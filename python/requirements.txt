@@ -1,0 +1,30 @@
+# API
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+python-multipart>=0.0.20
+httpx>=0.28.0
+
+# Torch — instalado separadamente no run.sh (CPU ou CUDA)
+
+# ML
+diffusers>=0.30.0
+transformers>=4.35.0,<4.45.0
+accelerate>=0.33.0
+safetensors
+huggingface-hub>=0.34.0
+
+# TripoSR deps
+omegaconf==2.3.0
+einops==0.7.0
+open_clip_torch>=2.26.0
+
+# 3D / imagem
+trimesh>=4.5.0
+pillow>=10.4.0,<11.0
+numpy>=1.24.0,<2.0.0
+scikit-image>=0.21.0
+onnxruntime
+
+
+# torchmcubes NÃO entra aqui — instalado via git+ no run.sh / Dockerfile
+# CPU fallback via _mcubes_shim.py + skimage se CUDA indisponível
