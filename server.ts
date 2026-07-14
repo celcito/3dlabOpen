@@ -1,13 +1,16 @@
 import express from "express";
 import path from "path";
-<<<<<<< HEAD
-=======
 import fs from "fs";
 import http from "node:http";
 import { Readable } from "node:stream";
->>>>>>> 835080b (feat)
+import crypto from "node:crypto";
+import multer from "multer";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, GenerateVideosOperation, Type } from "@google/genai";
+
+const IMG2_3D_PY_URL = process.env.IMG2_3D_PY_URL || "http://127.0.0.1:8001";
+const JOBS_DIR = path.join(process.cwd(), "jobs");
+const upload = multer();
 
 function pyStream(url: string, signal?: AbortSignal): Promise<{ ok: boolean; status: number; body: ReadableStream<Uint8Array> | null }> {
   return new Promise((resolve, reject) => {
@@ -90,7 +93,6 @@ Return only the optimized prompt.`;
         return res.status(400).json({ error: "Prompt is required" });
       }
 
-<<<<<<< HEAD
       if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: "Gemini API key is not configured" });
       }
@@ -114,7 +116,56 @@ Return only the optimized prompt.`;
         enhancedPrompt = `3D mini figure keychain edition of: ${prompt}. Pocket-sized, featuring a sturdy attachment loop connector ring integrated on top of its head, plain neutral dark studio background, displayed as a small keychain accessory, realistic plastic material, high quality render.`;
       } else if (physicalFormat === "drawing_plate") {
         enhancedPrompt = `2D lineart drawing plate design: ${prompt}. Pure black and white, high contrast, clean vector style lines, coloring book page, no shading, minimal details.`;
-=======
+      } else {
+        enhancedPrompt = `3D digital sculpture of: ${prompt}. Centered composition, plain neutral dark studio background, displayed on a pedestal or base, realistic materials, intricate fine details, optimized for 3D printing, high quality render.`;
+      }
+
+      const response = await ai.models.generateContent({
+        model,
+        contents: {
+          parts: [
+            {
+              text: enhancedPrompt,
+            },
+          ],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio,
+          }
+        },
+      });
+
+      let imageUrl = "";
+      const candidates = response.candidates;
+      if (candidates && candidates[0] && candidates[0].content && candidates[0].content.parts) {
+        for (const part of candidates[0].content.parts) {
+          if (part.inlineData) {
+            const base64EncodeString = part.inlineData.data;
+            imageUrl = `data:image/png;base64,${base64EncodeString}`;
+            break;
+          }
+        }
+      }
+
+      if (!imageUrl) {
+        throw new Error("Não foi possível gerar a imagem a partir do modelo Gemini.");
+      }
+
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error("Gemini Image API Error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate image" });
+    }
+  });
+
+  // Image-to-3D API (proxy to Python FastAPI service)
+  app.post("/api/img2-3d", upload.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Image file is required" });
+      }
+
       const mcResolution = req.body.mcResolution || 256;
       const provider = req.body.provider || "local";
 
@@ -461,47 +512,11 @@ Return only the optimized prompt.`;
         newMeta.updatedAt = Date.now();
         writeProjectMeta(newMeta);
         res.json(newMeta);
->>>>>>> 835080b (feat)
       } else {
-        enhancedPrompt = `3D digital sculpture of: ${prompt}. Centered composition, plain neutral dark studio background, displayed on a pedestal or base, realistic materials, intricate fine details, optimized for 3D printing, high quality render.`;
+        res.status(500).json({ error: "Failed to duplicate project" });
       }
-
-      const response = await ai.models.generateContent({
-        model,
-        contents: {
-          parts: [
-            {
-              text: enhancedPrompt,
-            },
-          ],
-        },
-        config: {
-          imageConfig: {
-            aspectRatio,
-          }
-        },
-      });
-
-      let imageUrl = "";
-      const candidates = response.candidates;
-      if (candidates && candidates[0] && candidates[0].content && candidates[0].content.parts) {
-        for (const part of candidates[0].content.parts) {
-          if (part.inlineData) {
-            const base64EncodeString = part.inlineData.data;
-            imageUrl = `data:image/png;base64,${base64EncodeString}`;
-            break;
-          }
-        }
-      }
-
-      if (!imageUrl) {
-        throw new Error("Não foi possível gerar a imagem a partir do modelo Gemini.");
-      }
-
-      res.json({ imageUrl });
-    } catch (error: any) {
-      console.error("Gemini Image API Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate image" });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
     }
   });
 
