@@ -4,7 +4,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower } from "lucide-react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image } from "lucide-react";
 import PaintMixer from "./pages/PaintMixer";
 import AiFigures from "./pages/AiFigures";
 import Viewer3D from "./pages/Viewer3D";
@@ -23,6 +23,7 @@ import FlexiModelCreator from "./pages/FlexiModelCreator";
 import Face3DGenerator from "./pages/Face3DGenerator";
 import BinGenerator from "./pages/BinGenerator";
 import VaseGenerator from "./pages/VaseGenerator";
+import ImageTo3D from "./pages/ImageTo3D";
 
 function NavItem({ to, icon: Icon, label, description }: { to: string; icon: any; label: string; description: string }) {
   const location = useLocation();
@@ -68,6 +69,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col w-full">
             <NavItem to="/" icon={BoxSelect} label="Separar Partes 3D" description="3D Viewer & Slicer" />
             <NavItem to="/face-3d" icon={UserCircle2} label="Face 3D" description="Foto em Relevo 3D" />
+            <NavItem to="/image-to-3d" icon={Image} label="Imagem para 3D" description="Image to 3D Model" />
             <NavItem to="/vase-generator" icon={Flower} label="Vase Maker" description="Vasos Paramétricos" />
             <NavItem to="/bin-generator" icon={Box} label="Bin Generator" description="Organizadores Sob Medida" />
             <NavItem to="/flexi-creator" icon={Waves} label="Criador Flexi" description="Modelos Articulados" />
@@ -102,6 +104,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Viewer3D />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />
+          <Route path="/image-to-3d" element={<ImageTo3D />} />
           <Route path="/vase-generator" element={<VaseGenerator />} />
           <Route path="/bin-generator" element={<BinGenerator />} />
           <Route path="/flexi-creator" element={<FlexiModelCreator />} />
