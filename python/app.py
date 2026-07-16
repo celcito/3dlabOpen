@@ -23,10 +23,7 @@ if _triposr_home.is_dir() and str(_triposr_home) not in sys.path:
     sys.path.insert(0, str(_triposr_home))
 
 from jobs import create_job, get_job, update_job, remove_old_jobs
-from triposr_runner import infer
 from tripo_api import create_task, wait_and_download, TripoError
-from convert import convert_glb_to_all
-from decimate import decimate_mesh_file
 
 JOBS_DIR = Path(__file__).parent.parent / "tmp" / "jobs"
 JOBS_DIR.mkdir(parents=True, exist_ok=True)
@@ -56,6 +53,9 @@ app.add_middleware(
 
 
 def _run_inference(job_id: str, image_path: str, output_dir: str, mc_resolution: int = 256):
+    from triposr_runner import infer
+    from convert import convert_glb_to_all
+
     try:
         def progress(percent: int, step: str):
             update_job(job_id, "processing", progress=percent, step=step)
@@ -125,8 +125,9 @@ def _run_cloud_inference(job_id: str, image_path: str, output_dir: str, mc_resol
 async def generate(image: UploadFile = File(...), mc_resolution: int = 256, provider: str = "local"):
     if mc_resolution not in (128, 256, 384, 512):
         raise HTTPException(400, "mc_resolution must be 128, 256, 384, or 512")
-    if not image.content_type or not image.content_type.startswith("image/"):
-        raise HTTPException(400, "File must be an image (PNG, JPEG, WebP)")
+    allowed_types = {"image/png", "image/jpeg", "image/webp"}
+    if not image.content_type or image.content_type not in allowed_types:
+        raise HTTPException(400, f"File must be a raster image ({', '.join(allowed_types)}), got {image.content_type}")
 
     if provider not in ("local", "cloud"):
         raise HTTPException(400, "provider must be 'local' or 'cloud'")
@@ -138,8 +139,18 @@ async def generate(image: UploadFile = File(...), mc_resolution: int = 256, prov
     job_dir = JOBS_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
 
-    image_path = job_dir / "input.png"
+    ext_map = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
+    ext = ext_map.get(image.content_type, ".png")
+    image_path = job_dir / f"input{ext}"
     contents = await image.read()
+
+    try:
+        from PIL import Image
+        import io
+        Image.open(io.BytesIO(contents)).verify()
+    except Exception:
+        raise HTTPException(400, "Uploaded file is not a valid image")
+
     image_path.write_bytes(contents)
 
     output_dir = job_dir
@@ -272,6 +283,7 @@ async def decimate_endpoint(file: UploadFile = File(...), ratio: float = 0.5):
 
     import uuid
     from fastapi.responses import FileResponse
+    from decimate import decimate_mesh_file
 
     job_dir = decimate_dir / uuid.uuid4().hex[:8]
     job_dir.mkdir(parents=True, exist_ok=True)
@@ -306,6 +318,9 @@ def _run_text_to_3d(job_id: str, prompt: str, output_dir: str, mc_resolution: in
         update_job(job_id, "error", progress=0, step="error",
                      error="diffusers not installed. Run: pip install diffusers accelerate safetensors")
         return
+
+    from triposr_runner import infer
+    from convert import convert_glb_to_all
 
     try:
         def progress(pct: int, step: str):

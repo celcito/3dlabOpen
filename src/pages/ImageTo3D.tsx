@@ -62,7 +62,7 @@ export default function ImageTo3D() {
   const [multiCount, setMultiCount] = useState<number>(4);
   const [multiFiles, setMultiFiles] = useState<(File | null)[]>(new Array(4).fill(null));
   const [multiUploading, setMultiUploading] = useState(false);
-  const [resolution, setResolution] = useState<256 | 512>(256);
+  const [resolution, setResolution] = useState<128 | 256 | 512>(128);
   const { jobs: multiJobs, addJobs, allDone: multiAllDone } = useMultiJobStream();
 
   const [textMode, setTextMode] = useState(false);
@@ -130,7 +130,7 @@ export default function ImageTo3D() {
         formData.append("image", f);
         formData.append("mcResolution", String(resolution));
         formData.append("provider", provider);
-        const res = await fetch("/api/img2-3d/generate", { method: "POST", body: formData });
+      const res = await fetch("/api/img2-3d", { method: "POST", body: formData });
         if (!res.ok) {
           const data = await res.json().catch(() => ({ error: "Unknown error" }));
           throw new Error(data.error || `HTTP ${res.status}`);
@@ -346,6 +346,12 @@ export default function ImageTo3D() {
             <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-3 font-bold">02. Resolution</h3>
             <div className="flex items-center gap-1 bg-[#0A0A0A] border border-[#222] p-1 w-fit mb-4">
               <button
+                onClick={() => setResolution(128)}
+                className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-colors ${resolution === 128 ? "bg-[#00E5FF] text-black" : "text-zinc-500 hover:text-white"}`}
+              >
+                Fast (128)
+              </button>
+              <button
                 onClick={() => setResolution(256)}
                 className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-colors ${resolution === 256 ? "bg-[#00E5FF] text-black" : "text-zinc-500 hover:text-white"}`}
               >
@@ -359,9 +365,11 @@ export default function ImageTo3D() {
               </button>
             </div>
             <p className="text-[10px] text-zinc-500 mb-4">
-              {resolution === 512
-                ? "512: ~2× mais detalhes, ~4× mais triângulos, ~2× mais lento. Use para peças com detalhes finos."
-                : "256: Bom balanço qualidade/velocidade. Ideal para a maioria dos cases."}
+              {resolution === 128
+                ? "128: 8x mais rapido que 256. Ideal para testes rapidos em CPU."
+                : resolution === 512
+                ? "512: ~2x mais detalhes, ~4x mais triangulos. Use para pecas com detalhes finos."
+                : "256: Bom balanco qualidade/velocidade. Ideal para a maioria dos cases."}
             </p>
           </section>
 

@@ -69,4 +69,4 @@ if [ "$MODE" = "gradio" ]; then
 fi
 
 echo "Starting TripoSR API on port 8001..."
-exec uvicorn app:app --host 127.0.0.1 --port 8001 --reload --log-level info
+exec uvicorn app:app --host 127.0.0.1 --port 8001 --log-level info --timeout-keep-alive 600
