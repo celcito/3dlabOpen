@@ -35,7 +35,7 @@ export default function FidgetClickerMaker() {
     cornerRadius: 3,
     keychainHole: true,
     holeDiameter: 4,
-    baseColor: "#00E5FF"
+    baseColor: "#e0e0e0"
   });
 
   const [successMsg, setSuccessMsg] = useState("");

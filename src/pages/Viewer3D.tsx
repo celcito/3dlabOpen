@@ -13,11 +13,11 @@ import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUti
 
 // Vibrant colors for print separation groups
 const GROUPS = [
-  { id: 0, name: "Base Principal (Cinza / Gray)", color: "#333333", border: "border-zinc-700" },
-  { id: 1, name: "Parte 1 (Ciano / Cyan)", color: "#00E5FF", border: "border-[#00E5FF]" },
-  { id: 2, name: "Parte 2 (Vermelho / Red)", color: "#FF1744", border: "border-[#FF1744]" },
-  { id: 3, name: "Parte 3 (Verde / Green)", color: "#00FF41", border: "border-[#00FF41]" },
-  { id: 4, name: "Parte 4 (Roxo / Purple)", color: "#D500F9", border: "border-[#D500F9]" },
+  { id: 0, name: "Base Principal (Cinza / Gray)", color: "#333333", border: "border-zinc-700", connectorRole: "auto" as const },
+  { id: 1, name: "Parte 1 (Ciano / Cyan)", color: "#00E5FF", border: "border-[#00E5FF]", connectorRole: "male" as const },
+  { id: 2, name: "Parte 2 (Vermelho / Red)", color: "#FF1744", border: "border-[#FF1744]", connectorRole: "female" as const },
+  { id: 3, name: "Parte 3 (Verde / Green)", color: "#00FF41", border: "border-[#00FF41]", connectorRole: "male" as const },
+  { id: 4, name: "Parte 4 (Roxo / Purple)", color: "#D500F9", border: "border-[#D500F9]", connectorRole: "male" as const },
 ];
 
 const PRESET_COLORS = [
@@ -31,6 +31,34 @@ const PRESET_COLORS = [
   "#2979FF", // Blue
   "#FFFFFF", // White
 ];
+
+// Connector generation constants
+const CONNECTOR_CONFIG = {
+  // Snap-fit dimensions (in model units, scaled by printScale)
+  snapFit: {
+    pinDiameter: 0.08,      // 8mm at 1:1 scale
+    pinHeight: 0.12,        // 12mm insertion depth
+    socketTolerance: 0.006, // 0.6mm clearance for FDM
+    socketDepth: 0.13,      // Slightly deeper than pin
+    filletRadius: 0.01,     // 1mm fillet for stress relief
+    taperAngle: 3.0,        // Degrees for easy insertion
+  },
+  // Magnet cavity dimensions (for 6x3mm magnets)
+  magnet: {
+    cavityDiameter: 0.065,  // 6.5mm for 6mm magnet + 0.5mm tolerance
+    cavityDepth: 0.035,     // 3.5mm for 3mm thick magnet + 0.5mm
+    wallThickness: 0.02,    // 2mm wall around magnet
+  },
+  // Assignment logic: which parts get male vs female
+  // Larger volume = female (receives), smaller = male (inserts)
+  // For humanoids: trunk/torso = female, limbs = male
+  anatomicalRoles: {
+    trunk: "female",    // Group 2 (torso) - receives legs/arms
+    legs: "male",       // Group 1 (legs) - inserts into trunk
+    arms: "male",       // Group 3/4 (arms) - inserts into trunk
+    head: "male",       // Head inserts into neck
+  },
+} as const;
 
 // Explanatory Tooltip Component for beginners
 function HelpTooltip({ text, position = "left" }: { text: string; position?: "top" | "bottom" | "left" | "right" }) {
@@ -102,12 +130,284 @@ function buildAdjacencyList(geometry: THREE.BufferGeometry) {
   return adjacency;
 }
 
+// Connector generation functions
+function findBoundaryEdges(
+  geometry: THREE.BufferGeometry,
+  vertexGroups: Uint8Array,
+  targetGroupId: number
+): { edge: [number, number]; normal: THREE.Vector3; centroid: THREE.Vector3; adjacentGroupId: number }[] {
+  const positionAttr = geometry.attributes.position;
+  const indexAttr = geometry.index;
+  const boundaryEdges: { edge: [number, number]; normal: THREE.Vector3; centroid: THREE.Vector3; adjacentGroupId: number }[] = [];
+  const edgeMap = new Map<string, { count: number; normal: THREE.Vector3; centroid: THREE.Vector3; adjacentGroupId: number }>();
+
+  if (!positionAttr) return [];
+
+  const processTriangle = (idx0: number, idx1: number, idx2: number) => {
+    const g0 = vertexGroups[idx0] || 0;
+    const g1 = vertexGroups[idx1] || 0;
+    const g2 = vertexGroups[idx2] || 0;
+
+    const triangleGroups = [g0, g1, g2];
+    const hasTargetGroup = triangleGroups.some(g => g === targetGroupId);
+    const hasOtherGroup = triangleGroups.some(g => g !== targetGroupId && g !== 0);
+
+    if (hasTargetGroup && hasOtherGroup) {
+      // This triangle straddles the boundary
+      const edges = [
+        [idx0, idx1, g0, g1],
+        [idx1, idx2, g1, g2],
+        [idx2, idx0, g2, g0],
+      ] as const;
+
+      for (const [ia, ib, ga, gb] of edges) {
+        const isBoundaryEdge = (ga === targetGroupId && gb !== targetGroupId && gb !== 0) ||
+                               (gb === targetGroupId && ga !== targetGroupId && ga !== 0);
+
+        if (isBoundaryEdge) {
+          // Order: target group vertex first
+          const [vTarget, vOther, gOther] = ga === targetGroupId ? [ia, ib, gb] : [ib, ia, ga];
+
+          const pA = new THREE.Vector3(positionAttr.getX(vTarget), positionAttr.getY(vTarget), positionAttr.getZ(vTarget));
+          const pB = new THREE.Vector3(positionAttr.getX(vOther), positionAttr.getY(vOther), positionAttr.getZ(vOther));
+
+          const edgeKey = `${Math.min(vTarget, vOther)}-${Math.max(vTarget, vOther)}`;
+          const centroid = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+          const edgeDir = new THREE.Vector3().subVectors(pB, pA).normalize();
+          
+          // Approximate normal from cross product with up vector
+          const up = new THREE.Vector3(0, 1, 0);
+          let normal = new THREE.Vector3().crossVectors(edgeDir, up).normalize();
+          if (normal.lengthSq() < 0.1) {
+            normal = new THREE.Vector3().crossVectors(edgeDir, new THREE.Vector3(1, 0, 0)).normalize();
+          }
+
+          const existing = edgeMap.get(edgeKey);
+          if (!existing) {
+            edgeMap.set(edgeKey, { count: 1, normal, centroid, adjacentGroupId: gOther });
+          } else {
+            existing.count++;
+            existing.normal.add(normal);
+            existing.centroid.add(centroid);
+          }
+        }
+      }
+    }
+  };
+
+  if (indexAttr) {
+    const arr = indexAttr.array;
+    for (let i = 0; i < arr.length; i += 3) {
+      processTriangle(arr[i], arr[i + 1], arr[i + 2]);
+    }
+  } else {
+    const count = positionAttr.count;
+    for (let i = 0; i < count; i += 3) {
+      if (i + 2 < count) processTriangle(i, i + 1, i + 2);
+    }
+  }
+
+  // Convert to boundary edges (edges that appear only once = boundary)
+  for (const [key, data] of edgeMap.entries()) {
+    if (data.count === 1) {
+      data.normal.normalize();
+      data.centroid.multiplyScalar(1 / data.count);
+      const [v1, v2] = key.split('-').map(Number);
+      boundaryEdges.push({ edge: [v1, v2], normal: data.normal, centroid: data.centroid, adjacentGroupId: data.adjacentGroupId });
+    }
+  }
+
+  return boundaryEdges;
+}
+
+// Clusters boundary edges into connector locations
+function clusterBoundaryEdges(
+  boundaries: { edge: [number, number]; normal: THREE.Vector3; centroid: THREE.Vector3; adjacentGroupId: number }[],
+  maxClusterDistance: number = 0.15
+): { center: THREE.Vector3; normal: THREE.Vector3; adjacentGroupId: number; edgeCount: number }[] {
+  const clusters: { center: THREE.Vector3; normal: THREE.Vector3; adjacentGroupId: number; edgeCount: number; edges: typeof boundaries }[] = [];
+
+  for (const boundary of boundaries) {
+    let assigned = false;
+    for (const cluster of clusters) {
+      if (cluster.adjacentGroupId === boundary.adjacentGroupId &&
+          boundary.centroid.distanceTo(cluster.center) < maxClusterDistance) {
+        // Merge into cluster
+        cluster.center.add(boundary.centroid);
+        cluster.normal.add(boundary.normal);
+        cluster.edgeCount++;
+        cluster.edges.push(boundary);
+        assigned = true;
+        break;
+      }
+    }
+    if (!assigned) {
+      clusters.push({
+        center: boundary.centroid.clone(),
+        normal: boundary.normal.clone(),
+        adjacentGroupId: boundary.adjacentGroupId,
+        edgeCount: 1,
+        edges: [boundary],
+      });
+    }
+  }
+
+  // Average cluster properties
+  return clusters.map(c => ({
+    center: c.center.multiplyScalar(1 / c.edgeCount),
+    normal: c.normal.normalize(),
+    adjacentGroupId: c.adjacentGroupId,
+    edgeCount: c.edgeCount,
+  }));
+}
+
+// Determines connector role (male/female) for a group pair
+function getConnectorRole(groupId: number, adjacentGroupId: number, groups: { id: number; connectorRole: "male" | "female" | "auto" }[]): "male" | "female" {
+  const group = groups.find(g => g.id === groupId);
+  const adjacentGroup = groups.find(g => g.id === adjacentGroupId);
+  
+  // If THIS group has a manual setting, use it
+  if (group?.connectorRole === "male" || group?.connectorRole === "female") {
+    return group.connectorRole;
+  }
+  
+  // If adjacent group has manual setting, infer opposite
+  if (adjacentGroup?.connectorRole === "male") return "female";
+  if (adjacentGroup?.connectorRole === "female") return "male";
+
+  // Anatomical heuristic (fallback for auto)
+  // Group 1 (cyan) = legs, Group 2 (red) = trunk, Group 3 (green) = left arm, Group 4 (purple) = right arm
+  const anatomicalRole: Record<number, "male" | "female"> = {
+    1: "male",   // Legs -> male (insert into trunk)
+    2: "female", // Trunk -> female (receives legs/arms)
+    3: "male",   // Left arm -> male
+    4: "male",   // Right arm -> male
+  };
+
+  if (anatomicalRole[groupId]) {
+    return anatomicalRole[groupId];
+  }
+  if (anatomicalRole[adjacentGroupId]) {
+    return anatomicalRole[adjacentGroupId] === "male" ? "female" : "male";
+  }
+
+  // Default: larger volume = female (receives), smaller = male (inserts)
+  return "female"; // fallback - volume check would need geometry but we don't have it here
+}
+
+// Creates snap-fit connector geometry (male pin or female socket)
+function createSnapFitConnector(
+  center: THREE.Vector3,
+  normal: THREE.Vector3,
+  role: "male" | "female",
+  scale: number = 1.0
+): THREE.BufferGeometry {
+  const cfg = CONNECTOR_CONFIG.snapFit;
+  const pinDiameter = cfg.pinDiameter * scale;
+  const pinHeight = cfg.pinHeight * scale;
+  const socketTolerance = cfg.socketTolerance * scale;
+  const socketDepth = cfg.socketDepth * scale;
+  const taperAngle = THREE.MathUtils.degToRad(cfg.taperAngle);
+
+  const geometry = new THREE.BufferGeometry();
+
+  if (role === "male") {
+    // Male pin: tapered cylinder
+    const radiusTop = (pinDiameter / 2) - (pinHeight * Math.tan(taperAngle));
+    const radiusBottom = pinDiameter / 2;
+    const cylinderGeom = new THREE.CylinderGeometry(radiusTop, radiusBottom, pinHeight, 16);
+    
+    // Add fillet at base (torus)
+    const filletGeom = new THREE.TorusGeometry(radiusBottom, cfg.filletRadius * scale, 8, 16, Math.PI);
+    filletGeom.translate(0, -pinHeight / 2, 0);
+    filletGeom.rotateX(Math.PI / 2);
+    
+    const merged = BufferGeometryUtils.mergeGeometries([cylinderGeom, filletGeom]);
+    if (merged) return merged;
+    return cylinderGeom;
+  } else {
+    // Female socket: hollow cylinder with tolerance
+    const innerRadius = (pinDiameter / 2) + socketTolerance;
+    const outerRadius = innerRadius + 0.02 * scale; // 2mm wall
+    
+    const outerCyl = new THREE.CylinderGeometry(outerRadius, outerRadius, socketDepth, 16);
+    const innerCyl = new THREE.CylinderGeometry(innerRadius, innerRadius, socketDepth, 16);
+    innerCyl.translate(0, 0, 0); // Same position
+    
+    // Use CSG-like subtraction via BufferGeometryUtils (approximate)
+    // For STL export, we create the socket as a separate "hole" geometry
+    // that will be subtracted in the slicer or via boolean
+    // Here we create a cylinder with the inner diameter removed (shell)
+    const socketGeom = new THREE.CylinderGeometry(outerRadius, outerRadius, socketDepth, 16, 1, true); // open ended
+    return socketGeom;
+  }
+}
+
+// Creates magnet cavity geometry
+function createMagnetCavity(
+  center: THREE.Vector3,
+  normal: THREE.Vector3,
+  scale: number = 1.0
+): THREE.BufferGeometry {
+  const cfg = CONNECTOR_CONFIG.magnet;
+  const diameter = cfg.cavityDiameter * scale;
+  const depth = cfg.cavityDepth * scale;
+  const wallThickness = cfg.wallThickness * scale;
+
+  // Cylindrical cavity for magnet
+  const cavity = new THREE.CylinderGeometry(diameter / 2, diameter / 2, depth, 16);
+  return cavity;
+}
+
+// Orients and positions a connector geometry at the boundary
+function placeConnector(
+  connectorGeom: THREE.BufferGeometry,
+  center: THREE.Vector3,
+  normal: THREE.Vector3,
+  role: "male" | "female",
+  isMagnet: boolean = false
+): THREE.BufferGeometry {
+  const placed = connectorGeom.clone();
+  
+  // Rotate to align with boundary normal (pointing outward from target group)
+  const up = new THREE.Vector3(0, 1, 0);
+  const quat = new THREE.Quaternion().setFromUnitVectors(up, normal);
+  placed.applyQuaternion(quat);
+  
+  // Position
+  let offsetDistance = 0;
+  if (isMagnet) {
+    offsetDistance = CONNECTOR_CONFIG.magnet.cavityDepth / 2;
+  } else if (role === "male") {
+    offsetDistance = CONNECTOR_CONFIG.snapFit.pinHeight / 2;
+  } else {
+    offsetDistance = CONNECTOR_CONFIG.snapFit.socketDepth / 2;
+  }
+  
+  // Move connector slightly OUTWARD from the surface (into the adjacent part's space)
+  // For male: pin sticks out from this part
+  // For female: socket goes into this part
+  const direction = role === "female" ? -1 : 1;
+  placed.translate(center.x, center.y, center.z);
+  placed.translateOnAxis(normal, direction * offsetDistance);
+  
+  return placed;
+}
+
+// Calculates the scale factor based on model dimensions and print scale
+function getConnectorScale(modelDimensions: { x: number; y: number; z: number }, printScale: number): number {
+  const maxDim = Math.max(modelDimensions.x, modelDimensions.y, modelDimensions.z);
+  // Base scale: 1.0 = model units. Print scale is percentage.
+  // If model is in meters and print at 10%, connectors should be ~10% size
+  return (printScale / 100.0) * (maxDim < 15 ? 10.0 : 1.0);
+}
+
 // Calculates exact physical volume of a triangulated 3D mesh (manifold) using signed tetrahedra
 function calculateMeshVolume(geometry: THREE.BufferGeometry): number {
   if (!geometry) return 0;
   const position = geometry.attributes.position;
   if (!position) return 0;
-  
+
   let totalVolume = 0;
   const count = position.count;
   const index = geometry.index;
@@ -478,22 +778,28 @@ function mergeGeometriesFallback(geometries: THREE.BufferGeometry[]): THREE.Buff
 
 export default function Viewer3D() {
   const [groups, setGroups] = useState([
-    { id: 0, name: "Base Principal (Cinza)", color: "#333333", border: "border-zinc-700" },
-    { id: 1, name: "Parte 1 (Ciano)", color: "#00E5FF", border: "border-[#00E5FF]" },
-    { id: 2, name: "Parte 2 (Vermelho)", color: "#FF1744", border: "border-[#FF1744]" },
-    { id: 3, name: "Parte 3 (Verde)", color: "#00FF41", border: "border-[#00FF41]" },
-    { id: 4, name: "Parte 4 (Roxo)", color: "#D500F9", border: "border-[#D500F9]" },
+    { id: 0, name: "Base Principal (Cinza)", color: "#333333", border: "border-zinc-700", connectorRole: "auto" as const },
+    { id: 1, name: "Parte 1 (Ciano)", color: "#00E5FF", border: "border-[#00E5FF]", connectorRole: "male" as const },
+    { id: 2, name: "Parte 2 (Vermelho)", color: "#FF1744", border: "border-[#FF1744]", connectorRole: "female" as const },
+    { id: 3, name: "Parte 3 (Verde)", color: "#00FF41", border: "border-[#00FF41]", connectorRole: "male" as const },
+    { id: 4, name: "Parte 4 (Roxo)", color: "#D500F9", border: "border-[#D500F9]", connectorRole: "male" as const },
   ]);
 
   const updateGroupColor = (id: number, color: string) => {
     setGroups((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, color } : g))
+      prev.map((g) => (g.id === id ? { ...g, color, border: `border-[${color}]` } : g))
     );
   };
 
   const updateGroupName = (id: number, name: string) => {
     setGroups((prev) =>
       prev.map((g) => (g.id === id ? { ...g, name } : g))
+    );
+  };
+
+  const updateGroupConnectorRole = (id: number, role: "male" | "female" | "auto") => {
+    setGroups((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, connectorRole: role } : g))
     );
   };
 
@@ -513,7 +819,8 @@ export default function Viewer3D() {
       id: nextId,
       name: `Parte ${nextId}`,
       color: color,
-      border: `border-[${color}]`
+      border: `border-[${color}]`,
+      connectorRole: "auto" as const,
     };
     setGroups((prev) => [...prev, newGroup]);
     setActiveGroupId(nextId);
@@ -747,7 +1054,7 @@ export default function Viewer3D() {
         fdmPrintSpeed,
         fdmFilamentCostPerKg,
         fdmWallCount,
-        groups: groups.map(g => ({ id: g.id, name: g.name, color: g.color }))
+        groups: groups.map(g => ({ id: g.id, name: g.name, color: g.color, connectorRole: g.connectorRole }))
       };
 
       const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
@@ -805,7 +1112,8 @@ export default function Viewer3D() {
             id: Number(g.id),
             name: String(g.name || `Parte ${g.id}`),
             color: String(g.color || "#00E5FF"),
-            border: g.border || `border-[${g.color || "#00E5FF"}]`
+            border: g.border || `border-[${g.color || "#00E5FF"}]`,
+            connectorRole: (g.connectorRole === "male" || g.connectorRole === "female" || g.connectorRole === "auto") ? g.connectorRole : "auto",
           }));
           setGroups(updatedGroups);
         }
@@ -2166,7 +2474,7 @@ export default function Viewer3D() {
     if (!modelGeometry) return;
     setIsExporting(groupId);
     setIsProcessing(true);
-    setProcessingMessage(`Exportando ${groupId === 0 ? "Peça Principal" : getGroupName(groupId)} para STL...`);
+    setProcessingMessage(`Exportando ${groupId === 0 ? "Peça Principal" : getGroupName(groupId)} para STL com encaixes...`);
 
     setTimeout(() => {
       try {
@@ -2253,20 +2561,63 @@ export default function Viewer3D() {
           return;
         }
 
-        // Reconstruct BufferGeometry
-        const exportGeometry = new THREE.BufferGeometry();
-        exportGeometry.setAttribute(
+        // Reconstruct base BufferGeometry for this part
+        const baseGeometry = new THREE.BufferGeometry();
+        baseGeometry.setAttribute(
           "position",
           new THREE.Float32BufferAttribute(exportPositions, 3)
         );
         if (exportNormals.length > 0) {
-          exportGeometry.setAttribute(
+          baseGeometry.setAttribute(
             "normal",
             new THREE.Float32BufferAttribute(exportNormals, 3)
           );
         }
+        baseGeometry.computeVertexNormals();
 
-        const exportMesh = new THREE.Mesh(exportGeometry, new THREE.MeshBasicMaterial());
+        // --- CONNECTOR GENERATION ---
+        const connectorGeometries: THREE.BufferGeometry[] = [];
+        const scale = getConnectorScale(modelDimensions, printScale);
+
+        // Find boundaries between this group and adjacent groups
+        const boundaries = findBoundaryEdges(modelGeometry, vertexGroups, groupId);
+        
+        // Cluster boundaries into connector locations
+        const clusters = clusterBoundaryEdges(boundaries);
+
+        // For each cluster, determine role and create connector
+        for (const cluster of clusters) {
+          // Skip very small clusters (noise)
+          if (cluster.edgeCount < 3) continue;
+
+          const adjacentGroupId = cluster.adjacentGroupId;
+          if (adjacentGroupId === 0 || adjacentGroupId === groupId) continue;
+
+          const role = getConnectorRole(groupId, adjacentGroupId, groups);
+          const isMagnet = jointType === "magnet";
+
+          let connectorGeom: THREE.BufferGeometry;
+          if (isMagnet) {
+            connectorGeom = createMagnetCavity(cluster.center, cluster.normal, scale);
+          } else {
+            connectorGeom = createSnapFitConnector(cluster.center, cluster.normal, role, scale);
+          }
+
+          const placedConnector = placeConnector(connectorGeom, cluster.center, cluster.normal, role, isMagnet);
+          connectorGeometries.push(placedConnector);
+        }
+
+        // Merge base geometry with connectors
+        let finalGeometry = baseGeometry;
+        if (connectorGeometries.length > 0) {
+          const allGeoms = [baseGeometry, ...connectorGeometries];
+          const merged = BufferGeometryUtils.mergeGeometries(allGeoms, true);
+          if (merged) {
+            finalGeometry = merged;
+          }
+        }
+
+        const exportMesh = new THREE.Mesh(finalGeometry, new THREE.MeshBasicMaterial());
         const exporter = new STLExporter();
         const result = exporter.parse(exportMesh, { binary: true });
 
@@ -2278,6 +2629,11 @@ export default function Viewer3D() {
         const cleanName = fileName.replace(/\.[a-zA-Z0-9]+$/, "");
         link.download = `${cleanName}_${getGroupName(groupId).replace(/\s+/g, "_")}${jointSuffix}.stl`;
         link.click();
+
+        // Cleanup
+        connectorGeometries.forEach(g => g.dispose());
+        baseGeometry.dispose();
+        if (finalGeometry !== baseGeometry) finalGeometry.dispose();
       } catch (err) {
         console.error("Export error:", err);
       } finally {
@@ -3835,6 +4191,48 @@ export default function Viewer3D() {
                               </label>
                             </div>
                           </div>
+
+                          {/* Connector Role / Papel do Encaixe */}
+                          {group.id !== 0 && (
+                            <div>
+                              <label className="text-[9px] uppercase text-zinc-500 font-bold flex items-center mb-2">
+                                <span>Papel do Encaixe / Connector Role</span>
+                                <HelpTooltip text="Macho = pino que entra na outra peça. Fêmea = furo que recebe o pino. Auto = decide automaticamente baseado na anatomia (tronco=fêmea, membros=macho)." />
+                              </label>
+                              <div className="grid grid-cols-3 gap-1">
+                                <button
+                                  onClick={() => updateGroupConnectorRole(group.id, "male")}
+                                  className={`py-1.5 px-2 rounded border text-[8px] font-bold uppercase tracking-wider transition-all text-center ${
+                                    group.connectorRole === "male"
+                                      ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]"
+                                      : "bg-[#0a0a0a] border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-white"
+                                  }`}
+                                >
+                                  <span>Macho (Pino)</span>
+                                </button>
+                                <button
+                                  onClick={() => updateGroupConnectorRole(group.id, "female")}
+                                  className={`py-1.5 px-2 rounded border text-[8px] font-bold uppercase tracking-wider transition-all text-center ${
+                                    group.connectorRole === "female"
+                                      ? "bg-emerald-400/20 border-emerald-400 text-emerald-400"
+                                      : "bg-[#0a0a0a] border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-white"
+                                  }`}
+                                >
+                                  <span>Fêmea (Furo)</span>
+                                </button>
+                                <button
+                                  onClick={() => updateGroupConnectorRole(group.id, "auto")}
+                                  className={`py-1.5 px-2 rounded border text-[8px] font-bold uppercase tracking-wider transition-all text-center ${
+                                    group.connectorRole === "auto"
+                                      ? "bg-purple-400/20 border-purple-400 text-purple-400"
+                                      : "bg-[#0a0a0a] border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-white"
+                                  }`}
+                                >
+                                  <span>Auto</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -4276,6 +4674,7 @@ export default function Viewer3D() {
               )}
             </section>
           )}
+
 
           {/* EXPORT PARTS FOR PRINT */}
           {modelGeometry && (

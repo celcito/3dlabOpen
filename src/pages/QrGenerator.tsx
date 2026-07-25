@@ -35,7 +35,7 @@ export default function QrGenerator() {
     qrHeight: 2,
     padding: 10,
     borderRadius: 5,
-    baseColor: "#121212",
+    baseColor: "#ffffff",
     qrColor: "#FFFFFF",
     includeText: true,
     label: "SCAN ME",

@@ -542,7 +542,7 @@ function Scene({
             }
           ]} />
           <meshStandardMaterial 
-            color={config.borderStyle === "relief" ? "#00E5FF" : "#0d0d0d"}
+            color={config.borderStyle === "relief" ? "#121212" : "#0d0d0d"}
             roughness={0.5}
             metalness={0.2}
             wireframe={showWireframe}
@@ -701,7 +701,7 @@ const PLATE_PRESETS: { name: string; desc: string; config: PlateConfig; layers: 
         size: 1.5,
         depth: 4.5,
         rotation: 0,
-        color: "#00E5FF",
+        color: "#121212",
         visible: true,
         style: "raised"
       }
@@ -881,7 +881,7 @@ export default function PlateCreator() {
     height: 100,
     thickness: 6,
     borderRadius: 10,
-    color: "#1c1c1c",
+    color: "#e0e0e0",
     borderStyle: "relief",
     borderWidth: 5,
     borderHeight: 3,
@@ -901,7 +901,7 @@ export default function PlateCreator() {
       size: 1.5,
       depth: 4.0,
       rotation: 0,
-      color: "#00E5FF",
+      color: "#121212",
       visible: true,
       style: "raised"
     },
@@ -1022,7 +1022,7 @@ export default function PlateCreator() {
       size: 4.0,
       depth: 3.5,
       rotation: 0,
-      color: "#00E5FF",
+      color: "#121212",
       visible: true,
       style: "raised"
     };
