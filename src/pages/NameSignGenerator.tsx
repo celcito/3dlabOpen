@@ -48,7 +48,7 @@ export default function NameSignGenerator() {
     paddingX: 10,
     paddingY: 10,
     borderRadius: 5,
-    baseColor: "#121212",
+    baseColor: "#e0e0e0",
     textColor: "#00E5FF",
     mountingHoles: true,
     holeSize: 4,

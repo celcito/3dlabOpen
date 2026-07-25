@@ -722,7 +722,7 @@ export default function CookieCutterMaker() {
     coloringBaseThickness: 3.0,
     coloringLineHeight: 1.6,
     coloringLineWidth: 1.2,
-    materialColor: "#ff5722", // Bright orange PLA
+    materialColor: "#e0e0e0", // Bright orange PLA
     viewMode: "cutter_stamp",
     explodedView: 0.25,
     showWireframe: false
