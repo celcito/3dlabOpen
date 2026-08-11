@@ -4,6 +4,7 @@ import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle } from "lucide-react";
+import { toastExportError } from "@/lib/toast";
 
 export default function LithophaneGenerator() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export default function LithophaneGenerator() {
         link.click();
       } catch(e) {
         console.error(e);
-        alert("Erro ao exportar STL");
+        toastExportError();
       }
       setIsLoading(false);
     }, 100);

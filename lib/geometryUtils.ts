@@ -112,7 +112,7 @@ export function detectBoundaryEdges(
 
 function traceLoop(
   edges: [number, number][],
-  pos: Float32Array
+  pos: ArrayLike<number>
 ): THREE.Vector3[] | null {
   if (edges.length === 0) return null;
 

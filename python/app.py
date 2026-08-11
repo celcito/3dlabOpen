@@ -8,7 +8,7 @@ import asyncio
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,6 +22,8 @@ _triposr_home = Path.home() / "TripoSR"
 if _triposr_home.is_dir() and str(_triposr_home) not in sys.path:
     sys.path.insert(0, str(_triposr_home))
 
+import numpy as np
+import trimesh
 from jobs import create_job, get_job, update_job, remove_old_jobs
 from tripo_api import create_task, wait_and_download, TripoError
 
@@ -258,12 +260,15 @@ async def job_status(job_id: str):
 
 @app.get("/jobs/{job_id}/file/{fmt}")
 async def job_file(job_id: str, fmt: str):
-    if fmt not in ("glb", "obj", "stl"):
-        raise HTTPException(400, "Format must be glb, obj, or stl")
+    if fmt == "zip":
+        path = JOBS_DIR / "connectors" / job_id / "connectors_output.zip"
+    elif fmt in ("glb", "obj", "stl"):
+        path = JOBS_DIR / job_id / f"model.{fmt}"
+    else:
+        raise HTTPException(400, "Format must be glb, obj, stl, or zip")
 
-    path = JOBS_DIR / job_id / f"model.{fmt}"
     if not path.exists():
-        raise HTTPException(404, f"File not found: model.{fmt}")
+        raise HTTPException(404, f"File not found: {fmt}")
 
     from fastapi.responses import FileResponse
     return FileResponse(str(path))
@@ -377,6 +382,190 @@ class TextTo3DRequest:
         self.prompt = prompt
         self.mc_resolution = mc_resolution
         self.clean_prompt = clean_prompt
+
+
+def _run_connectors(job_id: str, mesh_path: str, output_dir: str, config: dict):
+    from connectors import (
+        generate_dovetail_connector, generate_plug_connector,
+        generate_dowel_connector, apply_connector_to_parts, place_connectors_on_loop,
+        generate_connector_at_position, CutLoop
+    )
+    from mesh_utils import split_mesh_by_groups, export_zip, detect_cut_loops
+
+    try:
+        update_job(job_id, "processing", progress=0, step="loading_mesh")
+
+        logger.info(f"Connector job {job_id}: loading mesh from {mesh_path}")
+        mesh = trimesh.load(mesh_path)
+        if isinstance(mesh, trimesh.Scene):
+            mesh = mesh.dump(concatenate=True)
+        if mesh.is_empty:
+            raise ValueError("Loaded mesh is empty")
+
+        update_job(job_id, "processing", progress=10, step="detecting_boundaries")
+
+        vertex_groups = {}
+        raw_groups = config.get("vertex_groups", {})
+
+        if raw_groups:
+            first_val = next(iter(raw_groups.values()))
+            if first_val and isinstance(first_val, (list, tuple)) and len(first_val) == 3 and isinstance(first_val[0], (int, float)):
+                centroids = {int(k): np.array(v) for k, v in raw_groups.items()}
+                verts_arr = mesh.vertices
+                for vi in range(len(verts_arr)):
+                    v = verts_arr[vi]
+                    best_gid = min(centroids, key=lambda gid: np.linalg.norm(v - centroids[gid]))
+                    if best_gid not in vertex_groups:
+                        vertex_groups[best_gid] = []
+                    vertex_groups[best_gid].append(vi)
+                logger.info(f"Assigned {len(verts_arr)} vertices to {len(centroids)} centroids")
+            else:
+                for gid, verts in raw_groups.items():
+                    vertex_groups[int(gid)] = verts
+
+        connector_config = config.get("connector_config", {})
+        ctype = connector_config.get("type", "dovetail")
+        count = connector_config.get("count", 1)
+        distribution = connector_config.get("distribution", "uniform")
+        conn_size = connector_config.get("size_mm", 8.0)
+
+        if vertex_groups:
+            parts = split_mesh_by_groups(mesh, vertex_groups)
+        else:
+            parts = {0: mesh.copy()}
+
+        if len(parts) < 2:
+            update_job(job_id, "error", progress=0, step="error",
+                       error="Need at least 2 paint groups to place connectors")
+            return
+
+        update_job(job_id, "processing", progress=30, step="splitting_mesh")
+
+        loops = detect_cut_loops(mesh, vertex_groups)
+
+        if not loops:
+            update_job(job_id, "processing", progress=100, step="complete_no_loops",
+                       files={})
+            return
+
+        update_job(job_id, "processing", progress=50, step="generating_connectors")
+
+        placement_mode = config.get("placement_mode", "auto")
+        manual_assignments = config.get("manual_assignments", {})
+
+        if placement_mode == "manual" and manual_assignments:
+            for loop_key, assignment in manual_assignments.items():
+                loop_parts = loop_key.split("-")
+                if len(loop_parts) == 2:
+                    ga, gb = int(loop_parts[0]), int(loop_parts[1])
+                    for loop in loops:
+                        if loop.group_a == ga and loop.group_b == gb:
+                            loop.male_on_a = assignment == "male_on_a"
+                            loop.male_on_b = assignment == "male_on_b"
+                            break
+        else:
+            assign_idx = 0
+            for loop in loops:
+                loop.male_on_a = (assign_idx % 2 == 0)
+                loop.male_on_b = not loop.male_on_a
+                assign_idx += 1
+
+        all_dowels = []
+
+        for loop_idx, loop in enumerate(loops):
+            placements = place_connectors_on_loop(
+                loop, count, distribution, conn_size
+            )
+
+            for pi, (pos, norm) in enumerate(placements):
+                temp_loop = CutLoop(
+                    vertices=loop.vertices,
+                    normal=norm,
+                    centroid=pos,
+                    group_a=loop.group_a,
+                    group_b=loop.group_b
+                )
+
+                if ctype == "dovetail":
+                    conn = generate_dovetail_connector(temp_loop, connector_config)
+                elif ctype == "plug":
+                    conn = generate_plug_connector(temp_loop, connector_config)
+                elif ctype == "dowel":
+                    conn = generate_dowel_connector(temp_loop, connector_config)
+                else:
+                    raise ValueError(f"Unknown connector type: {ctype}")
+
+                male_on_a = getattr(loop, 'male_on_a', True)
+                parts, all_dowels = apply_connector_to_parts(
+                    parts, conn, male_on_a, loop.group_a, loop.group_b, all_dowels
+                )
+
+            progress = 50 + int((loop_idx + 1) / len(loops) * 30)
+            update_job(job_id, "processing", progress=progress,
+                       step=f"connectors_loop_{loop_idx + 1}")
+
+        update_job(job_id, "processing", progress=85, step="exporting_zip")
+
+        for gid in parts:
+            if parts[gid] is not None and not parts[gid].is_empty:
+                try:
+                    parts[gid].update_faces(parts[gid].unique_faces())
+                    parts[gid].update_faces(parts[gid].nondegenerate_faces())
+                    parts[gid].remove_unreferenced_vertices()
+                except Exception:
+                    pass
+
+        zip_buf = export_zip(parts, all_dowels, config.get("model_name", "model"))
+
+        zip_path = Path(output_dir) / "connectors_output.zip"
+        with open(zip_path, "wb") as f:
+            f.write(zip_buf.getvalue())
+
+        logger.info(f"Connector job {job_id} completed → {zip_path} ({len(all_dowels)} dowels)")
+
+        update_job(job_id, "done", progress=100, step="complete",
+                   files={"zip": str(zip_path)})
+
+    except Exception as e:
+        logger.exception(f"Connector job {job_id} failed: {e}")
+        import traceback
+        update_job(job_id, "error", progress=0, step="error",
+                   error=f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}")
+
+
+@app.post("/generate-connectors")
+async def generate_connectors(file: UploadFile = File(...), config: str = Form("{}"), config_json: str = None):
+    import json
+
+    config_str = config_json if config_json else config
+    try:
+        parsed = json.loads(config_str)
+    except json.JSONDecodeError:
+        raise HTTPException(400, "config must be valid JSON")
+
+    ctype = parsed.get("connector_config", {}).get("type", "dovetail")
+    if ctype not in ("dovetail", "plug", "dowel"):
+        raise HTTPException(400, f"Invalid connector type: {ctype}")
+
+    conn_dir = JOBS_DIR / "connectors"
+    conn_dir.mkdir(parents=True, exist_ok=True)
+
+    job_id = create_job()
+    job_dir = conn_dir / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    ext = Path(file.filename or "mesh.stl").suffix or ".stl"
+    mesh_path = job_dir / f"input{ext}"
+    contents = await file.read()
+    mesh_path.write_bytes(contents)
+
+    threading.Thread(
+        target=_run_connectors,
+        args=(job_id, str(mesh_path), str(job_dir), parsed),
+        daemon=True,
+    ).start()
+
+    return {"jobId": job_id}
 
 
 @app.post("/text-to-3d")

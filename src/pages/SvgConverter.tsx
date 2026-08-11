@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Upload, Download, FileImage, RefreshCw, CheckCircle2, AlertCircle, X, ArrowRightLeft, Settings, Sliders, Image as ImageIcon, Play, Undo } from "lucide-react";
 // @ts-ignore
 import ImageTracer from "imagetracerjs";
+import { toastInvalidFormat } from "@/lib/toast";
 
 interface ConversionResult {
   id: string;
@@ -62,7 +63,7 @@ export default function SvgConverter() {
     });
 
     if (validFiles.length < newFiles.length) {
-      alert("Alguns arquivos foram ignorados. Apenas imagens (PNG, JPG, WEBP, BMP) são permitidas.");
+      toastInvalidFormat(["PNG", "JPG", "WEBP", "BMP"]);
     }
 
     const newItems: ConversionResult[] = validFiles.map(f => ({

@@ -6,6 +6,7 @@ import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUti
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
+import { toastExportError } from "@/lib/toast";
 import { 
   Type, Download, Settings, Sliders, 
   Layers, Move, MousePointer2, 
@@ -154,7 +155,7 @@ export default function NameSignGenerator() {
       showNotification("STL exportado com sucesso!");
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Falha ao exportar STL.");
+      toastExportError();
     } finally {
       setIsExporting(false);
     }

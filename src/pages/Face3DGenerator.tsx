@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center, PerspectiveCamera, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
+import { toastExportError } from "@/lib/toast";
 import { 
   UserCircle2, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -135,7 +136,7 @@ export default function Face3DGenerator() {
       showNotification("STL da Face exportado!");
     } catch (err) {
       console.error(err);
-      alert("Erro ao exportar.");
+      toastExportError();
     }
   };
 

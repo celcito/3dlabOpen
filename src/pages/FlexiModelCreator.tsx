@@ -5,6 +5,7 @@ import * as THREE from "three";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { addPegSocketJoint } from "../../lib/csg";
+import { toastExportError } from "@/lib/toast";
 import { 
   Waves, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -101,7 +102,7 @@ export default function FlexiModelCreator() {
       showNotification("STL Flexi exportado com sucesso!");
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Falha ao exportar STL.");
+      toastExportError();
     }
   };
 

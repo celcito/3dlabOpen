@@ -4,6 +4,7 @@ import { OrbitControls, Grid, Center, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
 import { Brush, Upload, Download, Plus, Trash2, Sliders, Info, Image as ImageIcon, Check, Layers, AlertCircle } from "lucide-react";
+import { toastExportError } from "@/lib/toast";
 
 interface ColorLayer {
   id: string;
@@ -111,7 +112,7 @@ export default function FilamentPainter() {
       showNotification("STL Exportado! Veja as instruções de troca abaixo.");
     } catch (err) {
       console.error(err);
-      alert("Erro ao exportar STL.");
+      toastExportError();
     }
   };
 

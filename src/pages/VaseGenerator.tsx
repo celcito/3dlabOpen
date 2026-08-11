@@ -4,6 +4,7 @@ import { OrbitControls, Grid, Center, PerspectiveCamera, ContactShadows, Edges }
 import * as THREE from "three";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
+import { toastExportError } from "@/lib/toast";
 import { 
   Flower, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -65,7 +66,7 @@ export default function VaseGenerator() {
       showNotification("Vaso exportado com sucesso!");
     } catch (err) {
       console.error(err);
-      alert("Erro ao exportar STL.");
+      toastExportError();
     }
   };
 

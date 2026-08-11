@@ -7,6 +7,7 @@ import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import { Upload, Download, FileBox, RefreshCw, FileText, CheckCircle2, AlertCircle, X, Layers, Play } from "lucide-react";
+import { toastInvalidFormat } from "@/lib/toast";
 
 interface FileItem {
   id: string;
@@ -52,7 +53,7 @@ export default function FileConverter() {
     });
 
     if (validFiles.length < newFiles.length) {
-      alert("Alguns arquivos foram ignorados. Apenas STL, OBJ e FBX são permitidos.");
+      toastInvalidFormat(["STL", "OBJ", "FBX"]);
     }
 
     const newItems: FileItem[] = validFiles.map(f => {
