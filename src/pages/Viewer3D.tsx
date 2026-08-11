@@ -5,12 +5,19 @@ import * as THREE from "three";
 import { Upload, Download, Paintbrush, PaintBucket, Move, RotateCcw, Eye, EyeOff, Trash2, Sliders, Play, Plus, Info, Check, RefreshCw, Sparkles, Layers, Undo, Eraser, Ruler, Clock, Printer, Settings, FileJson, Save, BoxSelect, Loader2, Circle, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { capBoundaryHoles, addPeg, addSocket, addReinforcedSocket } from "../../lib/csg";
+import { useViewerCamera } from "../hooks/viewer3d/useViewerCamera";
+import { useWatermark } from "../hooks/viewer3d/useWatermark";
+import { usePrintEstimator } from "../hooks/viewer3d/usePrintEstimator";
+import { useViewerModelImport } from "../hooks/viewer3d/useViewerModelImport";
+import { useViewerTopology } from "../hooks/viewer3d/useViewerTopology";
+import { useViewerSegmentation } from "../hooks/viewer3d/useViewerSegmentation";
+import { useViewerPainting } from "../hooks/viewer3d/useViewerPainting";
+import { useViewerJoints } from "../hooks/viewer3d/useViewerJoints";
+import { useViewerSeparatedPreview } from "../hooks/viewer3d/useViewerSeparatedPreview";
+import { useViewerExports } from "../hooks/viewer3d/useViewerExports";
 
 // Vibrant colors for print separation groups
 const GROUPS = [
@@ -51,59 +58,6 @@ function HelpTooltip({ text, position = "left" }: { text: string; position?: "to
       </div>
     </div>
   );
-}
-
-function buildAdjacencyList(geometry: THREE.BufferGeometry) {
-  const positionAttr = geometry.attributes.position;
-  if (!positionAttr) return [];
-  const count = positionAttr.count;
-  const adjacency: Set<number>[] = Array.from({ length: count }, () => new Set<number>());
-  const index = geometry.index;
-
-  if (index) {
-    const arr = index.array;
-    for (let i = 0; i < arr.length; i += 3) {
-      const a = arr[i], b = arr[i + 1], c = arr[i + 2];
-      adjacency[a].add(b); adjacency[a].add(c);
-      adjacency[b].add(a); adjacency[b].add(c);
-      adjacency[c].add(a); adjacency[c].add(b);
-    }
-  } else {
-    for (let i = 0; i < count; i += 3) {
-      const a = i, b = i + 1, c = i + 2;
-      adjacency[a].add(b); adjacency[a].add(c);
-      adjacency[b].add(a); adjacency[b].add(c);
-      adjacency[c].add(a); adjacency[c].add(b);
-    }
-  }
-  return adjacency;
-}
-
-function calculateMeshVolume(geometry: THREE.BufferGeometry): number {
-  if (!geometry) return 0;
-  const position = geometry.attributes.position;
-  if (!position) return 0;
-  let totalVolume = 0;
-  const count = position.count;
-  const index = geometry.index;
-  if (index) {
-    const idxCount = index.count;
-    for (let i = 0; i < idxCount; i += 3) {
-      const i0 = index.getX(i), i1 = index.getX(i + 1), i2 = index.getX(i + 2);
-      const ax = position.getX(i0), ay = position.getY(i0), az = position.getZ(i0);
-      const bx = position.getX(i1), by = position.getY(i1), bz = position.getZ(i1);
-      const cx = position.getX(i2), cy = position.getY(i2), cz = position.getZ(i2);
-      totalVolume += (-cx * by * az + bx * cy * az + cx * ay * bz - ax * cy * bz - bx * ay * cz + ax * by * cz) / 6.0;
-    }
-  } else {
-    for (let i = 0; i < count; i += 3) {
-      const ax = position.getX(i), ay = position.getY(i), az = position.getZ(i);
-      const bx = position.getX(i + 1), by = position.getY(i + 1), bz = position.getZ(i + 1);
-      const cx = position.getX(i + 2), cy = position.getY(i + 2), cz = position.getZ(i + 2);
-      totalVolume += (-cx * by * az + bx * cy * az + cx * ay * bz - ax * cy * bz - bx * ay * cz + ax * by * cz) / 6.0;
-    }
-  }
-  return Math.abs(totalVolume);
 }
 
 interface PaintableMeshProps {
@@ -322,29 +276,6 @@ function PlacementIndicator({ placementMode }: { placementMode: boolean }) {
   );
 }
 
-function mergeGeometriesFallback(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  try {
-    if (BufferGeometryUtils && typeof BufferGeometryUtils.mergeGeometries === 'function') {
-      const merged = BufferGeometryUtils.mergeGeometries(geometries, true);
-      if (merged) return merged;
-    }
-  } catch (e) { console.warn("BufferGeometryUtils.mergeGeometries failed:", e); }
-  const mergedPos: number[] = [], mergedNorm: number[] = [];
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position, normAttr = geom.attributes.normal;
-    if (!posAttr) continue;
-    for (let i = 0; i < posAttr.count; i++) {
-      mergedPos.push(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
-      if (normAttr) mergedNorm.push(normAttr.getX(i), normAttr.getY(i), normAttr.getZ(i));
-      else mergedNorm.push(0, 1, 0);
-    }
-  }
-  const finalGeom = new THREE.BufferGeometry();
-  finalGeom.setAttribute("position", new THREE.Float32BufferAttribute(mergedPos, 3));
-  finalGeom.setAttribute("normal", new THREE.Float32BufferAttribute(mergedNorm, 3));
-  return finalGeom;
-}
-
 // CORREÇÃO: classifyTriangleGroup agora aceita targetGroup
 function classifyTriangleGroup(g0: number, g1: number, g2: number, targetGroup: number): boolean {
   if (targetGroup === 0) return g0 === 0 && g1 === 0 && g2 === 0;
@@ -445,15 +376,12 @@ export default function Viewer3D() {
   const getGroupColor = (gId: number, currentGroups = groups) => currentGroups.find(g => g.id === gId)?.color || "#333333";
   const getGroupName = (gId: number, currentGroups = groups) => currentGroups.find(g => g.id === gId)?.name || `Parte ${gId}`;
 
-  const [modelGeometry, setModelGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [fileName, setFileName] = useState("NONE");
   const [vertexGroups, setVertexGroups] = useState<Uint8Array>(new Uint8Array(0));
   const [history, setHistory] = useState<Uint8Array[]>([]);
   const [activeGroupId, setActiveGroupId] = useState(1);
   const [paintMode, setPaintMode] = useState(true);
   const [paintTool, setPaintTool] = useState<"brush" | "bucket" | "eraser">("brush");
   const [brushRadius, setBrushRadius] = useState(0.2);
-  const [stats, setStats] = useState({ faces: 0, vertices: 0 });
   const [isExporting, setIsExporting] = useState<number | null>(null);
   const [loadingCap, setLoadingCap] = useState(false);
   const [capSelection, setCapSelection] = useState<"base" | "top">("top");
@@ -461,15 +389,10 @@ export default function Viewer3D() {
   const [isDownloadingCapped, setIsDownloadingCapped] = useState(false);
   const [isolateGroupId, setIsolateGroupId] = useState<number | null>(null);
   const [autoIsolateActive, setAutoIsolateActive] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingMessage, setProcessingMessage] = useState("");
   const [previewSeparated, setPreviewSeparated] = useState(false);
   const [finalizedPreview, setFinalizedPreview] = useState(false);
   const [previewValidation, setPreviewValidation] = useState<"idle" | "valid" | "warning">("idle");
   const [separationDistance, setSeparationDistance] = useState<number>(1.0);
-  const [segmentLegs, setSegmentLegs] = useState(true);
-  const [segmentArms, setSegmentArms] = useState(true);
-  const [segmentTorso, setSegmentTorso] = useState(true);
   const [jointType, setJointType] = useState<"default" | "magnet">("default");
   const [jointSizes, setJointSizes] = useState({ pegDiameter: 3.0, pegLength: 4.0, fitTolerance: 0.2, magnetDiameter: 3.2, magnetDepth: 1.6, reinforcementDiameter: 7.0, reinforcementHeight: 2.5, reinforcementWall: 1.2 });
   const [manualJoints, setManualJoints] = useState<ManualJoint[]>([]);
@@ -479,89 +402,20 @@ export default function Viewer3D() {
   const [importUnit, setImportUnit] = useState<"mm" | "inch">("mm");
   const [importScale, setImportScale] = useState(1.0);
   const [showConversionSettings, setShowConversionSettings] = useState(false);
-  const [estimatorType, setEstimatorType] = useState<"SLA" | "FDM">("SLA");
-  const MATERIALS = [
-    { id: "pla", name: "PLA (Standard)", density: 1.24, defaultCost: 110, type: "FDM" },
-    { id: "petg", name: "PETG (Resistente)", density: 1.27, defaultCost: 130, type: "FDM" },
-    { id: "abs", name: "ABS (Técnico)", density: 1.04, defaultCost: 100, type: "FDM" },
-    { id: "resin_std", name: "Resina Standard", density: 1.10, defaultCost: 220, type: "SLA" },
-    { id: "resin_tough", name: "Resina Tough/ABS-Like", density: 1.15, defaultCost: 340, type: "SLA" },
-    { id: "resin_eco", name: "Resina Eco / Lavável", density: 1.05, defaultCost: 280, type: "SLA" },
-  ];
-  const [selectedMaterialId, setSelectedMaterialId] = useState("resin_std");
-  const [materialDensity, setMaterialDensity] = useState(1.10);
-  const [modelDimensions, setModelDimensions] = useState({ x: 0, y: 0, z: 0, volume: 0 });
-  const [printScale, setPrintScale] = useState(100);
-  const [miniatureScaleMode, setMiniatureScaleMode] = useState<"human" | "direct">("human");
-  const [customMiniatureRatio, setCustomMiniatureRatio] = useState(16);
-  const [isHollow, setIsHollow] = useState(false);
-  const [layerHeight, setLayerHeight] = useState(0.05);
-  const [exposureTime, setExposureTime] = useState(2.5);
-  const [resinCostPerKg, setResinCostPerKg] = useState(220);
-  const [fdmInfill, setFdmInfill] = useState(20);
-  const [fdmLayerHeight, setFdmLayerHeight] = useState(0.2);
-  const [fdmPrintSpeed, setFdmPrintSpeed] = useState(60);
-  const [fdmFilamentCostPerKg, setFdmFilamentCostPerKg] = useState(110);
-  const [fdmWallCount, setFdmWallCount] = useState(2);
-
-  const handleDownloadCSV = () => {
-    if (!modelDimensions) return;
-    const maxOriginalDim = Math.max(modelDimensions.x, modelDimensions.y, modelDimensions.z);
-    const autoScaleFactor = maxOriginalDim < 15.0 ? 10.0 : 1.0;
-    const scaleMultiplier = printScale / 100.0;
-    const scaledX = modelDimensions.x * autoScaleFactor * scaleMultiplier;
-    const scaledY = modelDimensions.y * autoScaleFactor * scaleMultiplier;
-    const scaledZ = modelDimensions.z * autoScaleFactor * scaleMultiplier;
-    let rawVol = modelDimensions.volume * Math.pow(autoScaleFactor, 3) * Math.pow(scaleMultiplier, 3) * 0.001;
-    if (rawVol <= 0.001) rawVol = (scaledX * scaledY * scaledZ) * 0.001 * 0.40;
-    let finalVol = 0, weight = 0, cost = 0, timeStr = "";
-    const material = MATERIALS.find(m => m.id === selectedMaterialId)?.name || "Desconhecido";
-    if (estimatorType === "SLA") {
-      finalVol = isHollow ? rawVol * 0.30 : rawVol;
-      weight = finalVol * materialDensity;
-      cost = (weight / 1000.0) * resinCostPerKg;
-      const totalLayers = Math.max(1, Math.ceil(scaledZ / layerHeight));
-      const totalSecs = totalLayers * (exposureTime + 5.0) + 120;
-      timeStr = `${Math.floor(totalSecs / 3600)}h ${Math.floor((totalSecs % 3600) / 60)}m`;
-    } else {
-      const shellFactor = Math.min(0.8, 0.08 * fdmWallCount);
-      const infillFactor = fdmInfill / 100.0;
-      const fdmVolRatio = shellFactor + (1.0 - shellFactor) * infillFactor;
-      finalVol = rawVol * Math.max(0.05, fdmVolRatio);
-      weight = finalVol * materialDensity;
-      cost = (weight / 1000.0) * fdmFilamentCostPerKg;
-      const volumetricFlow = 0.42 * fdmLayerHeight * fdmPrintSpeed;
-      const totalSecs = ((finalVol * 1000.0) / (volumetricFlow || 1.0)) * 1.30 + 900;
-      timeStr = `${Math.floor(totalSecs / 3600)}h ${Math.floor((totalSecs % 3600) / 60)}m`;
-    }
-    const csvRows = [["Campo", "Valor"], ["Arquivo", fileName], ["Tipo de Estimador", estimatorType], ["Material", material], ["Escala de Impressao (%)", printScale], ["Dimensoes X (mm)", scaledX.toFixed(2)], ["Dimensoes Y (mm)", scaledY.toFixed(2)], ["Dimensoes Z (mm)", scaledZ.toFixed(2)], ["Volume Final (mL/cm3)", finalVol.toFixed(2)], ["Peso Estimado (g)", weight.toFixed(2)], ["Custo Estimado (R$)", cost.toFixed(2)], ["Tempo Estimado", timeStr]];
-    if (estimatorType === "SLA") {
-      csvRows.push(["Oco (Hollowed)", isHollow ? "Sim" : "Nao"], ["Altura de Camada (mm)", layerHeight], ["Tempo de Exposicao (s)", exposureTime]);
-    } else {
-      csvRows.push(["Infill (%)", fdmInfill], ["Altura de Camada FDM (mm)", fdmLayerHeight], ["Velocidade de Impressao (mm/s)", fdmPrintSpeed], ["Numero de Paredes", fdmWallCount]);
-    }
-    const csvContent = csvRows.map(row => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `estimativa_${fileName.replace(/\.[^/.]+$/, "")}.csv`;
-    link.click();
-  };
-
-  const [isEstimating, setIsEstimating] = useState(false);
-  const [estimateProgress, setEstimateProgress] = useState(100);
-
-  useEffect(() => {
-    if (!modelGeometry) return;
-    setIsEstimating(true); setEstimateProgress(0);
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += Math.floor(Math.random() * 20) + 10;
-      if (currentProgress >= 100) { currentProgress = 100; clearInterval(interval); setTimeout(() => setIsEstimating(false), 120); }
-      setEstimateProgress(currentProgress);
-    }, 40);
-    return () => clearInterval(interval);
-  }, [printScale, estimatorType, isHollow, layerHeight, exposureTime, resinCostPerKg, fdmInfill, fdmLayerHeight, fdmPrintSpeed, fdmFilamentCostPerKg, fdmWallCount, materialDensity, modelDimensions.volume]);
+   const modelImport = useViewerModelImport({
+     importUnit,
+     importScale,
+     onResetDomain: () => { setVertexGroups(new Uint8Array(0)); setHistory([]); setGroupJointTypes({}); setManualJoints([]); setPlacementMode(false); },
+   });
+   const { modelGeometry, setModelGeometry, fileName, modelDimensions, stats, setStats, isProcessing, setIsProcessing, processingMessage, setProcessingMessage, loadDemoModel, handleFileUpload } = modelImport;
+   const estimator = usePrintEstimator(fileName, modelDimensions, Boolean(modelGeometry));
+   const {
+     MATERIALS, estimatorType, setEstimatorType, selectedMaterialId, setSelectedMaterialId, materialDensity, setMaterialDensity,
+     printScale, setPrintScale, miniatureScaleMode, setMiniatureScaleMode, isHollow, setIsHollow, layerHeight, setLayerHeight,
+     exposureTime, setExposureTime, resinCostPerKg, setResinCostPerKg, fdmInfill, setFdmInfill, fdmLayerHeight, setFdmLayerHeight,
+     fdmPrintSpeed, setFdmPrintSpeed, fdmFilamentCostPerKg, setFdmFilamentCostPerKg, fdmWallCount, setFdmWallCount,
+     isEstimating, estimateProgress, originalX, originalY, originalZ, scaledX, scaledY, scaledZ, handleDownloadCSV, applyMiniatureScale, getSlicingStatus,
+   } = estimator;
 
   const [settingsNotification, setSettingsNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const settingsInputRef = useRef<HTMLInputElement>(null);
@@ -619,70 +473,25 @@ export default function Viewer3D() {
     setTimeout(() => setSettingsNotification(null), 3000);
   };
 
-  const [watermarkEnabled, setWatermarkEnabled] = useState(false);
-  const [watermarkText, setWatermarkText] = useState("VERTICE");
-  const [watermarkPlacement, setWatermarkPlacement] = useState<"base" | "top" | "front" | "back" | "left" | "right">("base");
-  const [watermarkSize, setWatermarkSize] = useState(0.25);
-  const [watermarkDepth, setWatermarkDepth] = useState(0.04);
-  const [watermarkColor, setWatermarkColor] = useState("#00E5FF");
-  const [watermarkOffsetX, setWatermarkOffsetX] = useState(0);
-  const [watermarkOffsetY, setWatermarkOffsetY] = useState(0);
-  const [watermarkOffsetZ, setWatermarkOffsetZ] = useState(0);
-  const [watermarkRotationX, setWatermarkRotationX] = useState(0);
-  const [watermarkRotationY, setWatermarkRotationY] = useState(0);
-  const [watermarkRotationZ, setWatermarkRotationZ] = useState(0);
-  const [watermarkStyle, setWatermarkStyle] = useState<"raised" | "recessed" | "overlay">("raised");
+   const {
+     watermarkEnabled, watermarkText, watermarkPlacement, watermarkSize, watermarkDepth, watermarkColor,
+     watermarkOffsetX, watermarkOffsetY, watermarkOffsetZ, watermarkRotationX, watermarkRotationY,
+     watermarkRotationZ, watermarkStyle, watermarkParams, setWatermarkEnabled, setWatermarkText,
+     setWatermarkPlacement, setWatermarkSize, setWatermarkColor, setWatermarkOffsetX, setWatermarkOffsetY,
+     setWatermarkOffsetZ, setWatermarkRotationX, setWatermarkRotationY, setWatermarkRotationZ, setWatermarkStyle,
+   } = useWatermark(modelDimensions);
 
-  const watermarkParams = useMemo(() => {
-    if (!modelDimensions.x || !modelDimensions.y || !modelDimensions.z) return { position: [0, 0, 0] as [number, number, number], rotation: [0, 0, 0] as [number, number, number] };
-    let px = 0, py = 0, pz = 0, rx = 0, ry = 0, rz = 0;
-    const hx = modelDimensions.x / 2, hy = modelDimensions.y / 2, hz = modelDimensions.z / 2;
-    switch (watermarkPlacement) {
-      case "base": py = -hy; rx = Math.PI / 2; break;
-      case "top": py = hy; rx = -Math.PI / 2; break;
-      case "front": pz = hz; break;
-      case "back": pz = -hz; ry = Math.PI; break;
-      case "left": px = -hx; ry = -Math.PI / 2; break;
-      case "right": px = hx; ry = Math.PI / 2; break;
-    }
-    px += watermarkOffsetX; py += watermarkOffsetY; pz += watermarkOffsetZ;
-    rx += (watermarkRotationX * Math.PI) / 180; ry += (watermarkRotationY * Math.PI) / 180; rz += (watermarkRotationZ * Math.PI) / 180;
-    return { position: [px, py, pz] as [number, number, number], rotation: [rx, ry, rz] as [number, number, number] };
-  }, [modelDimensions, watermarkPlacement, watermarkOffsetX, watermarkOffsetY, watermarkOffsetZ, watermarkRotationX, watermarkRotationY, watermarkRotationZ]);
+   const effectiveIsolateGroupId = autoIsolateActive ? activeGroupId : isolateGroupId;
+   const fileInputRef = useRef<HTMLInputElement>(null);
+   const { controlsRef, zoomIn, zoomOut, resetCamera } = useViewerCamera();
 
-  const effectiveIsolateGroupId = autoIsolateActive ? activeGroupId : isolateGroupId;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const controlsRef = useRef<any>(null);
-
-  const pushStateToHistory = (customState?: Uint8Array) => {
-    const stateToPush = customState || vertexGroups;
-    if (!stateToPush || stateToPush.length === 0) return;
-    setHistory(prev => { const next = [...prev, new Uint8Array(stateToPush)]; if (next.length > 20) next.shift(); return next; });
-  };
-
-  const handleUndo = () => {
-    if (history.length === 0) return;
-    const previousState = history[history.length - 1];
-    setVertexGroups(previousState);
-    setHistory(prev => prev.slice(0, -1));
-    if (modelGeometry && previousState) {
-      const colorAttr = modelGeometry.attributes.color;
-      if (colorAttr) {
-        const isIsolated = effectiveIsolateGroupId !== null;
-        const ghostColor = new THREE.Color("#1c1c1c");
-        for (let i = 0; i < previousState.length; i++) {
-          const color = (isIsolated && previousState[i] !== effectiveIsolateGroupId) ? ghostColor : new THREE.Color(getGroupColor(previousState[i]));
-          colorAttr.setXYZ(i, color.r, color.g, color.b);
-        }
-        colorAttr.needsUpdate = true;
-      }
-    }
-  };
-
-  const adjacencyList = useMemo(() => {
-    if (!modelGeometry) return null;
-    return buildAdjacencyList(modelGeometry);
-  }, [modelGeometry]);
+    const adjacencyList = useViewerTopology(modelGeometry);
+    const { pushStateToHistory, handleUndo, resetPainting, fillRemainingWithActiveGroup, fillAllWithActiveGroup, expandConnectedPaint } = useViewerPainting({ geometry: modelGeometry, vertexGroups, setVertexGroups, history, setHistory, activeGroupId, effectiveIsolateGroupId, groupColor: (id) => getGroupColor(id), adjacencyList });
+    const { segmentLegs, setSegmentLegs, segmentArms, setSegmentArms, segmentTorso, setSegmentTorso, autoSegmentAnatomy, autoSegmentShells, autoSegmentSmart } = useViewerSegmentation({ geometry: modelGeometry, adjacencyList, groups, setGroups, setVertexGroups, pushHistory: () => pushStateToHistory(), onProcessing: (message) => { setIsProcessing(Boolean(message)); if (message) setProcessingMessage(message); } });
+    const extractedJoints = useViewerJoints({ modelGeometry, vertexGroups, adjacencyList, groups, jointType, jointSizes });
+    const extractedPreview = useViewerSeparatedPreview({ previewSeparated, modelGeometry, vertexGroups, groups, jointType, jointSizes, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, getGroupName: extractedJoints.getGroupName, setPlacementMode: extractedJoints.setPlacementMode });
+    const extractedExports = useViewerExports({ modelGeometry, setModelGeometry, vertexGroups, setVertexGroups, groups, fileName, jointType, jointSizes, capSelection, setIsProcessing, setProcessingMessage, setStats, setHistory, setGroupJointTypes: extractedJoints.setGroupJointTypes, setManualJoints: extractedJoints.setManualJoints, setPlacementMode: extractedJoints.setPlacementMode, getGroupName: extractedJoints.getGroupName, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, jointConfigurationWarning: null });
+    void extractedJoints; void extractedPreview; void extractedExports;
 
   // ATUALIZADO: groupJointRoles agora respeita marcação manual e usa adjacencyList
   const groupJointRoles = useMemo(() => {
@@ -1127,71 +936,6 @@ export default function Viewer3D() {
 
   useEffect(() => { return () => { subGeometries.forEach(sub => sub.geometry.dispose()); }; }, [subGeometries]);
 
-  const handleZoomIn = () => {
-    if (controlsRef.current) {
-      const camera = controlsRef.current.object;
-      if (camera.isPerspectiveCamera) camera.position.multiplyScalar(0.85);
-      else if (camera.isOrthographicCamera) { camera.zoom *= 1.15; camera.updateProjectionMatrix(); }
-      controlsRef.current.update();
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (controlsRef.current) {
-      const camera = controlsRef.current.object;
-      if (camera.isPerspectiveCamera) camera.position.multiplyScalar(1.15);
-      else if (camera.isOrthographicCamera) { camera.zoom *= 0.85; camera.updateProjectionMatrix(); }
-      controlsRef.current.update();
-    }
-  };
-
-  const handleResetCamera = () => { if (controlsRef.current) controlsRef.current.reset(); };
-
-  const setupGeometry = (geometry: THREE.BufferGeometry) => {
-    setIsProcessing(true); setProcessingMessage("Preparando geometria...");
-    setTimeout(() => {
-      try {
-        let weldedGeom = geometry;
-        try { weldedGeom = BufferGeometryUtils.mergeVertices(geometry); } catch (e) { console.warn("Failed to merge vertices:", e); }
-        const unitFactor = importUnit === "inch" ? 25.4 : 1.0;
-        const totalFactor = unitFactor * importScale;
-        if (totalFactor !== 1.0) weldedGeom.scale(totalFactor, totalFactor, totalFactor);
-        weldedGeom.center(); weldedGeom.computeVertexNormals(); weldedGeom.computeBoundingBox();
-        const bbox = weldedGeom.boundingBox;
-        let sizeX = 0, sizeY = 0, sizeZ = 0;
-        if (bbox) { const size = new THREE.Vector3(); bbox.getSize(size); sizeX = size.x; sizeY = size.y; sizeZ = size.z; }
-        const volume = calculateMeshVolume(weldedGeom);
-        setModelDimensions({ x: sizeX, y: sizeY, z: sizeZ, volume });
-        const count = weldedGeom.attributes.position.count;
-        setVertexGroups(new Uint8Array(count)); setHistory([]); setGroupJointTypes({}); setManualJoints([]); setPlacementMode(false);
-        setModelGeometry(weldedGeom);
-        setStats({ faces: weldedGeom.index ? Math.floor(weldedGeom.index.count / 3) : Math.floor(count / 3), vertices: count });
-      } finally { setIsProcessing(false); }
-    }, 100);
-  };
-
-  const loadDemoModel = () => { const geometry = new THREE.TorusKnotGeometry(1.5, 0.45, 120, 24); setupGeometry(geometry); setFileName("DEMO_TORUS_KNOT.STL"); };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setIsProcessing(true); setProcessingMessage(`Lendo arquivo: ${file.name}...`);
-    const name = file.name.toUpperCase(); setFileName(name);
-    if (name.endsWith(".STL")) {
-      const reader = new FileReader();
-      reader.onload = (e) => { try { setupGeometry(new STLLoader().parse(e.target?.result as ArrayBuffer)); } catch (err) { console.error(err); alert("Failed to parse STL."); setIsProcessing(false); } };
-      reader.readAsArrayBuffer(file);
-    } else if (name.endsWith(".OBJ")) {
-      const reader = new FileReader();
-      reader.onload = (e) => { try { const obj = new OBJLoader().parse(e.target?.result as string); const geometries: THREE.BufferGeometry[] = []; obj.traverse(child => { if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).geometry) geometries.push((child as THREE.Mesh).geometry.clone()); }); if (geometries.length === 0) { alert("No meshes found."); setIsProcessing(false); return; } setupGeometry(geometries.length === 1 ? geometries[0] : mergeGeometriesFallback(geometries)); } catch { alert("Failed to parse OBJ."); setIsProcessing(false); } };
-      reader.readAsText(file);
-    } else if (name.endsWith(".FBX")) {
-      const reader = new FileReader();
-      reader.onload = (e) => { try { const fbx = new FBXLoader().parse(e.target?.result as ArrayBuffer, ""); const geometries: THREE.BufferGeometry[] = []; fbx.traverse(child => { if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).geometry) geometries.push((child as THREE.Mesh).geometry.clone()); }); if (geometries.length === 0) { alert("No meshes found."); setIsProcessing(false); return; } setupGeometry(geometries.length === 1 ? geometries[0] : mergeGeometriesFallback(geometries)); } catch { alert("Failed to parse FBX."); setIsProcessing(false); } };
-      reader.readAsArrayBuffer(file);
-    } else { alert("Unsupported format."); setIsProcessing(false); }
-  };
-
   const handleGeometryUpdated = () => {};
 
   const capHollowVase = async () => {
@@ -1268,149 +1012,6 @@ export default function Viewer3D() {
         worker.onmessage = (e) => { const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([e.data.buffer], { type: "application/octet-stream" })); link.download = `vaso_fechado_${capSelection}.stl`; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000); setIsCapped(false); setIsDownloadingCapped(false); setIsProcessing(false); worker.terminate(); };
         worker.onerror = () => { alert("Erro ao exportar."); setIsDownloadingCapped(false); setIsProcessing(false); worker.terminate(); };
       } catch { alert("Erro."); setIsDownloadingCapped(false); setIsProcessing(false); }
-    }, 100);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); handleUndo(); } };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleUndo]);
-
-  const resetPainting = () => {
-    if (!modelGeometry) return;
-    pushStateToHistory();
-    const count = modelGeometry.attributes.position.count;
-    setVertexGroups(new Uint8Array(count));
-    const colorAttr = modelGeometry.attributes.color;
-    if (colorAttr) { const baseColor = new THREE.Color(getGroupColor(0)); for (let i = 0; i < count; i++) colorAttr.setXYZ(i, baseColor.r, baseColor.g, baseColor.b); colorAttr.needsUpdate = true; }
-  };
-
-  const fillRemainingWithActiveGroup = () => {
-    if (!modelGeometry) return;
-    pushStateToHistory();
-    const count = modelGeometry.attributes.position.count;
-    const newGroups = new Uint8Array(vertexGroups);
-    const targetColor = new THREE.Color(getGroupColor(activeGroupId));
-    const colorAttr = modelGeometry.attributes.color;
-    let updated = false;
-    for (let i = 0; i < count; i++) {
-      if (newGroups[i] === 0) { newGroups[i] = activeGroupId; if (colorAttr) colorAttr.setXYZ(i, targetColor.r, targetColor.g, targetColor.b); updated = true; }
-    }
-    if (updated) { if (colorAttr) colorAttr.needsUpdate = true; setVertexGroups(newGroups); }
-  };
-
-  const fillAllWithActiveGroup = () => {
-    if (!modelGeometry) return;
-    pushStateToHistory();
-    const count = modelGeometry.attributes.position.count;
-    const newGroups = new Uint8Array(count); newGroups.fill(activeGroupId);
-    const targetColor = new THREE.Color(getGroupColor(activeGroupId));
-    const colorAttr = modelGeometry.attributes.color;
-    if (colorAttr) { for (let i = 0; i < count; i++) colorAttr.setXYZ(i, targetColor.r, targetColor.g, targetColor.b); colorAttr.needsUpdate = true; }
-    setVertexGroups(newGroups);
-  };
-
-  const expandConnectedPaint = () => {
-    if (!modelGeometry || !adjacencyList) return;
-    const count = modelGeometry.attributes.position.count;
-    const initialSeeds: number[] = [];
-    for (let i = 0; i < count; i++) if (vertexGroups[i] === activeGroupId) initialSeeds.push(i);
-    if (initialSeeds.length === 0) { alert("Pinte primeiro uma parte!"); return; }
-    pushStateToHistory();
-    const newGroups = new Uint8Array(vertexGroups);
-    const targetColor = new THREE.Color(getGroupColor(activeGroupId));
-    const colorAttr = modelGeometry.attributes.color;
-    const queue = [...initialSeeds];
-    const visited = new Uint8Array(count);
-    for (const s of initialSeeds) visited[s] = 1;
-    let expanded = 0;
-    while (queue.length > 0) {
-      const u = queue.shift()!;
-      for (const v of adjacencyList[u] || []) { if (visited[v] === 0 && vertexGroups[v] === 0) { visited[v] = 1; newGroups[v] = activeGroupId; if (colorAttr) colorAttr.setXYZ(v, targetColor.r, targetColor.g, targetColor.b); queue.push(v); expanded++; } }
-    }
-    if (expanded > 0) { if (colorAttr) colorAttr.needsUpdate = true; setVertexGroups(newGroups); }
-    else alert("Nenhuma parte conectada não pintada!");
-  };
-
-  const autoSegmentAnatomy = () => {
-    if (!modelGeometry) return;
-    setIsProcessing(true); setProcessingMessage("Segmentando...");
-    setTimeout(() => {
-      try {
-        pushStateToHistory();
-        const count = modelGeometry.attributes.position.count;
-        const pos = modelGeometry.attributes.position;
-        const colorAttr = modelGeometry.attributes.color;
-        const newGroups = new Uint8Array(count);
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        for (let i = 0; i < count; i++) { const x = pos.getX(i), y = pos.getY(i); if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
-        const height = maxY - minY, width = maxX - minX;
-        for (let i = 0; i < count; i++) { const x = pos.getX(i), y = pos.getY(i); if (y < minY + height * 0.36) newGroups[i] = segmentLegs ? 1 : 0; else if (x < minX + width * 0.33) newGroups[i] = segmentArms ? 3 : 0; else if (x > maxX - width * 0.33) newGroups[i] = segmentArms ? 4 : 0; else newGroups[i] = segmentTorso ? 2 : 0; }
-        if (colorAttr) { for (let i = 0; i < count; i++) { const c = new THREE.Color(getGroupColor(newGroups[i])); colorAttr.setXYZ(i, c.r, c.g, c.b); } colorAttr.needsUpdate = true; }
-        setVertexGroups(newGroups); setManualJoints([]); setPlacementMode(false);
-      } finally { setIsProcessing(false); }
-    }, 100);
-  };
-
-  const autoSegmentShells = () => {
-    if (!modelGeometry || !adjacencyList) return;
-    setIsProcessing(true); setProcessingMessage("Detectando shells...");
-    setTimeout(() => {
-      try {
-        pushStateToHistory();
-        const count = modelGeometry.attributes.position.count;
-        const newGroups = new Uint8Array(count); const visited = new Uint8Array(count);
-        let currentGroup = 1, shellCount = 0;
-        for (let i = 0; i < count; i++) {
-          if (visited[i] === 0) {
-            shellCount++;
-            const queue = [i]; visited[i] = 1; const component: number[] = [];
-            while (queue.length > 0) { const u = queue.shift()!; component.push(u); if (component.length > 500000) break; for (const v of adjacencyList[u] || []) { if (visited[v] === 0) { visited[v] = 1; queue.push(v); } } }
-            for (const idx of component) newGroups[idx] = currentGroup;
-            currentGroup = currentGroup < 4 ? currentGroup + 1 : 1;
-          }
-        }
-        if (shellCount <= 1) alert("Apenas uma peça detectada.");
-        setGroups([{ id: 0, name: "Base Principal (Cinza)", color: "#333333", border: "border-zinc-700" }, { id: 1, name: "Grupo 1", color: "#00E5FF", border: "border-[#00E5FF]" }, { id: 2, name: "Grupo 2", color: "#FF1744", border: "border-[#FF1744]" }, { id: 3, name: "Grupo 3", color: "#00FF41", border: "border-[#00FF41]" }, { id: 4, name: "Grupo 4", color: "#D500F9", border: "border-[#D500F9]" }]);
-        const colorAttr = modelGeometry.attributes.color;
-        if (colorAttr) { for (let i = 0; i < count; i++) { const c = new THREE.Color(getGroupColor(newGroups[i])); colorAttr.setXYZ(i, c.r, c.g, c.b); } colorAttr.needsUpdate = true; }
-        setVertexGroups(newGroups); setGroupJointTypes({}); setManualJoints([]);
-      } finally { setIsProcessing(false); }
-    }, 100);
-  };
-
-  const autoSegmentSmart = () => {
-    if (!modelGeometry || !adjacencyList) return;
-    setIsProcessing(true); setProcessingMessage("Analisando...");
-    setTimeout(() => {
-      try {
-        pushStateToHistory();
-        const count = modelGeometry.attributes.position.count;
-        const pos = modelGeometry.attributes.position;
-        const newGroups = new Uint8Array(count); const visited = new Uint8Array(count);
-        const shells: { vertices: number[]; center: THREE.Vector3; count: number }[] = [];
-        for (let i = 0; i < count; i++) {
-          if (visited[i] === 0) {
-            const queue = [i]; visited[i] = 1; const component: number[] = []; const sum = new THREE.Vector3();
-            while (queue.length > 0) { const u = queue.shift()!; component.push(u); sum.x += pos.getX(u); sum.y += pos.getY(u); sum.z += pos.getZ(u); if (component.length > 200000) break; for (const v of adjacencyList[u] || []) { if (visited[v] === 0) { visited[v] = 1; queue.push(v); } } }
-            shells.push({ vertices: component, center: sum.divideScalar(component.length), count: component.length });
-          }
-        }
-        shells.sort((a, b) => b.count - a.count);
-        const minY = modelGeometry.boundingBox!.min.y, maxY = modelGeometry.boundingBox!.max.y, height = maxY - minY;
-        shells.forEach((shell, index) => {
-          let gId = 4;
-          if (index === 0) gId = 1;
-          else if (shell.count > count * 0.05) { if (shell.center.y < minY + height * 0.3) gId = 2; else if (shell.center.y > maxY - height * 0.3) gId = 3; else gId = 1; }
-          else { gId = shell.center.y < minY + height * 0.2 ? 2 : 4; }
-          for (const vIdx of shell.vertices) newGroups[vIdx] = gId;
-        });
-        setGroups([{ id: 0, name: "Base Principal (Cinza)", color: "#333333", border: "border-zinc-700" }, { id: 1, name: "Estrutura", color: "#00E5FF", border: "border-[#00E5FF]" }, { id: 2, name: "Base", color: "#FF1744", border: "border-[#FF1744]" }, { id: 3, name: "Topo", color: "#00FF41", border: "border-[#00FF41]" }, { id: 4, name: "Detalhes", color: "#D500F9", border: "border-[#D500F9]" }]);
-        const colorAttr = modelGeometry.attributes.color;
-        if (colorAttr) { for (let i = 0; i < count; i++) { const c = new THREE.Color(getGroupColor(newGroups[i])); colorAttr.setXYZ(i, c.r, c.g, c.b); } colorAttr.needsUpdate = true; }
-        setVertexGroups(newGroups); setGroupJointTypes({}); setManualJoints([]);
-      } finally { setIsProcessing(false); }
     }, 100);
   };
 
@@ -1510,25 +1111,6 @@ export default function Viewer3D() {
       const count = vertexGroups.filter(vg => vg === group.id).length;
       if (count > 0 || group.id === 0) await exportSeparatedPart(group.id);
     }
-  };
-
-  const getSlicingStatus = (progress: number) => {
-    if (progress < 25) return "Analisando malha 3D...";
-    if (progress < 55) return "Calculando volumes...";
-    if (progress < 80) return "Estimando tempo...";
-    return "Finalizando...";
-  };
-
-  const originalX = modelDimensions.x * (modelDimensions.x < 15.0 ? 10.0 : 1.0);
-  const originalY = modelDimensions.y * (modelDimensions.y < 15.0 ? 10.0 : 1.0);
-  const originalZ = modelDimensions.z * (modelDimensions.z < 15.0 ? 10.0 : 1.0);
-  const scaledX = originalX * (printScale / 100.0);
-  const scaledY = originalY * (printScale / 100.0);
-  const scaledZ = originalZ * (printScale / 100.0);
-
-  const applyMiniatureScale = (denom: number, mode = miniatureScaleMode) => {
-    if (mode === "human") { if (originalZ > 0) { const targetZ = 1800.0 / denom; setPrintScale(Math.max(0.1, Math.min(2000, Math.round((targetZ / originalZ) * 1000) / 10))); } }
-    else { setPrintScale(Math.max(0.1, Math.min(2000, Math.round((100.0 / denom) * 10) / 10))); }
   };
 
   const selectedManualJoint = manualJoints.find(j => j.id === selectedManualJointId) ?? null;
@@ -1661,9 +1243,9 @@ export default function Viewer3D() {
                   {paintMode && !placementMode && <div className="text-[9px] text-[#00FF41] mt-1 border-t border-zinc-800/60 pt-1.5 normal-case italic">* Tip: Paint & navigate the camera seamlessly!</div>}
                 </div>
                 <div className="absolute top-6 right-6 flex flex-col gap-2 z-10">
-                  <button title="Zoom In" onClick={handleZoomIn} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><Plus className="w-5 h-5" /></button>
-                  <button title="Zoom Out" onClick={handleZoomOut} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><span className="text-xl font-bold leading-none select-none">-</span></button>
-                  <button title="Reset Camera" onClick={handleResetCamera} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><RotateCcw className="w-4 h-4" /></button>
+                  <button title="Zoom In" onClick={zoomIn} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><Plus className="w-5 h-5" /></button>
+                  <button title="Zoom Out" onClick={zoomOut} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><span className="text-xl font-bold leading-none select-none">-</span></button>
+                  <button title="Reset Camera" onClick={resetCamera} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><RotateCcw className="w-4 h-4" /></button>
                 </div>
               </>
             ) : (

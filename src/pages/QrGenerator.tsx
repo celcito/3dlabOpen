@@ -1,11 +1,7 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Text, Center } from "@react-three/drei";
 import * as THREE from "three";
-import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { toastExportError } from "@/lib/toast";
-import QRCode from "qrcode";
+import { useQrGenerator, type QrConfig } from "../hooks/useQrGenerator";
 import { 
   QrCode, Download, Settings, RefreshCcw, 
   Trash2, Sliders, Type, Info, Layers, 
@@ -13,167 +9,10 @@ import {
   Play, Save, FileDown, Undo, Sparkles
 } from "lucide-react";
 
-interface QrConfig {
-  text: string;
-  size: number; // Size of the QR code modules (mm)
-  thickness: number; // Thickness of the base plate (mm)
-  qrHeight: number; // Height of the QR code modules (mm)
-  padding: number; // Padding around the QR code (mm)
-  borderRadius: number; // Border radius of the plate (mm)
-  baseColor: string;
-  qrColor: string;
-  includeText: boolean;
-  label: string;
-  labelSize: number;
-  labelDepth: number;
-}
-
 export default function QrGenerator() {
-  const [config, setConfig] = useState<QrConfig>({
-    text: "https://verticestudio.com.br",
-    size: 2,
-    thickness: 4,
-    qrHeight: 2,
-    padding: 10,
-    borderRadius: 5,
-    baseColor: "#ffffff",
-    qrColor: "#FFFFFF",
-    includeText: true,
-    label: "SCAN ME",
-    labelSize: 6,
-    labelDepth: 1.5
-  });
-
-  const [qrMatrix, setQrMatrix] = useState<number[][]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-
-  // Generate QR Matrix
-  useEffect(() => {
-    if (!config.text) {
-      setQrMatrix([]);
-      return;
-    }
-
-    const generate = async () => {
-      try {
-        const matrix = await QRCode.create(config.text, { errorCorrectionLevel: 'M' });
-        const modules = matrix.modules;
-        const size = modules.size;
-        const result: number[][] = [];
-        for (let y = 0; y < size; y++) {
-          const row: number[] = [];
-          for (let x = 0; x < size; x++) {
-            row.push(modules.get(x, y) ? 1 : 0);
-          }
-          result.push(row);
-        }
-        setQrMatrix(result);
-      } catch (err) {
-        console.error("QR Generation failed:", err);
-      }
-    };
-
-    generate();
-  }, [config.text]);
-
-  const plateDimensions = useMemo(() => {
-    if (qrMatrix.length === 0) return { width: 0, height: 0 };
-    const qrDim = qrMatrix.length * config.size;
-    const totalDim = qrDim + (config.padding * 2);
-    const height = totalDim + (config.includeText ? config.labelSize * 2 : 0);
-    return { width: totalDim, height: height };
-  }, [qrMatrix, config.size, config.padding, config.includeText, config.labelSize]);
-
-  const handleExportSTL = () => {
-    if (qrMatrix.length === 0) return;
-
-    try {
-      const exporter = new STLExporter();
-      const group = new THREE.Group();
-
-      const { width, height } = plateDimensions;
-      const wUnits = width / 10;
-      const hUnits = height / 10;
-      const rUnits = config.borderRadius / 10;
-      const tUnits = config.thickness / 10;
-      const qhUnits = config.qrHeight / 10;
-      const moduleSize = config.size / 10;
-
-      // 1. Create Base Plate
-      const shape = new THREE.Shape();
-      shape.moveTo(-wUnits / 2 + rUnits, -hUnits / 2);
-      shape.lineTo(wUnits / 2 - rUnits, -hUnits / 2);
-      shape.quadraticCurveTo(wUnits / 2, -hUnits / 2, wUnits / 2, -hUnits / 2 + rUnits);
-      shape.lineTo(wUnits / 2, hUnits / 2 - rUnits);
-      shape.quadraticCurveTo(wUnits / 2, hUnits / 2, wUnits / 2 - rUnits, hUnits / 2);
-      shape.lineTo(-wUnits / 2 + rUnits, hUnits / 2);
-      shape.quadraticCurveTo(-wUnits / 2, hUnits / 2, -wUnits / 2, hUnits / 2 - rUnits);
-      shape.lineTo(-wUnits / 2, -hUnits / 2 + rUnits);
-      shape.quadraticCurveTo(-wUnits / 2, -hUnits / 2, -wUnits / 2 + rUnits, -hUnits / 2);
-
-      const plateGeom = new THREE.ExtrudeGeometry(shape, {
-        steps: 1,
-        depth: tUnits,
-        bevelEnabled: true,
-        bevelThickness: 0.1,
-        bevelSize: 0.1,
-        bevelSegments: 3
-      });
-      const plateMesh = new THREE.Mesh(plateGeom);
-      group.add(plateMesh);
-
-      // 2. Create QR Modules
-      const qrGroup = new THREE.Group();
-      const qrSize = qrMatrix.length;
-      const qrOffset = -(qrSize * moduleSize) / 2;
-      const yShift = config.includeText ? config.labelSize / 10 : 0;
-
-      // We can optimize by merging geometries, but for STL export a group of boxes is fine too.
-      // Better to merge for large QR codes.
-      const geometries: THREE.BoxGeometry[] = [];
-      for (let y = 0; y < qrSize; y++) {
-        for (let x = 0; x < qrSize; x++) {
-          if (qrMatrix[y][x] === 1) {
-            const box = new THREE.BoxGeometry(moduleSize, moduleSize, qhUnits);
-            box.translate(
-              qrOffset + (x * moduleSize) + (moduleSize / 2),
-              - (qrOffset + (y * moduleSize) + (moduleSize / 2)) + yShift,
-              tUnits + (qhUnits / 2)
-            );
-            geometries.push(box);
-          }
-        }
-      }
-      
-      if (geometries.length > 0) {
-        // Simple merge
-        const mergedGeom = BufferGeometryUtils.mergeGeometries(geometries);
-        const qrMesh = new THREE.Mesh(mergedGeom);
-        group.add(qrMesh);
-      }
-
-      // Note: Text export would require TextGeometry which is not available in this simplified exporter helper without font loading.
-      // For now, let's just export the QR and Plate.
-
-      const result = exporter.parse(group, { binary: true });
-      const blob = new Blob([result], { type: "application/octet-stream" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `qrcode-plate-${Date.now()}.stl`;
-      link.click();
-      
-      showNotification("STL exportado com sucesso!");
-    } catch (err) {
-      console.error("Export failed:", err);
-      toastExportError();
-    }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
-  };
+  const generator = useQrGenerator();
+  const { config, setConfig, qrMatrix, plateDimensions, previewGeometry, successMsg } = generator;
+  const exportSTL = generator.handleExportSTL;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
@@ -324,7 +163,7 @@ export default function QrGenerator() {
 
           <div className="pt-6">
             <button
-              onClick={handleExportSTL}
+               onClick={exportSTL}
               disabled={qrMatrix.length === 0}
               className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed group"
             >
@@ -358,7 +197,7 @@ export default function QrGenerator() {
               position={[0, -0.1, 0]}
             />
 
-            <Scene config={config} qrMatrix={qrMatrix} plateDimensions={plateDimensions} />
+             <Scene config={config} qrMatrix={qrMatrix} plateDimensions={plateDimensions} previewGeometry={previewGeometry} />
           </Canvas>
         </div>
 
@@ -399,36 +238,10 @@ export default function QrGenerator() {
   );
 }
 
-function Scene({ config, qrMatrix, plateDimensions }: { config: QrConfig; qrMatrix: number[][]; plateDimensions: { width: number; height: number } }) {
+function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: { config: QrConfig; qrMatrix: number[][]; plateDimensions: { width: number; height: number }; previewGeometry: { shape: THREE.Shape; extrudeSettings: THREE.ExtrudeGeometryOptions } }) {
   const { width, height } = plateDimensions;
   
-  const plateShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const w = width / 10;
-    const h = height / 10;
-    const r = config.borderRadius / 10;
-    
-    shape.moveTo(-w / 2 + r, -h / 2);
-    shape.lineTo(w / 2 - r, -h / 2);
-    shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-    shape.lineTo(w / 2, h / 2 - r);
-    shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-    shape.lineTo(-w / 2 + r, h / 2);
-    shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-    shape.lineTo(-w / 2, -h / 2 + r);
-    shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-    
-    return shape;
-  }, [width, height, config.borderRadius]);
-
-  const extrudeSettings = useMemo(() => ({
-    steps: 1,
-    depth: config.thickness / 10,
-    bevelEnabled: true,
-    bevelThickness: 0.1,
-    bevelSize: 0.1,
-    bevelSegments: 3
-  }), [config.thickness]);
+  const { shape: plateShape, extrudeSettings } = previewGeometry;
 
   const moduleSize = config.size / 10;
   const qrSize = qrMatrix.length;

@@ -1,9 +1,8 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center, PerspectiveCamera, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { toastExportError } from "@/lib/toast";
+import { useFace3DGenerator, useFaceMeshGeometry, type FaceConfig } from "../hooks/useFace3DGenerator";
 import { 
   UserCircle2, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -12,138 +11,10 @@ import {
   Image as ImageIcon, Camera, RefreshCw
 } from "lucide-react";
 
-interface FaceConfig {
-  intensity: number;
-  baseThickness: number;
-  size: number;
-  resolution: number;
-  invert: boolean;
-  contrast: number;
-  baseColor: string;
-}
-
 export default function Face3DGenerator() {
-  const [config, setConfig] = useState<FaceConfig>({
-    intensity: 8,
-    baseThickness: 3,
-    size: 100,
-    resolution: 128,
-    invert: false,
-    contrast: 1.2,
-    baseColor: "#ffffff"
-  });
-
-  const [image, setImage] = useState<string | null>(null);
-  const [heightData, setHeightData] = useState<Float32Array | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (f) => {
-      setImage(f.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  useEffect(() => {
-    if (!image) return;
-    processImage();
-  }, [image, config.resolution, config.contrast, config.invert]);
-
-  const processImage = () => {
-    setIsProcessing(true);
-    const img = new Image();
-    img.src = image!;
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const res = config.resolution;
-      canvas.width = res;
-      canvas.height = res;
-
-      // Draw image to fit canvas
-      ctx.drawImage(img, 0, 0, res, res);
-      const imageData = ctx.getImageData(0, 0, res, res);
-      const data = imageData.data;
-      const heights = new Float32Array(res * res);
-
-      for (let i = 0; i < data.length; i += 4) {
-        // Simple grayscale: (R+G+B)/3
-        let avg = (data[i] + data[i + 1] + data[i + 2]) / 3 / 255;
-        
-        // Apply contrast
-        avg = (avg - 0.5) * config.contrast + 0.5;
-        avg = Math.max(0, Math.min(1, avg));
-
-        if (config.invert) avg = 1 - avg;
-        
-        heights[i / 4] = avg;
-      }
-
-      setHeightData(heights);
-      setIsProcessing(false);
-    };
-  };
-
-  const handleExportSTL = () => {
-    if (!heightData) return;
-    
-    try {
-      const exporter = new STLExporter();
-      const res = config.resolution;
-      const size = config.size / 10;
-      const intensity = config.intensity / 10;
-      const base = config.baseThickness / 10;
-
-      // Create relief geometry
-      const reliefGeom = new THREE.PlaneGeometry(size, size, res - 1, res - 1);
-      const positions = reliefGeom.attributes.position.array as Float32Array;
-
-      for (let i = 0; i < res * res; i++) {
-        positions[i * 3 + 2] = heightData[i] * intensity;
-      }
-      reliefGeom.computeVertexNormals();
-
-      // Create base geometry
-      const baseGeom = new THREE.BoxGeometry(size, size, base);
-      baseGeom.translate(0, 0, -base / 2);
-
-      // Group them for export
-      const group = new THREE.Group();
-      const reliefMesh = new THREE.Mesh(reliefGeom);
-      const baseMesh = new THREE.Mesh(baseGeom);
-      
-      group.add(reliefMesh);
-      group.add(baseMesh);
-
-      // Rotate group for printable orientation (Z up usually for slicers, but Three.js Y up)
-      group.rotation.x = -Math.PI / 2;
-      group.updateMatrixWorld();
-
-      const result = exporter.parse(group, { binary: true });
-      const blob = new Blob([result], { type: "application/octet-stream" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `face-3d-${Date.now()}.stl`;
-      link.click();
-      
-      showNotification("STL da Face exportado!");
-    } catch (err) {
-      console.error(err);
-      toastExportError();
-    }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
-  };
+  const generator = useFace3DGenerator();
+  const { config, setConfig, image, setImage, heightData, isProcessing, successMsg, handleImageUpload } = generator;
+  const exportSTL = generator.handleExportSTL;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
@@ -251,7 +122,7 @@ export default function Face3DGenerator() {
 
           <div className="pt-6">
             <button
-              onClick={handleExportSTL}
+               onClick={exportSTL}
               disabled={!heightData}
               className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group disabled:opacity-50"
             >
@@ -328,16 +199,7 @@ function FaceMesh({ heightData, config }: { heightData: Float32Array; config: Fa
   const intensity = config.intensity / 10;
   const base = config.baseThickness / 10;
 
-  useEffect(() => {
-    if (!meshRef.current) return;
-    
-    const positions = meshRef.current.geometry.attributes.position.array as Float32Array;
-    for (let i = 0; i < res * res; i++) {
-      positions[i * 3 + 2] = heightData[i] * intensity;
-    }
-    meshRef.current.geometry.attributes.position.needsUpdate = true;
-    meshRef.current.geometry.computeVertexNormals();
-  }, [heightData, intensity, res]);
+  useFaceMeshGeometry(meshRef, heightData, intensity, res);
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>

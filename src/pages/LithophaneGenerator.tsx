@@ -1,105 +1,12 @@
-import { useState, useRef, useMemo, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle } from "lucide-react";
-import { toastExportError } from "@/lib/toast";
+import { useLithophaneGenerator, type ImagePixels } from "../hooks/useLithophaneGenerator";
 
 export default function LithophaneGenerator() {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imagePixels, setImagePixels] = useState<{data: Uint8ClampedArray, w: number, h: number} | null>(null);
-
-  const [shape, setShape] = useState<"flat" | "curved">("flat");
-  const [width, setWidth] = useState(100);
-  const [height, setHeight] = useState(100);
-  const [minThick, setMinThick] = useState(0.8);
-  const [maxThick, setMaxThick] = useState(3.0);
-  const [curveAngle, setCurveAngle] = useState(180); // for curved
-
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
-
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      
-      const TARGET_RESOLUTION = 300;
-      let w = img.width;
-      let h = img.height;
-      if (w > h) {
-        if (w > TARGET_RESOLUTION) {
-          h = Math.round((h * TARGET_RESOLUTION) / w);
-          w = TARGET_RESOLUTION;
-        }
-      } else {
-        if (h > TARGET_RESOLUTION) {
-          w = Math.round((w * TARGET_RESOLUTION) / h);
-          h = TARGET_RESOLUTION;
-        }
-      }
-
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      
-      ctx.drawImage(img, 0, 0, w, h);
-      const imgData = ctx.getImageData(0, 0, w, h);
-      setImagePixels({ data: imgData.data, w, h });
-      
-      const aspect = w / h;
-      if (aspect > 1) {
-        setWidth(150);
-        setHeight(Math.round(150 / aspect));
-      } else {
-        setHeight(150);
-        setWidth(Math.round(150 * aspect));
-      }
-    };
-    img.src = url;
-  };
-
-  const handleExportSTL = () => {
-    if (!imagePixels) return;
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      try {
-        const geom = createLithophaneGeometry(imagePixels, shape, width, height, minThick, maxThick, curveAngle);
-        const mesh = new THREE.Mesh(geom);
-        
-        if (shape === "flat") {
-          mesh.rotation.x = -Math.PI / 2;
-        } else {
-          mesh.rotation.x = -Math.PI / 2;
-        }
-        mesh.updateMatrixWorld();
-        
-        const scene = new THREE.Scene();
-        scene.add(mesh);
-        
-        const exporter = new STLExporter();
-        const result = exporter.parse(scene, { binary: true });
-        
-        const blob = new Blob([result], { type: "application/octet-stream" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `lithophane-${shape}-${Date.now()}.stl`;
-        link.click();
-      } catch(e) {
-        console.error(e);
-        toastExportError();
-      }
-      setIsLoading(false);
-    }, 100);
-  };
+  const generator = useLithophaneGenerator(createLithophaneGeometry);
+  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, geometry, handleImageUpload, handleExportSTL } = generator;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
@@ -263,15 +170,7 @@ export default function LithophaneGenerator() {
 
             <Center>
               {imagePixels && (
-                <LithophanePreview 
-                  pixels={imagePixels}
-                  shape={shape}
-                  width={width}
-                  height={height}
-                  minThick={minThick}
-                  maxThick={maxThick}
-                  curveAngle={curveAngle}
-                />
+                 <LithophanePreview geometry={geometry} />
               )}
             </Center>
           </Canvas>
@@ -281,13 +180,9 @@ export default function LithophaneGenerator() {
   );
 }
 
-function LithophanePreview({ pixels, shape, width, height, minThick, maxThick, curveAngle }: any) {
-  const geom = useMemo(() => {
-    return createLithophaneGeometry(pixels, shape, width, height, minThick, maxThick, curveAngle);
-  }, [pixels, shape, width, height, minThick, maxThick, curveAngle]);
-
+function LithophanePreview({ geometry }: { geometry: THREE.BufferGeometry | null }) {
   return (
-    <mesh geometry={geom} castShadow receiveShadow>
+    <mesh geometry={geometry ?? undefined} castShadow receiveShadow>
       <meshStandardMaterial color="#ffffff" roughness={0.7} side={THREE.DoubleSide} />
     </mesh>
   );

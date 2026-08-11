@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { Search, Droplet, Plus, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import colorConvert from "color-convert";
+import { MOCK_PAINTS, usePaintMixer } from "../hooks/usePaintMixer";
 
 // Explanatory Tooltip Component for beginners
 function HelpTooltip({ text, position = "right" }: { text: string; position?: "top" | "bottom" | "left" | "right" }) {
@@ -29,44 +28,8 @@ function HelpTooltip({ text, position = "right" }: { text: string; position?: "t
   );
 }
 
-// Mock data for initial MVP
-const BRANDS = [
-  { id: "citadel", name: "Citadel" },
-  { id: "vallejo", name: "Vallejo" },
-];
-
-const MOCK_PAINTS = [
-  { id: 1, name: "Mephiston Red", brand: "Citadel", hex: "#9a1115", type: "Base" },
-  { id: 2, name: "Macragge Blue", brand: "Citadel", hex: "#0d2a59", type: "Base" },
-  { id: 3, name: "Averland Sunset", brand: "Citadel", hex: "#fbb81c", type: "Base" },
-  { id: 4, name: "Abaddon Black", brand: "Citadel", hex: "#000000", type: "Base" },
-  { id: 5, name: "Corax White", brand: "Citadel", hex: "#ffffff", type: "Base" },
-  { id: 6, name: "Ultramarine", brand: "Vallejo", hex: "#152069", type: "Model Color" },
-  { id: 7, name: "Flat Red", brand: "Vallejo", hex: "#990000", type: "Model Color" },
-];
-
 export default function PaintMixer() {
-  const [targetHex, setTargetHex] = useState("#800080"); // Default purple
-  
-  // Basic euclidean distance in LAB space (mock interpolation)
-  const findClosestPaints = (hex: string) => {
-    try {
-      const targetLab = colorConvert.hex.lab(hex.replace("#", ""));
-      return MOCK_PAINTS.map(paint => {
-        const paintLab = colorConvert.hex.lab(paint.hex.replace("#", ""));
-        const distance = Math.sqrt(
-          Math.pow(targetLab[0] - paintLab[0], 2) +
-          Math.pow(targetLab[1] - paintLab[1], 2) +
-          Math.pow(targetLab[2] - paintLab[2], 2)
-        );
-        return { ...paint, distance };
-      }).sort((a, b) => a.distance - b.distance).slice(0, 3);
-    } catch (e) {
-      return [];
-    }
-  };
-
-  const closest = findClosestPaints(targetHex);
+  const { targetHex, setTargetHex, closest } = usePaintMixer();
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-white">

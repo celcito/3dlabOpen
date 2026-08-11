@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,31 +13,10 @@ import {
   Maximize, Minimize, Activity, Cpu,
   Link as LinkIcon, Scissors
 } from "lucide-react";
-
-interface FlexiConfig {
-  segments: number;
-  width: number;
-  height: number;
-  segmentGap: number;
-  hingeGap: number;
-  baseColor: string;
-  taper: number;
-  hingeSize: number;
-}
+import { useFlexiModelCreator, type FlexiConfig } from "../hooks/useFlexiModelCreator";
 
 export default function FlexiModelCreator() {
-  const [config, setConfig] = useState<FlexiConfig>({
-    segments: 8,
-    width: 20,
-    height: 15,
-    segmentGap: 1.5,
-    hingeGap: 0.4,
-    baseColor: "#00E5FF",
-    taper: 0.7,
-    hingeSize: 4
-  });
-
-  const [successMsg, setSuccessMsg] = useState("");
+  const { config, setConfig, successMsg, showNotification } = useFlexiModelCreator();
 
   const handleExportSTL = () => {
     try {
@@ -99,16 +78,11 @@ export default function FlexiModelCreator() {
       link.download = `flexi-model-${segments}-segments-${Date.now()}.stl`;
       link.click();
       
-      showNotification("STL Flexi exportado com sucesso!");
+       showNotification("STL Flexi exportado com sucesso!");
     } catch (err) {
       console.error("Export failed:", err);
       toastExportError();
     }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
   };
 
   return (

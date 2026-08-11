@@ -1,12 +1,7 @@
-import { useState, useRef, useMemo, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
-import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
-import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
-import { toastExportError } from "@/lib/toast";
+import { useNameSignGenerator, type SignConfig, FONTS } from "../hooks/useNameSignGenerator";
 import { 
   Type, Download, Settings, Sliders, 
   Layers, Move, MousePointer2, 
@@ -15,156 +10,11 @@ import {
   Baseline, AlignCenter, MoreVertical
 } from "lucide-react";
 
-interface SignConfig {
-  text: string;
-  font: string;
-  fontSize: number;
-  textHeight: number;
-  letterSpacing: number;
-  plateThickness: number;
-  paddingX: number;
-  paddingY: number;
-  borderRadius: number;
-  baseColor: string;
-  textColor: string;
-  mountingHoles: boolean;
-  holeSize: number;
-  holePadding: number;
-}
-
-const FONTS = [
-  { name: "Inter Black", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/helvetiker_bold.typeface.json" },
-  { name: "Modern Sans", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/helvetiker_regular.typeface.json" },
-  { name: "Gentilis", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/gentilis_bold.typeface.json" }
-];
-
 export default function NameSignGenerator() {
-  const [config, setConfig] = useState<SignConfig>({
-    text: "VERTICE",
-    font: FONTS[0].url,
-    fontSize: 20,
-    textHeight: 4,
-    letterSpacing: 1,
-    plateThickness: 3,
-    paddingX: 10,
-    paddingY: 10,
-    borderRadius: 5,
-    baseColor: "#e0e0e0",
-    textColor: "#00E5FF",
-    mountingHoles: true,
-    holeSize: 4,
-    holePadding: 6
-  });
-
-  const [successMsg, setSuccessMsg] = useState("");
-  const [isExporting, setIsExporting] = useState(false);
-
-  const plateDimensions = useMemo(() => {
-    // Rough estimate for the UI HUD, the actual scene uses Three.js measurements
-    const charWidth = config.fontSize * 0.7;
-    const textW = config.text.length * (charWidth + config.letterSpacing);
-    const textH = config.fontSize;
-    
-    return {
-      width: textW + (config.paddingX * 2),
-      height: textH + (config.paddingY * 2)
-    };
-  }, [config]);
-
-  const handleExportSTL = async () => {
-    setIsExporting(true);
-    try {
-      const exporter = new STLExporter();
-      const loader = new FontLoader();
-      
-      // We need to load the font as a promise to use in the exporter
-      const font = await new Promise<any>((resolve) => {
-        loader.load(config.font, (f) => resolve(f));
-      });
-
-      const group = new THREE.Group();
-
-      // 1. Text Geometry
-      const textGeom = new TextGeometry(config.text, {
-        font: font,
-        size: config.fontSize / 10,
-        depth: config.textHeight / 10,
-        curveSegments: 12,
-        bevelEnabled: false
-      });
-      
-      textGeom.computeBoundingBox();
-      const bbox = textGeom.boundingBox!;
-      const textW = bbox.max.x - bbox.min.x;
-      const textH = bbox.max.y - bbox.min.y;
-      
-      // Center the text geometry
-      textGeom.translate(-textW / 2, -textH / 2, config.plateThickness / 10);
-      
-      // 2. Plate Geometry
-      const pW = textW + (config.paddingX / 5);
-      const pH = textH + (config.paddingY / 5);
-      const pR = config.borderRadius / 10;
-      const pT = config.plateThickness / 10;
-      
-      const plateShape = new THREE.Shape();
-      plateShape.moveTo(-pW / 2 + pR, -pH / 2);
-      plateShape.lineTo(pW / 2 - pR, -pH / 2);
-      plateShape.quadraticCurveTo(pW / 2, -pH / 2, pW / 2, -pH / 2 + pR);
-      plateShape.lineTo(pW / 2, pH / 2 - pR);
-      plateShape.quadraticCurveTo(pW / 2, pH / 2, pW / 2 - pR, pH / 2);
-      plateShape.lineTo(-pW / 2 + pR, pH / 2);
-      plateShape.quadraticCurveTo(-pW / 2, pH / 2, -pW / 2, pH / 2 - pR);
-      plateShape.lineTo(-pW / 2, -pH / 2 + pR);
-      plateShape.quadraticCurveTo(-pW / 2, -pH / 2, -pW / 2 + pR, -pH / 2);
-
-      if (config.mountingHoles) {
-        const hR = config.holeSize / 20;
-        const hPad = config.holePadding / 10;
-        
-        // Add 4 holes
-        const holes = [
-          [-pW / 2 + hPad, -pH / 2 + hPad],
-          [pW / 2 - hPad, -pH / 2 + hPad],
-          [pW / 2 - hPad, pH / 2 - hPad],
-          [-pW / 2 + hPad, pH / 2 - hPad]
-        ];
-        
-        holes.forEach(([hx, hy]) => {
-          const hole = new THREE.Path();
-          hole.absarc(hx, hy, hR, 0, Math.PI * 2, true);
-          plateShape.holes.push(hole);
-        });
-      }
-
-      const plateGeom = new THREE.ExtrudeGeometry(plateShape, {
-        depth: pT,
-        bevelEnabled: false
-      });
-
-      const merged = BufferGeometryUtils.mergeGeometries([plateGeom, textGeom]);
-      const mesh = new THREE.Mesh(merged);
-      
-      const result = exporter.parse(mesh, { binary: true });
-      const blob = new Blob([result], { type: "application/octet-stream" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `name-sign-${config.text.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.stl`;
-      link.click();
-      
-      showNotification("STL exportado com sucesso!");
-    } catch (err) {
-      console.error("Export failed:", err);
-      toastExportError();
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
-  };
+  const generator = useNameSignGenerator();
+   const { config, setConfig, plateDimensions, previewGeometry, successMsg } = generator;
+  const exportSTL = generator.handleExportSTL;
+  const { isExporting } = generator;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
@@ -304,7 +154,7 @@ export default function NameSignGenerator() {
 
           <div className="pt-6">
             <button
-              onClick={handleExportSTL}
+               onClick={exportSTL}
               disabled={isExporting}
               className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group disabled:opacity-50"
             >
@@ -338,7 +188,7 @@ export default function NameSignGenerator() {
               position={[0, -0.1, 0]}
             />
             <Center top>
-              <Scene config={config} />
+             <Scene config={config} previewGeometry={previewGeometry} />
             </Center>
           </Canvas>
         </div>
@@ -369,52 +219,13 @@ export default function NameSignGenerator() {
   );
 }
 
-function Scene({ config }: { config: SignConfig }) {
+function Scene({ config, previewGeometry }: { config: SignConfig; previewGeometry: { shape: THREE.Shape; textW: number; textH: number; pW: number; pT: number } }) {
   // We use Text from drei for the preview as it's much faster than re-extruding real 3D geometry every frame.
   // The STL export uses the actual TextGeometry.
   
   // Estimate dimensions for the base plate
   // In a more robust version, we'd use a ref to measure the Text component
-  const textW = config.text.length * (config.fontSize * 0.6) / 10;
-  const textH = (config.fontSize / 10);
-  
-  const pW = textW + (config.paddingX / 5);
-  const pH = textH + (config.paddingY / 5);
-  const pR = config.borderRadius / 10;
-  const pT = config.plateThickness / 10;
-
-  const plateShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.moveTo(-pW / 2 + pR, -pH / 2);
-    shape.lineTo(pW / 2 - pR, -pH / 2);
-    shape.quadraticCurveTo(pW / 2, -pH / 2, pW / 2, -pH / 2 + pR);
-    shape.lineTo(pW / 2, pH / 2 - pR);
-    shape.quadraticCurveTo(pW / 2, pH / 2, pW / 2 - pR, pH / 2);
-    shape.lineTo(-pW / 2 + pR, pH / 2);
-    shape.quadraticCurveTo(-pW / 2, pH / 2, -pW / 2, pH / 2 - pR);
-    shape.lineTo(-pW / 2, -pH / 2 + pR);
-    shape.quadraticCurveTo(-pW / 2, -pH / 2, -pW / 2 + pR, -pH / 2);
-
-    if (config.mountingHoles) {
-      const hR = config.holeSize / 20;
-      const hPad = config.holePadding / 10;
-      
-      const holes = [
-        [-pW / 2 + hPad, -pH / 2 + hPad],
-        [pW / 2 - hPad, -pH / 2 + hPad],
-        [pW / 2 - hPad, pH / 2 - hPad],
-        [-pW / 2 + hPad, pH / 2 - hPad]
-      ];
-      
-      holes.forEach(([hx, hy]) => {
-        const hole = new THREE.Path();
-        hole.absarc(hx, hy, hR, 0, Math.PI * 2, true);
-        shape.holes.push(hole);
-      });
-    }
-
-    return shape;
-  }, [pW, pH, pR, config.mountingHoles, config.holeSize, config.holePadding]);
+  const { shape: plateShape, textW, textH, pW, pT } = previewGeometry;
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
