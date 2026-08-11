@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { FontLoader, Font } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
+import { toast, toastExportError } from "@/lib/toast";
 import { 
   Sparkles, Layers, Download, Plus, Trash2, Sliders, HelpCircle,
   Eye, EyeOff, RotateCcw, Copy, Folder, BookOpen, Save, FileDown,
@@ -1315,12 +1316,12 @@ export default function PlateCreator() {
         if (exportedCount > 0) {
           showSuccessNotification(`Exportados ${exportedCount} arquivos de peças separados!`);
         } else {
-          alert("Nenhuma camada visível para exportar.");
+          toast.warning("Nenhuma camada visível para exportar.");
         }
       }
     } catch (err) {
       console.error("Export generation failed:", err);
-      alert("Houve um erro ao gerar o arquivo STL.");
+      toastExportError();
     }
   };
 

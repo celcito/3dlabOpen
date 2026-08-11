@@ -6,6 +6,7 @@ import {
   Save, Folder, FileDown, BookOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { toastInvalidFormat } from "@/lib/toast";
 
 interface MarketingDetails {
   title: string;
@@ -191,7 +192,7 @@ export default function MarketingGenerator() {
 
   const processImage = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      alert("Por favor, selecione apenas arquivos de imagem.");
+      toastInvalidFormat(["PNG", "JPG", "WEBP", "GIF"]);
       return;
     }
     setImageFile(file);

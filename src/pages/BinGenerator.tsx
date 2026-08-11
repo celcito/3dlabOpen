@@ -5,6 +5,7 @@ import * as THREE from "three";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { Evaluator, Brush, SUBTRACTION } from 'three-bvh-csg';
+import { toastExportError } from "@/lib/toast";
 import { 
   Box, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -375,7 +376,7 @@ export default function BinGenerator() {
       showNotification("Organizador exportado com sucesso!");
     } catch (err) {
       console.error(err);
-      alert("Erro ao exportar.");
+      toastExportError();
     }
   };
 

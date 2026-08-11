@@ -4,6 +4,7 @@ import { OrbitControls, Grid, Center, PerspectiveCamera } from "@react-three/dre
 import * as THREE from "three";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
+import { toastExportError } from "@/lib/toast";
 import { 
   Gamepad2, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -144,7 +145,7 @@ export default function FidgetClickerMaker() {
       showNotification("STL exportado com sucesso!");
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Falha ao exportar STL.");
+      toastExportError();
     }
   };
 

@@ -20,6 +20,7 @@ open_clip_torch>=2.26.0
 
 # 3D / imagem
 trimesh>=4.5.0
+manifold3d>=2.5.0  # engine de boolean CSG (manifold) para connectors.py
 pillow>=10.4.0,<11.0
 numpy>=1.24.0,<2.0.0
 scikit-image>=0.21.0

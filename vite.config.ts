@@ -6,6 +6,19 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    build: {
+      target: "esnext",
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-three': ['three'],
+            'vendor-r3f': ['@react-three/fiber', '@react-three/drei', 'three-mesh-bvh', 'three-bvh-csg'],
+            'vendor-ui': ['lucide-react', 'sonner'],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

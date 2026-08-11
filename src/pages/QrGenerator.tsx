@@ -4,6 +4,7 @@ import { OrbitControls, Grid, Text, Center } from "@react-three/drei";
 import * as THREE from "three";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
+import { toastExportError } from "@/lib/toast";
 import QRCode from "qrcode";
 import { 
   QrCode, Download, Settings, RefreshCcw, 
@@ -165,7 +166,7 @@ export default function QrGenerator() {
       showNotification("STL exportado com sucesso!");
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Falha ao exportar STL. Tente novamente.");
+      toastExportError();
     }
   };
 

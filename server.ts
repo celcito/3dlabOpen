@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
@@ -934,6 +935,45 @@ Return a JSON object matching this schema:
     } catch (error: any) {
       console.error("Video Download Error:", error);
       res.status(500).json({ error: error.message || "Failed to download generated video" });
+    }
+  });
+
+  app.post("/api/flexi/generate-svg", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key is not configured" });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build', 'Authorization': `Bearer ${process.env.GEMINI_API_KEY}` } }
+      });
+
+      const systemInstruction = `You are an expert SVG designer.
+Your task is to generate a clean, single-path, solid black silhouette SVG of the requested subject (e.g. lizard, snake, dragon, caterpillar).
+The silhouette MUST be viewed from perfectly top-down (bird's-eye view), facing to the right or pointing upwards.
+Use a viewBox of "0 0 100 100".
+Keep the path relatively simple and smooth.
+Output ONLY the raw <svg> code. Do not include markdown formatting or backticks.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `Generate a top-down silhouette of: ${prompt}`,
+        config: { systemInstruction }
+      });
+
+      let svgCode = response.text || "";
+      svgCode = svgCode.replace(/```xml/g, "").replace(/```svg/g, "").replace(/```/g, "").trim();
+
+      res.json({ svgCode });
+    } catch (error: any) {
+      console.warn("Gemini SVG API auth error, please refresh session");
+      res.status(500).json({ error: error.message || "Failed to generate SVG" });
     }
   });
 
