@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Grid, Text } from "@react-three/drei";
+import { OrbitControls, Grid, Text, TransformControls } from "@react-three/drei";
 import * as THREE from "three";
 import { Upload, Download, Paintbrush, PaintBucket, Move, RotateCcw, Eye, EyeOff, Trash2, Sliders, Play, Plus, Info, Check, RefreshCw, Sparkles, Layers, Undo, Eraser, Ruler, Clock, Printer, Settings, FileJson, Save, BoxSelect, Loader2, Circle, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -328,12 +328,14 @@ interface ManualJoint {
   groupB: number;
   position: THREE.Vector3;
   normalA: THREE.Vector3;
+  scale?: number;
 }
 
 interface JointSpec {
   position: THREE.Vector3;
   normalFrom: THREE.Vector3;
   manualId?: string;
+  scale?: number;
 }
 
 export default function Viewer3D() {
@@ -397,15 +399,15 @@ export default function Viewer3D() {
   const [jointSizes, setJointSizes] = useState({ pegDiameter: 3.0, pegLength: 4.0, fitTolerance: 0.2, magnetDiameter: 3.2, magnetDepth: 1.6, reinforcementDiameter: 7.0, reinforcementHeight: 2.5, reinforcementWall: 1.2 });
   const [manualJoints, setManualJoints] = useState<ManualJoint[]>([]);
   const [selectedManualJointId, setSelectedManualJointId] = useState<string | null>(null);
-  const [placementMode, setPlacementMode] = useState(false);
-  const [showSuppliers, setShowSuppliers] = useState(false);
+   const [placementMode, setPlacementMode] = useState(false);
+   const [transformMode, setTransformMode] = useState<"translate" | "rotate" | "scale">("translate");
   const [importUnit, setImportUnit] = useState<"mm" | "inch">("mm");
   const [importScale, setImportScale] = useState(1.0);
   const [showConversionSettings, setShowConversionSettings] = useState(false);
    const modelImport = useViewerModelImport({
      importUnit,
      importScale,
-     onResetDomain: () => { setVertexGroups(new Uint8Array(0)); setHistory([]); setGroupJointTypes({}); setManualJoints([]); setPlacementMode(false); },
+     onResetDomain: (vertexCount) => { setVertexGroups(new Uint8Array(vertexCount)); setHistory([]); setGroupJointTypes({}); setManualJoints([]); setPlacementMode(false); },
    });
    const { modelGeometry, setModelGeometry, fileName, modelDimensions, stats, setStats, isProcessing, setIsProcessing, processingMessage, setProcessingMessage, loadDemoModel, handleFileUpload } = modelImport;
    const estimator = usePrintEstimator(fileName, modelDimensions, Boolean(modelGeometry));
@@ -416,62 +418,6 @@ export default function Viewer3D() {
      fdmPrintSpeed, setFdmPrintSpeed, fdmFilamentCostPerKg, setFdmFilamentCostPerKg, fdmWallCount, setFdmWallCount,
      isEstimating, estimateProgress, originalX, originalY, originalZ, scaledX, scaledY, scaledZ, handleDownloadCSV, applyMiniatureScale, getSlicingStatus,
    } = estimator;
-
-  const [settingsNotification, setSettingsNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  const settingsInputRef = useRef<HTMLInputElement>(null);
-
-  const exportSettingsJSON = () => {
-    try {
-      const configData = { appName: "Vértice Studio", exportDate: new Date().toISOString(), estimatorType, printScale, isHollow, layerHeight, exposureTime, resinCostPerKg, fdmInfill, fdmLayerHeight, fdmPrintSpeed, fdmFilamentCostPerKg, fdmWallCount, groups: groups.map(g => ({ id: g.id, name: g.name, color: g.color })), groupJointTypes };
-      const link = document.createElement("a");
-      link.href = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(configData, null, 2))}`;
-      link.download = `vertice_project_settings_${estimatorType.toLowerCase()}.json`;
-      link.click();
-      setSettingsNotification({ message: "Configurações exportadas!", type: "success" });
-      setTimeout(() => setSettingsNotification(null), 4000);
-    } catch { setSettingsNotification({ message: "Erro ao exportar.", type: "error" }); setTimeout(() => setSettingsNotification(null), 4000); }
-  };
-
-  const importSettingsJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target?.result as string);
-        if (parsed.estimatorType === "SLA" || parsed.estimatorType === "FDM") setEstimatorType(parsed.estimatorType);
-        if (typeof parsed.printScale === "number") setPrintScale(parsed.printScale);
-        if (typeof parsed.isHollow === "boolean") setIsHollow(parsed.isHollow);
-        if (typeof parsed.layerHeight === "number") setLayerHeight(parsed.layerHeight);
-        if (typeof parsed.exposureTime === "number") setExposureTime(parsed.exposureTime);
-        if (typeof parsed.resinCostPerKg === "number") setResinCostPerKg(parsed.resinCostPerKg);
-        if (typeof parsed.fdmInfill === "number") setFdmInfill(parsed.fdmInfill);
-        if (typeof parsed.fdmLayerHeight === "number") setFdmLayerHeight(parsed.fdmLayerHeight);
-        if (typeof parsed.fdmPrintSpeed === "number") setFdmPrintSpeed(parsed.fdmPrintSpeed);
-        if (typeof parsed.fdmFilamentCostPerKg === "number") setFdmFilamentCostPerKg(parsed.fdmFilamentCostPerKg);
-        if (typeof parsed.fdmWallCount === "number") setFdmWallCount(parsed.fdmWallCount);
-        if (Array.isArray(parsed.groups)) setGroups(parsed.groups.map((g: any) => ({ id: Number(g.id), name: String(g.name || `Parte ${g.id}`), color: String(g.color || "#00E5FF"), border: g.border || `border-[${g.color || "#00E5FF"}]` })));
-        if (parsed.groupJointTypes) setGroupJointTypes(parsed.groupJointTypes);
-        setSettingsNotification({ message: "Configurações importadas!", type: "success" });
-        setTimeout(() => setSettingsNotification(null), 5000);
-      } catch { setSettingsNotification({ message: "Arquivo inválido.", type: "error" }); setTimeout(() => setSettingsNotification(null), 5000); }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  };
-
-  const applyPresetProfile = (presetKey: string) => {
-    switch (presetKey) {
-      case "sla_standard": setEstimatorType("SLA"); setIsHollow(false); setLayerHeight(0.05); setExposureTime(2.5); setResinCostPerKg(35); break;
-      case "sla_high_detail": setEstimatorType("SLA"); setIsHollow(false); setLayerHeight(0.02); setExposureTime(2.0); setResinCostPerKg(45); break;
-      case "sla_draft_hollow": setEstimatorType("SLA"); setIsHollow(true); setLayerHeight(0.10); setExposureTime(3.5); setResinCostPerKg(30); break;
-      case "fdm_standard": setEstimatorType("FDM"); setFdmInfill(20); setFdmLayerHeight(0.20); setFdmPrintSpeed(60); setFdmFilamentCostPerKg(25); setFdmWallCount(3); break;
-      case "fdm_draft": setEstimatorType("FDM"); setFdmInfill(15); setFdmLayerHeight(0.28); setFdmPrintSpeed(120); setFdmFilamentCostPerKg(20); setFdmWallCount(2); break;
-      case "fdm_strong": setEstimatorType("FDM"); setFdmInfill(40); setFdmLayerHeight(0.16); setFdmPrintSpeed(50); setFdmFilamentCostPerKg(28); setFdmWallCount(4); break;
-    }
-    setSettingsNotification({ message: "Perfil aplicado!", type: "success" });
-    setTimeout(() => setSettingsNotification(null), 3000);
-  };
 
    const {
      watermarkEnabled, watermarkText, watermarkPlacement, watermarkSize, watermarkDepth, watermarkColor,
@@ -673,6 +619,7 @@ export default function Viewer3D() {
         position: j.position.clone(),
         normalFrom: j.groupA === groupId ? j.normalA.clone() : j.normalA.clone().negate(),
         manualId: j.id,
+        scale: j.scale ?? 1,
       }));
     }
     const anchor = computeGroupPairAnchor(groupId, neighborId);
@@ -786,6 +733,14 @@ export default function Viewer3D() {
     }));
   };
 
+  const updateManualJointTransform = (position: THREE.Vector3, normalA: THREE.Vector3, scale: number) => {
+    if (!selectedManualJointId) return;
+    setManualJoints(prev => prev.map(j => j.id === selectedManualJointId
+      ? { ...j, position: position.clone(), normalA: normalA.clone().normalize(), scale: Math.max(0.1, scale) }
+      : j
+    ));
+  };
+
   const moveManualJointToBoundary = (jointId: string, point: THREE.Vector3, groupId: number) => {
     if (!modelGeometry || !adjacencyList) return;
     const positionAttr = modelGeometry.attributes.position;
@@ -891,7 +846,7 @@ export default function Viewer3D() {
   // Usa os MESMOS specs do export (manual + auto), então o preview reflete o STL final.
   const jointGeometries = useMemo(() => {
     if (!previewSeparated || !modelGeometry) return [];
-    const joints: { id?: string; groupId: number; neighborId: number; type: 'peg' | 'socket' | 'magnet'; position: THREE.Vector3; direction: THREE.Vector3; color: string; neighborName: string; reinforcement?: { diameter: number; height: number; wall: number } }[] = [];
+     const joints: { id?: string; groupId: number; neighborId: number; type: 'peg' | 'socket' | 'magnet'; position: THREE.Vector3; direction: THREE.Vector3; color: string; neighborName: string; scale: number; reinforcement?: { diameter: number; height: number; wall: number } }[] = [];
 
     groups.forEach((group) => {
       const groupId = group.id;
@@ -902,11 +857,11 @@ export default function Viewer3D() {
           const intoGroup = spec.normalFrom.clone().negate();
           const neighborName = getGroupName(neighborId);
           if (jointType === "magnet") {
-             joints.push({ id: spec.manualId, groupId, neighborId, type: 'magnet', position: spec.position.clone(), direction: intoGroup, color: "#FFD700", neighborName });
+             joints.push({ id: spec.manualId, groupId, neighborId, type: 'magnet', position: spec.position.clone(), direction: intoGroup, color: "#FFD700", neighborName, scale: spec.scale ?? 1 });
           } else if (myType === 'female') {
-               joints.push({ id: spec.manualId, groupId, neighborId, type: 'socket', position: spec.position.clone(), direction: intoGroup, color: "#FF1744", neighborName, reinforcement: { diameter: jointSizes.reinforcementDiameter, height: jointSizes.reinforcementHeight, wall: jointSizes.reinforcementWall } });
+                joints.push({ id: spec.manualId, groupId, neighborId, type: 'socket', position: spec.position.clone(), direction: intoGroup, color: "#FF1744", neighborName, scale: spec.scale ?? 1, reinforcement: { diameter: jointSizes.reinforcementDiameter, height: jointSizes.reinforcementHeight, wall: jointSizes.reinforcementWall } });
           } else {
-             joints.push({ id: spec.manualId, groupId, neighborId, type: 'peg', position: spec.position.clone(), direction: spec.normalFrom.clone(), color: "#00E5FF", neighborName });
+             joints.push({ id: spec.manualId, groupId, neighborId, type: 'peg', position: spec.position.clone(), direction: spec.normalFrom.clone(), color: "#00E5FF", neighborName, scale: spec.scale ?? 1 });
           }
         });
       });
@@ -1066,26 +1021,28 @@ export default function Viewer3D() {
         const maleCentroid = jointType === "default" ? computeGroupCentroid(groupId) : null;
          findNeighborGroups(groupId).forEach((neighborId) => {
            getPairJointSpecs(groupId, neighborId).forEach((spec) => {
-             const myType = getEffectiveJointType(groupId, neighborId);
-             const intoGroup = spec.normalFrom.clone().negate();
-             const connectorPosition = snapPointToGeometryBoundary(rawGeometry, spec.position);
-             if (jointType === "magnet") {
-               exportGeometry = addSocket(exportGeometry, connectorPosition, intoGroup, jointSizes.magnetDiameter, jointSizes.magnetDepth, 6);
-             } else if (myType === 'female') {
-               exportGeometry = addReinforcedSocket(
-                 exportGeometry,
-                 connectorPosition,
-                 intoGroup,
-                jointSizes.pegDiameter + jointSizes.fitTolerance * 2,
-                jointSizes.pegLength + jointSizes.fitTolerance,
-                jointSizes.reinforcementDiameter,
-                jointSizes.reinforcementHeight,
-                jointSizes.reinforcementWall,
-                6,
-              );
-             } else {
-               const embed = maleCentroid ? Math.max(0.5, Math.min(jointSizes.pegLength, connectorPosition.distanceTo(maleCentroid))) : 0.5;
-               exportGeometry = addPeg(exportGeometry, connectorPosition, spec.normalFrom, jointSizes.pegDiameter, jointSizes.pegLength, 6, embed);
+              const myType = getEffectiveJointType(groupId, neighborId);
+              const intoGroup = spec.normalFrom.clone().negate();
+              const connectorPosition = snapPointToGeometryBoundary(rawGeometry, spec.position);
+              const transformScale = spec.scale ?? 1;
+              if (jointType === "magnet") {
+                exportGeometry = addSocket(exportGeometry, connectorPosition, intoGroup, jointSizes.magnetDiameter * transformScale, jointSizes.magnetDepth * transformScale, 6);
+              } else if (myType === 'female') {
+                exportGeometry = addReinforcedSocket(
+                  exportGeometry,
+                  connectorPosition,
+                  intoGroup,
+                 (jointSizes.pegDiameter + jointSizes.fitTolerance * 2) * transformScale,
+                 (jointSizes.pegLength + jointSizes.fitTolerance) * transformScale,
+                 jointSizes.reinforcementDiameter * transformScale,
+                 jointSizes.reinforcementHeight * transformScale,
+                 jointSizes.reinforcementWall * transformScale,
+                 6,
+               );
+              } else {
+                const pegLength = jointSizes.pegLength * transformScale;
+                const embed = maleCentroid ? Math.max(0.5, Math.min(pegLength, connectorPosition.distanceTo(maleCentroid))) : 0.5;
+                exportGeometry = addPeg(exportGeometry, connectorPosition, spec.normalFrom, jointSizes.pegDiameter * transformScale, pegLength, 6, embed);
              }
           });
         });
@@ -1120,6 +1077,16 @@ export default function Viewer3D() {
     : jointSizes.reinforcementHeight < jointSizes.pegLength * 0.5
       ? "A saliência está mais curta que metade do pino. Verifique a profundidade do encaixe."
       : null;
+
+  const handleGizmoChange = (event: any) => {
+    const object = event?.target?.object as THREE.Object3D | undefined;
+    if (!object || !selectedManualJoint) return;
+    const subGeometry = subGeometries.find((sub) => sub.groupId === selectedManualJoint.groupA);
+    if (!subGeometry) return;
+    const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance);
+    const normalA = new THREE.Vector3(0, 1, 0).applyQuaternion(object.quaternion).normalize();
+    updateManualJointTransform(object.position.clone().sub(offset), normalA, object.scale.x);
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-white bg-[#080808]">
@@ -1176,7 +1143,7 @@ export default function Viewer3D() {
                           const l = jointSizes.pegLength;
                           const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
                           return (
-                               <mesh key={`peg-${idx}`} geometry={new THREE.CylinderGeometry(r, r, l, 6)} position={pos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
+                               <mesh key={`peg-${idx}`} geometry={new THREE.CylinderGeometry(r, r, l, 6)} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                                 <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedManualJointId ? 0.9 : 0.4} transparent opacity={joint.id === selectedManualJointId ? 1 : 0.85} />
                             </mesh>
                           );
@@ -1188,7 +1155,7 @@ export default function Viewer3D() {
                           const bossLength = reinforcement.height + reinforcement.wall;
                           const bossPos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(-(reinforcement.height - reinforcement.wall) / 2));
                           return (
-                            <group key={`socket-${idx}`}>
+                             <group key={`socket-${idx}`} scale={[joint.scale, joint.scale, joint.scale]}>
                                <mesh geometry={new THREE.CylinderGeometry(reinforcement.diameter / 2, reinforcement.diameter / 2, bossLength, 6)} position={bossPos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                                 <meshStandardMaterial color="#FF1744" transparent opacity={joint.id === selectedManualJointId ? 0.5 : 0.25} wireframe />
                               </mesh>
@@ -1202,12 +1169,33 @@ export default function Viewer3D() {
                           const l = jointSizes.magnetDepth;
                           const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
                           return (
-                             <mesh key={`magnet-${idx}`} geometry={new THREE.CylinderGeometry(r, r, l, 6)} position={pos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
+                             <mesh key={`magnet-${idx}`} geometry={new THREE.CylinderGeometry(r, r, l, 6)} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                               <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedManualJointId ? 1 : 0.5} transparent opacity={joint.id === selectedManualJointId ? 1 : 0.9} metalness={0.8} roughness={0.2} />
                             </mesh>
                           );
-                        }
+                       }
                       })}
+                      {selectedManualJoint && (() => {
+                        const subGeometry = subGeometries.find((sub) => sub.groupId === selectedManualJoint.groupA);
+                        if (!subGeometry) return null;
+                        const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance);
+                        const position = selectedManualJoint.position.clone().add(offset);
+                        const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), selectedManualJoint.normalA);
+                        const scale = selectedManualJoint.scale ?? 1;
+                        return (
+                          <TransformControls
+                            mode={transformMode}
+                            position={position}
+                            quaternion={quaternion}
+                            onObjectChange={handleGizmoChange}
+                          >
+                            <mesh visible={false} scale={[scale, scale, scale]}>
+                              <sphereGeometry args={[0.35, 8, 8]} />
+                              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+                            </mesh>
+                          </TransformControls>
+                        );
+                      })()}
                     </>
                   ) : (
                     <PaintableMesh geometry={modelGeometry} brushRadius={brushRadius} activeGroupId={activeGroupId} paintMode={paintMode} paintTool={paintTool} onGeometryUpdated={handleGeometryUpdated} onPaintChanged={() => { setManualJoints([]); setSelectedManualJointId(null); }} vertexGroups={vertexGroups} setVertexGroups={setVertexGroups} adjacencyList={adjacencyList} onStartAction={pushStateToHistory} isolateGroupId={effectiveIsolateGroupId} groups={groups} placementMode={placementMode} onPlaceJoint={placeJointAt} />
@@ -1259,12 +1247,16 @@ export default function Viewer3D() {
             )}
             {modelGeometry && (
               <div className="absolute bottom-6 left-6 right-6 bg-[#0A0A0A]/90 border border-zinc-800 backdrop-blur-md p-4 flex flex-wrap items-center justify-between gap-4 z-10">
-                <div className="flex gap-2">
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("brush"); setPreviewSeparated(false); }} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-colors ${paintMode && paintTool === "brush" && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`}><Paintbrush className="w-3.5 h-3.5" /> Pincel / Brush</button>
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3.5 h-3.5" /> Balde / Bucket</button>
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[#FF1744] text-white border-[#FF1744]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Borracha"><Eraser className="w-3.5 h-3.5" /> Apagar / Eraser</button>
-                  <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`}><Move className="w-3.5 h-3.5" /> Rotacionar / Rotate</button>
-                   <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-colors ${previewSeparated ? "bg-emerald-400 text-black border-emerald-400 font-bold" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Visualizar peças separadas"><Layers className="w-3.5 h-3.5" /> Preview Separar</button>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("brush"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "brush" && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`}><Paintbrush className="w-3 h-3" /> Brush</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3 h-3" /> Bucket</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[#FF1744] text-white border-[#FF1744]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Borracha"><Eraser className="w-3 h-3" /> Eraser</button>
+                  <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`}><Move className="w-3 h-3" /> Rotate</button>
+                   <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-emerald-400 text-black border-emerald-400 font-bold" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
+                  <span className="w-px self-stretch bg-zinc-800 mx-0.5" />
+                  <button onClick={expandConnectedPaint} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#00E5FF] transition-colors" title="Preencher Parte Conectada"><PaintBucket className="w-3 h-3 text-[#00E5FF]" /> Fill Connected</button>
+                  <button onClick={fillRemainingWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#00E5FF] transition-colors"><Paintbrush className="w-3 h-3" /> Fill Remaining</button>
+                  <button onClick={fillAllWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#00E5FF] transition-colors"><Check className="w-3 h-3" /> Fill All</button>
                 </div>
                 {previewSeparated ? (
                   <div className="flex items-center gap-6 flex-1 max-w-xs px-4">
@@ -1285,9 +1277,9 @@ export default function Viewer3D() {
                     </div>
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <button onClick={handleUndo} disabled={history.length === 0} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border transition-all ${history.length > 0 ? "bg-[#0A0A0A] border-zinc-700 text-zinc-100 hover:text-white hover:border-[#00E5FF] hover:bg-zinc-900 active:scale-95" : "bg-zinc-950/40 border-zinc-900 text-zinc-600 cursor-not-allowed"}`}><Undo className="w-3.5 h-3.5" /> Desfazer / Undo {history.length > 0 && `(${history.length})`}</button>
-                  <button onClick={resetPainting} className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"><RotateCcw className="w-3.5 h-3.5" /> Clear All Paint</button>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button onClick={handleUndo} disabled={history.length === 0} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all ${history.length > 0 ? "bg-[#0A0A0A] border-zinc-700 text-zinc-100 hover:text-white hover:border-[#00E5FF] hover:bg-zinc-900 active:scale-95" : "bg-zinc-950/40 border-zinc-900 text-zinc-600 cursor-not-allowed"}`}><Undo className="w-3 h-3" /> Undo {history.length > 0 && `(${history.length})`}</button>
+                  <button onClick={resetPainting} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"><RotateCcw className="w-3 h-3" /> Clear All Paint</button>
                 </div>
               </div>
             )}
@@ -1337,187 +1329,6 @@ export default function Viewer3D() {
                 <div className="grid grid-cols-2 gap-2 bg-[#151515] p-3 border border-zinc-800 mt-2">
                   <div><span className="text-[9px] uppercase text-zinc-500 block">Triangles</span><span className="font-mono text-sm text-white">{stats.faces.toLocaleString()}</span></div>
                   <div><span className="text-[9px] uppercase text-zinc-500 block">Status</span><span className="font-mono text-sm text-[#00FF41]">LOADED</span></div>
-                </div>
-              )}
-            </div>
-          </section>
-          {modelGeometry && (
-            <section className="border-t border-zinc-900 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2"><Printer className="w-4 h-4 text-[#00E5FF]" /> 02. Calculadora de Preços</h3>
-                <button onClick={handleDownloadCSV} className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] uppercase font-bold text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF]/30 transition-all group"><FileJson className="w-3 h-3 group-hover:scale-110 transition-transform" /> CSV</button>
-              </div>
-              <div className="flex bg-[#111] p-1 rounded border border-zinc-900 mb-4 font-sans">
-                <button onClick={() => { setEstimatorType("SLA"); const d = MATERIALS.find(m => m.type === "SLA"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setResinCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "SLA" ? "bg-cyan-500/10 text-[#00E5FF] border border-cyan-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Printer className="w-3.5 h-3.5" /> SLA (Resina)</button>
-                <button onClick={() => { setEstimatorType("FDM"); const d = MATERIALS.find(m => m.type === "FDM"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setFdmFilamentCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "FDM" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Sliders className="w-3.5 h-3.5" /> FDM (Filamento)</button>
-              </div>
-              <div className="mb-4 space-y-1.5">
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block px-1">Perfil de Material</label>
-                <select value={selectedMaterialId} onChange={(e) => { const m = MATERIALS.find(x => x.id === e.target.value); if (m) { setSelectedMaterialId(m.id); setMaterialDensity(m.density); if (m.type === "SLA") setResinCostPerKg(m.defaultCost); else setFdmFilamentCostPerKg(m.defaultCost); } }} className="w-full bg-[#111] border border-zinc-800 p-2.5 rounded text-[10px] text-zinc-200 font-bold uppercase focus:outline-none focus:border-[#00E5FF]">
-                  {MATERIALS.filter(m => m.type === estimatorType).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                </select>
-                <div className="flex justify-between text-[8px] text-zinc-600 uppercase font-black px-1">
-                  <span>Densidade: {materialDensity.toFixed(2)} g/cm³</span>
-                  <span>Preço: R$ {(estimatorType === "SLA" ? resinCostPerKg : fdmFilamentCostPerKg).toFixed(0)}/kg</span>
-                </div>
-              </div>
-              <div className="bg-[#111] border border-zinc-900 rounded p-4 space-y-4 mb-4 font-sans relative overflow-hidden">
-                {isEstimating && (
-                  <>
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-zinc-950 z-20"><div className={`h-full transition-all duration-100 ease-out ${estimatorType === "SLA" ? "bg-gradient-to-r from-cyan-500 to-[#00E5FF]" : "bg-gradient-to-r from-emerald-500 to-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
-                    <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-[1px] flex flex-col items-center justify-center space-y-3 z-10 select-none">
-                      <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 animate-spin ${estimatorType === "SLA" ? "text-[#00E5FF]" : "text-emerald-400"}`} /><span className="text-[9px] uppercase font-bold tracking-widest text-zinc-300">{estimatorType === "SLA" ? "Fatiando SLA..." : "Fatiando FDM..."}</span></div>
-                      <div className="text-center space-y-1 w-full max-w-[220px] px-4">
-                        <div className="flex justify-between items-center text-[8px] uppercase font-mono text-zinc-500"><span>Status</span><span className={`${estimatorType === "SLA" ? "text-[#00E5FF]" : "text-emerald-400"} font-bold`}>{estimateProgress}%</span></div>
-                        <div className="w-full h-[3px] bg-zinc-900 rounded-full overflow-hidden"><div className={`h-full transition-all duration-75 ${estimatorType === "SLA" ? "bg-[#00E5FF]" : "bg-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
-                        <p className="text-[8px] font-medium text-zinc-400 uppercase tracking-wider text-center pt-1.5 truncate">{getSlicingStatus(estimateProgress)}</p>
-                      </div>
-                    </div>
-                  </>
-                )}
-                <div className="grid grid-cols-3 gap-2 text-center pb-3 border-b border-zinc-900">
-                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">X</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledX.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
-                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Y</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledY.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
-                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Z</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledZ.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
-                </div>
-                {estimatorType === "SLA" ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume).toFixed(2)} mL</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity).toFixed(1)} g</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">{Math.floor((Math.ceil(scaledZ / layerHeight) * (exposureTime + 5.0) + 120) / 3600)}h</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${(((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity) / 1000.0 * resinCostPerKg).toFixed(2)}</span></div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0)).toFixed(2)} cm³</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity).toFixed(1)} g</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">~{Math.floor(((modelDimensions.volume * 1000.0) / (0.42 * fdmLayerHeight * fdmPrintSpeed || 1.0)) * 1.30 / 3600)}h</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${((modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity) / 1000.0 * fdmFilamentCostPerKg).toFixed(2)}</span></div>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-4 bg-zinc-950 p-3.5 border border-zinc-900 rounded font-sans">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-zinc-400">
-                    <span className="flex items-center">Escala / Scale<HelpTooltip text="Ajusta o tamanho final." /></span>
-                    <div className="flex items-center bg-zinc-900 border border-zinc-850 rounded px-1.5 py-0.5 w-24">
-                      <input type="number" value={printScale} onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPrintScale(Math.max(1, Math.min(2000, v))); }} className="w-full bg-transparent text-right text-xs font-mono text-[#00E5FF] focus:outline-none" min="1" max="2000" step="0.1" />
-                      <span className="text-[10px] text-zinc-500 font-bold ml-1">%</span>
-                    </div>
-                  </div>
-                  <Slider value={[printScale]} onValueChange={(v) => setPrintScale(v[0])} min={1} max={500} step={1} />
-                  <div className="space-y-1">
-                    <span className="text-[8px] uppercase font-bold text-zinc-500 block">Atalhos:</span>
-                    <div className="grid grid-cols-6 gap-1">
-                      {[25, 50, 75, 100, 150, 200].map(p => (
-                        <button key={p} onClick={() => setPrintScale(p)} className={`py-1 text-[8px] font-mono uppercase border rounded transition-all cursor-pointer text-center ${printScale === p ? "bg-[#00E5FF] text-black border-[#00E5FF] font-bold" : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"}`}>{p}%</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-3 pt-2.5 border-t border-zinc-900/60">
-                    <span className="text-[8px] uppercase font-bold text-[#00E5FF] flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Proporções de Miniatura</span>
-                    <div className="grid grid-cols-2 gap-1 bg-zinc-950 p-0.5 rounded border border-zinc-900">
-                      <button onClick={() => setMiniatureScaleMode("human")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "human" ? "bg-[#00E5FF] text-black" : "text-zinc-400 hover:text-white"}`}>Base Humana (1.80m)</button>
-                      <button onClick={() => setMiniatureScaleMode("direct")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "direct" ? "bg-[#00E5FF] text-black" : "text-zinc-400 hover:text-white"}`}>Direto do Arquivo (1:1)</button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1">
-                      {[{ label: "1/8", value: 8 }, { label: "1/12", value: 12 }, { label: "1/16", value: 16 }, { label: "1/24", value: 24 }, { label: "1/32", value: 32 }, { label: "1/35", value: 35 }, { label: "1/48", value: 48 }, { label: "1/56", value: 56 }, { label: "1/64", value: 64 }, { label: "1/72", value: 72 }, { label: "1/100", value: 100 }].map(item => {
-                        const targetScale = miniatureScaleMode === "human" && originalZ > 0 ? (1800.0 / item.value / originalZ) * 100.0 : 100.0 / item.value;
-                        return <button key={item.label} onClick={() => applyMiniatureScale(item.value)} className={`p-1 border rounded text-[9px] font-black ${Math.abs(printScale - targetScale) < 0.2 ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]" : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"}`}>{item.label}</button>;
-                      })}
-                    </div>
-                  </div>
-                </div>
-                {estimatorType === "SLA" ? (
-                  <>
-                    <div className="flex items-center justify-between border-t border-zinc-900/60 pt-3">
-                      <div><span className="text-[10px] uppercase font-bold text-zinc-400">Modelo Oco</span><span className="text-[9px] text-zinc-500 block">Parede de 2mm</span></div>
-                      <button onClick={() => setIsHollow(!isHollow)} className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border ${isHollow ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[#111] border-zinc-800 text-zinc-400"}`}>{isHollow ? "Ativo" : "Não"}</button>
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Camada</span><span className="text-purple-400 font-mono">{(layerHeight * 1000).toFixed(0)} μm</span></div>
-                      <Slider value={[layerHeight]} onValueChange={(v) => setLayerHeight(v[0])} min={0.02} max={0.15} step={0.01} />
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Exposição</span><span className="text-yellow-400 font-mono">{exposureTime}s</span></div>
-                      <Slider value={[exposureTime]} onValueChange={(v) => setExposureTime(v[0])} min={1.0} max={10.0} step={0.1} />
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Preço Resina</span><span className="text-zinc-300 font-mono">${resinCostPerKg}/kg</span></div>
-                      <Slider value={[resinCostPerKg]} onValueChange={(v) => setResinCostPerKg(v[0])} min={15} max={120} step={1} />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Infill</span><span className="text-emerald-400 font-mono">{fdmInfill}%</span></div>
-                      <Slider value={[fdmInfill]} onValueChange={(v) => setFdmInfill(v[0])} min={0} max={100} step={5} />
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Paredes</span><span className="text-cyan-400 font-mono">{fdmWallCount}</span></div>
-                      <Slider value={[fdmWallCount]} onValueChange={(v) => setFdmWallCount(v[0])} min={1} max={8} step={1} />
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Camada</span><span className="text-purple-400 font-mono">{fdmLayerHeight} mm</span></div>
-                      <Slider value={[fdmLayerHeight]} onValueChange={(v) => setFdmLayerHeight(v[0])} min={0.08} max={0.36} step={0.02} />
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Velocidade</span><span className="text-yellow-400 font-mono">{fdmPrintSpeed} mm/s</span></div>
-                      <Slider value={[fdmPrintSpeed]} onValueChange={(v) => setFdmPrintSpeed(v[0])} min={30} max={300} step={10} />
-                    </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Preço Filamento</span><span className="text-zinc-300 font-mono">${fdmFilamentCostPerKg}/kg</span></div>
-                      <Slider value={[fdmFilamentCostPerKg]} onValueChange={(v) => setFdmFilamentCostPerKg(v[0])} min={10} max={80} step={1} />
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-          )}
-          {modelGeometry && (
-            <section className="border-t border-zinc-900 pt-6">
-              <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[#00E5FF]" /> Perfis & Configurações</h3>
-              <div className="bg-[#111] border border-zinc-900 rounded p-4 space-y-4 font-sans">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-zinc-400">Carregar Perfil</label>
-                  <select onChange={(e) => { if (e.target.value) { applyPresetProfile(e.target.value); e.target.value = ""; } }} defaultValue="" className="w-full bg-[#151515] border border-zinc-800 text-zinc-300 rounded px-2.5 py-2 text-xs focus:outline-none focus:border-[#00E5FF]">
-                    <option value="" disabled>-- Selecione --</option>
-                    <optgroup label="SLA"><option value="sla_standard">SLA Padrão (50μm)</option><option value="sla_high_detail">SLA Alta Definição (20μm)</option><option value="sla_draft_hollow">SLA Rápido & Oco (100μm)</option></optgroup>
-                    <optgroup label="FDM"><option value="fdm_standard">FDM Padrão (0.20mm - 20%)</option><option value="fdm_draft">FDM Rápido (0.28mm - 15%)</option><option value="fdm_strong">FDM Resistente (0.16mm - 40%)</option></optgroup>
-                  </select>
-                </div>
-                {settingsNotification && (
-                  <div className={`p-2.5 rounded text-[10px] uppercase font-bold tracking-wide flex items-center gap-2 ${settingsNotification.type === "success" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-[#FF1744]/10 border border-[#FF1744]/20 text-[#FF1744]"}`}>
-                    <Info className="w-3.5 h-3.5 shrink-0" /><span>{settingsNotification.message}</span>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-2">
-                  <button onClick={exportSettingsJSON} className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-zinc-950 border border-zinc-800 hover:border-[#00E5FF] hover:bg-zinc-900 text-zinc-300 hover:text-white rounded transition-all text-[10px] font-bold uppercase tracking-wider"><FileJson className="w-3.5 h-3.5 text-[#00E5FF]" /> Exportar JSON</button>
-                  <button onClick={() => settingsInputRef.current?.click()} className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-zinc-950 border border-zinc-800 hover:border-emerald-400 hover:bg-zinc-900 text-zinc-300 hover:text-white rounded transition-all text-[10px] font-bold uppercase tracking-wider"><Upload className="w-3.5 h-3.5 text-emerald-400" /> Importar JSON</button>
-                  <input type="file" ref={settingsInputRef} onChange={importSettingsJSON} accept=".json" className="hidden" />
-                </div>
-              </div>
-            </section>
-          )}
-          <section className="border-t border-zinc-900 pt-6">
-            <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Plus className="w-3.5 h-3.5 text-[#00E5FF]" /> 03. Fornecedores</h3>
-            <div className="space-y-2">
-              <button onClick={() => setShowSuppliers(!showSuppliers)} className="w-full flex items-center justify-between p-3 bg-zinc-950 border border-zinc-900 rounded text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-[#00E5FF] hover:border-[#00E5FF]/30 transition-all group">
-                <div className="flex items-center gap-2"><Download className="w-3.5 h-3.5 group-hover:animate-bounce" /> Ver Lista</div>
-                {showSuppliers ? <Undo className="w-3 h-3 rotate-90 text-[#00E5FF]" /> : <Plus className="w-3 h-3" />}
-              </button>
-              {showSuppliers && (
-                <div className="mt-2 space-y-2">
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <button onClick={() => setEstimatorType("SLA")} className={`py-1.5 text-[8px] font-bold uppercase rounded border ${estimatorType === "SLA" ? "bg-cyan-500/10 text-[#00E5FF] border-cyan-500/30" : "bg-zinc-900 text-zinc-600 border-zinc-800"}`}>Resina (SLA)</button>
-                    <button onClick={() => setEstimatorType("FDM")} className={`py-1.5 text-[8px] font-bold uppercase rounded border ${estimatorType === "FDM" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-zinc-900 text-zinc-600 border-zinc-800"}`}>Filamento (FDM)</button>
-                  </div>
-                  {(estimatorType === "SLA" ? [{ name: "3D PRIME", url: "https://3dprime.com.br/resinas" }, { name: "GTMAX 3D", url: "https://gtmax3d.com.br/" }, { name: "ANYCUBIC", url: "https://anycubic.com.br/" }] : [{ name: "3D FILA", url: "https://3dfila.com.br/" }, { name: "VOOLT3D", url: "https://www.voolt3d.com.br/" }, { name: "CLIEVER", url: "https://www.cliever.com/" }]).map((sup, idx) => (
-                    <a key={idx} href={sup.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-2.5 bg-[#0a0a0a] border border-zinc-900 rounded hover:border-[#00E5FF]/40 hover:bg-[#111] transition-all">
-                      <span className="text-[10px] font-black text-zinc-300">{sup.name}</span>
-                      <Download className="w-3 h-3 text-zinc-800 hover:text-[#00E5FF] rotate-[-90deg]" />
-                    </a>
-                  ))}
                 </div>
               )}
             </div>
@@ -1593,13 +1404,6 @@ export default function Viewer3D() {
                   );
                 })}
                 <button onClick={addCustomGroup} className="w-full mt-2 border border-dashed border-zinc-800 hover:border-[#00E5FF] bg-zinc-950/40 hover:bg-[#00E5FF]/5 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center justify-center gap-1.5 transition-all rounded shadow-sm"><Plus className="w-4 h-4 text-[#00E5FF]" /> Adicionar Nova Peça</button>
-                <div className="space-y-2 mt-4 pt-4 border-t border-zinc-900">
-                  <button onClick={expandConnectedPaint} className="w-full flex items-center justify-center gap-2 p-3 bg-zinc-900 border border-zinc-800 hover:border-[#00E5FF] hover:bg-zinc-800 text-zinc-100 text-[10px] font-bold uppercase tracking-wider transition-all rounded shadow-md"><PaintBucket className="w-4 h-4 text-[#00E5FF]" /> Preencher Parte Conectada</button>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={fillRemainingWithActiveGroup} className="flex items-center justify-center gap-2 p-2.5 bg-[#121212] border border-zinc-800 hover:border-zinc-500 hover:bg-zinc-900/40 text-zinc-300 text-[10px] font-bold uppercase tracking-wider transition-all rounded"><Paintbrush className="w-3.5 h-3.5 text-zinc-400" /> Completar Restante</button>
-                    <button onClick={fillAllWithActiveGroup} className="flex items-center justify-center gap-2 p-2.5 bg-[#121212] border border-zinc-800 hover:border-zinc-500 hover:bg-zinc-900/40 text-zinc-300 text-[10px] font-bold uppercase tracking-wider transition-all rounded"><Check className="w-3.5 h-3.5 text-zinc-400" /> Preencher Tudo</button>
-                  </div>
-                </div>
               </div>
             ) : (
               <div className="p-6 border border-dashed border-zinc-800 rounded bg-[#0b0b0b] text-center text-[10px] text-zinc-500 uppercase tracking-wider">Upload a 3D model first</div>
@@ -1690,7 +1494,19 @@ export default function Viewer3D() {
                     ))}
                     {selectedManualJoint && jointBounds && (
                       <div className="space-y-2 p-2 bg-[#FFD700]/5 rounded border border-[#FFD700]/30">
-                        <div className="flex items-center justify-between text-[8px] uppercase font-bold text-[#FFD700]"><span>Ajustar posição</span><button onClick={() => setSelectedManualJointId(null)} className="text-zinc-500 hover:text-white">Fechar</button></div>
+                         <div className="flex items-center justify-between text-[8px] uppercase font-bold text-[#FFD700]"><span>Ajustar encaixe</span><button onClick={() => setSelectedManualJointId(null)} className="text-zinc-500 hover:text-white">Fechar</button></div>
+                         <div className="grid grid-cols-3 gap-1">
+                           {([
+                             ["translate", "Mover"],
+                             ["rotate", "Rotacionar"],
+                             ["scale", "Escalar"],
+                           ] as const).map(([mode, label]) => (
+                             <button key={mode} onClick={() => setTransformMode(mode)} className={`py-1.5 rounded border text-[8px] font-bold uppercase ${transformMode === mode ? "border-[#FFD700] bg-[#FFD700]/15 text-[#FFD700]" : "border-zinc-800 text-zinc-500 hover:text-white"}`}>
+                               {label}
+                             </button>
+                           ))}
+                         </div>
+                         <p className="text-[8px] text-zinc-500">Use o gizmo no preview para ajustar os eixos X, Y e Z.</p>
                         {(["x", "y", "z"] as const).map(axis => {
                           const min = jointBounds.min[axis];
                           const max = jointBounds.max[axis];
@@ -1868,6 +1684,139 @@ export default function Viewer3D() {
                     </button>
                   );
                 })}
+              </div>
+            </section>
+          )}
+          {modelGeometry && (
+            <section className="border-t border-zinc-900 pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2"><Printer className="w-4 h-4 text-[#00E5FF]" /> 02. Calculadora de Preços</h3>
+                <button onClick={handleDownloadCSV} className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] uppercase font-bold text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF]/30 transition-all group"><FileJson className="w-3 h-3 group-hover:scale-110 transition-transform" /> CSV</button>
+              </div>
+              <div className="flex bg-[#111] p-1 rounded border border-zinc-900 mb-4 font-sans">
+                <button onClick={() => { setEstimatorType("SLA"); const d = MATERIALS.find(m => m.type === "SLA"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setResinCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "SLA" ? "bg-cyan-500/10 text-[#00E5FF] border border-cyan-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Printer className="w-3.5 h-3.5" /> SLA (Resina)</button>
+                <button onClick={() => { setEstimatorType("FDM"); const d = MATERIALS.find(m => m.type === "FDM"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setFdmFilamentCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "FDM" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Sliders className="w-3.5 h-3.5" /> FDM (Filamento)</button>
+              </div>
+              <div className="mb-4 space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block px-1">Perfil de Material</label>
+                <select value={selectedMaterialId} onChange={(e) => { const m = MATERIALS.find(x => x.id === e.target.value); if (m) { setSelectedMaterialId(m.id); setMaterialDensity(m.density); if (m.type === "SLA") setResinCostPerKg(m.defaultCost); else setFdmFilamentCostPerKg(m.defaultCost); } }} className="w-full bg-[#111] border border-zinc-800 p-2.5 rounded text-[10px] text-zinc-200 font-bold uppercase focus:outline-none focus:border-[#00E5FF]">
+                  {MATERIALS.filter(m => m.type === estimatorType).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <div className="flex justify-between text-[8px] text-zinc-600 uppercase font-black px-1">
+                  <span>Densidade: {materialDensity.toFixed(2)} g/cm³</span>
+                  <span>Preço: R$ {(estimatorType === "SLA" ? resinCostPerKg : fdmFilamentCostPerKg).toFixed(0)}/kg</span>
+                </div>
+              </div>
+              <div className="bg-[#111] border border-zinc-900 rounded p-4 space-y-4 mb-4 font-sans relative overflow-hidden">
+                {isEstimating && (
+                  <>
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-zinc-950 z-20"><div className={`h-full transition-all duration-100 ease-out ${estimatorType === "SLA" ? "bg-gradient-to-r from-cyan-500 to-[#00E5FF]" : "bg-gradient-to-r from-emerald-500 to-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
+                    <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-[1px] flex flex-col items-center justify-center space-y-3 z-10 select-none">
+                      <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 animate-spin ${estimatorType === "SLA" ? "text-[#00E5FF]" : "text-emerald-400"}`} /><span className="text-[9px] uppercase font-bold tracking-widest text-zinc-300">{estimatorType === "SLA" ? "Fatiando SLA..." : "Fatiando FDM..."}</span></div>
+                      <div className="text-center space-y-1 w-full max-w-[220px] px-4">
+                        <div className="flex justify-between items-center text-[8px] uppercase font-mono text-zinc-500"><span>Status</span><span className={`${estimatorType === "SLA" ? "text-[#00E5FF]" : "text-emerald-400"} font-bold`}>{estimateProgress}%</span></div>
+                        <div className="w-full h-[3px] bg-zinc-900 rounded-full overflow-hidden"><div className={`h-full transition-all duration-75 ${estimatorType === "SLA" ? "bg-[#00E5FF]" : "bg-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
+                        <p className="text-[8px] font-medium text-zinc-400 uppercase tracking-wider text-center pt-1.5 truncate">{getSlicingStatus(estimateProgress)}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+                <div className="grid grid-cols-3 gap-2 text-center pb-3 border-b border-zinc-900">
+                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">X</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledX.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
+                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Y</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledY.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
+                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Z</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledZ.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
+                </div>
+                {estimatorType === "SLA" ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume).toFixed(2)} mL</span></div>
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity).toFixed(1)} g</span></div>
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">{Math.floor((Math.ceil(scaledZ / layerHeight) * (exposureTime + 5.0) + 120) / 3600)}h</span></div>
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${(((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity) / 1000.0 * resinCostPerKg).toFixed(2)}</span></div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0)).toFixed(2)} cm³</span></div>
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity).toFixed(1)} g</span></div>
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">~{Math.floor(((modelDimensions.volume * 1000.0) / (0.42 * fdmLayerHeight * fdmPrintSpeed || 1.0)) * 1.30 / 3600)}h</span></div>
+                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${((modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity) / 1000.0 * fdmFilamentCostPerKg).toFixed(2)}</span></div>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4 bg-zinc-950 p-3.5 border border-zinc-900 rounded font-sans">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-bold text-zinc-400">
+                    <span className="flex items-center">Escala / Scale<HelpTooltip text="Ajusta o tamanho final." /></span>
+                    <div className="flex items-center bg-zinc-900 border border-zinc-850 rounded px-1.5 py-0.5 w-24">
+                      <input type="number" value={printScale} onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPrintScale(Math.max(1, Math.min(2000, v))); }} className="w-full bg-transparent text-right text-xs font-mono text-[#00E5FF] focus:outline-none" min="1" max="2000" step="0.1" />
+                      <span className="text-[10px] text-zinc-500 font-bold ml-1">%</span>
+                    </div>
+                  </div>
+                  <Slider value={[printScale]} onValueChange={(v) => setPrintScale(v[0])} min={1} max={500} step={1} />
+                  <div className="space-y-1">
+                    <span className="text-[8px] uppercase font-bold text-zinc-500 block">Atalhos:</span>
+                    <div className="grid grid-cols-6 gap-1">
+                      {[25, 50, 75, 100, 150, 200].map(p => (
+                        <button key={p} onClick={() => setPrintScale(p)} className={`py-1 text-[8px] font-mono uppercase border rounded transition-all cursor-pointer text-center ${printScale === p ? "bg-[#00E5FF] text-black border-[#00E5FF] font-bold" : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"}`}>{p}%</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-3 pt-2.5 border-t border-zinc-900/60">
+                    <span className="text-[8px] uppercase font-bold text-[#00E5FF] flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Proporções de Miniatura</span>
+                    <div className="grid grid-cols-2 gap-1 bg-zinc-950 p-0.5 rounded border border-zinc-900">
+                      <button onClick={() => setMiniatureScaleMode("human")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "human" ? "bg-[#00E5FF] text-black" : "text-zinc-400 hover:text-white"}`}>Base Humana (1.80m)</button>
+                      <button onClick={() => setMiniatureScaleMode("direct")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "direct" ? "bg-[#00E5FF] text-black" : "text-zinc-400 hover:text-white"}`}>Direto do Arquivo (1:1)</button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[{ label: "1/8", value: 8 }, { label: "1/12", value: 12 }, { label: "1/16", value: 16 }, { label: "1/24", value: 24 }, { label: "1/32", value: 32 }, { label: "1/35", value: 35 }, { label: "1/48", value: 48 }, { label: "1/56", value: 56 }, { label: "1/64", value: 64 }, { label: "1/72", value: 72 }, { label: "1/100", value: 100 }].map(item => {
+                        const targetScale = miniatureScaleMode === "human" && originalZ > 0 ? (1800.0 / item.value / originalZ) * 100.0 : 100.0 / item.value;
+                        return <button key={item.label} onClick={() => applyMiniatureScale(item.value)} className={`p-1 border rounded text-[9px] font-black ${Math.abs(printScale - targetScale) < 0.2 ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]" : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"}`}>{item.label}</button>;
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {estimatorType === "SLA" ? (
+                  <>
+                    <div className="flex items-center justify-between border-t border-zinc-900/60 pt-3">
+                      <div><span className="text-[10px] uppercase font-bold text-zinc-400">Modelo Oco</span><span className="text-[9px] text-zinc-500 block">Parede de 2mm</span></div>
+                      <button onClick={() => setIsHollow(!isHollow)} className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border ${isHollow ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[#111] border-zinc-800 text-zinc-400"}`}>{isHollow ? "Ativo" : "Não"}</button>
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Camada</span><span className="text-purple-400 font-mono">{(layerHeight * 1000).toFixed(0)} μm</span></div>
+                      <Slider value={[layerHeight]} onValueChange={(v) => setLayerHeight(v[0])} min={0.02} max={0.15} step={0.01} />
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Exposição</span><span className="text-yellow-400 font-mono">{exposureTime}s</span></div>
+                      <Slider value={[exposureTime]} onValueChange={(v) => setExposureTime(v[0])} min={1.0} max={10.0} step={0.1} />
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Preço Resina</span><span className="text-zinc-300 font-mono">${resinCostPerKg}/kg</span></div>
+                      <Slider value={[resinCostPerKg]} onValueChange={(v) => setResinCostPerKg(v[0])} min={15} max={120} step={1} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Infill</span><span className="text-emerald-400 font-mono">{fdmInfill}%</span></div>
+                      <Slider value={[fdmInfill]} onValueChange={(v) => setFdmInfill(v[0])} min={0} max={100} step={5} />
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Paredes</span><span className="text-cyan-400 font-mono">{fdmWallCount}</span></div>
+                      <Slider value={[fdmWallCount]} onValueChange={(v) => setFdmWallCount(v[0])} min={1} max={8} step={1} />
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Camada</span><span className="text-purple-400 font-mono">{fdmLayerHeight} mm</span></div>
+                      <Slider value={[fdmLayerHeight]} onValueChange={(v) => setFdmLayerHeight(v[0])} min={0.08} max={0.36} step={0.02} />
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Velocidade</span><span className="text-yellow-400 font-mono">{fdmPrintSpeed} mm/s</span></div>
+                      <Slider value={[fdmPrintSpeed]} onValueChange={(v) => setFdmPrintSpeed(v[0])} min={30} max={300} step={10} />
+                    </div>
+                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Preço Filamento</span><span className="text-zinc-300 font-mono">${fdmFilamentCostPerKg}/kg</span></div>
+                      <Slider value={[fdmFilamentCostPerKg]} onValueChange={(v) => setFdmFilamentCostPerKg(v[0])} min={10} max={80} step={1} />
+                    </div>
+                  </>
+                )}
               </div>
             </section>
           )}

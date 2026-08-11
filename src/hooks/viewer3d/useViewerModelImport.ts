@@ -46,7 +46,7 @@ export function useViewerModelImport({
 }: {
   importUnit: "mm" | "inch";
   importScale: number;
-  onResetDomain: () => void;
+    onResetDomain: (vertexCount: number) => void;
 }) {
   const [modelGeometry, setModelGeometry] = useState<THREE.BufferGeometry | null>(null);
   const [fileName, setFileName] = useState("NONE");
@@ -68,7 +68,7 @@ export function useViewerModelImport({
         const size = prepared.boundingBox?.getSize(new THREE.Vector3()) || new THREE.Vector3();
         setModelDimensions({ x: size.x, y: size.y, z: size.z, volume: calculateMeshVolume(prepared) });
         const count = prepared.attributes.position.count;
-        onResetDomain(); setModelGeometry(prepared);
+        onResetDomain(count); setModelGeometry(prepared);
         setStats({ faces: prepared.index ? Math.floor(prepared.index.count / 3) : Math.floor(count / 3), vertices: count });
       } finally { setIsProcessing(false); }
     }, 100);
