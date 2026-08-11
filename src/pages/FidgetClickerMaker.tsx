@@ -1,10 +1,7 @@
-import { useState, useRef, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
-import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { toastExportError } from "@/lib/toast";
+import { useFidgetClickerMaker, type ClickerConfig } from "../hooks/useFidgetClickerMaker";
 import { 
   Gamepad2, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -12,147 +9,10 @@ import {
   Maximize, Minimize, Activity, Cpu
 } from "lucide-react";
 
-interface ClickerConfig {
-  rows: number;
-  cols: number;
-  switchSize: number; // 14mm standard
-  wallThickness: number;
-  height: number;
-  plateThickness: number;
-  cornerRadius: number;
-  keychainHole: boolean;
-  holeDiameter: number;
-  baseColor: string;
-}
-
 export default function FidgetClickerMaker() {
-  const [config, setConfig] = useState<ClickerConfig>({
-    rows: 1,
-    cols: 1,
-    switchSize: 14,
-    wallThickness: 2.5,
-    height: 12,
-    plateThickness: 1.5,
-    cornerRadius: 3,
-    keychainHole: true,
-    holeDiameter: 4,
-    baseColor: "#e0e0e0"
-  });
-
-  const [successMsg, setSuccessMsg] = useState("");
-
-  const dimensions = useMemo(() => {
-    const width = (config.cols * config.switchSize) + ((config.cols + 1) * config.wallThickness);
-    const depth = (config.rows * config.switchSize) + ((config.rows + 1) * config.wallThickness);
-    return { width, depth, height: config.height };
-  }, [config]);
-
-  const handleExportSTL = () => {
-    try {
-      const exporter = new STLExporter();
-      const { width, depth, height } = dimensions;
-      const w = width / 10;
-      const d = depth / 10;
-      const h = height / 10;
-      const r = config.cornerRadius / 10;
-      const sw = config.switchSize / 10;
-      const t = config.wallThickness / 10;
-      const pt = config.plateThickness / 10;
-
-      // 1. Create main outer shape
-      const outerShape = new THREE.Shape();
-      outerShape.moveTo(-w / 2 + r, -d / 2);
-      outerShape.lineTo(w / 2 - r, -d / 2);
-      outerShape.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + r);
-      outerShape.lineTo(w / 2, d / 2 - r);
-      outerShape.quadraticCurveTo(w / 2, d / 2, w / 2 - r, d / 2);
-      outerShape.lineTo(-w / 2 + r, d / 2);
-      outerShape.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - r);
-      outerShape.lineTo(-w / 2, -d / 2 + r);
-      outerShape.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + r, -d / 2);
-
-      // 2. Create switch holes as holes in the shape
-      // We'll create the plate first
-      const plateShape = outerShape.clone();
-      for (let rIdx = 0; rIdx < config.rows; rIdx++) {
-        for (let cIdx = 0; cIdx < config.cols; cIdx++) {
-          const x = (-(width / 10) / 2) + t + (cIdx * (sw + t));
-          const y = (-(depth / 10) / 2) + t + (rIdx * (sw + t));
-          
-          const holePath = new THREE.Path();
-          holePath.moveTo(x, y);
-          holePath.lineTo(x + sw, y);
-          holePath.lineTo(x + sw, y + sw);
-          holePath.lineTo(x, y + sw);
-          holePath.lineTo(x, y);
-          plateShape.holes.push(holePath);
-        }
-      }
-
-      // Keychain hole
-      if (config.keychainHole) {
-        const khRadius = config.holeDiameter / 20;
-        const khX = (width / 20) - (config.wallThickness / 10);
-        const khY = (depth / 20) - (config.wallThickness / 10);
-        const khHole = new THREE.Path();
-        khHole.absarc(khX, khY, khRadius, 0, Math.PI * 2, true);
-        plateShape.holes.push(khHole);
-      }
-
-      const geometries: THREE.BufferGeometry[] = [];
-
-      // Base (0.2cm = 2mm)
-      const baseGeom = new THREE.ExtrudeGeometry(outerShape, { depth: 0.2, bevelEnabled: false });
-      geometries.push(baseGeom);
-
-      // Plate with holes at the top
-      const plateGeom = new THREE.ExtrudeGeometry(plateShape, { depth: pt, bevelEnabled: false });
-      plateGeom.translate(0, 0, h - pt);
-      geometries.push(plateGeom);
-
-      // Walls
-      // We can create walls by extruding a frame
-      const frameShape = outerShape.clone();
-      const innerW = w - (t * 2);
-      const innerD = d - (t * 2);
-      const innerR = Math.max(0, r - t);
-      const innerPath = new THREE.Path();
-      innerPath.moveTo(-innerW / 2 + innerR, -innerD / 2);
-      innerPath.lineTo(innerW / 2 - innerR, -innerD / 2);
-      innerPath.quadraticCurveTo(innerW / 2, -innerD / 2, innerW / 2, -innerD / 2 + innerR);
-      innerPath.lineTo(innerW / 2, innerD / 2 - innerR);
-      innerPath.quadraticCurveTo(innerW / 2, innerD / 2, innerW / 2 - innerR, innerD / 2);
-      innerPath.lineTo(-innerW / 2 + innerR, innerD / 2);
-      innerPath.quadraticCurveTo(-innerW / 2, innerD / 2, -innerW / 2, innerD / 2 - innerR);
-      innerPath.lineTo(-innerW / 2, -innerD / 2 + innerR);
-      innerPath.quadraticCurveTo(-innerW / 2, -innerD / 2, -innerW / 2 + innerR, -innerD / 2);
-      frameShape.holes.push(innerPath);
-
-      const wallsGeom = new THREE.ExtrudeGeometry(frameShape, { depth: h - 0.2, bevelEnabled: false });
-      wallsGeom.translate(0, 0, 0.2);
-      geometries.push(wallsGeom);
-
-      const mergedGeometry = BufferGeometryUtils.mergeGeometries(geometries);
-      const mesh = new THREE.Mesh(mergedGeometry);
-
-      const result = exporter.parse(mesh, { binary: true });
-      const blob = new Blob([result], { type: "application/octet-stream" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `fidget-clicker-${config.cols}x${config.rows}-${Date.now()}.stl`;
-      link.click();
-      
-      showNotification("STL exportado com sucesso!");
-    } catch (err) {
-      console.error("Export failed:", err);
-      toastExportError();
-    }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
-  };
+  const generator = useFidgetClickerMaker();
+  const { config, setConfig, dimensions, housingShape, extrudeSettings, successMsg } = generator;
+  const exportSTL = generator.handleExportSTL;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
@@ -281,7 +141,7 @@ export default function FidgetClickerMaker() {
 
           <div className="pt-6">
             <button
-              onClick={handleExportSTL}
+               onClick={exportSTL}
               className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
@@ -309,7 +169,7 @@ export default function FidgetClickerMaker() {
               sectionSize={50} 
               position={[0, -0.1, 0]}
             />
-            <Scene config={config} dimensions={dimensions} />
+            <Scene config={config} dimensions={dimensions} housingShape={housingShape} extrudeSettings={extrudeSettings} />
           </Canvas>
         </div>
 
@@ -339,39 +199,11 @@ export default function FidgetClickerMaker() {
   );
 }
 
-function Scene({ config, dimensions }: { config: ClickerConfig; dimensions: any }) {
+function Scene({ config, dimensions, housingShape, extrudeSettings }: { config: ClickerConfig; dimensions: any; housingShape: THREE.Shape; extrudeSettings: THREE.ExtrudeGeometryOptions }) {
   const { width, depth, height } = dimensions;
   
   // Create the housing geometry with cutouts for switches
   // For the preview, we'll use a main box and subtract visually by adding "holes" or using a clever shape.
-  const housingShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const w = width / 10;
-    const d = depth / 10;
-    const r = config.cornerRadius / 10;
-    
-    shape.moveTo(-w/2 + r, -d/2);
-    shape.lineTo(w/2 - r, -d/2);
-    shape.quadraticCurveTo(w/2, -d/2, w/2, -d/2 + r);
-    shape.lineTo(w/2, d/2 - r);
-    shape.quadraticCurveTo(w/2, d/2, w/2 - r, d/2);
-    shape.lineTo(-w/2 + r, d/2);
-    shape.quadraticCurveTo(-w/2, d/2, -w/2, d/2 - r);
-    shape.lineTo(-w/2, -d/2 + r);
-    shape.quadraticCurveTo(-w/2, -d/2, -w/2 + r, -d/2);
-    
-    return shape;
-  }, [width, depth, config.cornerRadius]);
-
-  const extrudeSettings = useMemo(() => ({
-    steps: 1,
-    depth: height / 10,
-    bevelEnabled: true,
-    bevelThickness: 0.1,
-    bevelSize: 0.1,
-    bevelSegments: 3
-  }), [height]);
-
   const sw = config.switchSize / 10;
   const t = config.wallThickness / 10;
   const pt = config.plateThickness / 10;

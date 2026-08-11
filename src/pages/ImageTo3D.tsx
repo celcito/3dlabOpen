@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Image, Loader2, CheckCircle, XCircle, Download, Box, ExternalLink,
@@ -6,8 +5,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UploadDropzone } from "@/components/UploadDropzone";
-import { useJobStream } from "@/hooks/useJobStream";
-import { useMultiJobStream } from "@/hooks/useMultiJobStream";
+import { useImageTo3D, type Provider } from "../hooks/useImageTo3D";
 
 const MAX_MULTI = 4;
 const MULTI_OPTIONS = [2, 3, 4] as const;
@@ -29,156 +27,21 @@ function stepLabel(step: string) {
   return labels[step] || step;
 }
 
-interface Provider {
-  id: string;
-  label: string;
-  available: boolean;
-  model_version?: string;
-}
-
 export default function ImageTo3D() {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [provider, setProvider] = useState<string>("local");
-  const [availableProviders, setAvailableProviders] = useState<Provider[]>([]);
   const navigate = useNavigate();
+  const {
+    file, setFile, uploading, setUploading, jobId, setJobId, error, setError,
+    provider, setProvider, multiMode, setMultiMode, multiCount, setMultiCount,
+    multiFiles, setMultiFiles, multiUploading, setMultiUploading, resolution,
+    setResolution, textMode, setTextMode, prompt, setPrompt, textUploading,
+    setTextUploading, textJobId, setTextJobId, progress, connected,
+    textProgress, textConnected, multiJobs, addJobs, multiAllDone,
+    handleGenerate, handleTextGenerate, handleGenerateMulti, handleReset, handleTextReset,
+    handleMultiReset, setMultiFileAt, isProcessing, isDone, isError, showProgress,
+    textIsProcessing, textIsDone, textIsError, textShowProgress, formatDownloadUrl,
+    multiFormatDownloadUrl, multiProcessing, multiHasResults, multiJobEntries,
+  } = useImageTo3D();
 
-  useEffect(() => {
-    fetch("/api/img2-3d/providers")
-      .then((r) => r.json())
-      .then((data) => {
-        setAvailableProviders(data.providers || []);
-        const cloud = (data.providers || []).find((p: Provider) => p.available && p.id === "cloud");
-        if (cloud) setProvider("cloud");
-      })
-      .catch(() => setProvider("local"));
-  }, []);
-
-  const { progress, connected } = useJobStream(jobId);
-
-  const [multiMode, setMultiMode] = useState(false);
-  const [multiCount, setMultiCount] = useState<number>(4);
-  const [multiFiles, setMultiFiles] = useState<(File | null)[]>(new Array(4).fill(null));
-  const [multiUploading, setMultiUploading] = useState(false);
-  const [resolution, setResolution] = useState<128 | 256 | 512>(128);
-  const { jobs: multiJobs, addJobs, allDone: multiAllDone } = useMultiJobStream();
-
-  const [textMode, setTextMode] = useState(false);
-  const [prompt, setPrompt] = useState("");
-  const [textUploading, setTextUploading] = useState(false);
-  const [textJobId, setTextJobId] = useState<string | null>(null);
-  const { progress: textProgress, connected: textConnected } = useJobStream(textJobId);
-
-  const handleGenerate = async () => {
-    if (!file) return;
-    setError(null);
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("mcResolution", String(resolution));
-      formData.append("provider", provider);
-      const res = await fetch("/api/img2-3d/generate", { method: "POST", body: formData });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(data.error || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setJobId(data.jobId);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleTextGenerate = async () => {
-    if (!prompt.trim()) return;
-    setError(null);
-    setTextUploading(true);
-    try {
-      const res = await fetch("/api/text-to-3d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, mcResolution: resolution, provider }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(data.error || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setTextJobId(data.jobId);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setTextUploading(false);
-    }
-  };
-
-  const handleGenerateMulti = async () => {
-    const files = multiFiles.filter((f): f is File => f !== null);
-    if (files.length < 2) return;
-    setError(null);
-    setMultiUploading(true);
-    const jobIds: string[] = [];
-    try {
-      for (const f of files.slice(0, multiCount)) {
-        if (!f) continue;
-        const formData = new FormData();
-        formData.append("image", f);
-        formData.append("mcResolution", String(resolution));
-        formData.append("provider", provider);
-      const res = await fetch("/api/img2-3d", { method: "POST", body: formData });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({ error: "Unknown error" }));
-          throw new Error(data.error || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
-        jobIds.push(data.jobId);
-      }
-      addJobs(jobIds);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setMultiUploading(false);
-    }
-  };
-
-  const handleReset = () => { setFile(null); setJobId(null); setError(null); };
-  const handleTextReset = () => { setPrompt(""); setTextJobId(null); setTextUploading(false); setError(null); };
-  const handleMultiReset = () => {
-    setMultiFiles(new Array(4).fill(null));
-    setMultiUploading(false);
-    setError(null);
-  };
-
-  const setMultiFileAt = (i: number) => (f: File) => {
-    const next = [...multiFiles];
-    next[i] = f;
-    setMultiFiles(next);
-  };
-
-  const isProcessing = jobId !== null && progress.status !== "done" && progress.status !== "error";
-  const isDone = progress.status === "done";
-  const isError = progress.status === "error" || !!error;
-  const showProgress = uploading || isProcessing;
-
-  const textIsProcessing = textJobId !== null && textProgress.status !== "done" && textProgress.status !== "error";
-  const textIsDone = textProgress.status === "done";
-  const textIsError = textProgress.status === "error";
-  const textShowProgress = textUploading || textIsProcessing;
-
-  const formatDownloadUrl = (fmt: string) => `/api/img2-3d/${jobId}/result/${fmt}`;
-  const multiFormatDownloadUrl = (id: string, fmt: string) => `/api/img2-3d/${id}/result/${fmt}`;
-
-  const multiProcessing = multiUploading || [...multiJobs.values()].some((j) =>
-    j.status !== "done" && j.status !== "error" && j.status !== "disconnected"
-  );
-  const multiHasResults = [...multiJobs.values()].some((j) => j.status === "done");
-
-  const multiJobEntries = [...multiJobs.values()];
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-white">

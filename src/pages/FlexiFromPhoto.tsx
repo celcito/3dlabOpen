@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,27 +13,14 @@ import {
   UploadCloud, Download, Sliders, Layers,
   Check, Waves, Loader2, ImageIcon
 } from "lucide-react";
-
-interface PhotoFlexiConfig {
-  segments: number;
-  gap: number;              // gap entre segmentos, em unidades da malha
-  hingeSizeRatio: number;   // 0.3–0.8, proporção do raio local
-  baseColor: string;
-}
+import { useFlexiFromPhoto } from "../hooks/useFlexiFromPhoto";
 
 export default function FlexiFromPhoto() {
-  const [config, setConfig] = useState<PhotoFlexiConfig>({
-    segments: 8,
-    gap: 0.15,
-    hingeSizeRatio: 0.5,
-    baseColor: "#00E5FF",
-  });
-
-  const [sourceGeometry, setSourceGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [segmentsPreview, setSegmentsPreview] = useState<SegmentData[]>([]);
-  const [fileName, setFileName] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "slicing" | "ready" | "error">("idle");
-  const [successMsg, setSuccessMsg] = useState("");
+  const {
+    config, setConfig, sourceGeometry, setSourceGeometry, segmentsPreview,
+    setSegmentsPreview, fileName, setFileName, status, setStatus, successMsg,
+    showNotification,
+  } = useFlexiFromPhoto();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- 1. Import do mesh gerado a partir da foto (saída do pipeline TripoSR/Hunyuan3D) ---
@@ -147,11 +134,6 @@ export default function FlexiFromPhoto() {
       console.error("Export failed:", err);
       toastExportError();
     }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
   };
 
   return (

@@ -1,14 +1,13 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { 
   Sparkles, Download, Upload, Sliders, HelpCircle, Eye, EyeOff, 
   RotateCcw, Info, Settings, LayoutGrid, Check, Play, Scissors,
   Layers, Hammer, Palette, ArrowRight, Save, Trash2, Heart, RefreshCw, FileText, Folder
 } from "lucide-react";
+import { useCookieCutterPage } from "../hooks/cookie/useCookieCutterPage";
 
 // --- TYPES & INTERFACES ---
 interface SVGPathLayer {
@@ -699,285 +698,19 @@ function CookieCutterScene({
 }
 
 export default function CookieCutterMaker() {
-  // --- STATE MANAGEMENT ---
-  const [activePresetId, setActivePresetId] = useState<string>("duck");
-  const [projectName, setProjectName] = useState<string>("MEU CORTADOR");
-  const [successMsg, setSuccessMsg] = useState<string>("");
-  const [errorMsg, setErrorMsg] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"geral" | "cutter" | "stamp" | "coloring" | "biblioteca">("geral");
-
-  // Configuration sliders with high-utility default settings for watertight 3D printing
-  const [config, setConfig] = useState<MakerConfig>({
-    size: 75,
-    cutterHeight: 14,
-    wallThickness: 0.8,
-    brimWidth: 4.0,
-    brimHeight: 2.0,
-    stampPlateThickness: 2.0,
-    clearance: 1.2,
-    detailHeight: 1.5,
-    detailThickness: 1.2,
-    addHandle: true,
-    handleHeight: 10,
-    coloringBaseThickness: 3.0,
-    coloringLineHeight: 1.6,
-    coloringLineWidth: 1.2,
-    materialColor: "#e0e0e0", // Bright orange PLA
-    viewMode: "cutter_stamp",
-    explodedView: 0.25,
-    showWireframe: false
-  });
-
-  // Vector layers parsed from SVG
-  const [layers, setLayers] = useState<SVGPathLayer[]>([]);
-  
-  // Local project list stored in localStorage
-  const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
-
-  // Hidden file upload ref
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    activePresetId, setActivePresetId, projectName, setProjectName, successMsg, triggerSuccess,
+    errorMsg, activeTab, setActiveTab, config, setConfig, layers, savedProjects, fileInputRef,
+    normalizedLayers, outlinePoints, detailRibbonShapes, handleSvgUpload, toggleLayerType,
+    handleSaveToLibrary, handleDeleteProject, handleLoadProject, exportToSTL,
+  } = useCookieCutterPage(PRESETS);
 
   // --- POP ALERT BANNER ---
-  const triggerSuccess = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 4000);
-  };
-
   // --- COMPUTE LAYER SHAPES & NORMALIZATION ---
   // Calculates combined bounding box of layers to center and scale them perfectly to config.size
-  const normalizedLayers = useMemo(() => {
-    if (layers.length === 0) return [];
+  // Geometry is normalized and prepared by the page hook.
 
-    // 1. Compute collective bounding box for layers classified as "cutter" (or fallback to all if none)
-    const activeLayers = layers.filter(l => l.type !== "ignore");
-    if (activeLayers.length === 0) return [];
-
-    const cutterLayers = activeLayers.filter(l => l.type === "cutter");
-    const targetBoundsLayers = cutterLayers.length > 0 ? cutterLayers : activeLayers;
-
-    const box = new THREE.Box2();
-    targetBoundsLayers.forEach(layer => {
-      layer.points.forEach(pt => box.expandByPoint(pt));
-    });
-
-    const sizeX = box.max.x - box.min.x;
-    const sizeY = box.max.y - box.min.y;
-    const center = new THREE.Vector2((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2);
-    const maxDimension = Math.max(sizeX, sizeY);
-
-    if (maxDimension <= 0) return layers;
-
-    // 2. Scale factor so the largest dimension is exactly config.size in millimeters
-    const scaleFactor = config.size / maxDimension;
-
-    // 3. Return layers with centered and scaled points
-    return layers.map(layer => {
-      const normalizedPts = layer.points.map(pt => {
-        // Shift to origin, scale, and flip Y-axis for standard 3D printers coordinate systems
-        return new THREE.Vector2()
-          .subVectors(pt, center)
-          .multiplyScalar(scaleFactor)
-          .multiply(new THREE.Vector2(1, -1)); // Flip Y so standard SVG rendering aligns with ThreeJS
-      });
-
-      return {
-        ...layer,
-        points: normalizedPts
-      };
-    });
-  }, [layers, config.size]);
-
-  // Combined outline coordinates for extrusion (single closed loop for outer wall cutter)
-  const outlinePoints = useMemo(() => {
-    const cutterLayer = normalizedLayers.find(l => l.type === "cutter");
-    if (cutterLayer) return cutterLayer.points;
-
-    // Fallback: Use the layer with the largest bounding box area
-    if (normalizedLayers.length === 0) return [];
-    let largestLayer = normalizedLayers[0];
-    let maxArea = -1;
-
-    normalizedLayers.forEach(layer => {
-      if (layer.type === "ignore") return;
-      const b = new THREE.Box2();
-      layer.points.forEach(pt => b.expandByPoint(pt));
-      const area = (b.max.x - b.min.x) * (b.max.y - b.min.y);
-      if (area > maxArea) {
-        maxArea = area;
-        largestLayer = layer;
-      }
-    });
-    return largestLayer.points;
-  }, [normalizedLayers]);
-
-  // Convert "stamp" layers to Ribbon shapes
-  const detailRibbonShapes = useMemo(() => {
-    const stampLayers = normalizedLayers.filter(l => l.type === "stamp");
-    return stampLayers.map(layer => {
-      const shape = createRibbonShapeFromPoints(layer.points, config.detailThickness, layer.isClosed);
-      return {
-        shape,
-        isClosed: layer.isClosed
-      };
-    });
-  }, [normalizedLayers, config.detailThickness]);
-
-  // --- PARSE SVG STRINGS INTO GEOMETRIES ---
-  const parseSVGContent = (svgText: string) => {
-    try {
-      const loader = new SVGLoader();
-      const svgData = loader.parse(svgText);
-      
-      if (!svgData || !svgData.paths || svgData.paths.length === 0) {
-        setErrorMsg("Não foi possível encontrar nenhum caminho vetorial (path) no SVG.");
-        return;
-      }
-
-      const parsedLayers: SVGPathLayer[] = [];
-
-      svgData.paths.forEach((pathObj, pathIdx) => {
-        const node = pathObj.userData?.node as any;
-        const nodeId = node ? (node.getAttribute("id") || node.getAttribute("class") || `path-${pathIdx}`) : `path-${pathIdx}`;
-        
-        pathObj.subPaths.forEach((subPath, subIdx) => {
-          // Get fine-sampled points for high resolution curves
-          const pts = subPath.getPoints(45);
-          if (pts.length < 2) return;
-
-          // Check if closed
-          const startPt = pts[0];
-          const endPt = pts[pts.length - 1];
-          const isClosed = startPt.distanceTo(endPt) < 0.1;
-
-          // Calculate total length
-          let pathLen = 0;
-          for (let i = 0; i < pts.length - 1; i++) {
-            pathLen += pts[i].distanceTo(pts[i + 1]);
-          }
-
-          parsedLayers.push({
-            id: `${nodeId}-${subIdx}`,
-            name: `${nodeId.toUpperCase()} (Parte ${subIdx + 1})`,
-            type: "stamp", // Default fallback
-            points: pts,
-            isClosed,
-            length: pathLen
-          });
-        });
-      });
-
-      if (parsedLayers.length === 0) {
-        setErrorMsg("Nenhuma linha ou curva válida foi encontrada.");
-        return;
-      }
-
-      // Auto-classify: The layer with the largest bounding box gets designated as "cutter" outline,
-      // all other layers are assigned as "stamp" details!
-      let largestIdx = 0;
-      let maxArea = -1;
-
-      parsedLayers.forEach((layer, idx) => {
-        const b = new THREE.Box2();
-        layer.points.forEach(pt => b.expandByPoint(pt));
-        const area = (b.max.x - b.min.x) * (b.max.y - b.min.y);
-        if (area > maxArea) {
-          maxArea = area;
-          largestIdx = idx;
-        }
-      });
-
-      parsedLayers.forEach((layer, idx) => {
-        layer.type = idx === largestIdx ? "cutter" : "stamp";
-      });
-
-      setLayers(parsedLayers);
-      setErrorMsg("");
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Falha ao analisar o arquivo SVG. Certifique-se de que é um formato válido.");
-    }
-  };
-
-  // Load preset SVG on start or preset click
-  useEffect(() => {
-    const preset = PRESETS.find(p => p.id === activePresetId);
-    if (preset) {
-      parseSVGContent(preset.svg);
-    }
-  }, [activePresetId]);
-
-  // Load library from localstorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("cookie_cutter_projects");
-      if (stored) {
-        setSavedProjects(JSON.parse(stored));
-      }
-    } catch (e) {}
-  }, []);
-
-  // --- SVG UPLOAD HANDLER ---
-  const handleSvgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setProjectName(file.name.replace(/\.svg$/i, "").toUpperCase());
-    setActivePresetId(""); // Clear active preset tag
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      parseSVGContent(text);
-      triggerSuccess("Desenho SVG importado com sucesso!");
-    };
-    reader.readAsText(file);
-  };
-
-  // --- LAYER TOGGLES ---
-  const toggleLayerType = (layerId: string, newType: "cutter" | "stamp" | "ignore") => {
-    setLayers(prev => prev.map(l => {
-      if (l.id !== layerId) return l;
-      return { ...l, type: newType };
-    }));
-  };
-
-  // --- SAVE CURRENT PROJECT TO LOCAL LIBRARY ---
-  const handleSaveToLibrary = () => {
-    if (layers.length === 0) return;
-
-    const newProject: SavedProject = {
-      id: crypto.randomUUID(),
-      name: projectName || "CORTADOR SEM NOME",
-      savedAt: new Date().toLocaleDateString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      presetId: activePresetId,
-      config: { ...config },
-      layers: [...layers]
-    };
-
-    const updated = [newProject, ...savedProjects];
-    setSavedProjects(updated);
-    localStorage.setItem("cookie_cutter_projects", JSON.stringify(updated));
-    triggerSuccess("Cortador salvo na biblioteca com sucesso!");
-  };
-
-  // --- DELETE PROJECT FROM LIBRARY ---
-  const handleDeleteProject = (projId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const updated = savedProjects.filter(p => p.id !== projId);
-    setSavedProjects(updated);
-    localStorage.setItem("cookie_cutter_projects", JSON.stringify(updated));
-    triggerSuccess("Cortador removido da biblioteca.");
-  };
-
-  // --- LOAD PROJECT FROM LIBRARY ---
-  const handleLoadProject = (proj: SavedProject) => {
-    setProjectName(proj.name);
-    setActivePresetId(proj.presetId);
-    setConfig(proj.config);
-    setLayers(proj.layers);
-    triggerSuccess(`Projeto "${proj.name}" carregado!`);
-  };
-
+  /* Legacy STL export implementation moved to useCookieCutterPage.
   // --- STL EXPORT MODULE ---
   const exportToSTL = (target: "cutter" | "stamp" | "coloring_plate" | "all") => {
     // Construct a temporary ThreeJS scene specifically for watertight STL export
@@ -1192,7 +925,7 @@ export default function CookieCutterMaker() {
       console.error(e);
       setErrorMsg("Erro ao compilar modelo 3D para STL.");
     }
-  };
+  }; */
 
   return (
     <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[#080808] text-white">

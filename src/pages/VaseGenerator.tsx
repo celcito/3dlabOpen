@@ -1,10 +1,7 @@
-import { useState, useRef, useMemo, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center, PerspectiveCamera, ContactShadows, Edges } from "@react-three/drei";
 import * as THREE from "three";
-import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { toastExportError } from "@/lib/toast";
+import { useVaseGenerator, type VaseConfig } from "../hooks/useVaseGenerator";
 import { 
   Flower, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -13,67 +10,10 @@ import {
   RefreshCw, Hash
 } from "lucide-react";
 
-interface VaseConfig {
-  height: number;
-  baseRadius: number;
-  midRadius: number;
-  topRadius: number;
-  midPosition: number; // 0 to 1
-  twist: number; // in degrees
-  sides: number; // 3 to 64
-  waves: number; // number of vertical waves
-  waveIntensity: number;
-  baseThickness: number;
-  wallThickness: number;
-  baseColor: string;
-}
-
 export default function VaseGenerator() {
-  const [config, setConfig] = useState<VaseConfig>({
-    height: 120,
-    baseRadius: 30,
-    midRadius: 45,
-    topRadius: 25,
-    midPosition: 0.5,
-    twist: 45,
-    sides: 32,
-    waves: 0,
-    waveIntensity: 2,
-    baseThickness: 2,
-    wallThickness: 2,
-    baseColor: "#e0e0e0"
-  });
-
-  const [successMsg, setSuccessMsg] = useState("");
-
-  const handleExportSTL = () => {
-    try {
-      const exporter = new STLExporter();
-      const geometry = createVaseGeometry(config);
-      const mesh = new THREE.Mesh(geometry);
-      
-      // Printable orientation
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.updateMatrixWorld();
-
-      const result = exporter.parse(mesh, { binary: true });
-      const blob = new Blob([result], { type: "application/octet-stream" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `custom-vase-${Date.now()}.stl`;
-      link.click();
-      
-      showNotification("Vaso exportado com sucesso!");
-    } catch (err) {
-      console.error(err);
-      toastExportError();
-    }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
-  };
+  const generator = useVaseGenerator(createVaseGeometry);
+  const { config, setConfig, successMsg, geometry } = generator;
+  const exportSTL = generator.handleExportSTL;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
@@ -250,7 +190,7 @@ export default function VaseGenerator() {
 
           <div className="pt-6">
             <button
-              onClick={handleExportSTL}
+              onClick={exportSTL}
               className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
@@ -279,7 +219,7 @@ export default function VaseGenerator() {
               position={[0, -0.1, 0]}
             />
             <Center top>
-              <VaseMesh config={config} />
+              <VaseMesh config={config} geometry={geometry} />
             </Center>
             <ContactShadows position={[0, -0.1, 0]} opacity={0.4} scale={30} blur={1} far={10} />
           </Canvas>
@@ -311,9 +251,7 @@ export default function VaseGenerator() {
   );
 }
 
-function VaseMesh({ config }: { config: VaseConfig }) {
-  const geometry = useMemo(() => createVaseGeometry(config), [config]);
-
+function VaseMesh({ config, geometry }: { config: VaseConfig; geometry: THREE.BufferGeometry }) {
   return (
     <mesh castShadow receiveShadow geometry={geometry}>
       <meshPhysicalMaterial 

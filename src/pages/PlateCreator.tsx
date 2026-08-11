@@ -11,6 +11,8 @@ import {
   Eye, EyeOff, RotateCcw, Copy, Folder, BookOpen, Save, FileDown,
   Info, Settings, LayoutGrid, Check, AlertTriangle, ArrowUpDown, Move, Type
 } from "lucide-react";
+import { usePlateCreator } from "../hooks/usePlateCreator";
+import { usePlateSceneGeometry, useTextGeometry } from "../hooks/plate/usePlateSceneGeometry";
 
 // Types
 interface PlateLayer {
@@ -393,18 +395,7 @@ function TextMesh({
   isSelected: boolean; 
   showWireframe: boolean; 
 }) {
-  const geom = useMemo(() => {
-    return new TextGeometry(layer.content, {
-      font: font,
-      size: layer.size / 10,
-      depth: layer.depth / 10,
-      curveSegments: 12,
-      bevelEnabled: true,
-      bevelThickness: 0.03,
-      bevelSize: 0.015,
-      bevelSegments: 3
-    });
-  }, [layer.content, layer.size, layer.depth, font]);
+  const geom = useTextGeometry(layer.content, layer.size, layer.depth, font);
 
   return (
     <mesh geometry={geom} castShadow receiveShadow>
@@ -454,47 +445,12 @@ function Scene({
     return target;
   };
 
-  const plateBaseShape = useMemo(() => {
-    return getPlateBaseShape(config, layers);
-  }, [config, layers]);
-
-  const extrudeSettings = useMemo(() => ({
-    steps: 1,
-    depth: config.thickness / 10,
-    bevelEnabled: true,
-    bevelThickness: 0.1,
-    bevelSize: 0.1,
-    bevelSegments: 3,
-  }), [config.thickness]);
-
-  // Determine material texture parameters
-  const materialProps = useMemo(() => {
-    const base = {
-      color: config.color,
-      roughness: 0.4,
-      metalness: 0.1,
-      wireframe: showWireframe
-    };
-
-    if (config.materialFinish === "glossy") {
-      base.roughness = 0.1;
-      base.metalness = 0.3;
-    } else if (config.materialFinish === "matte") {
-      base.roughness = 0.8;
-      base.metalness = 0.0;
-    } else if (config.materialFinish === "textured") {
-      base.roughness = 0.9;
-      base.metalness = 0.05;
-    } else if (config.materialFinish === "wood") {
-      base.color = "#8B5A2B"; // Warm wood tone
-      base.roughness = 0.7;
-    } else if (config.materialFinish === "carbon") {
-      base.color = "#151515"; // Dark carbon fiber base
-      base.roughness = 0.3;
-      base.metalness = 0.8;
-    }
-    return base;
-  }, [config.color, config.materialFinish, showWireframe]);
+  const { plateBaseShape, extrudeSettings, materialProps } = usePlateSceneGeometry(
+    config,
+    layers,
+    showWireframe,
+    getPlateBaseShape,
+  );
 
   // Handle auto-render refresh on parameter changes
   useEffect(() => {
@@ -928,7 +884,7 @@ export default function PlateCreator() {
   const [fontLoadingState, setFontLoadingState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [plateName, setPlateName] = useState<string>("Minha Placa Decorativa");
   const [savedLibrary, setSavedLibrary] = useState<SavedPlate[]>([]);
-  const [successMsg, setSuccessMsg] = useState<string>("");
+  const { successMsg, showSuccessNotification } = usePlateCreator();
   const [controlsEnabled, setControlsEnabled] = useState<boolean>(true);
 
   // Font loading system
@@ -1105,11 +1061,6 @@ export default function PlateCreator() {
       localStorage.setItem("vertice_saved_plates_library", JSON.stringify(updated));
       showSuccessNotification("Placa excluída.");
     }
-  };
-
-  const showSuccessNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
   };
 
   // STL EXPORT ENGINE (Dual Mode: Combined or Exploded separated for gluing)

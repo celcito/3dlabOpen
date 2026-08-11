@@ -6,6 +6,8 @@ import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUti
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { Evaluator, Brush, SUBTRACTION } from 'three-bvh-csg';
 import { toastExportError } from "@/lib/toast";
+import { useBinGenerator, type BinConfig, type BatterySlotGroup, type BatteryType, type SlotStyle } from "../hooks/useBinGenerator";
+import { useBinGeometry } from "../hooks/bin/useBinGeometry";
 import { 
   Box, Download, Settings, Sliders, 
   Trash2, Layers, Move, MousePointer2, 
@@ -14,33 +16,6 @@ import {
   Grid3X3, ArrowUpDown, ArrowLeftRight, Circle, Plus, X
 } from "lucide-react";
 
-type BatteryType = "aa" | "aaa" | "9v" | "cr";
-type SlotStyle = "hole" | "cradle";
-
-interface BatterySlotGroup {
-  id: string;
-  batteryType: BatteryType;
-  style: SlotStyle;
-  cols: number;
-  rows: number;
-  crDiameter: number;
-}
-
-interface BinConfig {
-  width: number;
-  depth: number;
-  height: number;
-  thickness: number;
-  radius: number;
-  dividersX: number;
-  dividersY: number;
-  divPositionsX?: number[];
-  divPositionsY?: number[];
-  innerFillet: number;
-  stackable: boolean;
-  baseColor: string;
-  slotGroups: BatterySlotGroup[];
-}
 
 let nextGroupId = 1;
 
@@ -238,21 +213,7 @@ function buildAllSlots(slotGroups: BatterySlotGroup[], innerW: number, innerD: n
 }
 
 export default function BinGenerator() {
-  const [config, setConfig] = useState<BinConfig>({
-    width: 80,
-    depth: 80,
-    height: 40,
-    thickness: 1.6,
-    radius: 6,
-    dividersX: 1,
-    dividersY: 1,
-    innerFillet: 2,
-    stackable: false,
-    baseColor: "#e0e0e0",
-    slotGroups: [],
-  });
-
-  const [successMsg, setSuccessMsg] = useState("");
+  const { config, setConfig, successMsg, showNotification } = useBinGenerator();
 
   const handleExportSTL = () => {
     try {
@@ -378,11 +339,6 @@ export default function BinGenerator() {
       console.error(err);
       toastExportError();
     }
-  };
-
-  const showNotification = (msg: string) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(""), 3500);
   };
 
   const hasSlots = config.slotGroups.length > 0;
@@ -891,81 +847,7 @@ function DividerY({ config, setConfig, index, innerW, innerD, h, t }: any) {
 function BinMesh({ config, setConfig }: { config: BinConfig; setConfig: React.Dispatch<React.SetStateAction<BinConfig>> }) {
   const { width, depth, height, thickness, radius, dividersX, dividersY, stackable, slotGroups } = config;
   
-  const w = width / 10;
-  const d = depth / 10;
-  const h = height / 10;
-  const t = thickness / 10;
-  const r = Math.min(radius / 10, w / 2, d / 2);
-
-  const innerW = w - t * 2;
-  const innerD = d - t * 2;
-
-  const { baseGeom, wallGeom, lipGeom } = useMemo(() => {
-    const baseShape = createRoundedRectShape(w, d, r);
-    const bGeom = new THREE.ExtrudeGeometry(baseShape, { depth: t, bevelEnabled: false, curveSegments: 24 });
-    
-    const wallShape = createRoundedRectShape(w, d, r);
-    const innerPath = createRoundedRectPath(innerW, innerD, Math.max(0, r - t));
-    wallShape.holes.push(innerPath);
-    const wGeom = new THREE.ExtrudeGeometry(wallShape, { depth: h - t, bevelEnabled: false, curveSegments: 24 });
-
-    let lGeom = null;
-    if (stackable) {
-      const lipH = Math.min(t, 0.4);
-      const lipW = innerW - 0.04;
-      const lipD = innerD - 0.04;
-      const lipR = Math.max(0, r - t - 0.02);
-      const lipShape = createRoundedRectShape(lipW, lipD, lipR);
-      const lipInnerW = lipW - t * 2;
-      const lipInnerD = lipD - t * 2;
-      if (lipInnerW > 0 && lipInnerD > 0) {
-        const lipInnerR = Math.max(0, lipR - t);
-        const lipInnerPath = createRoundedRectPath(lipInnerW, lipInnerD, lipInnerR);
-        lipShape.holes.push(lipInnerPath);
-      }
-      lGeom = new THREE.ExtrudeGeometry(lipShape, { depth: lipH, bevelEnabled: false, curveSegments: 24 });
-    }
-
-    return { baseGeom: bGeom, wallGeom: wGeom, lipGeom: lGeom };
-  }, [w, d, h, t, r, innerW, innerD, stackable]);
-
-  const slotGeoms = useMemo(() => {
-    return buildAllSlots(slotGroups, innerW, innerD, h, t);
-  }, [slotGroups, innerW, innerD, h, t]);
-
-  const finalMesh = useMemo(() => {
-    if (slotGeoms.holes.length === 0 && slotGeoms.cradles.length === 0) return null;
-
-    const toNI = (g: THREE.BufferGeometry) => g.clone().toNonIndexed();
-
-    const combined = BufferGeometryUtils.mergeGeometries([toNI(baseGeom), toNI(wallGeom)]);
-    combined.translate(0, 0, 0);
-    
-    let resultGeom: THREE.BufferGeometry;
-
-    if (slotGeoms.holes.length > 0) {
-      const binBrush = new Brush(combined.clone());
-      binBrush.updateMatrixWorld();
-      const holeMerged = BufferGeometryUtils.mergeGeometries(slotGeoms.holes.map(toNI));
-      holeMerged.translate(0, 0, 0);
-      const holeBrush = new Brush(holeMerged);
-      holeBrush.updateMatrixWorld();
-      const evaluator = new Evaluator();
-      const res = evaluator.evaluate(binBrush, holeBrush, SUBTRACTION);
-      if (!res || !res.geometry) return null;
-      resultGeom = res.geometry;
-    } else {
-      resultGeom = combined;
-    }
-
-    if (slotGeoms.cradles.length > 0) {
-      const cradleMerged = BufferGeometryUtils.mergeGeometries(slotGeoms.cradles.map(toNI));
-      resultGeom = BufferGeometryUtils.mergeGeometries([toNI(resultGeom), cradleMerged]);
-    }
-
-    resultGeom.rotateX(-Math.PI / 2);
-    return resultGeom;
-  }, [baseGeom, wallGeom, slotGeoms]);
+  const { baseGeom, wallGeom, lipGeom, finalMesh, w, d, h, t, r, innerW, innerD } = useBinGeometry(config);
 
   const lipH = Math.min(t, 0.4);
   const zOffset = stackable ? lipH : 0;

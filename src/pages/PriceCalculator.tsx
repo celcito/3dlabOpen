@@ -3,6 +3,7 @@ import { Printer, Droplet, ExternalLink, AlertTriangle, Info } from "lucide-reac
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { usePriceCalculator } from "../hooks/usePriceCalculator";
 
 interface Source {
   name: string;
@@ -650,8 +651,7 @@ function SourcesTab() {
 }
 
 export default function PriceCalculator() {
-  const [tab, setTab] = useState("fdm");
-  const [meta, setMeta] = useState(2000);
+  const { tab, setTab, meta, setMeta } = usePriceCalculator();
 
   return (
     <div className="flex flex-col h-full overflow-hidden text-white bg-[#080808]">
