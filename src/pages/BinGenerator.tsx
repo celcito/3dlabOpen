@@ -344,23 +344,23 @@ export default function BinGenerator() {
   const hasSlots = config.slotGroups.length > 0;
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
       {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[#0c0c0c] border-r border-zinc-900 overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-80 bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center">
-              <Box className="w-6 h-6 text-[#00E5FF]" />
+            <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
+              <Box className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-white">Custom Bin & Sorting Tray Generator</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Custom Bin & Sorting Tray Generator</h1>
           </div>
           <p className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase">Design custom storage bins, sorting trays, and battery organizers (AA, AAA, 9V, pilhas botão CR) with adjustable dimensions, grid layout, and rounded corners. Live 3D preview and instant STL download.</p>
         </header>
 
         <section className="space-y-6">
-          <div className="space-y-3 pb-4 border-b border-zinc-900">
+          <div className="space-y-3 pb-4 border-b border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
               00. Predefinições
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -368,7 +368,7 @@ export default function BinGenerator() {
                 <button
                   key={idx}
                   onClick={() => { setConfig({ ...config, ...preset.config, divPositionsX: undefined, divPositionsY: undefined }); nextGroupId = config.slotGroups.length + 1; }}
-                  className={`text-[9px] font-bold uppercase tracking-wider transition-colors py-2 rounded border border-zinc-800 bg-zinc-900 hover:bg-[#00E5FF]/20 text-zinc-400 hover:text-[#00E5FF]`}
+                  className={`text-[9px] font-bold uppercase tracking-wider transition-colors py-2 rounded border border-[#E8E9E3] bg-[#E8E9E3] hover:bg-[#632CE5]/20 text-zinc-400 hover:text-[#632CE5]`}
                 >
                   {preset.name}
                 </button>
@@ -378,33 +378,33 @@ export default function BinGenerator() {
           
           <div className="space-y-4">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Maximize className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Maximize className="w-3.5 h-3.5 text-[#632CE5]" />
               01. Corpo Externo
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Largura (X)</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.width}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.width}mm</span>
               </div>
               <input 
                 type="range" min="10" max="400" step="1" 
                 value={config.width}
                 onChange={(e) => setConfig({...config, width: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Profundidade (Y)</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.depth}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.depth}mm</span>
               </div>
               <input 
                 type="range" min="10" max="400" step="1" 
                 value={config.depth}
                 onChange={(e) => setConfig({...config, depth: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
@@ -413,73 +413,73 @@ export default function BinGenerator() {
                 <label className="text-[9px] uppercase font-bold text-zinc-600">
                   Altura (Z) {hasSlots && <span className="text-zinc-600 normal-case">— profundidade dos encaixes</span>}
                 </label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.height}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.height}mm</span>
               </div>
               <input 
                 type="range" min="10" max="200" step="1" 
                 value={config.height} 
                 onChange={(e) => setConfig({...config, height: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Grid3X3 className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Grid3X3 className="w-3.5 h-3.5 text-[#632CE5]" />
               02. Grid de Gavetas
             </h3>
             
-            <div className="bg-[#00E5FF]/10 border border-[#00E5FF]/20 rounded p-2 flex items-start gap-2">
-              <MousePointer2 className="w-3 h-3 text-[#00E5FF] mt-0.5" />
-              <p className="text-[9px] text-[#00E5FF] uppercase font-bold leading-tight">Arraste as divisórias no preview 3D para reposicioná-las.</p>
+            <div className="bg-[#632CE5]/10 border border-[#632CE5]/20 rounded p-2 flex items-start gap-2">
+              <MousePointer2 className="w-3 h-3 text-[#632CE5] mt-0.5" />
+              <p className="text-[9px] text-[#632CE5] uppercase font-bold leading-tight">Arraste as divisórias no preview 3D para reposicioná-las.</p>
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Colunas</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.dividersX + 1}</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.dividersX + 1}</span>
               </div>
               <input 
                 type="range" min="1" max="9" step="1" 
                 value={config.dividersX + 1} 
                 onChange={(e) => setConfig({...config, dividersX: parseInt(e.target.value) - 1})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Linhas</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.dividersY + 1}</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.dividersY + 1}</span>
               </div>
               <input 
                 type="range" min="1" max="9" step="1" 
                 value={config.dividersY + 1} 
                 onChange={(e) => setConfig({...config, dividersY: parseInt(e.target.value) - 1})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
-            <div className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800 flex justify-between items-center">
+            <div className="bg-[#E8E9E3]/50 p-3 rounded-lg border border-[#E8E9E3] flex justify-between items-center">
               <div>
-                <div className="text-[10px] font-black text-white uppercase">Total de Células</div>
+                <div className="text-[10px] font-black text-[#1A1C19] uppercase">Total de Células</div>
                 <div className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">Gaveteiro</div>
               </div>
-              <div className="text-xl font-black text-[#00E5FF]">
+              <div className="text-xl font-black text-[#632CE5]">
                 {(config.dividersX + 1) * (config.dividersY + 1)}
               </div>
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Circle className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Circle className="w-3.5 h-3.5 text-[#632CE5]" />
               02B. Slots de Bateria
             </h3>
 
             {config.slotGroups.map((group, idx) => (
-              <div key={group.id} className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800 space-y-3">
+              <div key={group.id} className="bg-[#E8E9E3]/50 p-3 rounded-lg border border-[#E8E9E3] space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold uppercase text-zinc-400">Grupo {idx + 1}</span>
                   <button
@@ -503,7 +503,7 @@ export default function BinGenerator() {
                         newGroups[idx] = { ...group, batteryType: e.target.value as BatteryType };
                         setConfig({ ...config, slotGroups: newGroups });
                       }}
-                      className="w-full bg-zinc-800 text-white text-[9px] font-bold uppercase rounded border border-zinc-700 p-1.5"
+                      className="w-full bg-[#F9FAF4] text-[#212121] text-[9px] font-bold uppercase rounded border border-[#E8E9E3] p-1.5"
                     >
                       {BATTERY_TYPE_OPTIONS.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -519,7 +519,7 @@ export default function BinGenerator() {
                         newGroups[idx] = { ...group, style: e.target.value as SlotStyle };
                         setConfig({ ...config, slotGroups: newGroups });
                       }}
-                      className="w-full bg-zinc-800 text-white text-[9px] font-bold uppercase rounded border border-zinc-700 p-1.5"
+                      className="w-full bg-[#F9FAF4] text-[#212121] text-[9px] font-bold uppercase rounded border border-[#E8E9E3] p-1.5"
                     >
                       <option value="hole">Furo</option>
                       <option value="cradle">Berço</option>
@@ -530,7 +530,7 @@ export default function BinGenerator() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <label className="text-[8px] uppercase font-bold text-zinc-600">Colunas</label>
-                    <span className="text-[9px] font-mono text-[#00E5FF]">{group.cols}</span>
+                    <span className="text-[9px] font-mono text-[#632CE5]">{group.cols}</span>
                   </div>
                   <input
                     type="range" min="1" max="10" step="1"
@@ -540,14 +540,14 @@ export default function BinGenerator() {
                       newGroups[idx] = { ...group, cols: parseInt(e.target.value) };
                       setConfig({ ...config, slotGroups: newGroups });
                     }}
-                    className="w-full accent-[#00E5FF] h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <label className="text-[8px] uppercase font-bold text-zinc-600">Linhas</label>
-                    <span className="text-[9px] font-mono text-[#00E5FF]">{group.rows}</span>
+                    <span className="text-[9px] font-mono text-[#632CE5]">{group.rows}</span>
                   </div>
                   <input
                     type="range" min="1" max="10" step="1"
@@ -557,15 +557,15 @@ export default function BinGenerator() {
                       newGroups[idx] = { ...group, rows: parseInt(e.target.value) };
                       setConfig({ ...config, slotGroups: newGroups });
                     }}
-                    className="w-full accent-[#00E5FF] h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
                 {group.batteryType === "cr" && (
-                  <div className="space-y-2 pt-2 border-t border-zinc-800">
+                  <div className="space-y-2 pt-2 border-t border-[#E8E9E3]">
                     <div className="flex justify-between">
                       <label className="text-[8px] uppercase font-bold text-zinc-600">Diâmetro CR</label>
-                      <span className="text-[9px] font-mono text-[#00E5FF]">{group.crDiameter.toFixed(1)}mm</span>
+                      <span className="text-[9px] font-mono text-[#632CE5]">{group.crDiameter.toFixed(1)}mm</span>
                     </div>
                     <input
                       type="range" min="10" max="30" step="0.5"
@@ -575,7 +575,7 @@ export default function BinGenerator() {
                         newGroups[idx] = { ...group, crDiameter: parseFloat(e.target.value) };
                         setConfig({ ...config, slotGroups: newGroups });
                       }}
-                      className="w-full accent-[#00E5FF] h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
                     />
                   </div>
                 )}
@@ -587,41 +587,41 @@ export default function BinGenerator() {
                 const id = `g${nextGroupId++}`;
                 setConfig({ ...config, slotGroups: [...config.slotGroups, defaultSlot(id)] });
               }}
-              className="w-full text-[9px] font-bold uppercase tracking-wider py-2 rounded border border-dashed border-zinc-700 text-zinc-500 hover:text-[#00E5FF] hover:border-[#00E5FF]/50 transition-colors flex items-center justify-center gap-2"
+              className="w-full text-[9px] font-bold uppercase tracking-wider py-2 rounded border border-dashed border-[#E8E9E3] text-zinc-500 hover:text-[#632CE5] hover:border-[#632CE5]/50 transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="w-3 h-3" />
               Adicionar Grupo de Slots
             </button>
 
-            <div className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800 flex justify-between items-center">
+            <div className="bg-[#E8E9E3]/50 p-3 rounded-lg border border-[#E8E9E3] flex justify-between items-center">
               <div>
-                <div className="text-[10px] font-black text-white uppercase">Total de Slots</div>
+                <div className="text-[10px] font-black text-[#1A1C19] uppercase">Total de Slots</div>
                 <div className="text-[9px] text-zinc-500 uppercase tracking-widest font-bold">
                   {config.slotGroups.length} grupo(s)
                 </div>
               </div>
-              <div className="text-xl font-black text-[#00E5FF]">
+              <div className="text-xl font-black text-[#632CE5]">
                 {config.slotGroups.reduce((sum, g) => sum + g.cols * g.rows, 0)}
               </div>
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
               03. Ajustes Técnicos
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura da Parede</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.thickness}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.thickness}mm</span>
               </div>
               <input 
                 type="range" min="0.8" max="5.0" step="0.2" 
                 value={config.thickness} 
                 onChange={(e) => setConfig({...config, thickness: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-[8px] font-bold text-zinc-600">
                 <span>0.8mm</span>
@@ -632,13 +632,13 @@ export default function BinGenerator() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Arredondamento (Raio)</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.radius}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.radius}mm</span>
               </div>
               <input 
                 type="range" min="0" max="15" step="1" 
                 value={config.radius} 
                 onChange={(e) => setConfig({...config, radius: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-[8px] font-bold text-zinc-600">
                 <span>0mm</span>
@@ -650,16 +650,16 @@ export default function BinGenerator() {
               <label className="text-[9px] uppercase font-bold text-zinc-400">Empilhável (Stacking)</label>
               <button 
                 onClick={() => setConfig({...config, stackable: !config.stackable})}
-                className={`w-10 h-5 rounded-full transition-all relative ${config.stackable ? 'bg-[#00E5FF]' : 'bg-zinc-800'}`}
+                className={`w-10 h-5 rounded-full transition-all relative ${config.stackable ? 'bg-[#632CE5]' : 'bg-[#F9FAF4]'}`}
               >
                 <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${config.stackable ? 'right-1' : 'left-1'}`} />
               </button>
             </div>
           </div>
 
-          <div className="bg-zinc-900/50 p-3 rounded-lg border border-zinc-800 flex flex-col justify-center items-center gap-1">
-            <div className="text-[10px] font-black text-white uppercase">Dimensões Totais</div>
-            <div className="text-[14px] font-black text-[#00E5FF] tracking-tighter">
+          <div className="bg-[#E8E9E3]/50 p-3 rounded-lg border border-[#E8E9E3] flex flex-col justify-center items-center gap-1">
+            <div className="text-[10px] font-black text-[#1A1C19] uppercase">Dimensões Totais</div>
+            <div className="text-[14px] font-black text-[#632CE5] tracking-tighter">
               {config.width} <span className="text-zinc-600 text-[10px]">×</span> {config.depth} <span className="text-zinc-600 text-[10px]">×</span> {config.height} <span className="text-zinc-600 text-[10px]">mm</span>
             </div>
           </div>
@@ -667,7 +667,7 @@ export default function BinGenerator() {
           <div className="pt-6">
             <button
               onClick={handleExportSTL}
-              className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group"
+              className="w-full bg-[#632CE5] text-[#212121] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] group"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
               Download Organizador STL
@@ -680,7 +680,7 @@ export default function BinGenerator() {
       <div className="flex-1 relative">
         <div className="absolute inset-0">
           <Canvas shadows camera={{ position: [60, 60, 60], fov: 45 }}>
-            <color attach="background" args={["#080808"]} />
+            <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[50, 100, 50]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-50, -50, -50]} intensity={0.5} />
@@ -703,12 +703,12 @@ export default function BinGenerator() {
 
         {/* HUD */}
         <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-md border border-zinc-900 p-4 rounded-xl space-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-4 rounded-xl space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">Organizer Preview</span>
+              <div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
+              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">Organizer Preview</span>
             </div>
-            <div className="text-[16px] font-black text-white uppercase tracking-tighter">
+            <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter">
               {hasSlots
                 ? `${config.slotGroups.reduce((s, g) => s + g.cols * g.rows, 0)} Slots de Bateria`
                 : `${(config.dividersX + 1) * (config.dividersY + 1)} Células Internas`}
@@ -725,7 +725,7 @@ export default function BinGenerator() {
 
         {successMsg && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-emerald-500 text-black px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-2xl">
+            <div className="bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-lg hover:bg-[#7C4DFF]">
               <Check className="w-4 h-4" />
               {successMsg}
             </div>
@@ -783,8 +783,8 @@ function DividerX({ config, setConfig, index, innerW, innerD, h, t }: any) {
         onPointerOut={(e) => { setHovered(false); document.body.style.cursor = 'auto'; }}
       >
         <boxGeometry args={[t, innerD, h - t]} />
-        <meshStandardMaterial color={hovered ? "#00E5FF" : config.baseColor} roughness={0.5} />
-        <Edges scale={1} threshold={15} color={hovered ? "#00E5FF" : "rgba(0,0,0,0.2)"} />
+        <meshStandardMaterial color={hovered ? "#632CE5" : config.baseColor} roughness={0.5} />
+        <Edges scale={1} threshold={15} color={hovered ? "#632CE5" : "rgba(0,0,0,0.2)"} />
       </mesh>
     </DragControls>
   );
@@ -836,8 +836,8 @@ function DividerY({ config, setConfig, index, innerW, innerD, h, t }: any) {
         onPointerOut={(e) => { setHovered(false); document.body.style.cursor = 'auto'; }}
       >
         <boxGeometry args={[innerW, t, h - t]} />
-        <meshStandardMaterial color={hovered ? "#00E5FF" : config.baseColor} roughness={0.5} />
-        <Edges scale={1} threshold={15} color={hovered ? "#00E5FF" : "rgba(0,0,0,0.2)"} />
+        <meshStandardMaterial color={hovered ? "#632CE5" : config.baseColor} roughness={0.5} />
+        <Edges scale={1} threshold={15} color={hovered ? "#632CE5" : "rgba(0,0,0,0.2)"} />
       </mesh>
     </DragControls>
   );

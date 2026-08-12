@@ -347,16 +347,16 @@ export default function MarketingGenerator() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[#080808] text-white">
+    <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[#F9FAF4] text-[#212121]">
       
       {/* HEADER */}
-      <div className="border-b border-zinc-900 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="border-b border-[#E2E3DD] pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#00E5FF] animate-pulse" />
-            <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#00E5FF]">VÉRTICE STUDIO ENGINE</span>
+            <Sparkles className="w-5 h-5 text-[#632CE5] animate-pulse" />
+            <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#632CE5]">VÉRTICE STUDIO ENGINE</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-white mt-1">
+          <h1 className="text-2xl font-black tracking-tight text-[#1A1C19] mt-1">
             Gerador de Marketing do Produto
           </h1>
           <p className="text-xs text-zinc-500 mt-1 max-w-2xl uppercase font-bold tracking-tight">
@@ -364,7 +364,7 @@ export default function MarketingGenerator() {
           </p>
         </div>
         <div className="flex items-center gap-2 self-start md:self-center">
-          <span className="text-[9px] font-mono font-bold text-zinc-600 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded uppercase">
+          <span className="text-[9px] font-mono font-bold text-zinc-600 bg-[#E8E9E3] border border-[#E8E9E3] px-2.5 py-1 rounded uppercase">
             Série Gemini 3.5 & Veo v3.1
           </span>
         </div>
@@ -376,9 +376,9 @@ export default function MarketingGenerator() {
         <div className="lg:col-span-5 space-y-6">
           
           {/* UPLOAD CARD */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 p-5 rounded-lg space-y-4">
+          <div className="bg-white border border-[#E2E3DD] p-5 rounded-lg space-y-4">
             <h3 className="text-[11px] font-black uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-              <Upload className="w-4 h-4 text-[#00E5FF]" />
+              <Upload className="w-4 h-4 text-[#632CE5]" />
               <span>Foto do Produto (3D ou Físico)</span>
             </h3>
 
@@ -389,10 +389,10 @@ export default function MarketingGenerator() {
               onClick={() => !imagePreview && fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer relative overflow-hidden ${
                 imagePreview 
-                  ? "border-zinc-800 bg-[#060606]" 
+                  ? "border-[#E8E9E3] bg-[#F9FAF4]" 
                   : isDragActive 
-                    ? "border-[#00E5FF] bg-[#00E5FF]/5" 
-                    : "border-zinc-800 hover:border-zinc-700 bg-black/40"
+                    ? "border-[#632CE5] bg-[#632CE5]/5" 
+                    : "border-[#E8E9E3] hover:border-[#E8E9E3] bg-white/40"
               }`}
             >
               <input
@@ -405,15 +405,15 @@ export default function MarketingGenerator() {
 
               {imagePreview ? (
                 <div className="space-y-4 relative z-10">
-                  <div className="relative w-full max-w-[240px] aspect-square mx-auto rounded-md overflow-hidden border border-zinc-800 bg-black shadow-[0_8px_30px_rgb(0,0,0,0.6)]">
+                  <div className="relative w-full max-w-[240px] aspect-square mx-auto rounded-md overflow-hidden border border-[#E8E9E3] bg-black shadow-[0_8px_30px_rgb(0,0,0,0.6)]">
                     <img 
                       src={imagePreview} 
                       alt="Preview do Produto" 
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center p-3">
-                      <p className="text-[9px] font-mono font-bold uppercase tracking-wider text-white">Visualização de Origem</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-center p-3">
+                      <p className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#1A1C19]">Visualização de Origem</p>
                     </div>
                   </div>
                   
@@ -424,7 +424,7 @@ export default function MarketingGenerator() {
                         e.stopPropagation();
                         fileInputRef.current?.click();
                       }}
-                      className="text-[9px] font-bold uppercase tracking-wider border border-zinc-800 hover:border-zinc-700 px-3 py-1.5 rounded text-zinc-400 hover:text-white transition-colors"
+                      className="text-[9px] font-bold uppercase tracking-wider border border-[#E8E9E3] hover:border-[#E8E9E3] px-3 py-1.5 rounded text-zinc-400 hover:text-[#1A1C19] transition-colors"
                     >
                       Alterar Foto
                     </button>
@@ -443,8 +443,8 @@ export default function MarketingGenerator() {
                 </div>
               ) : (
                 <div className="py-6 space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center mx-auto border border-zinc-800 group-hover:border-[#00E5FF] transition-all">
-                    <Upload className="w-5 h-5 text-zinc-500 group-hover:text-[#00E5FF]" />
+                  <div className="w-10 h-10 rounded-full bg-[#E8E9E3] flex items-center justify-center mx-auto border border-[#E8E9E3] group-hover:border-[#632CE5] transition-all">
+                    <Upload className="w-5 h-5 text-zinc-500 group-hover:text-[#632CE5]" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">Arraste a foto do seu produto aqui</p>
@@ -456,9 +456,9 @@ export default function MarketingGenerator() {
           </div>
 
           {/* SPECIFICATIONS & TARGET INPUTS */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 p-5 rounded-lg space-y-4">
+          <div className="bg-white border border-[#E2E3DD] p-5 rounded-lg space-y-4">
             <h3 className="text-[11px] font-black uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#00E5FF]" />
+              <Layers className="w-4 h-4 text-[#632CE5]" />
               <span>Configurações do Produto</span>
             </h3>
 
@@ -473,7 +473,7 @@ export default function MarketingGenerator() {
                   placeholder="Ex: Dragão Articulado Cristal, Estátua Arthas"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  className="w-full bg-[#060606] border border-zinc-800 focus:border-[#00E5FF] rounded px-3 py-2.5 text-[11px] font-medium outline-none text-white placeholder-zinc-700 transition-colors"
+                  className="w-full bg-[#F9FAF4] border border-[#E8E9E3] focus:border-[#632CE5] rounded px-3 py-2.5 text-[11px] font-medium outline-none text-[#212121] placeholder-zinc-700 transition-colors"
                 />
               </div>
 
@@ -496,8 +496,8 @@ export default function MarketingGenerator() {
                       onClick={() => setProductType(format.id as any)}
                       className={`text-[10px] font-bold uppercase tracking-wider py-2.5 px-3 border rounded text-left transition-all ${
                         productType === format.id
-                          ? "border-[#00E5FF] text-white bg-[#00E5FF]/5 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
-                          : "border-zinc-800 text-zinc-500 bg-black/30 hover:border-zinc-700"
+                          ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5 shadow-[0_0_15px_rgba(124,58,237,0.1)]"
+                          : "border-[#E8E9E3] text-zinc-500 bg-white/30 hover:border-[#E8E9E3]"
                       }`}
                     >
                       {format.label}
@@ -516,7 +516,7 @@ export default function MarketingGenerator() {
                   placeholder="Ex: Crianças, Gamers de RPG, Decoração Geek, Presentes"
                   value={targetAudience}
                   onChange={(e) => setTargetAudience(e.target.value)}
-                  className="w-full bg-[#060606] border border-zinc-800 focus:border-[#00E5FF] rounded px-3 py-2.5 text-[11px] font-medium outline-none text-white placeholder-zinc-700 transition-colors"
+                  className="w-full bg-[#F9FAF4] border border-[#E8E9E3] focus:border-[#632CE5] rounded px-3 py-2.5 text-[11px] font-medium outline-none text-[#212121] placeholder-zinc-700 transition-colors"
                 />
               </div>
             </div>
@@ -525,7 +525,7 @@ export default function MarketingGenerator() {
               type="button"
               onClick={handleGenerateMarketing}
               disabled={isGeneratingDetails || (!productName.trim() && !imagePreview)}
-              className="w-full bg-[#00E5FF] hover:bg-[#00B4CC] disabled:bg-zinc-900 disabled:text-zinc-600 text-black font-black uppercase text-[10px] tracking-widest py-3.5 rounded transition-all cursor-pointer flex items-center justify-center gap-2 mt-4"
+              className="w-full bg-[#632CE5] hover:bg-[#7C4DFF] disabled:bg-[#E8E9E3] disabled:text-zinc-600 text-black font-black uppercase text-[10px] tracking-widest py-3.5 rounded transition-all cursor-pointer flex items-center justify-center gap-2 mt-4"
             >
               {isGeneratingDetails ? (
                 <>
@@ -559,9 +559,9 @@ export default function MarketingGenerator() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="border border-zinc-900 rounded-lg p-10 text-center bg-[#0d0d0d] space-y-4"
+                className="border border-[#E2E3DD] rounded-lg p-10 text-center bg-white space-y-4"
               >
-                <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center mx-auto border border-zinc-800">
+                <div className="w-12 h-12 rounded-full bg-[#E8E9E3] flex items-center justify-center mx-auto border border-[#E8E9E3]">
                   <Sparkles className="w-5 h-5 text-zinc-500" />
                 </div>
                 <div>
@@ -576,20 +576,20 @@ export default function MarketingGenerator() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="border border-zinc-900 rounded-lg p-10 text-center bg-[#0d0d0d] space-y-6"
+                className="border border-[#E2E3DD] rounded-lg p-10 text-center bg-white space-y-6"
               >
                 <div className="relative w-16 h-16 mx-auto">
-                  <div className="absolute inset-0 border-2 border-t-[#00E5FF] border-zinc-800 rounded-full animate-spin"></div>
-                  <Sparkles className="w-5 h-5 text-[#00E5FF] absolute inset-0 m-auto animate-pulse" />
+                  <div className="absolute inset-0 border-2 border-t-[#632CE5] border-[#E8E9E3] rounded-full animate-spin"></div>
+                  <Sparkles className="w-5 h-5 text-[#632CE5] absolute inset-0 m-auto animate-pulse" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-[12px] font-bold uppercase tracking-wider text-[#00E5FF] font-mono">Processando Análise do Produto...</h3>
+                  <h3 className="text-[12px] font-bold uppercase tracking-wider text-[#632CE5] font-mono">Processando Análise do Produto...</h3>
                   <p className="text-[10px] text-zinc-400 max-w-sm mx-auto leading-relaxed font-sans normal-case">
                     A IA do Gemini 3.5 está analisando a foto, projetando o apelo de vendas para o público-alvo e calculando preços de acordo com tendências atuais de mercado de impressão 3D.
                   </p>
                 </div>
-                <div className="w-full max-w-xs mx-auto bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-zinc-900">
-                  <div className="bg-[#00E5FF] h-full rounded-full animate-pulse" style={{ width: "80%" }}></div>
+                <div className="w-full max-w-xs mx-auto bg-[#E8E9E3] h-1.5 rounded-full overflow-hidden border border-[#E2E3DD]">
+                  <div className="bg-[#632CE5] h-full rounded-full animate-pulse" style={{ width: "80%" }}></div>
                 </div>
               </motion.div>
             ) : (
@@ -601,7 +601,7 @@ export default function MarketingGenerator() {
               >
                 
                 {/* CORE MARKETING DATA BLOCK */}
-                <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-6 space-y-5">
+                <div className="bg-white border border-[#E2E3DD] rounded-lg p-6 space-y-5">
                   
                   {/* Save Success Alert */}
                   {saveSuccessMessage && (
@@ -615,10 +615,10 @@ export default function MarketingGenerator() {
                     </motion.div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-900 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E3DD] pb-4">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-[#00E5FF]" />
-                      <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Análise Comercial e Cópia do Produto</h3>
+                      <Sparkles className="w-4 h-4 text-[#632CE5]" />
+                      <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Análise Comercial e Cópia do Produto</h3>
                     </div>
                     
                     {/* Package Save & Export Actions */}
@@ -626,17 +626,17 @@ export default function MarketingGenerator() {
                       <button
                         type="button"
                         onClick={handleSavePackage}
-                        className="bg-[#00E5FF]/10 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30 hover:border-[#00E5FF] px-2.5 py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="bg-[#632CE5]/10 hover:bg-[#632CE5]/20 text-[#632CE5] border border-[#632CE5]/30 hover:border-[#632CE5] px-2.5 py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
                         title="Salvar este pacote na Biblioteca Local"
                       >
-                        <Save className="w-3.5 h-3.5 text-[#00E5FF]" />
+                        <Save className="w-3.5 h-3.5 text-[#632CE5]" />
                         <span>Salvar Pacote</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleDownloadPackageJSON()}
-                        className="bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-zinc-700 px-2.5 py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="bg-[#E8E9E3] hover:bg-[#F9FAF4] text-zinc-300 border border-[#E8E9E3] hover:border-[#E8E9E3] px-2.5 py-1.5 rounded text-[9px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
                         title="Baixar o pacote em arquivo JSON"
                       >
                         <FileDown className="w-3.5 h-3.5 text-zinc-400" />
@@ -651,21 +651,21 @@ export default function MarketingGenerator() {
 
                   {/* Title & Suggested Price Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-8 bg-black/40 border border-zinc-900 p-4 rounded-md space-y-1 relative group">
+                    <div className="md:col-span-8 bg-white/40 border border-[#E2E3DD] p-4 rounded-md space-y-1 relative group">
                       <span className="text-[8px] font-mono text-zinc-600 uppercase block">Título Comercial Sugerido</span>
-                      <p className="text-sm font-black text-white">{marketingDetails?.title}</p>
+                      <p className="text-sm font-black text-[#1A1C19]">{marketingDetails?.title}</p>
                       <button
                         onClick={() => copyToClipboard(marketingDetails?.title || "", "title")}
-                        className="absolute top-3 right-3 text-zinc-500 hover:text-[#00E5FF] transition-colors p-1"
+                        className="absolute top-3 right-3 text-zinc-500 hover:text-[#632CE5] transition-colors p-1"
                         title="Copiar Título"
                       >
                         {copiedField === "title" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
 
-                    <div className="md:col-span-4 bg-black/40 border border-zinc-900 p-4 rounded-md space-y-1 relative group">
+                    <div className="md:col-span-4 bg-white/40 border border-[#E2E3DD] p-4 rounded-md space-y-1 relative group">
                       <div className="flex items-center gap-1.5 text-zinc-600 block">
-                        <DollarSign className="w-3 h-3 text-[#00E5FF]" />
+                        <DollarSign className="w-3 h-3 text-[#632CE5]" />
                         <span className="text-[8px] font-mono uppercase">Preço Recomendado</span>
                       </div>
                       <p className="text-sm font-black text-emerald-400">{marketingDetails?.suggestedPrice}</p>
@@ -680,14 +680,14 @@ export default function MarketingGenerator() {
                   </div>
 
                   {/* Persuasive Description */}
-                  <div className="bg-black/40 border border-zinc-900 p-4 rounded-md space-y-2 relative group">
+                  <div className="bg-white/40 border border-[#E2E3DD] p-4 rounded-md space-y-2 relative group">
                     <span className="text-[8px] font-mono text-zinc-600 uppercase block">Descrição de Vendas / Copia Persuasiva</span>
                     <p className="text-[11px] text-zinc-300 leading-relaxed font-sans font-medium normal-case">
                       {marketingDetails?.description}
                     </p>
                     <button
                       onClick={() => copyToClipboard(marketingDetails?.description || "", "desc")}
-                      className="absolute top-3 right-3 text-zinc-500 hover:text-[#00E5FF] transition-colors p-1"
+                      className="absolute top-3 right-3 text-zinc-500 hover:text-[#632CE5] transition-colors p-1"
                       title="Copiar Descrição"
                     >
                       {copiedField === "desc" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -699,8 +699,8 @@ export default function MarketingGenerator() {
                     <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-wider block">Especificações e Recomendações Técnicas</span>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {marketingDetails?.specifications.map((spec, idx) => (
-                        <div key={idx} className="bg-[#111] border border-zinc-900/60 p-2.5 rounded flex items-start gap-2">
-                          <span className="text-[#00E5FF] font-black font-mono text-[9px] shrink-0 mt-0.5">{idx + 1}.</span>
+                        <div key={idx} className="bg-white border border-[#E2E3DD]/60 p-2.5 rounded flex items-start gap-2">
+                          <span className="text-[#632CE5] font-black font-mono text-[9px] shrink-0 mt-0.5">{idx + 1}.</span>
                           <span className="text-[9.5px] text-zinc-400 font-sans font-medium">{spec}</span>
                         </div>
                       ))}
@@ -708,9 +708,9 @@ export default function MarketingGenerator() {
                   </div>
 
                   {/* Social Post Template */}
-                  <div className="bg-black/40 border border-zinc-900 p-4 rounded-md space-y-2.5 relative group">
-                    <div className="flex items-center gap-1.5 border-b border-zinc-900/60 pb-1.5">
-                      <MessageSquare className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <div className="bg-white/40 border border-[#E2E3DD] p-4 rounded-md space-y-2.5 relative group">
+                    <div className="flex items-center gap-1.5 border-b border-[#E2E3DD]/60 pb-1.5">
+                      <MessageSquare className="w-3.5 h-3.5 text-[#632CE5]" />
                       <span className="text-[8px] font-mono text-zinc-500 uppercase block">Publicação Social (Pronto para Postar)</span>
                     </div>
                     <pre className="text-[10px] text-zinc-400 leading-relaxed font-sans font-medium normal-case whitespace-pre-wrap">
@@ -718,7 +718,7 @@ export default function MarketingGenerator() {
                     </pre>
                     <button
                       onClick={() => copyToClipboard(marketingDetails?.socialPost || "", "social")}
-                      className="absolute top-3 right-3 text-zinc-500 hover:text-[#00E5FF] transition-colors p-1"
+                      className="absolute top-3 right-3 text-zinc-500 hover:text-[#632CE5] transition-colors p-1"
                       title="Copiar Post Social"
                     >
                       {copiedField === "social" ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -728,11 +728,11 @@ export default function MarketingGenerator() {
                 </div>
 
                 {/* DEMONSTRATION VIDEO MODULE (Veo v3.1 + Interactive fallback Simulator) */}
-                <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-6 space-y-5">
-                  <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+                <div className="bg-white border border-[#E2E3DD] rounded-lg p-6 space-y-5">
+                  <div className="flex items-center justify-between border-b border-[#E2E3DD] pb-3">
                     <div className="flex items-center gap-2">
-                      <FileVideo className="w-4 h-4 text-[#00E5FF]" />
-                      <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Geração de Vídeo Demonstrativo Curto</h3>
+                      <FileVideo className="w-4 h-4 text-[#632CE5]" />
+                      <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Geração de Vídeo Demonstrativo Curto</h3>
                     </div>
                     <span className="text-[8px] font-mono font-bold text-cyan-400 bg-cyan-950/20 border border-cyan-900/40 px-2 py-0.5 rounded">
                       Veo 3.1 Lite Engine
@@ -745,18 +745,18 @@ export default function MarketingGenerator() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                     {/* VIDEO CONTAINER */}
-                    <div className={`border border-zinc-900 rounded-lg bg-black flex flex-col items-center justify-center overflow-hidden relative shadow-[inset_0_4px_30px_rgba(0,0,0,0.8)] transition-all duration-300 w-full ${
+                    <div className={`border border-[#E2E3DD] rounded-lg bg-black flex flex-col items-center justify-center overflow-hidden relative shadow-[inset_0_4px_30px_rgba(0,0,0,0.8)] transition-all duration-300 w-full ${
                       videoAspectRatio === "16:9" 
                         ? "aspect-video" 
                         : "aspect-[9/16] h-[360px] max-w-[220px] mx-auto"
                     }`}>
                       
                       {isGeneratingVideo ? (
-                        <div className="p-4 text-center space-y-3.5 w-full h-full flex flex-col items-center justify-center bg-[#050505]">
-                          <Loader2 className="w-8 h-8 animate-spin text-[#00E5FF]" />
+                        <div className="p-4 text-center space-y-3.5 w-full h-full flex flex-col items-center justify-center bg-[#F9FAF4]">
+                          <Loader2 className="w-8 h-8 animate-spin text-[#632CE5]" />
                           <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-white font-mono uppercase tracking-wider">Criando Vídeo Comercial...</p>
-                            <p className="text-[8px] text-[#00E5FF] font-semibold max-w-xs mx-auto animate-pulse uppercase tracking-tight">
+                            <p className="text-[10px] font-bold text-[#1A1C19] font-mono uppercase tracking-wider">Criando Vídeo Comercial...</p>
+                            <p className="text-[8px] text-[#632CE5] font-semibold max-w-xs mx-auto animate-pulse uppercase tracking-tight">
                               {videoLoadingSteps[videoProgressStep]}
                             </p>
                           </div>
@@ -774,7 +774,7 @@ export default function MarketingGenerator() {
                             playsInline
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute bottom-2 left-2 bg-black/60 border border-zinc-800/80 px-2 py-1 rounded text-[8px] font-mono text-zinc-400 flex items-center gap-1">
+                          <div className="absolute bottom-2 left-2 bg-white/60 border border-[#E8E9E3]/80 px-2 py-1 rounded text-[8px] font-mono text-zinc-400 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span>Demonstração Veo 3.1</span>
                           </div>
@@ -782,7 +782,7 @@ export default function MarketingGenerator() {
                           <a 
                             href={videoUrl} 
                             download={`comercial_figura_3d.mp4`}
-                            className="absolute top-2 right-2 bg-[#00E5FF] hover:bg-[#00B4CC] text-black p-1.5 rounded transition-all shadow-md opacity-0 group-hover:opacity-100"
+                            className="absolute top-2 right-2 bg-[#632CE5] hover:bg-[#7C4DFF] text-black p-1.5 rounded transition-all shadow-md opacity-0 group-hover:opacity-100"
                             title="Baixar Vídeo MP4"
                           >
                             <Download className="w-3.5 h-3.5" />
@@ -808,7 +808,7 @@ export default function MarketingGenerator() {
                             }}
                             className={`${
                               videoAspectRatio === "16:9" ? "w-[140px] h-[140px]" : "w-[120px] h-[180px]"
-                            } rounded-lg border-2 border-[#00E5FF]/40 bg-zinc-900 overflow-hidden relative shadow-[0_0_30px_rgba(0,229,255,0.15)] flex items-center justify-center`}
+                            } rounded-lg border-2 border-[#632CE5]/40 bg-[#E8E9E3] overflow-hidden relative shadow-[0_0_30px_rgba(124,58,237,0.15)] flex items-center justify-center`}
                             style={{ transformStyle: "preserve-3d", perspective: "600px" }}
                           >
                             <img
@@ -818,15 +818,15 @@ export default function MarketingGenerator() {
                               referrerPolicy="no-referrer"
                             />
                             {/* Scanning green laser effect */}
-                            <div className="absolute inset-x-0 h-1 bg-[#00E5FF] shadow-[0_0_12px_#00E5FF] animate-bounce" style={{ top: "10%" }}></div>
+                            <div className="absolute inset-x-0 h-1 bg-[#632CE5] shadow-[0_0_12px_#632CE5] animate-bounce" style={{ top: "10%" }}></div>
                           </motion.div>
 
                           {/* Dynamic Overlays */}
                           <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                            <span className="text-[7px] bg-black/70 border border-zinc-800 text-zinc-400 font-mono px-1.5 py-0.5 rounded tracking-wide uppercase">
+                            <span className="text-[7px] bg-white/70 border border-[#E8E9E3] text-zinc-400 font-mono px-1.5 py-0.5 rounded tracking-wide uppercase">
                               Showreel Instatâneo
                             </span>
-                            <span className="text-[7.5px] bg-[#00E5FF]/10 text-[#00E5FF] font-mono px-1.5 py-0.5 rounded tracking-wider uppercase font-extrabold animate-pulse">
+                            <span className="text-[7.5px] bg-[#632CE5]/10 text-[#632CE5] font-mono px-1.5 py-0.5 rounded tracking-wider uppercase font-extrabold animate-pulse">
                               {productType === "articulated" || productType === "articulated_keychain" ? "Flexi-Wiggle" : productType === "domestic_utensil" ? "Home-Showcase" : "Studio-Spin"}
                             </span>
                           </div>
@@ -834,7 +834,7 @@ export default function MarketingGenerator() {
                           <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
                             <button
                               onClick={() => setShowreelPlaying(!showreelPlaying)}
-                              className="bg-black/60 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white p-1 rounded cursor-pointer"
+                              className="bg-white/60 hover:bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] p-1 rounded cursor-pointer"
                             >
                               {showreelPlaying ? <Pause className="w-2.5 h-2.5" /> : <Play className="w-2.5 h-2.5" />}
                             </button>
@@ -855,7 +855,7 @@ export default function MarketingGenerator() {
                     {/* VEO BUTTONS BLOCK */}
                     <div className="space-y-3.5">
                       {/* ASPECT RATIO SELECTION BUTTONS */}
-                      <div className="bg-zinc-950 p-3 rounded border border-zinc-900 space-y-2">
+                      <div className="bg-[#E8E9E3] p-3 rounded border border-[#E2E3DD] space-y-2">
                         <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block font-extrabold">Formato de Proporção</span>
                         <div className="grid grid-cols-2 gap-2">
                           <button
@@ -866,8 +866,8 @@ export default function MarketingGenerator() {
                             }}
                             className={`py-2 px-2.5 rounded border text-[9px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                               videoAspectRatio === "16:9"
-                                ? "border-[#00E5FF] text-white bg-[#00E5FF]/5 shadow-[0_0_10px_rgba(0,229,255,0.1)]"
-                                : "border-zinc-800 text-zinc-500 hover:border-zinc-700 bg-black/40"
+                                ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5 shadow-[0_0_10px_rgba(124,58,237,0.1)]"
+                                : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
                             }`}
                           >
                             <span className="w-3 h-2 bg-current opacity-65 rounded-sm"></span>
@@ -881,8 +881,8 @@ export default function MarketingGenerator() {
                             }}
                             className={`py-2 px-2.5 rounded border text-[9px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                               videoAspectRatio === "9:16"
-                                ? "border-[#00E5FF] text-white bg-[#00E5FF]/5 shadow-[0_0_10px_rgba(0,229,255,0.1)]"
-                                : "border-zinc-800 text-zinc-500 hover:border-zinc-700 bg-black/40"
+                                ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5 shadow-[0_0_10px_rgba(124,58,237,0.1)]"
+                                : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
                             }`}
                           >
                             <span className="w-2 h-3 bg-current opacity-65 rounded-sm"></span>
@@ -892,7 +892,7 @@ export default function MarketingGenerator() {
                       </div>
 
                       {/* VIDEO RESOLUTION SELECTION BUTTONS */}
-                      <div className="bg-zinc-950 p-3 rounded border border-zinc-900 space-y-2">
+                      <div className="bg-[#E8E9E3] p-3 rounded border border-[#E2E3DD] space-y-2">
                         <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block font-extrabold">Resolução de Saída</span>
                         <div className="grid grid-cols-3 gap-1.5">
                           {[
@@ -909,8 +909,8 @@ export default function MarketingGenerator() {
                               }}
                               className={`py-2 px-1 rounded border text-[8px] font-bold uppercase tracking-wider transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer text-center ${
                                 videoResolution === res.id
-                                  ? "border-[#00E5FF] text-white bg-[#00E5FF]/5 shadow-[0_0_10px_rgba(0,229,255,0.1)]"
-                                  : "border-zinc-800 text-zinc-500 hover:border-zinc-700 bg-black/40"
+                                  ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5 shadow-[0_0_10px_rgba(124,58,237,0.1)]"
+                                  : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
                               }`}
                             >
                               <span className="font-extrabold">{res.label}</span>
@@ -921,7 +921,7 @@ export default function MarketingGenerator() {
                       </div>
 
                       {/* CAMERA STYLE SELECTION BUTTONS */}
-                      <div className="bg-zinc-950 p-3 rounded border border-zinc-900 space-y-2">
+                      <div className="bg-[#E8E9E3] p-3 rounded border border-[#E2E3DD] space-y-2">
                         <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block font-extrabold">Estilo Visual da Câmera</span>
                         <div className="grid grid-cols-3 gap-1.5">
                           {[
@@ -937,8 +937,8 @@ export default function MarketingGenerator() {
                               }}
                               className={`py-2 px-1 rounded border text-[8px] font-bold uppercase tracking-wider transition-all flex flex-col items-center justify-center gap-1 cursor-pointer text-center ${
                                 videoCameraStyle === style.id
-                                  ? "border-[#00E5FF] text-white bg-[#00E5FF]/5 shadow-[0_0_10px_rgba(0,229,255,0.1)]"
-                                  : "border-zinc-800 text-zinc-500 hover:border-zinc-700 bg-black/40"
+                                  ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5 shadow-[0_0_10px_rgba(124,58,237,0.1)]"
+                                  : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
                               }`}
                             >
                               <span>{style.label}</span>
@@ -947,7 +947,7 @@ export default function MarketingGenerator() {
                         </div>
                       </div>
 
-                      <div className="bg-zinc-950 p-3 rounded border border-zinc-900 space-y-1.5">
+                      <div className="bg-[#E8E9E3] p-3 rounded border border-[#E2E3DD] space-y-1.5">
                         <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block font-extrabold">Prompt do Vídeo AI</span>
                         <p className="text-[9px] text-zinc-400 italic font-sans leading-relaxed line-clamp-3">
                           "{marketingDetails?.videoPrompt || "Product commercial showreel, slow turntable rotation, studio presentation background..."}"
@@ -960,7 +960,7 @@ export default function MarketingGenerator() {
                           type="button"
                           onClick={handleGenerateVeoVideo}
                           disabled={isGeneratingVideo || !imagePreview}
-                          className="w-full bg-[#00E5FF] hover:bg-[#00B4CC] disabled:opacity-50 disabled:bg-zinc-900 disabled:text-zinc-600 text-black font-black uppercase text-[9px] tracking-widest py-3 rounded cursor-pointer transition-all flex items-center justify-center gap-2"
+                          className="w-full bg-[#632CE5] hover:bg-[#7C4DFF] disabled:opacity-50 disabled:bg-[#E8E9E3] disabled:text-zinc-600 text-black font-black uppercase text-[9px] tracking-widest py-3 rounded cursor-pointer transition-all flex items-center justify-center gap-2"
                         >
                           {isGeneratingVideo ? (
                             <>
@@ -983,7 +983,7 @@ export default function MarketingGenerator() {
                               setVideoUrl("");
                               setShowreelActive(true);
                             }}
-                            className="w-full bg-transparent hover:bg-zinc-900 border border-zinc-800 text-zinc-300 font-bold uppercase text-[9px] tracking-widest py-3 rounded cursor-pointer transition-all"
+                            className="w-full bg-transparent hover:bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-300 font-bold uppercase text-[9px] tracking-widest py-3 rounded cursor-pointer transition-all"
                           >
                             Showreel Simulador 3D Instantâneo
                           </button>
@@ -1010,14 +1010,14 @@ export default function MarketingGenerator() {
       </div>
 
       {/* BIBLIOTECA DE PACOTES SALVOS */}
-      <div className="border-t border-zinc-900 pt-8 mt-12 space-y-6">
+      <div className="border-t border-[#E2E3DD] pt-8 mt-12 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[#00E5FF]" />
-              <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#00E5FF]">BIBLIOTECA LOCAL</span>
+              <BookOpen className="w-4 h-4 text-[#632CE5]" />
+              <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#632CE5]">BIBLIOTECA LOCAL</span>
             </div>
-            <h2 className="text-lg font-black tracking-tight text-white mt-1">
+            <h2 className="text-lg font-black tracking-tight text-[#1A1C19] mt-1">
               Pacotes de Marketing Salvos
             </h2>
             <p className="text-xs text-zinc-500 max-w-xl">
@@ -1041,7 +1041,7 @@ export default function MarketingGenerator() {
         </div>
 
         {savedPackages.length === 0 ? (
-          <div className="border border-zinc-900 rounded-lg p-8 text-center bg-[#0d0d0d]/40">
+          <div className="border border-[#E2E3DD] rounded-lg p-8 text-center bg-white/40">
             <Folder className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
             <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Nenhum Pacote Salvo Ainda</p>
             <p className="text-[10px] text-zinc-600 mt-1 max-w-sm mx-auto leading-relaxed">
@@ -1054,15 +1054,15 @@ export default function MarketingGenerator() {
               <div 
                 key={pkg.id}
                 onClick={() => handleLoadPackage(pkg)}
-                className="group bg-[#0d0d0d] hover:bg-[#121212] border border-zinc-900 hover:border-[#00E5FF]/40 rounded-lg p-4 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden shadow-lg hover:shadow-[0_4px_20px_rgba(0,229,255,0.05)]"
+                className="group bg-white hover:bg-[#F9FAF4] border border-[#E2E3DD] hover:border-[#632CE5]/40 rounded-lg p-4 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden shadow-lg hover:shadow-[0_4px_20px_rgba(124,58,237,0.05)]"
               >
                 {/* Accent glow on hover */}
-                <div className="absolute top-0 left-0 w-1 h-full bg-[#00E5FF] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-0 left-0 w-1 h-full bg-[#632CE5] opacity-0 group-hover:opacity-100 transition-opacity" />
 
                 <div className="space-y-3">
                   {/* Thumbnail and Title Header */}
                   <div className="flex gap-3">
-                    <div className="w-12 h-12 rounded border border-zinc-800 bg-black overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded border border-[#E8E9E3] bg-black overflow-hidden shrink-0 flex items-center justify-center">
                       {pkg.imagePreview ? (
                         <img 
                           src={pkg.imagePreview} 
@@ -1074,18 +1074,18 @@ export default function MarketingGenerator() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-xs font-black text-white truncate group-hover:text-[#00E5FF] transition-colors">{pkg.productName}</h4>
+                      <h4 className="text-xs font-black text-[#1A1C19] truncate group-hover:text-[#632CE5] transition-colors">{pkg.productName}</h4>
                       <p className="text-[8px] font-mono text-zinc-500 uppercase mt-0.5 tracking-wider">
                         {pkg.productType === "articulated" ? "Chaveiro Articulado" : pkg.productType === "articulated_keychain" ? "Chaveiro Articulado Mini" : pkg.productType === "keychain" ? "Chaveiro Mini" : pkg.productType === "statue" ? "Estátua Estática" : "Utensílio Doméstico"}
                       </p>
-                      <span className="text-[7.5px] bg-[#00E5FF]/10 text-[#00E5FF] font-mono px-1 py-0.5 rounded uppercase mt-1 inline-block">
+                      <span className="text-[7.5px] bg-[#632CE5]/10 text-[#632CE5] font-mono px-1 py-0.5 rounded uppercase mt-1 inline-block">
                         {pkg.videoResolution} • {pkg.videoAspectRatio}
                       </span>
                     </div>
                   </div>
 
                   {/* Summary Details */}
-                  <div className="bg-black/30 p-2.5 rounded border border-zinc-950 space-y-1.5">
+                  <div className="bg-white/30 p-2.5 rounded border border-[#E2E3DD] space-y-1.5">
                     <div className="flex items-center justify-between text-[8px] font-mono">
                       <span className="text-zinc-600">Preço Sugerido:</span>
                       <span className="text-emerald-400 font-extrabold">{pkg.details.suggestedPrice}</span>
@@ -1097,7 +1097,7 @@ export default function MarketingGenerator() {
                 </div>
 
                 {/* Card footer actions */}
-                <div className="flex items-center justify-between border-t border-zinc-900/80 pt-3 mt-4">
+                <div className="flex items-center justify-between border-t border-[#E2E3DD]/80 pt-3 mt-4">
                   <span className="text-[7.5px] font-mono text-zinc-600">
                     Salvo em: {new Date(pkg.savedAt).toLocaleDateString("pt-BR")}
                   </span>
@@ -1109,7 +1109,7 @@ export default function MarketingGenerator() {
                         e.stopPropagation();
                         handleDownloadPackageJSON(pkg);
                       }}
-                      className="p-1.5 rounded hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+                      className="p-1.5 rounded hover:bg-[#F9FAF4] text-zinc-500 hover:text-zinc-300 transition-colors"
                       title="Baixar JSON"
                     >
                       <Download className="w-3.5 h-3.5" />

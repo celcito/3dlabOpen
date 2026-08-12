@@ -10,8 +10,8 @@ export default function FileConverter() {
       <div className="max-w-5xl mx-auto w-full">
         <header className="mb-10 flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-              <Layers className="w-8 h-8 text-[#00E5FF]" />
+            <h1 className="text-3xl font-black uppercase tracking-tight text-[#1A1C19] flex items-center gap-3">
+              <Layers className="w-8 h-8 text-[#632CE5]" />
               Conversor 3D Batch
             </h1>
             <p className="text-zinc-400 mt-2 text-sm max-w-xl">
@@ -20,7 +20,7 @@ export default function FileConverter() {
             </p>
           </div>
           
-          <div className="bg-[#151515] border border-zinc-800 rounded-lg p-4 flex gap-4">
+          <div className="bg-[#E8E9E3] border border-[#E8E9E3] rounded-lg p-4 flex gap-4">
             <div>
               <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Formato de Saída</h3>
               <div className="flex gap-1 mt-1">
@@ -35,8 +35,8 @@ export default function FileConverter() {
                     }}
                     className={`px-3 py-1 rounded text-xs font-bold transition-all ${
                       outputFormat === fmt 
-                        ? "bg-[#00E5FF] text-black" 
-                        : "bg-zinc-900 text-zinc-400 hover:text-white"
+                        ? "bg-[#632CE5] text-white" 
+                        : "bg-[#E8E9E3] text-zinc-400 hover:text-[#212121]"
                     }`}
                   >
                     {fmt.toUpperCase()}
@@ -50,7 +50,7 @@ export default function FileConverter() {
         <div className="flex flex-col gap-6">
           {/* Upload Area */}
           <div 
-            className={`border-2 border-dashed border-zinc-800 bg-[#151515] hover:border-[#00E5FF] rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer`}
+            className={`border-2 border-dashed border-[#E8E9E3] bg-[#E8E9E3] hover:border-[#632CE5] rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer`}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
@@ -64,10 +64,10 @@ export default function FileConverter() {
               className="hidden" 
             />
             
-            <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
-              <Upload className="w-6 h-6 text-[#00E5FF]" />
+            <div className="w-12 h-12 rounded-full bg-[#E8E9E3] flex items-center justify-center mb-4">
+              <Upload className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Adicionar Modelos 3D</h3>
+            <h3 className="text-lg font-bold text-[#1A1C19] mb-2">Adicionar Modelos 3D</h3>
             <p className="text-sm text-zinc-500">
               Arraste arquivos ou clique para selecionar (STL, OBJ, FBX). Você pode adicionar múltiplos arquivos de uma vez.
             </p>
@@ -75,7 +75,7 @@ export default function FileConverter() {
 
           {/* File List */}
           {files.length > 0 && (
-            <div className="bg-[#151515] border border-zinc-800 rounded-xl p-6">
+            <div className="bg-[#E8E9E3] border border-[#E8E9E3] rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
                   <FileBox className="w-4 h-4" />
@@ -85,7 +85,7 @@ export default function FileConverter() {
                 <div className="flex gap-2">
                   <button 
                     onClick={clearAll}
-                    className="px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 text-xs font-bold transition-all"
+                    className="px-3 py-1.5 rounded-lg border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] hover:bg-[#F9FAF4] text-xs font-bold transition-all"
                   >
                     Limpar Todos
                   </button>
@@ -94,10 +94,10 @@ export default function FileConverter() {
                     onClick={convertBatch}
                     className={`px-4 py-1.5 rounded-lg font-black uppercase tracking-wider text-xs flex items-center gap-2 transition-all ${
                       pendingCount === 0 
-                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed" 
+                        ? "bg-[#F9FAF4] text-zinc-600 cursor-not-allowed" 
                         : isConverting 
-                          ? "bg-[#00E5FF]/50 text-white cursor-wait" 
-                          : "bg-[#00E5FF] text-black hover:bg-[#00E5FF]/90"
+                          ? "bg-[#632CE5]/50 text-[#1A1C19] cursor-wait" 
+                          : "bg-[#632CE5] text-[#1A1C19] hover:bg-[#632CE5]/90"
                     }`}
                   >
                     {isConverting ? (
@@ -117,24 +117,24 @@ export default function FileConverter() {
 
               <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto pr-2">
                 {files.map(f => (
-                  <div key={f.id} className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-lg p-3 group">
+                  <div key={f.id} className="flex items-center justify-between bg-[#E8E9E3] border border-[#E8E9E3] rounded-lg p-3 group">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded bg-zinc-800 flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded bg-[#F9FAF4] flex items-center justify-center shrink-0">
                         {f.status === "done" ? (
                           <CheckCircle2 className="w-5 h-5 text-green-500" />
                         ) : f.status === "error" ? (
                           <AlertCircle className="w-5 h-5 text-red-500" />
                         ) : f.status === "converting" ? (
-                          <RefreshCw className="w-5 h-5 text-[#00E5FF] animate-spin" />
+                          <RefreshCw className="w-5 h-5 text-[#632CE5] animate-spin" />
                         ) : (
                           <FileText className="w-5 h-5 text-zinc-500" />
                         )}
                       </div>
                       
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-bold text-sm text-white truncate">{f.file.name}</span>
+                        <span className="font-bold text-sm text-[#1A1C19] truncate">{f.file.name}</span>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] uppercase font-mono text-zinc-500 bg-zinc-800 px-1.5 rounded">
+                          <span className="text-[10px] uppercase font-mono text-zinc-500 bg-[#F9FAF4] px-1.5 rounded">
                             {f.inputFormat} → {outputFormat}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-600">
@@ -145,9 +145,9 @@ export default function FileConverter() {
                           )}
                         </div>
                         {f.status === "converting" && f.progress !== undefined && (
-                          <div className="w-full bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                          <div className="w-full bg-[#F9FAF4] h-1.5 rounded-full mt-2 overflow-hidden">
                             <div 
-                              className="bg-[#00E5FF] h-full transition-all duration-300"
+                              className="bg-[#632CE5] h-full transition-all duration-300"
                               style={{ width: `${f.progress}%` }}
                             />
                           </div>
@@ -167,8 +167,8 @@ export default function FileConverter() {
                         </a>
                       ) : (
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
-                          f.status === "pending" ? "text-zinc-500 bg-zinc-800" :
-                          f.status === "converting" ? "text-[#00E5FF] bg-[#00E5FF]/10" :
+                          f.status === "pending" ? "text-zinc-500 bg-[#F9FAF4]" :
+                          f.status === "converting" ? "text-[#632CE5] bg-[#632CE5]/10" :
                           "text-red-500 bg-red-500/10"
                         }`}>
                           {f.status === "pending" ? "Pendente" : 

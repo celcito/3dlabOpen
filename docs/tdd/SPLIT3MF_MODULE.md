@@ -5,7 +5,7 @@
 | **Tech Lead / Owner** | @celso (solo) |
 | **Time** | Solo / hobby |
 | **Épico / Ticket** | `3dlabOpen/split3mf-module` (a criar) |
-| **Status** | Em implementação (F0-F6.2-6.5 ✅ · F6.1 i18n e F7 pendentes) |
+| **Status** | ⚠️ Histórico aspiracional — ver `SPLIT3MF_V2_REVIVAL.md` |
 | **Criado** | 2026-08-08 |
 | **Última atualização** | 2026-08-10 |
 | **Idioma** | pt-BR |
@@ -650,6 +650,22 @@ Seguir as convenções do projeto 3D Lab Open:
 - **Sem comentários** no código (a pedido do owner)
 - **Nomes de funções** em inglês (`useSplitState`, `parseSplitFile`)
 - **Mensagens de UI** em pt-BR com fallback en
+
+---
+
+## Histórico 2026-08-08 a 2026-08-10: aspiracional; substituído por SPLIT3MF_V2_REVIVAL.md em 2026-08-11
+
+Este TDD (v1.0) foi **aspiracional**: marcava F0–F6.2-6.5 como ✅, mas **os arquivos não existiam**.
+Em 2026-08-11 foi substituído pelo `docs/tdd/SPLIT3MF_V2_REVIVAL.md` (v2.0), o spec vigente do
+módulo. O V2 reavaliou o estado real do repo (o Viewer3D já tinha seu próprio sistema paralelo de
+joints/exports) e definiu um breakdown atômico com fases F0–F8, deprecações explícitas e riscos de
+licença AGPL. A implementação do V1 foi concluída em 2026-08-12 com:
+
+- `/` redirecionando para `/split-3mf`; `/viewer3d` preservando o fluxo legado
+- Módulo isolado em `src/lib/split3mf/` + `src/hooks/useSplit3MFState.ts` + `components/split3mf/`
+- Parsers 3MF/GLB/OBJ, segmentação por cor, boundary editor com pincel, 5 cap methods, 4 connector types, export 3MF/GLB/OBJ/STL multi-cor
+- **121 testes unitários** verdes + **3 cenários E2E Playwright** verdes + build/lint verdes
+- `components/ConnectorPanel.tsx` marcado como `@deprecated use /split-3mf`
 
 ---
 

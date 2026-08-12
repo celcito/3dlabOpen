@@ -606,7 +606,7 @@ function Scene({
             {isSelected && (
               <mesh position={[0, 0, (layer.depth / 10) + 0.05]}>
                 <ringGeometry args={[0.3, 0.35, 16]} />
-                <meshBasicMaterial color="#00E5FF" side={THREE.DoubleSide} />
+                <meshBasicMaterial color="#632CE5" side={THREE.DoubleSide} />
               </mesh>
             )}
           </group>
@@ -1287,16 +1287,16 @@ export default function PlateCreator() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[#080808] text-white">
+    <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[#F9FAF4] text-[#212121]">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-zinc-900">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[#E2E3DD]">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#00E5FF] animate-pulse" />
-            <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#00E5FF]">LABORATÓRIO 3D</span>
+            <Sparkles className="w-4 h-4 text-[#632CE5] animate-pulse" />
+            <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#632CE5]">LABORATÓRIO 3D</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-white mt-1">
+          <h1 className="text-2xl font-black tracking-tight text-[#1A1C19] mt-1">
             Criador de Placas Decorativas 3D
           </h1>
           <p className="text-xs text-zinc-500 max-w-xl">
@@ -1305,17 +1305,17 @@ export default function PlateCreator() {
         </div>
 
         {/* Input Name Plate */}
-        <div className="flex items-center gap-2 w-full md:w-auto bg-[#0d0d0d] p-1 border border-zinc-900 rounded-lg">
+        <div className="flex items-center gap-2 w-full md:w-auto bg-white p-1 border border-[#E2E3DD] rounded-lg">
           <input 
             type="text" 
             value={plateName}
             onChange={(e) => setPlateName(e.target.value)}
-            className="bg-black/40 text-[11px] font-bold uppercase tracking-wider px-3 py-2 border-0 outline-none focus:ring-1 focus:ring-[#00E5FF] rounded text-white w-full md:w-[220px]"
+            className="bg-white/40 text-[11px] font-bold uppercase tracking-wider px-3 py-2 border-0 outline-none focus:ring-1 focus:ring-[#632CE5] rounded text-[#212121] w-full md:w-[220px]"
             placeholder="Nome do Projeto..."
           />
           <button 
             onClick={handleSaveToLibrary}
-            className="p-2 bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 border border-[#00E5FF]/30 rounded transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+            className="p-2 bg-[#632CE5]/10 text-[#632CE5] hover:bg-[#632CE5]/20 border border-[#632CE5]/30 rounded transition-colors cursor-pointer flex items-center gap-1 shrink-0"
             title="Salvar Projeto Atual na Biblioteca"
           >
             <Save className="w-4 h-4" />
@@ -1325,7 +1325,7 @@ export default function PlateCreator() {
 
       {/* SUCCESS POPUP ALERT */}
       {successMsg && (
-        <div className="fixed top-6 right-6 z-50 bg-[#0d0d0d] border-2 border-emerald-500/50 text-emerald-400 font-mono text-[10px] uppercase font-black tracking-wider py-3.5 px-6 rounded-lg shadow-[0_4px_30px_rgba(16,185,129,0.15)] flex items-center gap-3">
+        <div className="fixed top-6 right-6 z-50 bg-white border-2 border-emerald-500/50 text-emerald-400 font-mono text-[10px] uppercase font-black tracking-wider py-3.5 px-6 rounded-lg shadow-[0_4px_30px_rgba(16,185,129,0.15)] flex items-center gap-3">
           <Check className="w-4 h-4 text-emerald-400" />
           <span>{successMsg}</span>
         </div>
@@ -1336,10 +1336,10 @@ export default function PlateCreator() {
         
         {/* LEFT COLUMN: 3D INTERACTIVE VIEWPORT (7 Cols) */}
         <div className="lg:col-span-7 flex flex-col space-y-4">
-          <div className="relative aspect-[4/3] w-full bg-[#0d0d0d] border border-zinc-900 rounded-lg overflow-hidden shadow-2xl flex flex-col justify-between">
+          <div className="relative aspect-[4/3] w-full bg-white border border-[#E2E3DD] rounded-lg overflow-hidden shadow-2xl flex flex-col justify-between">
             
             {/* Viewport header tags */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur border border-zinc-800/80 px-2.5 py-1 rounded font-mono text-[8.5px] text-zinc-400">
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/60 backdrop-blur border border-[#E8E9E3]/80 px-2.5 py-1 rounded font-mono text-[8.5px] text-zinc-400">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>PREVIEW EM TEMPO REAL (3D)</span>
             </div>
@@ -1349,8 +1349,8 @@ export default function PlateCreator() {
                 onClick={() => setShowWireframe(!showWireframe)}
                 className={`p-1.5 rounded backdrop-blur text-[8px] font-mono border transition-all cursor-pointer ${
                   showWireframe 
-                    ? "bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/40" 
-                    : "bg-black/60 text-zinc-400 border-zinc-800"
+                    ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/40" 
+                    : "bg-white/60 text-zinc-400 border-[#E8E9E3]"
                 }`}
                 title="Alternar Modo de Grade"
               >
@@ -1399,10 +1399,10 @@ export default function PlateCreator() {
             </div>
 
             {/* Viewport bottom controls HUD */}
-            <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 bg-black/80 backdrop-blur border border-zinc-900/95 p-3 rounded-md">
+            <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 bg-white/80 backdrop-blur border border-[#E2E3DD]/95 p-3 rounded-md">
               <div className="flex items-center gap-4 w-full sm:w-auto">
                 <div className="flex flex-col">
-                  <span className="text-[8px] font-mono text-[#00E5FF] uppercase tracking-widest block font-extrabold">Vista Explodida (Glúten Preview)</span>
+                  <span className="text-[8px] font-mono text-[#632CE5] uppercase tracking-widest block font-extrabold">Vista Explodida (Glúten Preview)</span>
                   <span className="text-[7px] text-zinc-500 uppercase">Arraste para afastar as partes</span>
                 </div>
                 <input 
@@ -1412,16 +1412,16 @@ export default function PlateCreator() {
                   step="0.1"
                   value={explodedView}
                   onChange={(e) => setExplodedView(parseFloat(e.target.value))}
-                  className="w-24 sm:w-32 accent-[#00E5FF] cursor-pointer"
+                  className="w-24 sm:w-32 accent-[#632CE5] cursor-pointer"
                 />
-                <span className="text-[9px] font-mono text-[#00E5FF] font-black">{Math.round(explodedView * 100)}%</span>
+                <span className="text-[9px] font-mono text-[#632CE5] font-black">{Math.round(explodedView * 100)}%</span>
               </div>
 
               <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setExplodedView(0)}
-                  className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 p-1 rounded cursor-pointer"
+                  className="bg-[#E8E9E3] hover:bg-[#F9FAF4] border border-[#E8E9E3] hover:border-[#E8E9E3] p-1 rounded cursor-pointer"
                   title="Resetar Vista"
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
@@ -1432,9 +1432,9 @@ export default function PlateCreator() {
           </div>
 
           {/* QUICK TUTORIAL OR ASSEMBLY INFO */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-4 space-y-2.5">
+          <div className="bg-white border border-[#E2E3DD] rounded-lg p-4 space-y-2.5">
             <h4 className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest font-black flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Info className="w-3.5 h-3.5 text-[#632CE5]" />
               Manual de Encaixes e Cola
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10.5px] text-zinc-500 leading-relaxed font-sans">
@@ -1452,14 +1452,14 @@ export default function PlateCreator() {
         <div className="lg:col-span-5 flex flex-col space-y-6">
           
           {/* CONFIGURATION TABS CONTROL */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-5 space-y-6">
+          <div className="bg-white border border-[#E2E3DD] rounded-lg p-5 space-y-6">
             
             {/* Base Plate Config Block */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+              <div className="flex items-center justify-between border-b border-[#E2E3DD] pb-2">
                 <div className="flex items-center gap-2">
-                  <LayoutGrid className="w-4 h-4 text-[#00E5FF]" />
-                  <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Geometria da Placa</h3>
+                  <LayoutGrid className="w-4 h-4 text-[#632CE5]" />
+                  <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Geometria da Placa</h3>
                 </div>
                 <span className="text-[8px] font-mono text-zinc-500 uppercase">Base Plate</span>
               </div>
@@ -1490,8 +1490,8 @@ export default function PlateCreator() {
                         }}
                         className={`py-2 px-1.5 rounded border text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center ${
                           config.shape === shape.id
-                            ? "border-[#00E5FF] text-white bg-[#00E5FF]/5"
-                            : "border-zinc-800 text-zinc-500 hover:border-zinc-700 bg-black/40"
+                            ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5"
+                            : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
                         }`}
                       >
                         {shape.label}
@@ -1510,7 +1510,7 @@ export default function PlateCreator() {
                       max="300"
                       value={config.width}
                       onChange={(e) => setConfig(prev => ({ ...prev, width: parseInt(e.target.value) || 100 }))}
-                      className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
                     />
                   </div>
                   <div>
@@ -1521,7 +1521,7 @@ export default function PlateCreator() {
                       max="300"
                       value={config.height}
                       onChange={(e) => setConfig(prev => ({ ...prev, height: parseInt(e.target.value) || 100 }))}
-                      className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
                     />
                   </div>
                 </div>
@@ -1536,7 +1536,7 @@ export default function PlateCreator() {
                       max="20"
                       value={config.thickness}
                       onChange={(e) => setConfig(prev => ({ ...prev, thickness: parseInt(e.target.value) || 6 }))}
-                      className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
                     />
                   </div>
                   <div>
@@ -1548,19 +1548,19 @@ export default function PlateCreator() {
                       disabled={config.shape !== "rounded_rect"}
                       value={config.borderRadius}
                       onChange={(e) => setConfig(prev => ({ ...prev, borderRadius: parseInt(e.target.value) || 0 }))}
-                      className="bg-black/80 border border-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed rounded px-2.5 py-1.5 text-xs text-white outline-none w-full font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] disabled:opacity-30 disabled:cursor-not-allowed rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Decorative border outline styling */}
-                <div className="grid grid-cols-2 gap-3 border-t border-zinc-900/60 pt-3">
+                <div className="grid grid-cols-2 gap-3 border-t border-[#E2E3DD]/60 pt-3">
                   <div>
                     <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Estilo de Borda</label>
                     <select
                       value={config.borderStyle}
                       onChange={(e) => setConfig(prev => ({ ...prev, borderStyle: e.target.value as any }))}
-                      className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full cursor-pointer font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full cursor-pointer font-mono"
                     >
                       <option value="none">Nenhuma</option>
                       <option value="relief">Borda em Relevo</option>
@@ -1576,19 +1576,19 @@ export default function PlateCreator() {
                       disabled={config.borderStyle === "none"}
                       value={config.borderWidth}
                       onChange={(e) => setConfig(prev => ({ ...prev, borderWidth: parseInt(e.target.value) || 5 }))}
-                      className="bg-black/80 border border-zinc-800 disabled:opacity-30 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] disabled:opacity-30 rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Material style and Mounting holes options */}
-                <div className="grid grid-cols-2 gap-3 border-t border-zinc-900/60 pt-3">
+                <div className="grid grid-cols-2 gap-3 border-t border-[#E2E3DD]/60 pt-3">
                   <div>
                     <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Orifícios de Fixação</label>
                     <select
                       value={config.mountingHoles}
                       onChange={(e) => setConfig(prev => ({ ...prev, mountingHoles: e.target.value as any }))}
-                      className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full cursor-pointer font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full cursor-pointer font-mono"
                     >
                       <option value="none">Nenhum furo</option>
                       <option value="top_center">1 furo topo centro</option>
@@ -1601,7 +1601,7 @@ export default function PlateCreator() {
                     <select
                       value={config.materialFinish}
                       onChange={(e) => setConfig(prev => ({ ...prev, materialFinish: e.target.value as any }))}
-                      className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full cursor-pointer font-mono"
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full cursor-pointer font-mono"
                     >
                       <option value="carbon">Fibra de Carbono (Preto)</option>
                       <option value="matte">Fosco Orgânico (Matte)</option>
@@ -1629,7 +1629,7 @@ export default function PlateCreator() {
                         type="button"
                         onClick={() => setConfig(prev => ({ ...prev, color: col }))}
                         className={`w-5 h-5 rounded-full border transition-all cursor-pointer ${
-                          config.color === col ? "ring-2 ring-[#00E5FF] border-whiteScale" : "border-zinc-800 hover:scale-105"
+                          config.color === col ? "ring-2 ring-[#632CE5] border-whiteScale" : "border-[#E8E9E3] hover:scale-105"
                         }`}
                         style={{ backgroundColor: col }}
                       />
@@ -1641,24 +1641,24 @@ export default function PlateCreator() {
             </div>
 
             {/* Visual Overlapping Layers Control Block */}
-            <div className="space-y-4 pt-4 border-t border-zinc-900">
+            <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[#00E5FF]" />
-                  <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Sobreposição de Camadas ({layers.length})</h3>
+                  <Layers className="w-4 h-4 text-[#632CE5]" />
+                  <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Sobreposição de Camadas ({layers.length})</h3>
                 </div>
                 <div className="flex gap-1.5">
                   <button
                     type="button"
                     onClick={handleAddTextLayer}
-                    className="bg-[#00E5FF]/10 text-[#00E5FF] hover:bg-[#00E5FF]/20 px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider flex items-center gap-1 cursor-pointer"
+                    className="bg-[#632CE5]/10 text-[#632CE5] hover:bg-[#632CE5]/20 px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3 h-3" /> + TEXTO
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAddIconLayer("heart")}
-                    className="bg-zinc-900 text-zinc-300 hover:bg-zinc-800 px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider flex items-center gap-1 cursor-pointer"
+                    className="bg-[#E8E9E3] text-zinc-300 hover:bg-[#F9FAF4] px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3 h-3" /> + ÍCONE
                   </button>
@@ -1668,7 +1668,7 @@ export default function PlateCreator() {
               {/* LIST OF CURRENT OVERLAPPING LAYERS */}
               <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
                 {layers.length === 0 ? (
-                  <div className="text-center py-4 bg-black/40 border border-zinc-900/60 rounded text-[10px] text-zinc-500 uppercase">
+                  <div className="text-center py-4 bg-white/40 border border-[#E2E3DD]/60 rounded text-[10px] text-zinc-500 uppercase">
                     Nenhuma camada sobreposta. Adicione um texto ou ícone acima!
                   </div>
                 ) : (
@@ -1680,8 +1680,8 @@ export default function PlateCreator() {
                         onClick={() => setActiveLayerId(layer.id)}
                         className={`flex items-center justify-between p-2 rounded border cursor-pointer transition-all ${
                           isSelected 
-                            ? "border-[#00E5FF] bg-[#00E5FF]/5 shadow-[0_0_8px_rgba(0,229,255,0.05)]" 
-                            : "border-zinc-900 bg-black/20 hover:border-zinc-800"
+                            ? "border-[#632CE5] bg-[#632CE5]/5 shadow-[0_0_8px_rgba(124,58,237,0.05)]" 
+                            : "border-[#E2E3DD] bg-white/20 hover:border-[#E8E9E3]"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -1696,7 +1696,7 @@ export default function PlateCreator() {
                             ) : (
                               <Sparkles className="w-3 h-3 text-zinc-500 shrink-0" />
                             )}
-                            <span className="text-[10px] font-bold text-white truncate max-w-[110px] font-mono uppercase">
+                            <span className="text-[10px] font-bold text-[#1A1C19] truncate max-w-[110px] font-mono uppercase">
                               {layer.type === "text" ? `"${layer.content}"` : `ÍCONE: ${layer.content}`}
                             </span>
                           </div>
@@ -1710,7 +1710,7 @@ export default function PlateCreator() {
                               e.stopPropagation();
                               updateActiveLayerField("visible", !layer.visible);
                             }}
-                            className="p-1 text-zinc-500 hover:text-white transition-colors"
+                            className="p-1 text-zinc-500 hover:text-[#1A1C19] transition-colors"
                           >
                             {layer.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3 text-red-500" />}
                           </button>
@@ -1722,7 +1722,7 @@ export default function PlateCreator() {
                               e.stopPropagation();
                               moveLayerOrder(idx, "up");
                             }}
-                            className="p-0.5 text-zinc-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                            className="p-0.5 text-zinc-500 hover:text-[#1A1C19] disabled:opacity-20 disabled:cursor-not-allowed"
                             title="Mover para Trás"
                           >
                             <ArrowUpDown className="w-3 h-3 rotate-180" />
@@ -1731,7 +1731,7 @@ export default function PlateCreator() {
                           <button
                             type="button"
                             onClick={(e) => handleDuplicateLayer(layer, e)}
-                            className="p-1 text-zinc-500 hover:text-white transition-colors"
+                            className="p-1 text-zinc-500 hover:text-[#1A1C19] transition-colors"
                             title="Duplicar"
                           >
                             <Copy className="w-3 h-3" />
@@ -1755,13 +1755,13 @@ export default function PlateCreator() {
 
             {/* SELECTED LAYER PROPERTIES CONTROL */}
             {activeLayer && (
-              <div className="space-y-4 pt-4 border-t border-zinc-900 bg-[#0d0d0d] rounded-lg">
-                <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+              <div className="space-y-4 pt-4 border-t border-[#E2E3DD] bg-white rounded-lg">
+                <div className="flex items-center justify-between border-b border-[#E2E3DD] pb-2">
                   <div className="flex items-center gap-1.5">
-                    <Sliders className="w-4 h-4 text-[#00E5FF]" />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-white">Ajustes da Camada Selecionada</span>
+                    <Sliders className="w-4 h-4 text-[#632CE5]" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#1A1C19]">Ajustes da Camada Selecionada</span>
                   </div>
-                  <span className="text-[7.5px] font-mono bg-[#00E5FF]/10 text-[#00E5FF] px-1.5 py-0.5 rounded uppercase">
+                  <span className="text-[7.5px] font-mono bg-[#632CE5]/10 text-[#632CE5] px-1.5 py-0.5 rounded uppercase">
                     {activeLayer.type}
                   </span>
                 </div>
@@ -1777,13 +1777,13 @@ export default function PlateCreator() {
                         type="text"
                         value={activeLayer.content}
                         onChange={(e) => updateActiveLayerField("content", e.target.value.toUpperCase())}
-                        className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full font-mono uppercase"
+                        className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono uppercase"
                       />
                     ) : (
                       <select
                         value={activeLayer.content}
                         onChange={(e) => updateActiveLayerField("content", e.target.value)}
-                        className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1.5 text-xs text-white outline-none w-full cursor-pointer font-mono"
+                        className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full cursor-pointer font-mono"
                       >
                         <option value="heart">Coração (Love)</option>
                         <option value="star">Estrela (Star)</option>
@@ -1807,7 +1807,7 @@ export default function PlateCreator() {
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                         <span>POSIÇÃO X (mm)</span>
-                        <span className="text-[#00E5FF]">{Math.round(activeLayer.x * 10)}</span>
+                        <span className="text-[#632CE5]">{Math.round(activeLayer.x * 10)}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1816,13 +1816,13 @@ export default function PlateCreator() {
                         step="0.2"
                         value={activeLayer.x}
                         onChange={(e) => updateActiveLayerField("x", parseFloat(e.target.value))}
-                        className="w-full accent-[#00E5FF] cursor-pointer"
+                        className="w-full accent-[#632CE5] cursor-pointer"
                       />
                     </div>
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                         <span>POSIÇÃO Y (mm)</span>
-                        <span className="text-[#00E5FF]">{Math.round(activeLayer.y * 10)}</span>
+                        <span className="text-[#632CE5]">{Math.round(activeLayer.y * 10)}</span>
                       </div>
                       <input 
                         type="range" 
@@ -1831,7 +1831,7 @@ export default function PlateCreator() {
                         step="0.2"
                         value={activeLayer.y}
                         onChange={(e) => updateActiveLayerField("y", parseFloat(e.target.value))}
-                        className="w-full accent-[#00E5FF] cursor-pointer"
+                        className="w-full accent-[#632CE5] cursor-pointer"
                       />
                     </div>
                   </div>
@@ -1841,7 +1841,7 @@ export default function PlateCreator() {
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                         <span>TAMANHO / ESCALA</span>
-                        <span className="text-[#00E5FF]">{activeLayer.size}x</span>
+                        <span className="text-[#632CE5]">{activeLayer.size}x</span>
                       </div>
                       <input 
                         type="range" 
@@ -1850,13 +1850,13 @@ export default function PlateCreator() {
                         step="0.1"
                         value={activeLayer.size}
                         onChange={(e) => updateActiveLayerField("size", parseFloat(e.target.value))}
-                        className="w-full accent-[#00E5FF] cursor-pointer"
+                        className="w-full accent-[#632CE5] cursor-pointer"
                       />
                     </div>
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                         <span>ALTURA RELEVO (Z)</span>
-                        <span className="text-[#00E5FF]">{activeLayer.depth}mm</span>
+                        <span className="text-[#632CE5]">{activeLayer.depth}mm</span>
                       </div>
                       <input 
                         type="range" 
@@ -1865,7 +1865,7 @@ export default function PlateCreator() {
                         step="0.5"
                         value={activeLayer.depth}
                         onChange={(e) => updateActiveLayerField("depth", parseFloat(e.target.value))}
-                        className="w-full accent-[#00E5FF] cursor-pointer"
+                        className="w-full accent-[#632CE5] cursor-pointer"
                       />
                     </div>
                   </div>
@@ -1874,7 +1874,7 @@ export default function PlateCreator() {
                   <div>
                     <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                       <span>ROTAÇÃO (GRAUS)</span>
-                      <span className="text-[#00E5FF]">{activeLayer.rotation}°</span>
+                      <span className="text-[#632CE5]">{activeLayer.rotation}°</span>
                     </div>
                     <input 
                       type="range" 
@@ -1883,7 +1883,7 @@ export default function PlateCreator() {
                       step="5"
                       value={activeLayer.rotation}
                       onChange={(e) => updateActiveLayerField("rotation", parseInt(e.target.value))}
-                      className="w-full accent-[#00E5FF] cursor-pointer"
+                      className="w-full accent-[#632CE5] cursor-pointer"
                     />
                   </div>
 
@@ -1894,7 +1894,7 @@ export default function PlateCreator() {
                       <select
                         value={activeLayer.style}
                         onChange={(e) => updateActiveLayerField("style", e.target.value as any)}
-                        className="bg-black/80 border border-zinc-800 rounded px-2.5 py-1 text-[10px] text-white outline-none w-full cursor-pointer font-mono"
+                        className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1 text-[10px] text-[#212121] outline-none w-full cursor-pointer font-mono"
                       >
                         <option value="raised">Relevo Sobressaído</option>
                         <option value="engraved">Baixo Relevo (Escavado)</option>
@@ -1906,7 +1906,7 @@ export default function PlateCreator() {
                       <label className="text-[8px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Cor da Peça</label>
                       <div className="flex flex-wrap gap-1 max-w-[140px]">
                         {[
-                          "#00E5FF", // Cyan
+                          "#632CE5", // Cyan
                           "#FF1744", // Red
                           "#00FF41", // Green
                           "#FFEA00", // Yellow
@@ -1918,7 +1918,7 @@ export default function PlateCreator() {
                             type="button"
                             onClick={() => updateActiveLayerField("color", col)}
                             className={`w-3.5 h-3.5 rounded-full border transition-all cursor-pointer ${
-                              activeLayer.color === col ? "ring-2 ring-white scale-110" : "border-zinc-800 hover:scale-105"
+                              activeLayer.color === col ? "ring-2 ring-white scale-110" : "border-[#E8E9E3] hover:scale-105"
                             }`}
                             style={{ backgroundColor: col }}
                           />
@@ -1934,10 +1934,10 @@ export default function PlateCreator() {
           </div>
 
           {/* TEMPLATE/PRESETS SECTION */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-5 space-y-4">
-            <div className="flex items-center gap-2 border-b border-zinc-900 pb-2">
-              <BookOpen className="w-4 h-4 text-[#00E5FF]" />
-              <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Modelos e Presets de Inspiração</h3>
+          <div className="bg-white border border-[#E2E3DD] rounded-lg p-5 space-y-4">
+            <div className="flex items-center gap-2 border-b border-[#E2E3DD] pb-2">
+              <BookOpen className="w-4 h-4 text-[#632CE5]" />
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Modelos e Presets de Inspiração</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-2">
@@ -1945,9 +1945,9 @@ export default function PlateCreator() {
                 <button
                   key={preset.name}
                   onClick={() => loadPreset(preset)}
-                  className="bg-black/40 hover:bg-zinc-900/60 border border-zinc-900 hover:border-zinc-800 p-2.5 rounded text-left transition-all cursor-pointer flex flex-col justify-between h-[65px]"
+                  className="bg-white/40 hover:bg-[#E8E9E3]/60 border border-[#E2E3DD] hover:border-[#E8E9E3] p-2.5 rounded text-left transition-all cursor-pointer flex flex-col justify-between h-[65px]"
                 >
-                  <span className="text-[9.5px] font-black uppercase tracking-wider text-white truncate w-full">{preset.name}</span>
+                  <span className="text-[9.5px] font-black uppercase tracking-wider text-[#1A1C19] truncate w-full">{preset.name}</span>
                   <p className="text-[8px] text-zinc-500 line-clamp-2 mt-1 leading-relaxed">{preset.desc}</p>
                 </button>
               ))}
@@ -1955,10 +1955,10 @@ export default function PlateCreator() {
           </div>
 
           {/* EXPORTING PANEL FOR 3D PRINTING */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-5 space-y-4">
-            <div className="flex items-center gap-2 border-b border-zinc-900 pb-2">
-              <Download className="w-4 h-4 text-[#00E5FF]" />
-              <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Exportação e Slicing 3D</h3>
+          <div className="bg-white border border-[#E2E3DD] rounded-lg p-5 space-y-4">
+            <div className="flex items-center gap-2 border-b border-[#E2E3DD] pb-2">
+              <Download className="w-4 h-4 text-[#632CE5]" />
+              <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Exportação e Slicing 3D</h3>
             </div>
 
             <div className="space-y-3 text-[10.5px] text-zinc-400">
@@ -1970,14 +1970,14 @@ export default function PlateCreator() {
                 <button
                   type="button"
                   onClick={() => handleExportSTL("combined")}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 px-3 py-2.5 rounded font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-[#E8E9E3] hover:bg-[#F9FAF4] text-zinc-300 hover:text-[#212121] border border-[#E8E9E3] px-3 py-2.5 rounded font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <FileDown className="w-4 h-4 text-[#00E5FF]" />
+                  <FileDown className="w-4 h-4 text-[#632CE5]" />
                   <span>Exportar Placa Unificada (Uma só Peça)</span>
                 </button>
 
-                <div className="border-t border-zinc-900/60 my-2 pt-2">
-                  <div className="flex items-center gap-1 mb-2 text-[#00E5FF] text-[9.5px] uppercase font-bold tracking-widest">
+                <div className="border-t border-[#E2E3DD]/60 my-2 pt-2">
+                  <div className="flex items-center gap-1 mb-2 text-[#632CE5] text-[9.5px] uppercase font-bold tracking-widest">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Fatiamento Modular para Colar</span>
                   </div>
@@ -1985,7 +1985,7 @@ export default function PlateCreator() {
                     <button
                       type="button"
                       onClick={() => handleExportSTL("separated_plate")}
-                      className="bg-[#00E5FF]/10 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30 px-3 py-2 rounded text-[9.5px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="bg-[#632CE5]/10 hover:bg-[#632CE5]/20 text-[#632CE5] border border-[#632CE5]/30 px-3 py-2 rounded text-[9.5px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       title="Baixar apenas a base com slots guia de montagem"
                     >
                       <Layers className="w-3.5 h-3.5" />
@@ -1994,7 +1994,7 @@ export default function PlateCreator() {
                     <button
                       type="button"
                       onClick={() => handleExportSTL("separated_layers")}
-                      className="bg-[#00E5FF]/10 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/30 px-3 py-2 rounded text-[9.5px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="bg-[#632CE5]/10 hover:bg-[#632CE5]/20 text-[#632CE5] border border-[#632CE5]/30 px-3 py-2 rounded text-[9.5px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       title="Baixar cada letra ou ícone como STL individual plano para colar"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -2007,11 +2007,11 @@ export default function PlateCreator() {
           </div>
 
           {/* SAVED PLATES LIBRARY PANEL */}
-          <div className="bg-[#0d0d0d] border border-zinc-900 rounded-lg p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+          <div className="bg-white border border-[#E2E3DD] rounded-lg p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E2E3DD] pb-2">
               <div className="flex items-center gap-2">
                 <Folder className="w-4 h-4 text-zinc-400" />
-                <h3 className="text-[11px] font-black uppercase tracking-wider text-white">Minhas Placas Salvas Localmente</h3>
+                <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Minhas Placas Salvas Localmente</h3>
               </div>
               {savedLibrary.length > 0 && (
                 <button
@@ -2039,10 +2039,10 @@ export default function PlateCreator() {
                   <div
                     key={plate.id}
                     onClick={() => loadSavedPlate(plate)}
-                    className="group bg-black/40 hover:bg-zinc-900/40 p-2.5 rounded border border-zinc-900 hover:border-zinc-800 flex items-center justify-between cursor-pointer transition-colors"
+                    className="group bg-white/40 hover:bg-[#E8E9E3]/40 p-2.5 rounded border border-[#E2E3DD] hover:border-[#E8E9E3] flex items-center justify-between cursor-pointer transition-colors"
                   >
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold text-white group-hover:text-[#00E5FF] transition-colors uppercase truncate block">
+                      <span className="text-[10px] font-bold text-[#1A1C19] group-hover:text-[#632CE5] transition-colors uppercase truncate block">
                         {plate.name}
                       </span>
                       <span className="text-[7.5px] font-mono text-zinc-500 block uppercase mt-0.5">

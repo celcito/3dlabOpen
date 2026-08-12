@@ -21,15 +21,15 @@ import { useViewerExports } from "../hooks/viewer3d/useViewerExports";
 
 // Vibrant colors for print separation groups
 const GROUPS = [
-  { id: 0, name: "Base Principal (Cinza / Gray)", color: "#333333", border: "border-zinc-700" },
-  { id: 1, name: "Parte 1 (Ciano / Cyan)", color: "#00E5FF", border: "border-[#00E5FF]" },
+  { id: 0, name: "Base Principal (Cinza / Gray)", color: "#333333", border: "border-[#E8E9E3]" },
+  { id: 1, name: "Parte 1 (Ciano / Cyan)", color: "#632CE5", border: "border-[#632CE5]" },
   { id: 2, name: "Parte 2 (Vermelho / Red)", color: "#FF1744", border: "border-[#FF1744]" },
   { id: 3, name: "Parte 3 (Verde / Green)", color: "#00FF41", border: "border-[#00FF41]" },
   { id: 4, name: "Parte 4 (Roxo / Purple)", color: "#D500F9", border: "border-[#D500F9]" },
 ];
 
 const PRESET_COLORS = [
-  "#00E5FF",
+  "#632CE5",
   "#FF1744",
   "#00FF41",
   "#D500F9",
@@ -49,11 +49,11 @@ function HelpTooltip({ text, position = "left" }: { text: string; position?: "to
   };
   return (
     <div className="relative group inline-flex items-center ml-1.5 select-none shrink-0 align-middle">
-      <span className="text-zinc-500 hover:text-[#00E5FF] transition-colors cursor-help focus:outline-none p-0.5">
+      <span className="text-zinc-500 hover:text-[#632CE5] transition-colors cursor-help focus:outline-none p-0.5">
         <Info className="w-3.5 h-3.5" />
       </span>
-      <div className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-zinc-950 border border-zinc-800 rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}>
-        <p className="tracking-wide uppercase text-[#00E5FF] font-black text-[9px] mb-1">Dica de Ajuda / Help Tip</p>
+      <div className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-[#E8E9E3] border border-[#E8E9E3] rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}>
+        <p className="tracking-wide uppercase text-[#632CE5] font-black text-[9px] mb-1">Dica de Ajuda / Help Tip</p>
         <p>{text}</p>
       </div>
     </div>
@@ -238,7 +238,7 @@ function BrushIndicator({ brushRadius, paintMode, paintTool }: { brushRadius: nu
   });
   if (!paintMode) return null;
   const indicatorRadius = paintTool === "bucket" ? 0.03 : brushRadius;
-  const color = paintTool === "eraser" ? "#FF1744" : "#00E5FF";
+  const color = paintTool === "eraser" ? "#FF1744" : "#632CE5";
   return (
     <mesh ref={meshRef} name="brush-indicator" visible={false} scale={[indicatorRadius, indicatorRadius, indicatorRadius]}>
       <sphereGeometry args={[1, 16, 16]} />
@@ -340,8 +340,8 @@ interface JointSpec {
 
 export default function Viewer3D() {
   const [groups, setGroups] = useState([
-    { id: 0, name: "Base Principal (Cinza)", color: "#333333", border: "border-zinc-700" },
-    { id: 1, name: "Parte 1 (Ciano)", color: "#00E5FF", border: "border-[#00E5FF]" },
+    { id: 0, name: "Base Principal (Cinza)", color: "#333333", border: "border-[#E8E9E3]" },
+    { id: 1, name: "Parte 1 (Ciano)", color: "#632CE5", border: "border-[#632CE5]" },
     { id: 2, name: "Parte 2 (Vermelho)", color: "#FF1744", border: "border-[#FF1744]" },
     { id: 3, name: "Parte 3 (Verde)", color: "#00FF41", border: "border-[#00FF41]" },
     { id: 4, name: "Parte 4 (Roxo)", color: "#D500F9", border: "border-[#D500F9]" },
@@ -861,7 +861,7 @@ export default function Viewer3D() {
           } else if (myType === 'female') {
                 joints.push({ id: spec.manualId, groupId, neighborId, type: 'socket', position: spec.position.clone(), direction: intoGroup, color: "#FF1744", neighborName, scale: spec.scale ?? 1, reinforcement: { diameter: jointSizes.reinforcementDiameter, height: jointSizes.reinforcementHeight, wall: jointSizes.reinforcementWall } });
           } else {
-             joints.push({ id: spec.manualId, groupId, neighborId, type: 'peg', position: spec.position.clone(), direction: spec.normalFrom.clone(), color: "#00E5FF", neighborName, scale: spec.scale ?? 1 });
+             joints.push({ id: spec.manualId, groupId, neighborId, type: 'peg', position: spec.position.clone(), direction: spec.normalFrom.clone(), color: "#632CE5", neighborName, scale: spec.scale ?? 1 });
           }
         });
       });
@@ -1089,27 +1089,27 @@ export default function Viewer3D() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden text-white bg-[#080808]">
-      <header className="p-8 flex justify-between items-end border-b border-[#222] shrink-0 bg-[#080808]">
+    <div className="flex flex-col h-full overflow-hidden text-[#212121] bg-[#F9FAF4]">
+      <header className="p-8 flex justify-between items-end border-b border-[#E2E3DD] shrink-0 bg-[#F9FAF4]">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-[#00E5FF] font-bold mb-2">VÉRTICE STUDIO TOOLS / v0.5.0</p>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-[#632CE5] font-bold mb-2">VÉRTICE STUDIO TOOLS / v0.5.0</p>
           <h1 className="text-6xl font-black tracking-tighter leading-none uppercase">3D Print Painter</h1>
         </div>
         <div className="text-right">
           <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Loaded File</div>
-          <div className="font-mono text-sm text-[#00E5FF] tracking-wider">{fileName}</div>
+          <div className="font-mono text-sm text-[#632CE5] tracking-wider">{fileName}</div>
         </div>
       </header>
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_360px] overflow-hidden">
-        <div className="relative bg-[#050505] p-6 h-full flex flex-col">
-          <div className="flex-1 w-full border border-zinc-800 rounded-lg relative overflow-hidden bg-[#050505] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]">
+        <div className="relative bg-[#F9FAF4] p-6 h-full flex flex-col">
+          <div className="flex-1 w-full border border-[#E8E9E3] rounded-lg relative overflow-hidden bg-[#F9FAF4] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]">
             {modelGeometry ? (
               <>
                 <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }}>
-                  <color attach="background" args={["#0a0a0a"]} />
+                  <color attach="background" args={["#F3F4EE"]} />
                   <ambientLight intensity={0.8} />
                   <pointLight position={[10, 10, 10]} intensity={1.5} />
-                  <pointLight position={[-10, 5, -10]} intensity={0.8} color="#00E5FF" />
+                  <pointLight position={[-10, 5, -10]} intensity={0.8} color="#632CE5" />
                   <directionalLight position={[5, 10, 5]} intensity={2.0} castShadow />
                   <directionalLight position={[-5, -10, -5]} intensity={0.6} />
                   {previewSeparated ? (
@@ -1221,42 +1221,42 @@ export default function Viewer3D() {
                     </Text>
                   )}
                 </Canvas>
-                <div className="absolute top-6 left-6 bg-[#0A0A0A]/85 border border-zinc-800 backdrop-blur-md p-3.5 max-w-xs rounded text-[10px] uppercase tracking-wider text-zinc-400 space-y-1.5 pointer-events-none select-none z-10">
-                  <div className="text-[#00E5FF] font-bold text-[11px] mb-1">3D Navigation Guide</div>
+                <div className="absolute top-6 left-6 bg-[#F9FAF4]/85 border border-[#E8E9E3] backdrop-blur-md p-3.5 max-w-xs rounded text-[10px] uppercase tracking-wider text-zinc-400 space-y-1.5 pointer-events-none select-none z-10">
+                  <div className="text-[#632CE5] font-bold text-[11px] mb-1">3D Navigation Guide</div>
                   <div className="flex justify-between gap-4"><span className="font-bold text-zinc-300">Left Click + Drag:</span><span>{placementMode ? "Place Joint" : paintMode ? "Paint Model" : "Rotate Camera"}</span></div>
                   <div className="flex justify-between gap-4"><span className="font-bold text-zinc-300">Right Click + Drag:</span><span>Rotate Camera</span></div>
                   <div className="flex justify-between gap-4"><span className="font-bold text-zinc-300">Scroll Wheel:</span><span>Zoom In / Out</span></div>
                   <div className="flex justify-between gap-4"><span className="font-bold text-zinc-300">Middle Click + Drag:</span><span>Pan Camera</span></div>
-                  {placementMode && <div className="text-[9px] text-[#FFD700] mt-1 border-t border-zinc-800/60 pt-1.5 normal-case italic">* Clique na fronteira entre a parte ativa e a vizinha para fixar o encaixe.</div>}
-                  {paintMode && !placementMode && <div className="text-[9px] text-[#00FF41] mt-1 border-t border-zinc-800/60 pt-1.5 normal-case italic">* Tip: Paint & navigate the camera seamlessly!</div>}
+                  {placementMode && <div className="text-[9px] text-[#FFD700] mt-1 border-t border-[#E8E9E3]/60 pt-1.5 normal-case italic">* Clique na fronteira entre a parte ativa e a vizinha para fixar o encaixe.</div>}
+                  {paintMode && !placementMode && <div className="text-[9px] text-[#00FF41] mt-1 border-t border-[#E8E9E3]/60 pt-1.5 normal-case italic">* Tip: Paint & navigate the camera seamlessly!</div>}
                 </div>
                 <div className="absolute top-6 right-6 flex flex-col gap-2 z-10">
-                  <button title="Zoom In" onClick={zoomIn} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><Plus className="w-5 h-5" /></button>
-                  <button title="Zoom Out" onClick={zoomOut} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><span className="text-xl font-bold leading-none select-none">-</span></button>
-                  <button title="Reset Camera" onClick={resetCamera} className="w-10 h-10 flex items-center justify-center bg-[#0A0A0A]/90 border border-zinc-800 text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF] backdrop-blur-md transition-all active:scale-95 rounded"><RotateCcw className="w-4 h-4" /></button>
+                  <button title="Zoom In" onClick={zoomIn} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><Plus className="w-5 h-5" /></button>
+                  <button title="Zoom Out" onClick={zoomOut} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><span className="text-xl font-bold leading-none select-none">-</span></button>
+                  <button title="Reset Camera" onClick={resetCamera} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><RotateCcw className="w-4 h-4" /></button>
                 </div>
               </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-zinc-500 max-w-sm p-8 bg-[#0A0A0A] border border-zinc-800">
-                  <Upload className="w-12 h-12 mx-auto mb-4 opacity-50 text-[#00E5FF]" />
-                  <p className="font-bold tracking-widest uppercase text-[10px] mb-4 text-[#00E5FF]">No 3D Model Loaded</p>
-                  <button onClick={loadDemoModel} className="bg-white text-black font-black uppercase text-xs px-6 py-3 tracking-widest hover:bg-[#00E5FF] transition-colors">Load Demo Model</button>
+                <div className="text-center text-zinc-500 max-w-sm p-8 bg-[#F9FAF4] border border-[#E8E9E3]">
+                  <Upload className="w-12 h-12 mx-auto mb-4 opacity-50 text-[#632CE5]" />
+                  <p className="font-bold tracking-widest uppercase text-[10px] mb-4 text-[#632CE5]">No 3D Model Loaded</p>
+                  <button onClick={loadDemoModel} className="bg-white text-black font-black uppercase text-xs px-6 py-3 tracking-widest hover:bg-[#632CE5] transition-colors">Load Demo Model</button>
                 </div>
               </div>
             )}
             {modelGeometry && (
-              <div className="absolute bottom-6 left-6 right-6 bg-[#0A0A0A]/90 border border-zinc-800 backdrop-blur-md p-4 flex flex-wrap items-center justify-between gap-4 z-10">
+              <div className="absolute bottom-6 left-6 right-6 bg-[#F9FAF4]/90 border border-[#E8E9E3] backdrop-blur-md p-4 flex flex-wrap items-center justify-between gap-4 z-10">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("brush"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "brush" && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`}><Paintbrush className="w-3 h-3" /> Brush</button>
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3 h-3" /> Bucket</button>
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[#FF1744] text-white border-[#FF1744]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Borracha"><Eraser className="w-3 h-3" /> Eraser</button>
-                  <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`}><Move className="w-3 h-3" /> Rotate</button>
-                   <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-emerald-400 text-black border-emerald-400 font-bold" : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
-                  <span className="w-px self-stretch bg-zinc-800 mx-0.5" />
-                  <button onClick={expandConnectedPaint} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#00E5FF] transition-colors" title="Preencher Parte Conectada"><PaintBucket className="w-3 h-3 text-[#00E5FF]" /> Fill Connected</button>
-                  <button onClick={fillRemainingWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#00E5FF] transition-colors"><Paintbrush className="w-3 h-3" /> Fill Remaining</button>
-                  <button onClick={fillAllWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-[#00E5FF] transition-colors"><Check className="w-3 h-3" /> Fill All</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("brush"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "brush" && !previewSeparated && !placementMode ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`}><Paintbrush className="w-3 h-3" /> Brush</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3 h-3" /> Bucket</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[#FF1744] text-[#212121] border-[#FF1744]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Borracha"><Eraser className="w-3 h-3" /> Eraser</button>
+                  <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`}><Move className="w-3 h-3" /> Rotate</button>
+                   <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-[#632CE5] text-white border-[#632CE5] font-bold" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
+                  <span className="w-px self-stretch bg-[#F9FAF4] mx-0.5" />
+                  <button onClick={expandConnectedPaint} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] hover:border-[#632CE5] transition-colors" title="Preencher Parte Conectada"><PaintBucket className="w-3 h-3 text-[#632CE5]" /> Fill Connected</button>
+                  <button onClick={fillRemainingWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] hover:border-[#632CE5] transition-colors"><Paintbrush className="w-3 h-3" /> Fill Remaining</button>
+                  <button onClick={fillAllWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] hover:border-[#632CE5] transition-colors"><Check className="w-3 h-3" /> Fill All</button>
                 </div>
                 {previewSeparated ? (
                   <div className="flex items-center gap-6 flex-1 max-w-xs px-4">
@@ -1265,7 +1265,7 @@ export default function Viewer3D() {
                      <Slider value={[separationDistance]} onValueChange={(val) => setSeparationDistance(val[0])} min={0.0} max={4.0} step={0.05} className="flex-1" />
                      <span className="font-mono text-xs text-emerald-400 w-12 text-right font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span>
                    </div>
-                   <button onClick={validatePreviewJoints} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-emerald-400 text-black border-emerald-400" : "bg-[#00E5FF] text-black border-[#00E5FF] hover:bg-[#00B8D4]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Finalizado" : "Finalizar"}</button>
+                   <button onClick={validatePreviewJoints} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-[#632CE5] text-white border-[#632CE5]" : "bg-[#632CE5] text-white border-[#632CE5] hover:bg-[#632CE5]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Finalizado" : "Finalizar"}</button>
                    {finalizedPreview && <span className={`text-[9px] font-bold uppercase whitespace-nowrap ${previewValidation === "valid" ? "text-emerald-400" : "text-amber-400"}`}>{previewValidation === "valid" ? "Encaixe OK" : "Revisar encaixe"}</span>}
                   </div>
                 ) : (
@@ -1273,40 +1273,40 @@ export default function Viewer3D() {
                     <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-wider whitespace-nowrap">Brush Size</span>
                     <div className="flex-1 flex items-center gap-2">
                       <Slider value={[brushRadius ?? 0.2]} onValueChange={(val) => { if (Array.isArray(val)) { if (val.length > 0 && typeof val[0] === "number" && !isNaN(val[0])) setBrushRadius(val[0]); } else if (typeof val === "number" && !isNaN(val)) setBrushRadius(val); }} min={0.05} max={1.0} step={0.01} className="flex-1" />
-                      <span className="font-mono text-xs text-[#00E5FF] w-12 text-right">{(brushRadius ?? 0.2).toFixed(2)}</span>
+                      <span className="font-mono text-xs text-[#632CE5] w-12 text-right">{(brushRadius ?? 0.2).toFixed(2)}</span>
                     </div>
                   </div>
                 )}
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <button onClick={handleUndo} disabled={history.length === 0} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all ${history.length > 0 ? "bg-[#0A0A0A] border-zinc-700 text-zinc-100 hover:text-white hover:border-[#00E5FF] hover:bg-zinc-900 active:scale-95" : "bg-zinc-950/40 border-zinc-900 text-zinc-600 cursor-not-allowed"}`}><Undo className="w-3 h-3" /> Undo {history.length > 0 && `(${history.length})`}</button>
-                  <button onClick={resetPainting} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"><RotateCcw className="w-3 h-3" /> Clear All Paint</button>
+                  <button onClick={handleUndo} disabled={history.length === 0} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all ${history.length > 0 ? "bg-[#F9FAF4] border-[#E8E9E3] text-zinc-100 hover:text-[#212121] hover:border-[#632CE5] hover:bg-[#E8E9E3] active:scale-95" : "bg-[#E8E9E3]/40 border-[#E2E3DD] text-zinc-600 cursor-not-allowed"}`}><Undo className="w-3 h-3" /> Undo {history.length > 0 && `(${history.length})`}</button>
+                  <button onClick={resetPainting} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] transition-colors"><RotateCcw className="w-3 h-3" /> Clear All Paint</button>
                 </div>
               </div>
             )}
           </div>
         </div>
-        <aside className="bg-[#0A0A0A] border-l border-[#222] p-6 flex flex-col gap-8 overflow-y-auto">
+        <aside className="bg-[#F9FAF4] border-l border-[#E2E3DD] p-6 flex flex-col gap-8 overflow-y-auto">
           <section>
             <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold">01. Model Input</h3>
             <div className="space-y-4">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".stl,.obj,.fbx" className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="w-full bg-[#151515] border border-zinc-800 hover:border-[#00E5FF] text-white py-4 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all"><Upload className="w-4 h-4 text-[#00E5FF]" /> Upload STL, OBJ or FBX</button>
-              <div className="bg-[#111] border border-zinc-900 rounded overflow-hidden">
-                <button onClick={() => setShowConversionSettings(!showConversionSettings)} className="w-full flex items-center justify-between p-3 text-[10px] uppercase font-black tracking-widest text-zinc-400 hover:text-white transition-colors">
-                  <div className="flex items-center gap-2"><Settings className={`w-3.5 h-3.5 ${showConversionSettings ? 'text-[#00E5FF]' : 'text-zinc-600'}`} /> Configurações de Conversão</div>
-                  <Plus className={`w-3 h-3 transition-transform duration-300 ${showConversionSettings ? 'rotate-45 text-[#00E5FF]' : ''}`} />
+              <button onClick={() => fileInputRef.current?.click()} className="w-full bg-[#E8E9E3] border border-[#E8E9E3] hover:border-[#632CE5] text-[#212121] py-4 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all"><Upload className="w-4 h-4 text-[#632CE5]" /> Upload STL, OBJ or FBX</button>
+              <div className="bg-white border border-[#E2E3DD] rounded overflow-hidden">
+                <button onClick={() => setShowConversionSettings(!showConversionSettings)} className="w-full flex items-center justify-between p-3 text-[10px] uppercase font-black tracking-widest text-zinc-400 hover:text-[#1A1C19] transition-colors">
+                  <div className="flex items-center gap-2"><Settings className={`w-3.5 h-3.5 ${showConversionSettings ? 'text-[#632CE5]' : 'text-zinc-600'}`} /> Configurações de Conversão</div>
+                  <Plus className={`w-3 h-3 transition-transform duration-300 ${showConversionSettings ? 'rotate-45 text-[#632CE5]' : ''}`} />
                 </button>
                 {showConversionSettings && (
-                  <div className="p-4 border-t border-zinc-900 space-y-4">
+                  <div className="p-4 border-t border-[#E2E3DD] space-y-4">
                     <div className="space-y-2">
                       <label className="text-[9px] uppercase font-bold text-zinc-500 block">Unidade de Medida</label>
                       <div className="grid grid-cols-2 gap-2">
-                        <button onClick={() => setImportUnit("mm")} className={`py-2 text-[10px] font-bold uppercase border rounded transition-all ${importUnit === "mm" ? "bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30" : "bg-zinc-950 text-zinc-500 border-zinc-850 hover:text-white"}`}>Milímetros (mm)</button>
-                        <button onClick={() => setImportUnit("inch")} className={`py-2 text-[10px] font-bold uppercase border rounded transition-all ${importUnit === "inch" ? "bg-[#00E5FF]/10 text-[#00E5FF] border-[#00E5FF]/30" : "bg-zinc-950 text-zinc-500 border-zinc-850 hover:text-white"}`}>Polegadas (in)</button>
+                        <button onClick={() => setImportUnit("mm")} className={`py-2 text-[10px] font-bold uppercase border rounded transition-all ${importUnit === "mm" ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/30" : "bg-[#E8E9E3] text-zinc-500 border-[#E2E3DD] hover:text-[#212121]"}`}>Milímetros (mm)</button>
+                        <button onClick={() => setImportUnit("inch")} className={`py-2 text-[10px] font-bold uppercase border rounded transition-all ${importUnit === "inch" ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/30" : "bg-[#E8E9E3] text-zinc-500 border-[#E2E3DD] hover:text-[#212121]"}`}>Polegadas (in)</button>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-500"><span>Escala de Importação</span><span className="text-[#00E5FF] font-mono">{importScale.toFixed(2)}x</span></div>
+                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-500"><span>Escala de Importação</span><span className="text-[#632CE5] font-mono">{importScale.toFixed(2)}x</span></div>
                       <Slider value={[importScale]} onValueChange={(val) => setImportScale(val[0])} min={0.01} max={10.0} step={0.01} />
                       <p className="text-[8px] text-zinc-600 italic">* Aplicada no próximo upload.</p>
                     </div>
@@ -1314,20 +1314,20 @@ export default function Viewer3D() {
                 )}
               </div>
               {modelGeometry && (
-                <div className="mt-2 bg-[#151515] p-3 border border-zinc-800">
+                <div className="mt-2 bg-[#E8E9E3] p-3 border border-[#E8E9E3]">
                   <div className="flex gap-2 mb-2">
-                    <button onClick={() => setCapSelection("base")} className={`flex-1 py-2 text-[10px] font-bold uppercase ${capSelection === 'base' ? 'bg-[#00FF41] text-black' : 'bg-zinc-800 text-white'}`}>Base</button>
-                    <button onClick={() => setCapSelection("top")} className={`flex-1 py-2 text-[10px] font-bold uppercase ${capSelection === 'top' ? 'bg-[#00FF41] text-black' : 'bg-zinc-800 text-white'}`}>Topo</button>
+                    <button onClick={() => setCapSelection("base")} className={`flex-1 py-2 text-[10px] font-bold uppercase ${capSelection === 'base' ? 'bg-[#632CE5] text-white' : 'bg-[#F9FAF4] text-[#212121]'}`}>Base</button>
+                    <button onClick={() => setCapSelection("top")} className={`flex-1 py-2 text-[10px] font-bold uppercase ${capSelection === 'top' ? 'bg-[#632CE5] text-white' : 'bg-[#F9FAF4] text-[#212121]'}`}>Topo</button>
                   </div>
-                  <button onClick={capHollowVase} disabled={loadingCap} className={`w-full bg-[#151515] border border-zinc-800 hover:border-[#00FF41] text-zinc-300 hover:text-white py-4 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${loadingCap ? 'opacity-50 cursor-not-allowed' : ''}`}><BoxSelect className={`w-4 h-4 text-[#00FF41] ${loadingCap ? 'animate-spin' : ''}`} /> {loadingCap ? "Processando..." : "Fechar Vaso Oco (Cap)"}</button>
+                  <button onClick={capHollowVase} disabled={loadingCap} className={`w-full bg-[#E8E9E3] border border-[#E8E9E3] hover:border-[#00FF41] text-zinc-300 hover:text-[#212121] py-4 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${loadingCap ? 'opacity-50 cursor-not-allowed' : ''}`}><BoxSelect className={`w-4 h-4 text-[#00FF41] ${loadingCap ? 'animate-spin' : ''}`} /> {loadingCap ? "Processando..." : "Fechar Vaso Oco (Cap)"}</button>
                   {isCapped && (
-                    <button onClick={downloadCappedModel} disabled={isDownloadingCapped} className={`w-full bg-[#00FF41] text-black border border-zinc-800 hover:bg-[#00CC33] py-4 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all mt-2 ${isDownloadingCapped ? 'opacity-50 cursor-not-allowed' : ''}`}><Download className={`w-4 h-4 ${isDownloadingCapped ? 'animate-bounce' : ''}`} /> {isDownloadingCapped ? "Gerando..." : "Baixar Vaso Fechado (STL)"}</button>
+                    <button onClick={downloadCappedModel} disabled={isDownloadingCapped} className={`w-full bg-[#00FF41] text-black border border-[#E8E9E3] hover:bg-[#00CC33] py-4 px-4 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all mt-2 ${isDownloadingCapped ? 'opacity-50 cursor-not-allowed' : ''}`}><Download className={`w-4 h-4 ${isDownloadingCapped ? 'animate-bounce' : ''}`} /> {isDownloadingCapped ? "Gerando..." : "Baixar Vaso Fechado (STL)"}</button>
                   )}
                 </div>
               )}
               {modelGeometry && (
-                <div className="grid grid-cols-2 gap-2 bg-[#151515] p-3 border border-zinc-800 mt-2">
-                  <div><span className="text-[9px] uppercase text-zinc-500 block">Triangles</span><span className="font-mono text-sm text-white">{stats.faces.toLocaleString()}</span></div>
+                <div className="grid grid-cols-2 gap-2 bg-[#E8E9E3] p-3 border border-[#E8E9E3] mt-2">
+                  <div><span className="text-[9px] uppercase text-zinc-500 block">Triangles</span><span className="font-mono text-sm text-[#1A1C19]">{stats.faces.toLocaleString()}</span></div>
                   <div><span className="text-[9px] uppercase text-zinc-500 block">Status</span><span className="font-mono text-sm text-[#00FF41]">LOADED</span></div>
                 </div>
               )}
@@ -1336,7 +1336,7 @@ export default function Viewer3D() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center"><span>04. Parte Ativa</span><HelpTooltip text="Gerencie as partes." /></h3>
-              <button onClick={() => { setAutoIsolateActive(!autoIsolateActive); setIsolateGroupId(null); }} className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border rounded transition-all ${autoIsolateActive ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}><Layers className="w-3 h-3" /> Auto Highlight</button>
+              <button onClick={() => { setAutoIsolateActive(!autoIsolateActive); setIsolateGroupId(null); }} className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border rounded transition-all ${autoIsolateActive ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-500 hover:text-zinc-300"}`}><Layers className="w-3 h-3" /> Auto Highlight</button>
             </div>
             {modelGeometry ? (
               <div className="space-y-2.5">
@@ -1345,34 +1345,34 @@ export default function Viewer3D() {
                   const isIsolated = effectiveIsolateGroupId === group.id;
                   const jointTypeSetting = groupJointTypes[group.id] || 'auto';
                   return (
-                    <div key={group.id} className="bg-[#111111] border border-zinc-900 rounded p-2.5 space-y-2.5 transition-all">
+                    <div key={group.id} className="bg-white border border-[#E2E3DD] rounded p-2.5 space-y-2.5 transition-all">
                       <div className="flex gap-1.5 items-stretch">
-                        <button onClick={() => { setActiveGroupId(group.id); setPaintMode(true); }} className={`flex-1 flex items-center justify-between p-2.5 bg-[#161616] border transition-all rounded ${isActive ? "border-[#00E5FF]" : "border-zinc-800 hover:border-zinc-700"}`}>
+                        <button onClick={() => { setActiveGroupId(group.id); setPaintMode(true); }} className={`flex-1 flex items-center justify-between p-2.5 bg-[#E8E9E3] border transition-all rounded ${isActive ? "border-[#632CE5]" : "border-[#E8E9E3] hover:border-[#E8E9E3]"}`}>
                           <div className="flex items-center gap-2.5">
                             <div className="w-4 h-4 rounded-full border border-white/10 shadow-inner shrink-0" style={{ backgroundColor: group.color }} />
-                            <span className={`text-[11px] font-bold uppercase tracking-wider text-left ${isActive ? "text-[#00E5FF]" : "text-zinc-300"}`}>{group.name}</span>
+                            <span className={`text-[11px] font-bold uppercase tracking-wider text-left ${isActive ? "text-[#632CE5]" : "text-zinc-300"}`}>{group.name}</span>
                           </div>
-                          {isActive && <Check className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />}
+                          {isActive && <Check className="w-3.5 h-3.5 text-[#632CE5] shrink-0" />}
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); if (autoIsolateActive) { setAutoIsolateActive(false); setIsolateGroupId(isIsolated ? null : group.id); } else { setIsolateGroupId(isIsolated ? null : group.id); } }} className={`px-3 border rounded transition-colors flex items-center justify-center ${isIsolated ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]" : "bg-[#161616] border-zinc-800 text-zinc-500 hover:text-white"}`} title={isIsolated ? "Mostrar tudo" : "Isolar"}>
+                        <button onClick={(e) => { e.stopPropagation(); if (autoIsolateActive) { setAutoIsolateActive(false); setIsolateGroupId(isIsolated ? null : group.id); } else { setIsolateGroupId(isIsolated ? null : group.id); } }} className={`px-3 border rounded transition-colors flex items-center justify-center ${isIsolated ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-500 hover:text-[#212121]"}`} title={isIsolated ? "Mostrar tudo" : "Isolar"}>
                           {isIsolated ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         </button>
                       </div>
                       {isActive && (
-                        <div className="bg-[#161616] p-3 border border-zinc-850 space-y-3 rounded">
+                        <div className="bg-[#E8E9E3] p-3 border border-[#E2E3DD] space-y-3 rounded">
                           <div>
                             <label className="text-[9px] uppercase text-zinc-500 font-bold flex items-center mb-1"><span>Nome da Peça</span><HelpTooltip text="Altere o nome." /></label>
-                            <input type="text" value={group.name} onChange={(e) => updateGroupName(group.id, e.target.value)} className="w-full bg-[#0a0a0a] border border-zinc-800 text-white rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#00E5FF] transition-all font-bold uppercase tracking-wider" placeholder="Nome..." />
+                            <input type="text" value={group.name} onChange={(e) => updateGroupName(group.id, e.target.value)} className="w-full bg-[#F9FAF4] border border-[#E8E9E3] text-[#212121] rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#632CE5] transition-all font-bold uppercase tracking-wider" placeholder="Nome..." />
                           </div>
                           <div>
                             <label className="text-[9px] uppercase text-zinc-500 font-bold flex items-center mb-2"><span>Paleta de Cores</span><HelpTooltip text="Selecione a cor." /></label>
                             <div className="flex flex-wrap gap-2 items-center">
                               {PRESET_COLORS.map(c => (
-                                <button key={c} onClick={() => updateGroupColor(group.id, c)} className={`w-5 h-5 rounded-full border transition-transform hover:scale-115 ${group.color.toLowerCase() === c.toLowerCase() ? "border-white scale-110 shadow-md ring-2 ring-[#00E5FF]" : "border-transparent"}`} style={{ backgroundColor: c }} title={c} />
+                                <button key={c} onClick={() => updateGroupColor(group.id, c)} className={`w-5 h-5 rounded-full border transition-transform hover:scale-115 ${group.color.toLowerCase() === c.toLowerCase() ? "border-white scale-110 shadow-md ring-2 ring-[#632CE5]" : "border-transparent"}`} style={{ backgroundColor: c }} title={c} />
                               ))}
-                              <label className="relative w-5 h-5 rounded-full cursor-pointer border border-zinc-700 hover:border-zinc-400 bg-gradient-to-tr from-red-500 via-green-500 to-blue-500 transition-transform hover:scale-115 flex items-center justify-center overflow-hidden" title="Cor personalizada">
+                              <label className="relative w-5 h-5 rounded-full cursor-pointer border border-[#E8E9E3] hover:border-zinc-400 bg-gradient-to-tr from-red-500 via-green-500 to-blue-500 transition-transform hover:scale-115 flex items-center justify-center overflow-hidden" title="Cor personalizada">
                                 <input type="color" value={group.color} onChange={(e) => updateGroupColor(group.id, e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150" />
-                                <span className="text-[10px] text-white font-bold pointer-events-none drop-shadow-md">+</span>
+                                <span className="text-[10px] text-[#1A1C19] font-bold pointer-events-none drop-shadow-md">+</span>
                               </label>
                             </div>
                           </div>
@@ -1382,13 +1382,13 @@ export default function Viewer3D() {
                               <HelpTooltip text="Defina se esta peça será MACHO (pino) ou FÊMEA (furo). 'Auto' usa menor ID = fêmea." />
                             </label>
                             <div className="grid grid-cols-3 gap-1">
-                              <button onClick={() => setGroupJointType(group.id, 'female')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'female' ? 'bg-[#D500F9]/20 text-[#D500F9] border-[#D500F9]' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'}`}>
+                              <button onClick={() => setGroupJointType(group.id, 'female')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'female' ? 'bg-[#D500F9]/20 text-[#D500F9] border-[#D500F9]' : 'bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]'}`}>
                                 <Circle className="w-3 h-3" /> Fêmea
                               </button>
-                              <button onClick={() => setGroupJointType(group.id, 'auto')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'auto' ? 'bg-zinc-700 text-white border-zinc-700' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'}`}>
+                              <button onClick={() => setGroupJointType(group.id, 'auto')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'auto' ? 'bg-[#F9FAF4] text-[#212121] border-[#E8E9E3]' : 'bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]'}`}>
                                 <Settings className="w-3 h-3" /> Auto
                               </button>
-                              <button onClick={() => setGroupJointType(group.id, 'male')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'male' ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'}`}>
+                              <button onClick={() => setGroupJointType(group.id, 'male')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'male' ? 'bg-[#632CE5]/20 text-[#632CE5] border-[#632CE5]' : 'bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]'}`}>
                                 <Square className="w-3 h-3" /> Macho
                               </button>
                             </div>
@@ -1403,57 +1403,57 @@ export default function Viewer3D() {
                     </div>
                   );
                 })}
-                <button onClick={addCustomGroup} className="w-full mt-2 border border-dashed border-zinc-800 hover:border-[#00E5FF] bg-zinc-950/40 hover:bg-[#00E5FF]/5 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white flex items-center justify-center gap-1.5 transition-all rounded shadow-sm"><Plus className="w-4 h-4 text-[#00E5FF]" /> Adicionar Nova Peça</button>
+                <button onClick={addCustomGroup} className="w-full mt-2 border border-dashed border-[#E8E9E3] hover:border-[#632CE5] bg-[#E8E9E3]/40 hover:bg-[#632CE5]/5 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-[#212121] flex items-center justify-center gap-1.5 transition-all rounded shadow-sm"><Plus className="w-4 h-4 text-[#632CE5]" /> Adicionar Nova Peça</button>
               </div>
             ) : (
-              <div className="p-6 border border-dashed border-zinc-800 rounded bg-[#0b0b0b] text-center text-[10px] text-zinc-500 uppercase tracking-wider">Upload a 3D model first</div>
+              <div className="p-6 border border-dashed border-[#E8E9E3] rounded bg-[#F9FAF4] text-center text-[10px] text-zinc-500 uppercase tracking-wider">Upload a 3D model first</div>
             )}
           </section>
           {modelGeometry && (
-            <section className="border-t border-zinc-900 pt-6">
-              <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[#00E5FF]" /> 05. Encaixes & Conectores</h3>
+            <section className="border-t border-[#E2E3DD] pt-6">
+              <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[#632CE5]" /> 05. Encaixes & Conectores</h3>
                 <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-4 leading-relaxed">Snap-fit hexagonal com folga configurável, ímãs ou posicionamento manual.</p>
-                <div className="bg-[#00E5FF]/5 border border-[#00E5FF]/20 rounded p-2 text-[8px] leading-relaxed text-zinc-400">
-                  <strong className="text-[#00E5FF]">Fluxo recomendado:</strong> pinte as partes, selecione uma fronteira, crie o encaixe e confira o pino e o reforço no Preview Separar antes de exportar.
+                <div className="bg-[#632CE5]/5 border border-[#632CE5]/20 rounded p-2 text-[8px] leading-relaxed text-zinc-400">
+                  <strong className="text-[#632CE5]">Fluxo recomendado:</strong> pinte as partes, selecione uma fronteira, crie o encaixe e confira o pino e o reforço no Preview Separar antes de exportar.
                 </div>
                 {jointConfigurationWarning && <div className="bg-[#FF1744]/10 border border-[#FF1744]/30 rounded p-2 text-[8px] leading-relaxed text-[#FF8A9A]">{jointConfigurationWarning}</div>}
-                <div className="bg-[#111] border border-zinc-900 rounded p-3 space-y-3">
+                <div className="bg-white border border-[#E2E3DD] rounded p-3 space-y-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => setJointType("default")} className={`py-2 px-2 rounded border text-[9px] font-bold uppercase flex items-center justify-center gap-1.5 ${jointType === "default" ? "border-[#00E5FF] text-white bg-[#00E5FF]/5" : "border-zinc-800 text-zinc-500 bg-black/40"}`}><Settings className="w-3 h-3 text-[#00E5FF]/60" /> Snap-Fit Hex</button>
-                  <button onClick={() => setJointType("magnet")} className={`py-2 px-2 rounded border text-[9px] font-bold uppercase flex items-center justify-center gap-1.5 ${jointType === "magnet" ? "border-[#00E5FF] text-white bg-[#00E5FF]/5" : "border-zinc-800 text-zinc-500 bg-black/40"}`}><Sparkles className="w-3 h-3 text-[#00E5FF]" /> Ímã</button>
+                  <button onClick={() => setJointType("default")} className={`py-2 px-2 rounded border text-[9px] font-bold uppercase flex items-center justify-center gap-1.5 ${jointType === "default" ? "border-[#632CE5] text-[#212121] bg-[#632CE5]/5" : "border-[#E8E9E3] text-zinc-500 bg-white/40"}`}><Settings className="w-3 h-3 text-[#632CE5]/60" /> Snap-Fit Hex</button>
+                  <button onClick={() => setJointType("magnet")} className={`py-2 px-2 rounded border text-[9px] font-bold uppercase flex items-center justify-center gap-1.5 ${jointType === "magnet" ? "border-[#632CE5] text-[#212121] bg-[#632CE5]/5" : "border-[#E8E9E3] text-zinc-500 bg-white/40"}`}><Sparkles className="w-3 h-3 text-[#632CE5]" /> Ímã</button>
                 </div>
-                <div className="bg-black/40 p-2 rounded border border-zinc-900 text-[8.5px] text-zinc-400">
+                <div className="bg-white/40 p-2 rounded border border-[#E2E3DD] text-[8.5px] text-zinc-400">
                   {jointType === "magnet"
-                    ? <p className="text-[#00E5FF]">✨ Cavidades para ímã em ambos os lados da junta</p>
+                    ? <p className="text-[#632CE5]">✨ Cavidades para ímã em ambos os lados da junta</p>
                     : <p>📦 Pino/furo hexagonal (6 lados) com folga ajustável</p>}
                 </div>
                 {jointType === "magnet" ? (
                   <>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-2.5">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-2.5">
                       <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Diâmetro Ímã</span><span className="text-[#FFD700] font-mono">{jointSizes.magnetDiameter.toFixed(2)} mm</span></div>
                       <Slider value={[jointSizes.magnetDiameter]} onValueChange={(val) => { const n = Array.isArray(val) ? val[0] : val; if (typeof n === "number" && !isNaN(n)) setJointSizes(prev => ({ ...prev, magnetDiameter: n })); }} min={1.0} max={12.0} step={0.1} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-2.5">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-2.5">
                       <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Profundidade Ímã</span><span className="text-[#FFD700] font-mono">{jointSizes.magnetDepth.toFixed(2)} mm</span></div>
                       <Slider value={[jointSizes.magnetDepth]} onValueChange={(val) => { const n = Array.isArray(val) ? val[0] : val; if (typeof n === "number" && !isNaN(n)) setJointSizes(prev => ({ ...prev, magnetDepth: n })); }} min={0.5} max={8.0} step={0.1} />
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-2.5">
-                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Diâmetro Pino</span><span className="text-[#00E5FF] font-mono">{jointSizes.pegDiameter.toFixed(2)} mm</span></div>
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-2.5">
+                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Diâmetro Pino</span><span className="text-[#632CE5] font-mono">{jointSizes.pegDiameter.toFixed(2)} mm</span></div>
                       <Slider value={[jointSizes.pegDiameter]} onValueChange={(val) => { const n = Array.isArray(val) ? val[0] : val; if (typeof n === "number" && !isNaN(n)) setJointSizes(prev => ({ ...prev, pegDiameter: n })); }} min={1.0} max={12.0} step={0.1} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-2.5">
-                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Profundidade Pino</span><span className="text-[#00E5FF] font-mono">{jointSizes.pegLength.toFixed(2)} mm</span></div>
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-2.5">
+                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Profundidade Pino</span><span className="text-[#632CE5] font-mono">{jointSizes.pegLength.toFixed(2)} mm</span></div>
                       <Slider value={[jointSizes.pegLength]} onValueChange={(val) => { const n = Array.isArray(val) ? val[0] : val; if (typeof n === "number" && !isNaN(n)) setJointSizes(prev => ({ ...prev, pegLength: n })); }} min={1.0} max={20.0} step={0.1} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-2.5">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-2.5">
                       <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Folga / Tolerância</span><span className="text-[#00FF41] font-mono">{jointSizes.fitTolerance.toFixed(2)} mm</span></div>
                       <Slider value={[jointSizes.fitTolerance]} onValueChange={(val) => { const n = Array.isArray(val) ? val[0] : val; if (typeof n === "number" && !isNaN(n)) setJointSizes(prev => ({ ...prev, fitTolerance: n })); }} min={0.0} max={0.8} step={0.01} />
                       <p className="text-[8px] text-zinc-600">Soma 2× ao diâmetro e 1× à profundidade do furo.</p>
                     </div>
-                    <div className="border-t border-zinc-900/60 pt-2.5 space-y-2">
+                    <div className="border-t border-[#E2E3DD]/60 pt-2.5 space-y-2">
                       <p className="text-[9px] uppercase font-bold text-[#FF1744]">Reforço da Fêmea</p>
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Diâmetro externo</span><span className="text-[#FF1744] font-mono">{jointSizes.reinforcementDiameter.toFixed(2)} mm</span></div>
@@ -1471,37 +1471,37 @@ export default function Viewer3D() {
                     </div>
                   </>
                 )}
-                <div className="border-t border-zinc-900/60 pt-3 space-y-2">
-                  <button onClick={() => { const next = !placementMode; setPlacementMode(next); if (next) setPaintMode(false); }} className={`w-full flex items-center justify-center gap-2 p-2.5 rounded border text-[10px] font-bold uppercase tracking-wider transition-all ${placementMode ? "bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]" : "bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-[#FFD700] hover:text-white"}`}>
+                <div className="border-t border-[#E2E3DD]/60 pt-3 space-y-2">
+                  <button onClick={() => { const next = !placementMode; setPlacementMode(next); if (next) setPaintMode(false); }} className={`w-full flex items-center justify-center gap-2 p-2.5 rounded border text-[10px] font-bold uppercase tracking-wider transition-all ${placementMode ? "bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-300 hover:border-[#FFD700] hover:text-[#212121]"}`}>
                     <Circle className="w-3.5 h-3.5" /> {placementMode ? "Colocando... Clique na junta (Ativo)" : "Colocar Encaixe Manual"}
                   </button>
                   <p className="text-[8px] text-zinc-600 leading-relaxed">No Preview Separar, clique diretamente na superfície da peça para criar o encaixe nessa fronteira. Clique num marcador dourado/ciano/vermelho para selecioná-lo e ajustar a posição.</p>
                 </div>
                 {manualJoints.length > 0 && (
-                  <div className="border-t border-zinc-900/60 pt-3 space-y-2">
+                  <div className="border-t border-[#E2E3DD]/60 pt-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] uppercase font-bold text-[#FFD700] flex items-center gap-1"><Sparkles className="w-3 h-3" /> Encaixes Manuais ({manualJoints.length})</span>
-                      <button onClick={() => setManualJoints([])} className="flex items-center gap-1 px-2 py-1 rounded border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-[#FF1744] hover:border-[#FF1744]/40 text-[8px] font-bold uppercase transition-all"><Trash2 className="w-3 h-3" /> Limpar</button>
+                      <button onClick={() => setManualJoints([])} className="flex items-center gap-1 px-2 py-1 rounded border border-[#E8E9E3] bg-[#E8E9E3] text-zinc-400 hover:text-[#FF1744] hover:border-[#FF1744]/40 text-[8px] font-bold uppercase transition-all"><Trash2 className="w-3 h-3" /> Limpar</button>
                     </div>
                     {manualJoints.map(j => (
-                      <div key={j.id} className="flex items-center justify-between gap-2 p-2 bg-zinc-950 rounded border border-zinc-900 text-[9px] font-mono text-zinc-300">
+                      <div key={j.id} className="flex items-center justify-between gap-2 p-2 bg-[#E8E9E3] rounded border border-[#E2E3DD] text-[9px] font-mono text-zinc-300">
                         <span className="truncate">{getGroupName(j.groupA)} ⇄ {getGroupName(j.groupB)}</span>
                         <div className="flex items-center gap-1 shrink-0">
-                          <button onClick={() => setSelectedManualJointId(j.id)} className={`px-1.5 py-1 rounded border text-[8px] uppercase font-bold ${selectedManualJointId === j.id ? "border-[#FFD700] text-[#FFD700]" : "border-zinc-800 text-zinc-500 hover:text-white"}`}>Ajustar</button>
+                          <button onClick={() => setSelectedManualJointId(j.id)} className={`px-1.5 py-1 rounded border text-[8px] uppercase font-bold ${selectedManualJointId === j.id ? "border-[#FFD700] text-[#FFD700]" : "border-[#E8E9E3] text-zinc-500 hover:text-[#1A1C19]"}`}>Ajustar</button>
                           <button onClick={() => { setManualJoints(prev => prev.filter(x => x.id !== j.id)); if (selectedManualJointId === j.id) setSelectedManualJointId(null); }} className="p-1 rounded text-zinc-500 hover:text-[#FF1744] transition-colors shrink-0"><Trash2 className="w-3 h-3" /></button>
                         </div>
                       </div>
                     ))}
                     {selectedManualJoint && jointBounds && (
                       <div className="space-y-2 p-2 bg-[#FFD700]/5 rounded border border-[#FFD700]/30">
-                         <div className="flex items-center justify-between text-[8px] uppercase font-bold text-[#FFD700]"><span>Ajustar encaixe</span><button onClick={() => setSelectedManualJointId(null)} className="text-zinc-500 hover:text-white">Fechar</button></div>
+                         <div className="flex items-center justify-between text-[8px] uppercase font-bold text-[#FFD700]"><span>Ajustar encaixe</span><button onClick={() => setSelectedManualJointId(null)} className="text-zinc-500 hover:text-[#1A1C19]">Fechar</button></div>
                          <div className="grid grid-cols-3 gap-1">
                            {([
                              ["translate", "Mover"],
                              ["rotate", "Rotacionar"],
                              ["scale", "Escalar"],
                            ] as const).map(([mode, label]) => (
-                             <button key={mode} onClick={() => setTransformMode(mode)} className={`py-1.5 rounded border text-[8px] font-bold uppercase ${transformMode === mode ? "border-[#FFD700] bg-[#FFD700]/15 text-[#FFD700]" : "border-zinc-800 text-zinc-500 hover:text-white"}`}>
+                             <button key={mode} onClick={() => setTransformMode(mode)} className={`py-1.5 rounded border text-[8px] font-bold uppercase ${transformMode === mode ? "border-[#FFD700] bg-[#FFD700]/15 text-[#FFD700]" : "border-[#E8E9E3] text-zinc-500 hover:text-[#1A1C19]"}`}>
                                {label}
                              </button>
                            ))}
@@ -1513,7 +1513,7 @@ export default function Viewer3D() {
                           const value = selectedManualJoint.position[axis];
                           return (
                             <div key={axis} className="space-y-1">
-                              <div className="flex justify-between items-center text-[8px] uppercase text-zinc-400"><span>Eixo {axis.toUpperCase()}</span><input type="number" value={value.toFixed(2)} onChange={event => updateManualJointPosition(axis, Number(event.target.value))} step="0.01" className="w-20 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right font-mono text-[#FFD700]" /></div>
+                              <div className="flex justify-between items-center text-[8px] uppercase text-zinc-400"><span>Eixo {axis.toUpperCase()}</span><input type="number" value={value.toFixed(2)} onChange={event => updateManualJointPosition(axis, Number(event.target.value))} step="0.01" className="w-20 bg-[#E8E9E3] border border-[#E8E9E3] rounded px-1 py-0.5 text-right font-mono text-[#FFD700]" /></div>
                               <input
                                 type="range"
                                 value={Math.min(max, Math.max(min, value))}
@@ -1535,15 +1535,15 @@ export default function Viewer3D() {
             </section>
           )}
           {modelGeometry && (
-            <section className="border-t border-zinc-900 pt-6">
-              <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" /> 06. Auto-Detecção</h3>
+            <section className="border-t border-[#E2E3DD] pt-6">
+              <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-[#632CE5]" /> 06. Auto-Detecção</h3>
               <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-4 leading-relaxed">Segmentação automática.</p>
-              <div className="bg-[#0b0b0b] border border-zinc-900 rounded p-3 mb-4 space-y-3">
-                <div><span className="text-[8px] font-mono text-[#00E5FF] uppercase tracking-widest block font-extrabold">Filtro Anatômico</span><span className="text-[9.5px] text-zinc-500 block mt-0.5">Escolha as partes:</span></div>
+              <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded p-3 mb-4 space-y-3">
+                <div><span className="text-[8px] font-mono text-[#632CE5] uppercase tracking-widest block font-extrabold">Filtro Anatômico</span><span className="text-[9.5px] text-zinc-500 block mt-0.5">Escolha as partes:</span></div>
                 <div className="grid grid-cols-3 gap-1.5">
-                  <button onClick={() => setSegmentLegs(!segmentLegs)} className={`py-1.5 px-1 rounded border text-[8.5px] font-bold uppercase ${segmentLegs ? "border-[#00E5FF] text-white bg-[#00E5FF]/5" : "border-zinc-800 text-zinc-500 bg-black/40"}`}>Pernas</button>
-                  <button onClick={() => setSegmentArms(!segmentArms)} className={`py-1.5 px-1 rounded border text-[8.5px] font-bold uppercase ${segmentArms ? "border-[#00E5FF] text-white bg-[#00E5FF]/5" : "border-zinc-800 text-zinc-500 bg-black/40"}`}>Braços</button>
-                  <button onClick={() => setSegmentTorso(!segmentTorso)} className={`py-1.5 px-1 rounded border text-[8.5px] font-bold uppercase ${segmentTorso ? "border-[#00E5FF] text-white bg-[#00E5FF]/5" : "border-zinc-800 text-zinc-500 bg-black/40"}`}>Tronco</button>
+                  <button onClick={() => setSegmentLegs(!segmentLegs)} className={`py-1.5 px-1 rounded border text-[8.5px] font-bold uppercase ${segmentLegs ? "border-[#632CE5] text-[#212121] bg-[#632CE5]/5" : "border-[#E8E9E3] text-zinc-500 bg-white/40"}`}>Pernas</button>
+                  <button onClick={() => setSegmentArms(!segmentArms)} className={`py-1.5 px-1 rounded border text-[8.5px] font-bold uppercase ${segmentArms ? "border-[#632CE5] text-[#212121] bg-[#632CE5]/5" : "border-[#E8E9E3] text-zinc-500 bg-white/40"}`}>Braços</button>
+                  <button onClick={() => setSegmentTorso(!segmentTorso)} className={`py-1.5 px-1 rounded border text-[8.5px] font-bold uppercase ${segmentTorso ? "border-[#632CE5] text-[#212121] bg-[#632CE5]/5" : "border-[#E8E9E3] text-zinc-500 bg-white/40"}`}>Tronco</button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -1553,38 +1553,38 @@ export default function Viewer3D() {
                     <div><p className="text-[10px] font-bold uppercase text-amber-500">Modelo Complexo</p><p className="text-[9px] text-zinc-400">{stats.faces.toLocaleString()} faces. Use Divisão Inteligente.</p></div>
                   </div>
                 )}
-                <button onClick={autoSegmentSmart} className="w-full flex flex-col items-start gap-1.5 p-3 bg-gradient-to-r from-zinc-900 to-[#111] border border-[#00E5FF]/30 hover:border-[#00E5FF] hover:bg-[#151515] transition-all rounded text-left">
-                  <div className="flex items-center gap-2 text-xs font-black uppercase text-[#00E5FF]"><Sparkles className="w-3.5 h-3.5" /> Divisão Inteligente</div>
+                <button onClick={autoSegmentSmart} className="w-full flex flex-col items-start gap-1.5 p-3 bg-gradient-to-r from-zinc-900 to-[#111] border border-[#632CE5]/30 hover:border-[#632CE5] hover:bg-[#E8E9E3] transition-all rounded text-left">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase text-[#632CE5]"><Sparkles className="w-3.5 h-3.5" /> Divisão Inteligente</div>
                   <span className="text-[9px] text-zinc-400 uppercase">Separação por posição.</span>
                 </button>
-                <button onClick={autoSegmentAnatomy} className="w-full flex flex-col items-start gap-1.5 p-3 bg-[#111] border border-zinc-800 hover:border-[#00E5FF] hover:bg-[#151515] transition-all rounded text-left">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200"><Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" /> Segmentação Anatômica</div>
+                <button onClick={autoSegmentAnatomy} className="w-full flex flex-col items-start gap-1.5 p-3 bg-white border border-[#E8E9E3] hover:border-[#632CE5] hover:bg-[#E8E9E3] transition-all rounded text-left">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200"><Sparkles className="w-3.5 h-3.5 text-[#632CE5]" /> Segmentação Anatômica</div>
                   <span className="text-[9px] text-zinc-500 uppercase">Braços/Pernas/Tronco.</span>
                 </button>
-                <button onClick={autoSegmentShells} className="w-full flex flex-col items-start gap-1.5 p-3 bg-[#111] border border-zinc-800 hover:border-[#00E5FF] hover:bg-[#151515] transition-all rounded text-left">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200"><Layers className="w-3.5 h-3.5 text-[#00E5FF]" /> Detectar Shells</div>
+                <button onClick={autoSegmentShells} className="w-full flex flex-col items-start gap-1.5 p-3 bg-white border border-[#E8E9E3] hover:border-[#632CE5] hover:bg-[#E8E9E3] transition-all rounded text-left">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200"><Layers className="w-3.5 h-3.5 text-[#632CE5]" /> Detectar Shells</div>
                   <span className="text-[9px] text-zinc-500 uppercase">Peças desconectadas.</span>
                 </button>
               </div>
             </section>
           )}
           {modelGeometry && (
-            <section className="border-t border-zinc-900 pt-6">
+            <section className="border-t border-[#E2E3DD] pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2"><Ruler className="w-3.5 h-3.5 text-[#00E5FF]" /> 07. Marca d'água 3D</h3>
-                <button onClick={() => setWatermarkEnabled(!watermarkEnabled)} className={`px-2.5 py-1 text-[9px] font-black uppercase border rounded ${watermarkEnabled ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]" : "bg-[#151515] border-zinc-800 text-zinc-500"}`}>{watermarkEnabled ? "Ativado" : "Desativado"}</button>
+                <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2"><Ruler className="w-3.5 h-3.5 text-[#632CE5]" /> 07. Marca d'água 3D</h3>
+                <button onClick={() => setWatermarkEnabled(!watermarkEnabled)} className={`px-2.5 py-1 text-[9px] font-black uppercase border rounded ${watermarkEnabled ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-500"}`}>{watermarkEnabled ? "Ativado" : "Desativado"}</button>
               </div>
               {watermarkEnabled && (
-                <div className="bg-[#111] border border-zinc-900 rounded p-4 space-y-4 font-sans">
+                <div className="bg-white border border-[#E2E3DD] rounded p-4 space-y-4 font-sans">
                   <div className="space-y-1.5">
                     <label className="text-[9px] uppercase font-bold text-zinc-400 block">Texto</label>
-                    <input type="text" value={watermarkText} onChange={(e) => setWatermarkText(e.target.value.toUpperCase().slice(0, 32))} placeholder="VERTICE..." className="w-full bg-[#151515] border border-zinc-850 focus:border-[#00E5FF] text-xs text-white rounded px-3 py-2 outline-none" />
+                    <input type="text" value={watermarkText} onChange={(e) => setWatermarkText(e.target.value.toUpperCase().slice(0, 32))} placeholder="VERTICE..." className="w-full bg-[#E8E9E3] border border-[#E2E3DD] focus:border-[#632CE5] text-xs text-[#212121] rounded px-3 py-2 outline-none" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] uppercase font-bold text-zinc-400 block">Superfície</label>
                     <div className="grid grid-cols-3 gap-1">
                       {(["base", "top", "front", "back", "left", "right"] as const).map(p => (
-                        <button key={p} onClick={() => setWatermarkPlacement(p)} className={`py-1.5 px-1 text-[8px] font-bold uppercase border rounded ${watermarkPlacement === p ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-950 text-zinc-400 border-zinc-850 hover:text-white"}`}>{p === "base" ? "Base" : p === "top" ? "Topo" : p === "front" ? "Frente" : p === "back" ? "Trás" : p === "left" ? "Esq" : "Dir"}</button>
+                        <button key={p} onClick={() => setWatermarkPlacement(p)} className={`py-1.5 px-1 text-[8px] font-bold uppercase border rounded ${watermarkPlacement === p ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E2E3DD] hover:text-[#212121]"}`}>{p === "base" ? "Base" : p === "top" ? "Topo" : p === "front" ? "Frente" : p === "back" ? "Trás" : p === "left" ? "Esq" : "Dir"}</button>
                       ))}
                     </div>
                   </div>
@@ -1592,15 +1592,15 @@ export default function Viewer3D() {
                     <label className="text-[9px] uppercase font-bold text-zinc-400 block">Estilo</label>
                     <div className="grid grid-cols-3 gap-1">
                       {(["raised", "recessed", "overlay"] as const).map(s => (
-                        <button key={s} onClick={() => setWatermarkStyle(s)} className={`py-1.5 px-1 text-[8px] font-bold uppercase border rounded ${watermarkStyle === s ? "bg-[#00E5FF] text-black border-[#00E5FF]" : "bg-zinc-950 text-zinc-400 border-zinc-850 hover:text-white"}`}>{s === "raised" ? "Relevo" : s === "recessed" ? "Baixo Relevo" : "Overlay"}</button>
+                        <button key={s} onClick={() => setWatermarkStyle(s)} className={`py-1.5 px-1 text-[8px] font-bold uppercase border rounded ${watermarkStyle === s ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E2E3DD] hover:text-[#212121]"}`}>{s === "raised" ? "Relevo" : s === "recessed" ? "Baixo Relevo" : "Overlay"}</button>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Tamanho</span><span className="text-[#00E5FF] font-mono">{watermarkSize.toFixed(2)}x</span></div>
+                    <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400"><span>Tamanho</span><span className="text-[#632CE5] font-mono">{watermarkSize.toFixed(2)}x</span></div>
                     <Slider value={[watermarkSize]} onValueChange={(val) => setWatermarkSize(val[0])} min={0.05} max={1.5} step={0.01} />
                   </div>
-                  <div className="border-t border-zinc-900/60 pt-3 space-y-3">
+                  <div className="border-t border-[#E2E3DD]/60 pt-3 space-y-3">
                     <span className="text-[9px] uppercase font-black text-zinc-500 block">Posição</span>
                     {(["X", "Y", "Z"] as const).map(axis => {
                       const val = axis === "X" ? watermarkOffsetX : axis === "Y" ? watermarkOffsetY : watermarkOffsetZ;
@@ -1614,7 +1614,7 @@ export default function Viewer3D() {
                       );
                     })}
                   </div>
-                  <div className="border-t border-zinc-900/60 pt-3 space-y-3">
+                  <div className="border-t border-[#E2E3DD]/60 pt-3 space-y-3">
                     <span className="text-[9px] uppercase font-black text-zinc-500 block">Rotação</span>
                     {(["X", "Y", "Z"] as const).map(axis => {
                       const val = axis === "X" ? watermarkRotationX : axis === "Y" ? watermarkRotationY : watermarkRotationZ;
@@ -1627,10 +1627,10 @@ export default function Viewer3D() {
                       );
                     })}
                   </div>
-                  <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                  <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                     <label className="text-[9px] uppercase font-bold text-zinc-400 block">Cor</label>
                     <div className="flex gap-2">
-                      {["#00E5FF", "#FF1744", "#00E676", "#FFEB3B", "#FFFFFF", "#888888"].map(c => (
+                      {["#632CE5", "#FF1744", "#00E676", "#FFEB3B", "#FFFFFF", "#888888"].map(c => (
                         <button key={c} onClick={() => setWatermarkColor(c)} className={`w-5 h-5 rounded-full border ${watermarkColor === c ? "border-white scale-110 shadow" : "border-transparent opacity-60 hover:opacity-100"}`} style={{ backgroundColor: c }} />
                       ))}
                     </div>
@@ -1640,46 +1640,46 @@ export default function Viewer3D() {
             </section>
           )}
           {modelGeometry && (
-            <section className="flex-1 flex flex-col justify-end border-t border-zinc-900 pt-6">
+            <section className="flex-1 flex flex-col justify-end border-t border-[#E2E3DD] pt-6">
               <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold"> 08. Exportar</h3>
               <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-4 leading-relaxed">Export each colored region as STL.</p>
-              <div className="bg-[#111] border border-zinc-900 rounded p-4 mb-5 space-y-4 font-sans">
+              <div className="bg-white border border-[#E2E3DD] rounded p-4 mb-5 space-y-4 font-sans">
                 <div className="flex justify-between items-center">
                   <div><span className="text-[10px] uppercase font-bold text-zinc-300 block">Explodir Peças</span><span className="text-[9px] text-zinc-500">Visualize separadas</span></div>
-                  <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); if (next) setPaintMode(false); }} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border ${previewSeparated ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[#151515] border-zinc-800 text-zinc-400 hover:text-white"}`}>{previewSeparated ? "ATIVADO" : "DESATIVADO"}</button>
+                  <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); if (next) setPaintMode(false); }} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border ${previewSeparated ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-400 hover:text-[#212121]"}`}>{previewSeparated ? "ATIVADO" : "DESATIVADO"}</button>
                 </div>
                 {previewSeparated && (
-                  <div className="space-y-2 border-t border-zinc-900/60 pt-3">
+                  <div className="space-y-2 border-t border-[#E2E3DD]/60 pt-3">
                     <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Distância</span><span className="text-emerald-400 font-mono font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span></div>
                     <Slider value={[separationDistance]} onValueChange={(val) => setSeparationDistance(val[0])} min={0.0} max={4.0} step={0.05} />
                     <span className="text-[8px] text-zinc-500 block leading-relaxed">Arraste o slider para afastar ou aproximar as partes e verificar os encaixes.</span>
-                    <div className="flex flex-wrap gap-3 pt-2 border-t border-zinc-900/60">
-                      <div className="flex items-center gap-1.5 text-[9px] text-zinc-400"><div className="w-3 h-3 rounded-full bg-[#00E5FF]" /> Pino Hex (Macho)</div>
+                    <div className="flex flex-wrap gap-3 pt-2 border-t border-[#E2E3DD]/60">
+                      <div className="flex items-center gap-1.5 text-[9px] text-zinc-400"><div className="w-3 h-3 rounded-full bg-[#632CE5]" /> Pino Hex (Macho)</div>
                       <div className="flex items-center gap-1.5 text-[9px] text-zinc-400"><div className="w-3 h-3 rounded-full bg-[#FF1744]" /> Furo Hex (Fêmea)</div>
                       <div className="flex items-center gap-1.5 text-[9px] text-zinc-400"><div className="w-3 h-3 rounded-full bg-[#FFD700]" /> Ímã</div>
                     </div>
                   </div>
                 )}
               </div>
-              <button onClick={exportAllSeparatedParts} disabled={!modelGeometry || isExporting !== null} className="w-full bg-[#00E5FF] hover:bg-[#00B8D4] text-black font-black uppercase text-[11px] py-4 px-4 tracking-widest flex items-center justify-center gap-2 transition-all mb-4 shadow-[0_0_15px_rgba(0,229,255,0.2)] disabled:opacity-40"><Download className="w-4 h-4 text-black" /> Exportar Todas as Peças (.stl)</button>
+              <button onClick={exportAllSeparatedParts} disabled={!modelGeometry || isExporting !== null} className="w-full bg-[#632CE5] hover:bg-[#632CE5] text-black font-black uppercase text-[11px] py-4 px-4 tracking-widest flex items-center justify-center gap-2 transition-all mb-4 shadow-[0_0_15px_rgba(124,58,237,0.2)] disabled:opacity-40"><Download className="w-4 h-4 text-black" /> Exportar Todas as Peças (.stl)</button>
               <div className="space-y-2">
                 {groups.map(group => {
                   const countOfGroup = vertexGroups.filter(g => g === group.id).length;
                   const isGroupPainted = countOfGroup > 0 || group.id === 0;
                   return (
-                    <button key={group.id} disabled={!isGroupPainted || !modelGeometry || isExporting !== null} onClick={() => exportSeparatedPart(group.id)} className="w-full flex flex-col p-3.5 bg-[#111] border border-zinc-800 hover:border-[#00E5FF] hover:bg-[#151515] transition-all group disabled:opacity-40 disabled:hover:border-zinc-800 disabled:hover:bg-[#111]">
+                    <button key={group.id} disabled={!isGroupPainted || !modelGeometry || isExporting !== null} onClick={() => exportSeparatedPart(group.id)} className="w-full flex flex-col p-3.5 bg-white border border-[#E8E9E3] hover:border-[#632CE5] hover:bg-[#E8E9E3] transition-all group disabled:opacity-40 disabled:hover:border-[#E8E9E3] disabled:hover:bg-white">
                       <div className="w-full flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: group.color }} />
-                          <span className="text-xs font-bold uppercase text-zinc-300 group-hover:text-white transition-colors">{group.id === 0 ? "Exportar Restante (Cinza)" : `Exportar ${group.name}`}</span>
+                          <span className="text-xs font-bold uppercase text-zinc-300 group-hover:text-[#1A1C19] transition-colors">{group.id === 0 ? "Exportar Restante (Cinza)" : `Exportar ${group.name}`}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[9px] text-zinc-500 font-mono">{countOfGroup > 0 ? `${((countOfGroup / vertexGroups.length) * 100).toFixed(0)}%` : "0%"}</span>
-                          {isExporting === group.id ? <RefreshCw className="w-4 h-4 text-[#00E5FF] animate-spin" /> : <Download className="w-4 h-4 text-zinc-500 group-hover:text-[#00E5FF] transition-colors" />}
+                          {isExporting === group.id ? <RefreshCw className="w-4 h-4 text-[#632CE5] animate-spin" /> : <Download className="w-4 h-4 text-zinc-500 group-hover:text-[#632CE5] transition-colors" />}
                         </div>
                       </div>
                       {groupJointRoles.get(group.id) && (
-                        <span className="text-[8px] text-[#00E5FF] font-mono mt-1.5 ml-6 text-left">{groupJointRoles.get(group.id)}</span>
+                        <span className="text-[8px] text-[#632CE5] font-mono mt-1.5 ml-6 text-left">{groupJointRoles.get(group.id)}</span>
                       )}
                     </button>
                   );
@@ -1688,18 +1688,18 @@ export default function Viewer3D() {
             </section>
           )}
           {modelGeometry && (
-            <section className="border-t border-zinc-900 pt-6">
+            <section className="border-t border-[#E2E3DD] pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2"><Printer className="w-4 h-4 text-[#00E5FF]" /> 02. Calculadora de Preços</h3>
-                <button onClick={handleDownloadCSV} className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded text-[9px] uppercase font-bold text-zinc-400 hover:text-[#00E5FF] hover:border-[#00E5FF]/30 transition-all group"><FileJson className="w-3 h-3 group-hover:scale-110 transition-transform" /> CSV</button>
+                <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 font-bold flex items-center gap-2"><Printer className="w-4 h-4 text-[#632CE5]" /> 02. Calculadora de Preços</h3>
+                <button onClick={handleDownloadCSV} className="flex items-center gap-1.5 px-2 py-1 bg-[#E8E9E3] border border-[#E8E9E3] rounded text-[9px] uppercase font-bold text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5]/30 transition-all group"><FileJson className="w-3 h-3 group-hover:scale-110 transition-transform" /> CSV</button>
               </div>
-              <div className="flex bg-[#111] p-1 rounded border border-zinc-900 mb-4 font-sans">
-                <button onClick={() => { setEstimatorType("SLA"); const d = MATERIALS.find(m => m.type === "SLA"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setResinCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "SLA" ? "bg-cyan-500/10 text-[#00E5FF] border border-cyan-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Printer className="w-3.5 h-3.5" /> SLA (Resina)</button>
+              <div className="flex bg-white p-1 rounded border border-[#E2E3DD] mb-4 font-sans">
+                <button onClick={() => { setEstimatorType("SLA"); const d = MATERIALS.find(m => m.type === "SLA"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setResinCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "SLA" ? "bg-cyan-500/10 text-[#632CE5] border border-cyan-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Printer className="w-3.5 h-3.5" /> SLA (Resina)</button>
                 <button onClick={() => { setEstimatorType("FDM"); const d = MATERIALS.find(m => m.type === "FDM"); if (d) { setSelectedMaterialId(d.id); setMaterialDensity(d.density); setFdmFilamentCostPerKg(d.defaultCost); } }} className={`flex-1 py-1.5 text-[9px] font-bold uppercase tracking-wider rounded transition-all flex items-center justify-center gap-1.5 ${estimatorType === "FDM" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-zinc-500 hover:text-zinc-300 border border-transparent"}`}><Sliders className="w-3.5 h-3.5" /> FDM (Filamento)</button>
               </div>
               <div className="mb-4 space-y-1.5">
                 <label className="text-[9px] uppercase font-bold text-zinc-500 block px-1">Perfil de Material</label>
-                <select value={selectedMaterialId} onChange={(e) => { const m = MATERIALS.find(x => x.id === e.target.value); if (m) { setSelectedMaterialId(m.id); setMaterialDensity(m.density); if (m.type === "SLA") setResinCostPerKg(m.defaultCost); else setFdmFilamentCostPerKg(m.defaultCost); } }} className="w-full bg-[#111] border border-zinc-800 p-2.5 rounded text-[10px] text-zinc-200 font-bold uppercase focus:outline-none focus:border-[#00E5FF]">
+                <select value={selectedMaterialId} onChange={(e) => { const m = MATERIALS.find(x => x.id === e.target.value); if (m) { setSelectedMaterialId(m.id); setMaterialDensity(m.density); if (m.type === "SLA") setResinCostPerKg(m.defaultCost); else setFdmFilamentCostPerKg(m.defaultCost); } }} className="w-full bg-white border border-[#E8E9E3] p-2.5 rounded text-[10px] text-zinc-200 font-bold uppercase focus:outline-none focus:border-[#632CE5]">
                   {MATERIALS.filter(m => m.type === estimatorType).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
                 <div className="flex justify-between text-[8px] text-zinc-600 uppercase font-black px-1">
@@ -1707,47 +1707,47 @@ export default function Viewer3D() {
                   <span>Preço: R$ {(estimatorType === "SLA" ? resinCostPerKg : fdmFilamentCostPerKg).toFixed(0)}/kg</span>
                 </div>
               </div>
-              <div className="bg-[#111] border border-zinc-900 rounded p-4 space-y-4 mb-4 font-sans relative overflow-hidden">
+              <div className="bg-white border border-[#E2E3DD] rounded p-4 space-y-4 mb-4 font-sans relative overflow-hidden">
                 {isEstimating && (
                   <>
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-zinc-950 z-20"><div className={`h-full transition-all duration-100 ease-out ${estimatorType === "SLA" ? "bg-gradient-to-r from-cyan-500 to-[#00E5FF]" : "bg-gradient-to-r from-emerald-500 to-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
-                    <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-[1px] flex flex-col items-center justify-center space-y-3 z-10 select-none">
-                      <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 animate-spin ${estimatorType === "SLA" ? "text-[#00E5FF]" : "text-emerald-400"}`} /><span className="text-[9px] uppercase font-bold tracking-widest text-zinc-300">{estimatorType === "SLA" ? "Fatiando SLA..." : "Fatiando FDM..."}</span></div>
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#E8E9E3] z-20"><div className={`h-full transition-all duration-100 ease-out ${estimatorType === "SLA" ? "bg-gradient-to-r from-cyan-500 to-[#632CE5]" : "bg-gradient-to-r from-emerald-500 to-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
+                    <div className="absolute inset-0 bg-[#E8E9E3]/85 backdrop-blur-[1px] flex flex-col items-center justify-center space-y-3 z-10 select-none">
+                      <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 animate-spin ${estimatorType === "SLA" ? "text-[#632CE5]" : "text-emerald-400"}`} /><span className="text-[9px] uppercase font-bold tracking-widest text-zinc-300">{estimatorType === "SLA" ? "Fatiando SLA..." : "Fatiando FDM..."}</span></div>
                       <div className="text-center space-y-1 w-full max-w-[220px] px-4">
-                        <div className="flex justify-between items-center text-[8px] uppercase font-mono text-zinc-500"><span>Status</span><span className={`${estimatorType === "SLA" ? "text-[#00E5FF]" : "text-emerald-400"} font-bold`}>{estimateProgress}%</span></div>
-                        <div className="w-full h-[3px] bg-zinc-900 rounded-full overflow-hidden"><div className={`h-full transition-all duration-75 ${estimatorType === "SLA" ? "bg-[#00E5FF]" : "bg-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
+                        <div className="flex justify-between items-center text-[8px] uppercase font-mono text-zinc-500"><span>Status</span><span className={`${estimatorType === "SLA" ? "text-[#632CE5]" : "text-emerald-400"} font-bold`}>{estimateProgress}%</span></div>
+                        <div className="w-full h-[3px] bg-[#E8E9E3] rounded-full overflow-hidden"><div className={`h-full transition-all duration-75 ${estimatorType === "SLA" ? "bg-[#632CE5]" : "bg-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
                         <p className="text-[8px] font-medium text-zinc-400 uppercase tracking-wider text-center pt-1.5 truncate">{getSlicingStatus(estimateProgress)}</p>
                       </div>
                     </div>
                   </>
                 )}
-                <div className="grid grid-cols-3 gap-2 text-center pb-3 border-b border-zinc-900">
-                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">X</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledX.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
-                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Y</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledY.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
-                  <div className="bg-zinc-950/40 p-2 rounded border border-zinc-900/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Z</span><span className="font-mono text-xs text-white font-black block mt-1">{scaledZ.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
+                <div className="grid grid-cols-3 gap-2 text-center pb-3 border-b border-[#E2E3DD]">
+                  <div className="bg-[#E8E9E3]/40 p-2 rounded border border-[#E2E3DD]/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">X</span><span className="font-mono text-xs text-[#212121] font-black block mt-1">{scaledX.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
+                  <div className="bg-[#E8E9E3]/40 p-2 rounded border border-[#E2E3DD]/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Y</span><span className="font-mono text-xs text-[#212121] font-black block mt-1">{scaledY.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
+                  <div className="bg-[#E8E9E3]/40 p-2 rounded border border-[#E2E3DD]/40"><span className="text-[8px] uppercase text-zinc-500 block font-bold">Z</span><span className="font-mono text-xs text-[#212121] font-black block mt-1">{scaledZ.toFixed(1)} <span className="text-[9px] text-zinc-500 font-normal">mm</span></span></div>
                 </div>
                 {estimatorType === "SLA" ? (
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume).toFixed(2)} mL</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity).toFixed(1)} g</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">{Math.floor((Math.ceil(scaledZ / layerHeight) * (exposureTime + 5.0) + 120) / 3600)}h</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${(((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity) / 1000.0 * resinCostPerKg).toFixed(2)}</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume).toFixed(2)} mL</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity).toFixed(1)} g</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">{Math.floor((Math.ceil(scaledZ / layerHeight) * (exposureTime + 5.0) + 120) / 3600)}h</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${(((isHollow ? modelDimensions.volume * 0.30 : modelDimensions.volume) * materialDensity) / 1000.0 * resinCostPerKg).toFixed(2)}</span></div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0)).toFixed(2)} cm³</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity).toFixed(1)} g</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">~{Math.floor(((modelDimensions.volume * 1000.0) / (0.42 * fdmLayerHeight * fdmPrintSpeed || 1.0)) * 1.30 / 3600)}h</span></div>
-                    <div className="bg-zinc-950/80 p-3 rounded border border-zinc-900/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${((modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity) / 1000.0 * fdmFilamentCostPerKg).toFixed(2)}</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Volume</span><span className="font-mono text-sm text-emerald-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0)).toFixed(2)} cm³</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Peso</span><span className="font-mono text-sm text-cyan-400 font-bold">{(modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity).toFixed(1)} g</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Tempo</span><span className="font-mono text-sm text-purple-400 font-bold">~{Math.floor(((modelDimensions.volume * 1000.0) / (0.42 * fdmLayerHeight * fdmPrintSpeed || 1.0)) * 1.30 / 3600)}h</span></div>
+                    <div className="bg-[#E8E9E3]/80 p-3 rounded border border-[#E2E3DD]/60"><span className="text-[8px] uppercase text-zinc-500 block">Custo</span><span className="font-mono text-sm text-yellow-400 font-bold">${((modelDimensions.volume * Math.max(0.05, Math.min(0.8, 0.08 * fdmWallCount) + (1.0 - Math.min(0.8, 0.08 * fdmWallCount)) * fdmInfill / 100.0) * materialDensity) / 1000.0 * fdmFilamentCostPerKg).toFixed(2)}</span></div>
                   </div>
                 )}
               </div>
-              <div className="space-y-4 bg-zinc-950 p-3.5 border border-zinc-900 rounded font-sans">
+              <div className="space-y-4 bg-[#E8E9E3] p-3.5 border border-[#E2E3DD] rounded font-sans">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-[10px] uppercase font-bold text-zinc-400">
                     <span className="flex items-center">Escala / Scale<HelpTooltip text="Ajusta o tamanho final." /></span>
-                    <div className="flex items-center bg-zinc-900 border border-zinc-850 rounded px-1.5 py-0.5 w-24">
-                      <input type="number" value={printScale} onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPrintScale(Math.max(1, Math.min(2000, v))); }} className="w-full bg-transparent text-right text-xs font-mono text-[#00E5FF] focus:outline-none" min="1" max="2000" step="0.1" />
+                    <div className="flex items-center bg-[#E8E9E3] border border-[#E2E3DD] rounded px-1.5 py-0.5 w-24">
+                      <input type="number" value={printScale} onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) setPrintScale(Math.max(1, Math.min(2000, v))); }} className="w-full bg-transparent text-right text-xs font-mono text-[#632CE5] focus:outline-none" min="1" max="2000" step="0.1" />
                       <span className="text-[10px] text-zinc-500 font-bold ml-1">%</span>
                     </div>
                   </div>
@@ -1756,62 +1756,62 @@ export default function Viewer3D() {
                     <span className="text-[8px] uppercase font-bold text-zinc-500 block">Atalhos:</span>
                     <div className="grid grid-cols-6 gap-1">
                       {[25, 50, 75, 100, 150, 200].map(p => (
-                        <button key={p} onClick={() => setPrintScale(p)} className={`py-1 text-[8px] font-mono uppercase border rounded transition-all cursor-pointer text-center ${printScale === p ? "bg-[#00E5FF] text-black border-[#00E5FF] font-bold" : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"}`}>{p}%</button>
+                        <button key={p} onClick={() => setPrintScale(p)} className={`py-1 text-[8px] font-mono uppercase border rounded transition-all cursor-pointer text-center ${printScale === p ? "bg-[#632CE5] text-[#212121] border-[#632CE5] font-bold" : "bg-[#E8E9E3] text-zinc-400 border-[#E2E3DD] hover:text-[#212121]"}`}>{p}%</button>
                       ))}
                     </div>
                   </div>
-                  <div className="space-y-3 pt-2.5 border-t border-zinc-900/60">
-                    <span className="text-[8px] uppercase font-bold text-[#00E5FF] flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Proporções de Miniatura</span>
-                    <div className="grid grid-cols-2 gap-1 bg-zinc-950 p-0.5 rounded border border-zinc-900">
-                      <button onClick={() => setMiniatureScaleMode("human")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "human" ? "bg-[#00E5FF] text-black" : "text-zinc-400 hover:text-white"}`}>Base Humana (1.80m)</button>
-                      <button onClick={() => setMiniatureScaleMode("direct")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "direct" ? "bg-[#00E5FF] text-black" : "text-zinc-400 hover:text-white"}`}>Direto do Arquivo (1:1)</button>
+                  <div className="space-y-3 pt-2.5 border-t border-[#E2E3DD]/60">
+                    <span className="text-[8px] uppercase font-bold text-[#632CE5] flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Proporções de Miniatura</span>
+                    <div className="grid grid-cols-2 gap-1 bg-[#E8E9E3] p-0.5 rounded border border-[#E2E3DD]">
+                      <button onClick={() => setMiniatureScaleMode("human")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "human" ? "bg-[#632CE5] text-white" : "text-zinc-400 hover:text-white"}`}>Base Humana (1.80m)</button>
+                      <button onClick={() => setMiniatureScaleMode("direct")} className={`py-1 px-1 text-[8px] font-bold uppercase rounded transition-all cursor-pointer text-center ${miniatureScaleMode === "direct" ? "bg-[#632CE5] text-white" : "text-zinc-400 hover:text-white"}`}>Direto do Arquivo (1:1)</button>
                     </div>
                     <div className="grid grid-cols-3 gap-1">
                       {[{ label: "1/8", value: 8 }, { label: "1/12", value: 12 }, { label: "1/16", value: 16 }, { label: "1/24", value: 24 }, { label: "1/32", value: 32 }, { label: "1/35", value: 35 }, { label: "1/48", value: 48 }, { label: "1/56", value: 56 }, { label: "1/64", value: 64 }, { label: "1/72", value: 72 }, { label: "1/100", value: 100 }].map(item => {
                         const targetScale = miniatureScaleMode === "human" && originalZ > 0 ? (1800.0 / item.value / originalZ) * 100.0 : 100.0 / item.value;
-                        return <button key={item.label} onClick={() => applyMiniatureScale(item.value)} className={`p-1 border rounded text-[9px] font-black ${Math.abs(printScale - targetScale) < 0.2 ? "bg-[#00E5FF]/20 border-[#00E5FF] text-[#00E5FF]" : "bg-zinc-950 text-zinc-400 border-zinc-900 hover:text-white"}`}>{item.label}</button>;
+                        return <button key={item.label} onClick={() => applyMiniatureScale(item.value)} className={`p-1 border rounded text-[9px] font-black ${Math.abs(printScale - targetScale) < 0.2 ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E2E3DD] hover:text-[#212121]"}`}>{item.label}</button>;
                       })}
                     </div>
                   </div>
                 </div>
                 {estimatorType === "SLA" ? (
                   <>
-                    <div className="flex items-center justify-between border-t border-zinc-900/60 pt-3">
+                    <div className="flex items-center justify-between border-t border-[#E2E3DD]/60 pt-3">
                       <div><span className="text-[10px] uppercase font-bold text-zinc-400">Modelo Oco</span><span className="text-[9px] text-zinc-500 block">Parede de 2mm</span></div>
-                      <button onClick={() => setIsHollow(!isHollow)} className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border ${isHollow ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[#111] border-zinc-800 text-zinc-400"}`}>{isHollow ? "Ativo" : "Não"}</button>
+                      <button onClick={() => setIsHollow(!isHollow)} className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border ${isHollow ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-white border-[#E8E9E3] text-zinc-400"}`}>{isHollow ? "Ativo" : "Não"}</button>
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Camada</span><span className="text-purple-400 font-mono">{(layerHeight * 1000).toFixed(0)} μm</span></div>
                       <Slider value={[layerHeight]} onValueChange={(v) => setLayerHeight(v[0])} min={0.02} max={0.15} step={0.01} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Exposição</span><span className="text-yellow-400 font-mono">{exposureTime}s</span></div>
                       <Slider value={[exposureTime]} onValueChange={(v) => setExposureTime(v[0])} min={1.0} max={10.0} step={0.1} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Preço Resina</span><span className="text-zinc-300 font-mono">${resinCostPerKg}/kg</span></div>
                       <Slider value={[resinCostPerKg]} onValueChange={(v) => setResinCostPerKg(v[0])} min={15} max={120} step={1} />
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Infill</span><span className="text-emerald-400 font-mono">{fdmInfill}%</span></div>
                       <Slider value={[fdmInfill]} onValueChange={(v) => setFdmInfill(v[0])} min={0} max={100} step={5} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Paredes</span><span className="text-cyan-400 font-mono">{fdmWallCount}</span></div>
                       <Slider value={[fdmWallCount]} onValueChange={(v) => setFdmWallCount(v[0])} min={1} max={8} step={1} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Camada</span><span className="text-purple-400 font-mono">{fdmLayerHeight} mm</span></div>
                       <Slider value={[fdmLayerHeight]} onValueChange={(v) => setFdmLayerHeight(v[0])} min={0.08} max={0.36} step={0.02} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Velocidade</span><span className="text-yellow-400 font-mono">{fdmPrintSpeed} mm/s</span></div>
                       <Slider value={[fdmPrintSpeed]} onValueChange={(v) => setFdmPrintSpeed(v[0])} min={30} max={300} step={10} />
                     </div>
-                    <div className="space-y-1.5 border-t border-zinc-900/60 pt-3">
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-400"><span>Preço Filamento</span><span className="text-zinc-300 font-mono">${fdmFilamentCostPerKg}/kg</span></div>
                       <Slider value={[fdmFilamentCostPerKg]} onValueChange={(v) => setFdmFilamentCostPerKg(v[0])} min={10} max={80} step={1} />
                     </div>
@@ -1822,7 +1822,7 @@ export default function Viewer3D() {
           )}
         </aside>
       </div>
-      <footer className="h-12 border-t border-[#222] px-8 flex items-center justify-between bg-[#0A0A0A] shrink-0">
+      <footer className="h-12 border-t border-[#E2E3DD] px-8 flex items-center justify-between bg-[#F9FAF4] shrink-0">
         <div className="flex gap-6 items-center text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
           <span>Status: <span className="text-[#00FF41]">Watertight Export Ready</span></span>
           <span>GPU Mesh Painting: ACTIVE</span>
@@ -1831,11 +1831,11 @@ export default function Viewer3D() {
         <div className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold">© VÉRTICE STUDIO</div>
       </footer>
       {isProcessing && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm transition-all animate-in fade-in duration-300">
-          <div className="flex flex-col items-center gap-6 p-10 bg-zinc-950 border border-zinc-800 rounded-lg shadow-2xl max-w-sm w-full text-center">
-            <div className="relative"><Loader2 className="w-12 h-12 text-[#00E5FF] animate-spin" /><div className="absolute inset-0 blur-xl bg-[#00E5FF]/20 animate-pulse"></div></div>
-            <div className="space-y-2"><h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Processando</h3><p className="text-[10px] text-zinc-400 uppercase tracking-widest leading-relaxed">{processingMessage || "Aguarde..."}</p></div>
-            <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[#00E5FF] to-[#00B8D4] animate-progress-indefinite"></div></div>
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm transition-all animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-6 p-10 bg-[#E8E9E3] border border-[#E8E9E3] rounded-lg shadow-2xl max-w-sm w-full text-center">
+            <div className="relative"><Loader2 className="w-12 h-12 text-[#632CE5] animate-spin" /><div className="absolute inset-0 blur-xl bg-[#632CE5]/20 animate-pulse"></div></div>
+            <div className="space-y-2"><h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A1C19]">Processando</h3><p className="text-[10px] text-zinc-400 uppercase tracking-widest leading-relaxed">{processingMessage || "Aguarde..."}</p></div>
+            <div className="w-full h-1 bg-[#E8E9E3] rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[#632CE5] to-[#00B8D4] animate-progress-indefinite"></div></div>
             <p className="text-[8px] text-zinc-600 uppercase font-bold">Não feche a página.</p>
           </div>
         </div>

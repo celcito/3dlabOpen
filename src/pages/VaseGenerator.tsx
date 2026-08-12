@@ -16,15 +16,15 @@ export default function VaseGenerator() {
   const exportSTL = generator.handleExportSTL;
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
       {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[#0c0c0c] border-r border-zinc-900 overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-80 bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center">
-              <Flower className="w-6 h-6 text-[#00E5FF]" />
+            <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
+              <Flower className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-white">Vase Maker</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Vase Maker</h1>
           </div>
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Crie vasos e recipientes geométricos 3D.</p>
         </header>
@@ -32,158 +32,158 @@ export default function VaseGenerator() {
         <section className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Maximize className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Maximize className="w-3.5 h-3.5 text-[#632CE5]" />
               01. Proporções (mm)
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Altura Total</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.height}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.height}mm</span>
               </div>
               <input 
                 type="range" min="20" max="250" step="1" 
                 value={config.height} 
                 onChange={(e) => setConfig({...config, height: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Base R</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.baseRadius}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.baseRadius}mm</span>
               </div>
               <input 
                 type="range" min="5" max="150" step="1" 
                 value={config.baseRadius}
                 onChange={(e) => setConfig({...config, baseRadius: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Meio R</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.midRadius}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.midRadius}mm</span>
               </div>
               <input 
                 type="range" min="5" max="150" step="1" 
                 value={config.midRadius}
                 onChange={(e) => setConfig({...config, midRadius: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Topo R</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.topRadius}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.topRadius}mm</span>
               </div>
               <input 
                 type="range" min="5" max="150" step="1" 
                 value={config.topRadius}
                 onChange={(e) => setConfig({...config, topRadius: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <RefreshCw className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <RefreshCw className="w-3.5 h-3.5 text-[#632CE5]" />
               02. Geometria & Torção
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Lados (Sides)</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.sides}</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.sides}</span>
               </div>
               <input 
                 type="range" min="3" max="64" step="1" 
                 value={config.sides} 
                 onChange={(e) => setConfig({...config, sides: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Torção (Twist)</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.twist}°</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.twist}°</span>
               </div>
               <input 
                 type="range" min="-360" max="360" step="5" 
                 value={config.twist} 
                 onChange={(e) => setConfig({...config, twist: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Activity className="w-3.5 h-3.5 text-[#632CE5]" />
               03. Textura de Onda
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Quantidade Ondas</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.waves}</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.waves}</span>
               </div>
               <input 
                 type="range" min="0" max="20" step="1" 
                 value={config.waves} 
                 onChange={(e) => setConfig({...config, waves: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Intensidade</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.waveIntensity}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.waveIntensity}mm</span>
               </div>
               <input 
                 type="range" min="0" max="10" step="0.5" 
                 value={config.waveIntensity} 
                 onChange={(e) => setConfig({...config, waveIntensity: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Box className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Box className="w-3.5 h-3.5 text-[#632CE5]" />
               04. Parede & Base
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura da Parede</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.wallThickness}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.wallThickness}mm</span>
               </div>
               <input 
                 type="range" min="0.8" max="10" step="0.2" 
                 value={config.wallThickness} 
                 onChange={(e) => setConfig({...config, wallThickness: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura da Base</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.baseThickness}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.baseThickness}mm</span>
               </div>
               <input 
                 type="range" min="1" max="10" step="0.5" 
                 value={config.baseThickness} 
                 onChange={(e) => setConfig({...config, baseThickness: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function VaseGenerator() {
           <div className="pt-6">
             <button
               onClick={exportSTL}
-              className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group"
+              className="w-full bg-[#632CE5] text-[#212121] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] group"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
               Download STL Vaso
@@ -204,7 +204,7 @@ export default function VaseGenerator() {
       <div className="flex-1 relative">
         <div className="absolute inset-0">
           <Canvas shadows camera={{ position: [100, 100, 100], fov: 45 }}>
-            <color attach="background" args={["#080808"]} />
+            <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[100, 200, 100]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-100, -100, -100]} intensity={0.5} />
@@ -227,12 +227,12 @@ export default function VaseGenerator() {
 
         {/* HUD */}
         <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-md border border-zinc-900 p-4 rounded-xl space-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-4 rounded-xl space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">Procedural Vase Studio</span>
+              <div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
+              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">Procedural Vase Studio</span>
             </div>
-            <div className="text-[16px] font-black text-white uppercase tracking-tighter">
+            <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter">
               {config.sides} Lados • {config.height}mm Altura
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function VaseGenerator() {
 
         {successMsg && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-emerald-500 text-black px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-2xl">
+            <div className="bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-lg hover:bg-[#7C4DFF]">
               <Check className="w-4 h-4" />
               {successMsg}
             </div>
