@@ -15,6 +15,7 @@ export default defineConfig(() => {
             'vendor-three': ['three'],
             'vendor-r3f': ['@react-three/fiber', '@react-three/drei', 'three-mesh-bvh', 'three-bvh-csg'],
             'vendor-ui': ['lucide-react', 'sonner'],
+            'vendor-split3mf': ['manifold-3d', 'three/examples/jsm/loaders/GLTFLoader.js', 'three/examples/jsm/exporters/GLTFExporter.js'],
           },
         },
       },

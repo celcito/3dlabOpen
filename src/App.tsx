@@ -1,12 +1,8 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
-import { lazy, Suspense, useState } from "react";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, Layers, Camera } from "lucide-react";
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Split } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
+import { M2crLogo } from "@/components/M2crLogo";
 import Viewer3D from "./pages/Viewer3D";
 
 const PaintMixer = lazy(() => import("./pages/PaintMixer"));
@@ -29,77 +25,111 @@ const Face3DGenerator = lazy(() => import("./pages/Face3DGenerator"));
 const BinGenerator = lazy(() => import("./pages/BinGenerator"));
 const VaseGenerator = lazy(() => import("./pages/VaseGenerator"));
 const ImageTo3D = lazy(() => import("./pages/ImageTo3D"));
+const Split3MF = lazy(() => import("./pages/Split3MF"));
+
+const NAV_ITEMS = [
+  { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
+  { to: "/", icon: BoxSelect, label: "3D Slicer", description: "3D Viewer & Slicer" },
+  { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
+  { to: "/image-to-3d", icon: Image, label: "Image to 3D", description: "Image to 3D Model" },
+  { to: "/vase-generator", icon: Flower, label: "Vase Maker", description: "Vasos Paramétricos" },
+  { to: "/bin-generator", icon: Box, label: "Bin & Tray Generator", description: "Custom bins and sorting trays" },
+  { to: "/flexi-creator", icon: Waves, label: "Flexi Creator", description: "Modelos Articulados" },
+  { to: "/flexi-from-photo", icon: Camera, label: "Flexi From Photo", description: "Flexi a partir de Foto" },
+  { to: "/name-sign", icon: Baseline, label: "Gerador de Placas", description: "Placas e Letreiros" },
+  { to: "/fidget-clicker", icon: Gamepad2, label: "Clicker Maker", description: "Fidget Chaveiro 3D" },
+  { to: "/design-editor", icon: Palette, label: "Editor de Design", description: "Criação de Layouts" },
+  { to: "/qr-generator", icon: QrCode, label: "QR Generator", description: "QR Code para Placas" },
+  { to: "/svg-converter", icon: ArrowRightLeft, label: "Vetorizador Imagem", description: "PNG para SVG" },
+  { to: "/cookie-cutter-maker", icon: Scissors, label: "Cortador de Biscoitos", description: "Biscoito CUT Maker" },
+  { to: "/plate-creator", icon: Sparkles, label: "Criador de Placas 3D", description: "3D Plate Designer" },
+  { to: "/paint-mixer", icon: Brush, label: "Misturador de Tintas", description: "Paint Color Mixer" },
+  { to: "/filament-painter", icon: Layers, label: "Filament Painter", description: "Multicolor Print Generator" },
+  { to: "/lithophane-generator", icon: Box, label: "Lithophane Maker", description: "Foto em Relevo STL" },
+  { to: "/ai-figures", icon: Cuboid, label: "Gerador de Figuras", description: "AI Character Figures" },
+  { to: "/price-calculator", icon: Calculator, label: "Calculadora de Preços", description: "Price Calculator" },
+  { to: "/marketing-generator", icon: Megaphone, label: "Gerador de Marketing", description: "Product Marketing" },
+  { to: "/file-converter", icon: ArrowRightLeft, label: "Conversor de Arquivos", description: "Converter STL, OBJ, FBX" },
+];
 
 function NavItem({ to, icon: Icon, label, description }: { to: string; icon: any; label: string; description: string }) {
   const location = useLocation();
   const isActive = location.pathname === to;
-  
+
   return (
     <Link
       to={to}
-      className={`w-full flex items-center gap-3.5 px-6 py-4 border-l-2 transition-all ${
-        isActive 
-          ? "border-[#00E5FF] text-white bg-[#00E5FF]/5" 
-          : "border-transparent text-zinc-400 hover:text-white hover:bg-white/2"
+      className={`flex items-center gap-3 px-4 py-3 rounded-r-full border-l-4 font-mono text-[11px] font-medium tracking-[0.05em] transition-colors scale-95 active:scale-100 ${
+        isActive
+          ? "bg-[#7C4DFF] text-[#FCF6FF] border-[#632CE5]"
+          : "border-transparent text-[#494455] hover:bg-[#E8E9E3] hover:text-[#1A1C19]"
       }`}
     >
-      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#00E5FF]" : "text-zinc-500"}`} />
-      <div className="flex flex-col min-w-0">
-        <span className={`text-[11px] font-black uppercase tracking-wider ${isActive ? "text-white" : "text-zinc-300"}`}>
-          {label}
-        </span>
-        <span className="text-[9px] text-zinc-500 truncate font-sans uppercase tracking-tight font-bold">
-          {description}
-        </span>
-      </div>
+      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#FCF6FF]" : "text-[#7A7487]"}`} />
+      <span className="truncate">{label}</span>
     </Link>
   );
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-[#080808] text-white font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#F9FAF4] text-[#212121] font-sans overflow-hidden">
       {/* SIDEBAR NAVIGATION */}
-      <nav className="w-[240px] bg-[#0d0d0d] border-r border-zinc-900 flex flex-col pt-8 shrink-0">
-        <div className="px-6 flex items-center gap-3 mb-8 shrink-0">
-          <div className="text-xl font-black tracking-tighter border-2 border-[#00E5FF] text-[#00E5FF] w-9 h-9 flex items-center justify-center shrink-0">
-            V
-          </div>
+      <aside className="w-[280px] bg-[#FFFFFF] border-r border-[#CAC3D8] flex flex-col py-5 shrink-0">
+        <div className="px-5 mb-8 flex items-center gap-3 shrink-0">
+          <M2crLogo size={30} withWordmark={false} />
           <div className="flex flex-col">
-            <span className="text-[12px] font-black tracking-widest uppercase text-white">Vértice Studio</span>
-            <span className="text-[8px] tracking-wider text-zinc-500 uppercase font-mono font-bold">Print Companion</span>
+            <h1 className="font-sans text-[20px] font-bold text-[#632CE5] leading-none">Workbench</h1>
+            <span className="font-mono text-[10px] text-[#494455] tracking-[0.05em] mt-1">V0.5.0</span>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto scrollbar-hide pb-8">
+        <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 px-2 space-y-0.5">
           <div className="flex flex-col w-full">
-            <NavItem to="/" icon={BoxSelect} label="Separar Partes 3D" description="3D Viewer & Slicer" />
-            <NavItem to="/face-3d" icon={UserCircle2} label="Face 3D" description="Foto em Relevo 3D" />
-            <NavItem to="/image-to-3d" icon={Image} label="Imagem para 3D" description="Image to 3D Model" />
-            <NavItem to="/vase-generator" icon={Flower} label="Vase Maker" description="Vasos Paramétricos" />
-            <NavItem to="/bin-generator" icon={Box} label="Bin & Tray Generator" description="Custom bins and sorting trays" />
-            <NavItem to="/flexi-creator" icon={Waves} label="Criador Flexi" description="Modelos Articulados" />
-            <NavItem to="/flexi-from-photo" icon={Camera} label="Flexi From Photo" description="Flexi a partir de Foto" />
-            <NavItem to="/name-sign" icon={Baseline} label="Gerador de Placas" description="Placas e Letreiros" />
-            <NavItem to="/fidget-clicker" icon={Gamepad2} label="Clicker Maker" description="Fidget Chaveiro 3D" />
-            <NavItem to="/design-editor" icon={Palette} label="Editor de Design" description="Criação de Layouts" />
-            <NavItem to="/qr-generator" icon={QrCode} label="Gerador QR 3D" description="QR Code para Placas" />
-            <NavItem to="/svg-converter" icon={ArrowRightLeft} label="Vetorizador Imagem" description="PNG para SVG" />
-            <NavItem to="/cookie-cutter-maker" icon={Scissors} label="Cortador de Biscoitos" description="Biscoito CUT Maker" />
-            <NavItem to="/plate-creator" icon={Sparkles} label="Criador de Placas 3D" description="3D Plate Designer" />
-            <NavItem to="/paint-mixer" icon={Brush} label="Misturador de Tintas" description="Paint Color Mixer" />
-            <NavItem to="/filament-painter" icon={Layers} label="Filament Painter" description="Multicolor Print Generator" />
-            <NavItem to="/lithophane-generator" icon={Box} label="Lithophane Maker" description="Foto em Relevo STL" />
-            <NavItem to="/ai-figures" icon={Cuboid} label="Gerador de Figuras" description="AI Character Figures" />
-            <NavItem to="/price-calculator" icon={Calculator} label="Calculadora de Preços" description="Price Calculator" />
-            <NavItem to="/marketing-generator" icon={Megaphone} label="Gerador de Marketing" description="Product Marketing" />
-            <NavItem to="/file-converter" icon={ArrowRightLeft} label="Conversor de Arquivos" description="Converter STL, OBJ, FBX" />
+            {NAV_ITEMS.map((item) => (
+              <NavItem key={item.to} {...item} />
+            ))}
           </div>
         </div>
-      </nav>
-      
+        {/* CTA + Footer */}
+        <div className="px-5 mt-auto pt-4 space-y-4 shrink-0">
+          <button className="w-full py-2 px-4 bg-[#632CE5] text-white rounded font-mono text-[11px] tracking-[0.05em] hover:bg-[#7C4DFF] transition-colors flex items-center justify-center gap-2">
+            <MonitorPlay className="w-4 h-4" />
+            Upgrade to Pro
+          </button>
+          <div className="border-t border-[#E8E9E3] pt-4 space-y-1">
+            <a className="flex items-center gap-3 px-2 py-2 text-[#494455] hover:bg-[#E8E9E3] rounded font-mono text-[11px] tracking-[0.05em] transition-colors">
+              <HelpCircle className="w-4 h-4" />
+              Documentation
+            </a>
+            <a className="flex items-center gap-3 px-2 py-2 text-[#494455] hover:bg-[#E8E9E3] rounded font-mono text-[11px] tracking-[0.05em] transition-colors">
+              <Headset className="w-4 h-4" />
+              Support
+            </a>
+          </div>
+        </div>
+      </aside>
+
       {/* MAIN WORKSPACE */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-[#080808]">
-        <Suspense fallback={<LoadingScreen />}>{children}</Suspense>
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* TOP TOOLBAR */}
+        <header className="h-16 bg-[#FFFFFF] border-b border-[#CAC3D8] flex items-center justify-between px-6 shrink-0 z-10">
+          <div className="flex items-center gap-8">
+            <M2crLogo size={24} />
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="w-10 h-10 rounded-lg hover:bg-[#E8E9E3] flex items-center justify-center text-[#494455] transition-colors" aria-label="Configurações">
+              <Settings className="w-5 h-5" />
+            </button>
+            <div className="w-8 h-8 rounded-full bg-[#E2DFDE] border border-[#CAC3D8] flex items-center justify-center font-sans text-xs font-bold text-[#636262]">
+              MC
+            </div>
+          </div>
+        </header>
+
+        {/* PAGE CONTENT */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#F9FAF4]">
+          <Suspense fallback={<LoadingScreen />}>{children}</Suspense>
+        </div>
       </main>
       <Toaster />
     </div>
@@ -108,9 +138,9 @@ function Layout({ children }: { children: React.ReactNode }) {
 
 function LoadingScreen() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 bg-[#080808]">
-      <div className="w-9 h-9 border-2 border-[#00E5FF] border-t-transparent rounded-full animate-spin" />
-      <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">
+    <div className="flex-1 flex flex-col items-center justify-center gap-5 bg-[#F9FAF4]">
+      <M2crLogo size={44} withWordmark={true} />
+      <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-[#7A7487] font-bold">
         Carregando&hellip;
       </span>
     </div>
@@ -122,7 +152,9 @@ export default function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
-          <Route path="/" element={<Viewer3D />} />
+          <Route path="/split-3mf" element={<Split3MF />} />
+          <Route path="/" element={<Navigate to="/split-3mf" replace />} />
+          <Route path="/viewer3d" element={<Viewer3D />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />
           <Route path="/image-to-3d" element={<ImageTo3D />} />
           <Route path="/vase-generator" element={<VaseGenerator />} />

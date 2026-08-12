@@ -109,13 +109,13 @@ function HelpTooltip({ text, position = "top" }: { text: string; position?: "top
 
   return (
     <div className="relative group inline-flex items-center ml-1.5 select-none shrink-0 align-middle">
-      <span className="text-zinc-500 hover:text-[#00E5FF] transition-colors cursor-help focus:outline-none p-0.5">
+      <span className="text-zinc-500 hover:text-[#632CE5] transition-colors cursor-help focus:outline-none p-0.5">
         <Info className="w-3.5 h-3.5" />
       </span>
       <div 
-        className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-zinc-950 border border-zinc-800 rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}
+        className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-[#E8E9E3] border border-[#E8E9E3] rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}
       >
-        <p className="tracking-wide uppercase text-[#00E5FF] font-black text-[9px] mb-1 font-sans">Dica de Ajuda / Help Tip</p>
+        <p className="tracking-wide uppercase text-[#632CE5] font-black text-[9px] mb-1 font-sans">Dica de Ajuda / Help Tip</p>
         <p className="font-sans normal-case font-medium">{text}</p>
       </div>
     </div>
@@ -146,7 +146,7 @@ function SliderRow({
         step={step}
         value={value}
         onChange={e => onChange(Number(e.target.value))}
-        className="w-full accent-[#00E5FF] h-1 bg-zinc-900 border border-zinc-850 rounded cursor-pointer"
+        className="w-full accent-[#632CE5] h-1 bg-[#E8E9E3] border border-[#E2E3DD] rounded cursor-pointer"
       />
       <div className="flex justify-between text-[10px] text-zinc-600 mt-0.5 font-mono">
         <span>{min}{suffix}</span>
@@ -169,7 +169,7 @@ function NumInput({
         <span>{label}</span>
         {tooltip && <HelpTooltip text={tooltip} />}
       </Label>
-      <div className="flex items-center bg-[#111] border border-zinc-900 rounded-md overflow-hidden focus-within:border-[#00E5FF]/50 transition-colors">
+      <div className="flex items-center bg-white border border-[#E2E3DD] rounded-md overflow-hidden focus-within:border-[#632CE5]/50 transition-colors">
         {prefix && (
           <span className="pl-2.5 pr-1 text-zinc-500 text-xs font-mono">{prefix}</span>
         )}
@@ -178,7 +178,7 @@ function NumInput({
           value={value}
           step={step}
           onChange={e => onChange(Number(e.target.value))}
-          className="border-0 bg-transparent h-9 font-mono text-xs text-white [appearance:textfield] [&::-webkit-outer-spin-button]:opacity-30 [&::-webkit-inner-spin-button]:opacity-30"
+          className="border-0 bg-transparent h-9 font-mono text-xs text-[#1A1C19] [appearance:textfield] [&::-webkit-outer-spin-button]:opacity-30 [&::-webkit-inner-spin-button]:opacity-30"
         />
       </div>
     </div>
@@ -187,9 +187,9 @@ function NumInput({
 
 function MetricCard({ label, value, accent, colorClass }: { label: string; value: string; accent?: boolean; colorClass?: string }) {
   return (
-    <div className={`bg-[#111] border rounded-lg p-4 text-center ${accent ? "border-[#00E5FF]/40 shadow-[0_0_15px_rgba(0,229,255,0.05)]" : "border-zinc-900"}`}>
+    <div className={`bg-white border rounded-lg p-4 text-center ${accent ? "border-[#632CE5]/40 shadow-[0_0_15px_rgba(124,58,237,0.05)]" : "border-[#E2E3DD]"}`}>
       <div className="text-[8px] uppercase tracking-[0.1em] text-zinc-500 mb-1.5 font-black">{label}</div>
-      <div className={`text-xl font-bold font-mono ${colorClass ? colorClass : (accent ? "text-[#00E5FF]" : "text-white")}`}>{value}</div>
+      <div className={`text-xl font-bold font-mono ${colorClass ? colorClass : (accent ? "text-[#632CE5]" : "text-[#1A1C19]")}`}>{value}</div>
     </div>
   );
 }
@@ -199,7 +199,7 @@ function BreakdownBar({ label, value, total, color }: { label: string; value: nu
   return (
     <div className="flex items-center gap-3 mb-2.5">
       <span className="text-[11px] text-zinc-500 min-w-[150px] truncate">{label}</span>
-      <div className="flex-1 bg-zinc-950 border border-zinc-900/60 rounded h-2 overflow-hidden">
+      <div className="flex-1 bg-[#E8E9E3] border border-[#E2E3DD]/60 rounded h-2 overflow-hidden">
         <div className="rounded-full h-full transition-[width] duration-300" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <span className="text-[11px] text-zinc-300 min-w-[64px] text-right font-mono">{fmt(value)}</span>
@@ -209,7 +209,7 @@ function BreakdownBar({ label, value, total, color }: { label: string; value: nu
 
 function SourceCard({ source, accentColor }: { source: Source; accentColor: string }) {
   return (
-    <div className={`bg-[#111] rounded-lg p-5 relative border transition-all hover:border-zinc-800 ${source.recommended ? "shadow-[0_0_15px_rgba(0,229,255,0.03)]" : "border-zinc-900"}`}
+    <div className={`bg-white rounded-lg p-5 relative border transition-all hover:border-[#E8E9E3] ${source.recommended ? "shadow-[0_0_15px_rgba(124,58,237,0.03)]" : "border-[#E2E3DD]"}`}
       style={source.recommended ? { borderColor: accentColor } : undefined}>
       {source.recommended && (
         <div className="absolute -top-2.5 left-4 text-[8px] font-black px-2.5 py-0.5 rounded-full tracking-widest"
@@ -218,7 +218,7 @@ function SourceCard({ source, accentColor }: { source: Source; accentColor: stri
         </div>
       )}
       <div className="flex justify-between items-start mb-2">
-        <span className="font-bold text-sm text-white tracking-tight">{source.name}</span>
+        <span className="font-bold text-sm text-[#1A1C19] tracking-tight">{source.name}</span>
         <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono font-bold uppercase ${
           source.type === "free" ? "bg-emerald-950/30 text-emerald-400 border border-emerald-900/20" : "bg-purple-950/30 text-purple-400 border border-purple-900/20"
         }`}>
@@ -228,7 +228,7 @@ function SourceCard({ source, accentColor }: { source: Source; accentColor: stri
       <p className="text-xs text-zinc-400 mb-3.5 leading-relaxed font-medium">{source.desc}</p>
       <div className="flex gap-1.5 flex-wrap mb-4">
         {source.tags.map(t => (
-          <span key={t} className="bg-zinc-950 text-zinc-500 text-[9px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded border border-zinc-900">{t}</span>
+          <span key={t} className="bg-[#E8E9E3] text-zinc-500 text-[9px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded border border-[#E2E3DD]">{t}</span>
         ))}
       </div>
       <a href={source.url} target="_blank" rel="noopener noreferrer"
@@ -334,7 +334,7 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
         />
       </div>
 
-      <div className="bg-[#111] border border-zinc-900 rounded-lg p-5">
+      <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
         <SliderRow 
           label="Margem de lucro desejada" 
           min={50} 
@@ -355,17 +355,17 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
         <MetricCard label="Margem real" value={`${margemReal}%`} colorClass="text-cyan-400" />
       </div>
 
-      <div className="bg-[#111] border border-zinc-900 rounded-lg p-5">
+      <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
         <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-4 font-bold flex items-center">
           <span>Divisão dos Custos / Cost Breakdown</span>
           <HelpTooltip text="Gráfico de distribuição que aponta para onde está indo o dinheiro investido na fabricação desta peça." />
         </div>
         {breakdown.map(([lbl, value]) => (
-          <BreakdownBar key={lbl} label={lbl} value={value} total={totalBreakdown} color="#00E5FF" />
+          <BreakdownBar key={lbl} label={lbl} value={value} total={totalBreakdown} color="#632CE5" />
         ))}
       </div>
 
-      <div className="bg-[#111] border border-zinc-900 rounded-lg p-5">
+      <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
         <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-3 font-bold flex items-center">
           <span>Meta Mensal / Monthly Goal</span>
           <HelpTooltip text="Determine seu objetivo financeiro mensal para ver quantas réplicas ou bonecos precisa produzir e vender." />
@@ -373,7 +373,7 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
         <NumInput label="Renda desejada por mês (R$)" value={meta} onChange={setMeta} prefix="R$" />
         {qtd !== null ? (
           <div className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Você precisa vender <span className="text-2xl font-black text-[#00E5FF] font-mono align-middle mx-1">{qtd}</span> peças/mês para bater a meta.
+            Você precisa vender <span className="text-2xl font-black text-[#632CE5] font-mono align-middle mx-1">{qtd}</span> peças/mês para bater a meta.
           </div>
         ) : (
           <div className="mt-4 text-xs text-zinc-500">Ajuste a margem para calcular.</div>
@@ -502,7 +502,7 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
         />
       </div>
 
-      <div className="bg-[#111] border border-zinc-900 rounded-lg p-5">
+      <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
         <SliderRow 
           label="Margem de lucro desejada" 
           min={50} 
@@ -523,7 +523,7 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
         <MetricCard label="Margem real" value={`${margemReal}%`} colorClass="text-cyan-400" />
       </div>
 
-      <div className="bg-[#111] border border-zinc-900 rounded-lg p-5">
+      <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
         <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-4 font-bold flex items-center">
           <span>Divisão dos Custos / Cost Breakdown</span>
           <HelpTooltip text="Divisão percentual dos custos para fabricação de miniaturas em resina líquida." />
@@ -533,7 +533,7 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
         ))}
       </div>
 
-      <div className="bg-[#111] border border-zinc-900 rounded-lg p-5">
+      <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
         <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-3 font-bold flex items-center">
           <span>Meta Mensal / Monthly Goal</span>
           <HelpTooltip text="Alvo financeiro que deseja alcançar vendendo suas peças de alta fidelidade em resina." />
@@ -565,12 +565,12 @@ function SourcesTab() {
     `px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-all ${
       active
         ? `border-transparent text-black font-black`
-        : "border-zinc-900 text-zinc-500 hover:border-zinc-800 hover:text-zinc-300"
+        : "border-[#E2E3DD] text-zinc-500 hover:border-[#E8E9E3] hover:text-zinc-300"
     }`;
 
   return (
     <div className="space-y-6">
-      <div className="bg-[#111] border border-zinc-900 p-6 rounded-lg space-y-5">
+      <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-5">
         <div>
           <div className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 mb-2 font-bold flex items-center">
             <span>Tipo de Impressora / Printer Type</span>
@@ -578,10 +578,10 @@ function SourcesTab() {
           </div>
           <div className="flex gap-2 flex-wrap">
             {[
-              ["all", "Todas", "#00E5FF"],
-              ["fdm", "FDM", "#00E5FF"],
+              ["all", "Todas", "#632CE5"],
+              ["fdm", "FDM", "#632CE5"],
               ["resin", "Resina", "#A855F7"],
-              ["both", "Ambas", "#00E5FF"],
+              ["both", "Ambas", "#632CE5"],
             ].map(([val, label, color]) => (
               <button
                 key={val}
@@ -609,8 +609,8 @@ function SourcesTab() {
               <button
                 key={val}
                 onClick={() => setTypeFilter(val)}
-                className={pillClass(typeFilter === val, "#00E5FF")}
-                style={typeFilter === val ? { backgroundColor: "#00E5FF" } : undefined}
+                className={pillClass(typeFilter === val, "#632CE5")}
+                style={typeFilter === val ? { backgroundColor: "#632CE5" } : undefined}
               >
                 {label}
               </button>
@@ -627,7 +627,7 @@ function SourcesTab() {
             <SourceCard
               key={`${s.name}-${s.printerType}-${i}`}
               source={s}
-              accentColor={s.printerType === "resin" ? "#A855F7" : "#00E5FF"}
+              accentColor={s.printerType === "resin" ? "#A855F7" : "#632CE5"}
             />
           ))
         )}
@@ -654,26 +654,26 @@ export default function PriceCalculator() {
   const { tab, setTab, meta, setMeta } = usePriceCalculator();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden text-white bg-[#080808]">
-      <header className="p-8 flex justify-between items-end border-b border-zinc-900 shrink-0 bg-[#0d0d0d]">
+    <div className="flex flex-col h-full overflow-hidden text-[#212121] bg-[#F9FAF4]">
+      <header className="p-8 flex justify-between items-end border-b border-[#E2E3DD] shrink-0 bg-white">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-[#00E5FF] font-bold mb-2">VÉRTICE STUDIO TOOLS / v0.4.2</p>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-[#632CE5] font-bold mb-2">VÉRTICE STUDIO TOOLS / v0.4.2</p>
           <h1 className="text-6xl font-black tracking-tighter leading-none uppercase">Price Calculator</h1>
         </div>
         <div className="text-right">
           <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 font-bold">Meta Estimada / Target</div>
-          <div className="font-mono text-sm text-[#00E5FF] font-black">{fmt(meta)} <span className="text-zinc-500 text-[10px]">/ mês</span></div>
+          <div className="font-mono text-sm text-[#632CE5] font-black">{fmt(meta)} <span className="text-zinc-500 text-[10px]">/ mês</span></div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto bg-[#080808] p-8">
+      <div className="flex-1 overflow-y-auto bg-[#F9FAF4] p-8">
         <div className="max-w-[760px] mx-auto space-y-6">
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="bg-zinc-950 border border-zinc-900 p-1 mb-6 flex gap-1 rounded">
+            <TabsList className="bg-[#E8E9E3] border border-[#E2E3DD] p-1 mb-6 flex gap-1 rounded">
               <TabsTrigger 
                 value="fdm" 
                 className={`flex-1 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] py-2 transition-all ${
-                  tab === "fdm" ? "bg-[#00E5FF] text-black" : "text-zinc-500 hover:text-zinc-300"
+                  tab === "fdm" ? "bg-[#632CE5] text-white" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -682,7 +682,7 @@ export default function PriceCalculator() {
               <TabsTrigger 
                 value="resin" 
                 className={`flex-1 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] py-2 transition-all ${
-                  tab === "resin" ? "bg-[#A855F7] text-white" : "text-zinc-500 hover:text-zinc-300"
+                  tab === "resin" ? "bg-[#A855F7] text-[#1A1C19]" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
                 <Droplet className="w-3.5 h-3.5" />
@@ -691,7 +691,7 @@ export default function PriceCalculator() {
               <TabsTrigger 
                 value="sources" 
                 className={`flex-1 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] py-2 transition-all ${
-                  tab === "sources" ? "bg-zinc-800 text-white" : "text-zinc-500 hover:text-zinc-300"
+                  tab === "sources" ? "bg-[#F9FAF4] text-[#212121]" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
                 Fontes de Modelos 3D
@@ -711,9 +711,9 @@ export default function PriceCalculator() {
         </div>
       </div>
 
-      <footer className="h-12 border-t border-zinc-900 px-8 flex items-center justify-between bg-[#0d0d0d] shrink-0 font-sans">
+      <footer className="h-12 border-t border-[#E2E3DD] px-8 flex items-center justify-between bg-white shrink-0 font-sans">
         <div className="flex gap-6 items-center text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
-          <span>Engine: <span className="text-[#00E5FF]">Cost-Based Pricing</span></span>
+          <span>Engine: <span className="text-[#632CE5]">Cost-Based Pricing</span></span>
           <span>Sources: {SOURCES.length} Marketplaces</span>
         </div>
       </footer>

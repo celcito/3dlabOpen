@@ -15,15 +15,15 @@ export default function QrGenerator() {
   const exportSTL = generator.handleExportSTL;
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
       {/* LEFT PANEL: SETTINGS */}
-      <div className="w-full md:w-96 bg-[#0c0c0c] border-r border-zinc-900 overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-96 bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-              <QrCode className="w-6 h-6 text-[#00E5FF]" />
+              <QrCode className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-white">QR 3D Designer</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">QR 3D Designer</h1>
           </div>
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Gere placas 3D personalizadas com QR Codes funcionais.</p>
         </header>
@@ -31,7 +31,7 @@ export default function QrGenerator() {
         <section className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Type className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Type className="w-3.5 h-3.5 text-[#632CE5]" />
               01. Conteúdo do QR
             </h3>
             <div className="space-y-2">
@@ -40,14 +40,14 @@ export default function QrGenerator() {
                 value={config.text}
                 onChange={(e) => setConfig({ ...config, text: e.target.value })}
                 placeholder="Insira o link ou texto aqui..."
-                className="w-full bg-[#111] border border-zinc-800 p-3 rounded-lg text-xs text-white font-mono focus:outline-none focus:border-[#00E5FF] min-h-[80px] resize-none transition-all"
+                className="w-full bg-white border border-[#E8E9E3] p-3 rounded-lg text-xs text-[#212121] font-mono focus:outline-none focus:border-[#632CE5] min-h-[80px] resize-none transition-all"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
               02. Geometria 3D
             </h3>
             
@@ -58,7 +58,7 @@ export default function QrGenerator() {
                   type="number"
                   value={config.size}
                   onChange={(e) => setConfig({ ...config, size: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                 />
               </div>
               <div className="space-y-1.5">
@@ -67,7 +67,7 @@ export default function QrGenerator() {
                   type="number"
                   value={config.padding}
                   onChange={(e) => setConfig({ ...config, padding: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                 />
               </div>
             </div>
@@ -79,7 +79,7 @@ export default function QrGenerator() {
                   type="number"
                   value={config.thickness}
                   onChange={(e) => setConfig({ ...config, thickness: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                 />
               </div>
               <div className="space-y-1.5">
@@ -88,7 +88,7 @@ export default function QrGenerator() {
                   type="number"
                   value={config.qrHeight}
                   onChange={(e) => setConfig({ ...config, qrHeight: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                 />
               </div>
             </div>
@@ -101,7 +101,7 @@ export default function QrGenerator() {
                 max="20"
                 value={config.borderRadius}
                 onChange={(e) => setConfig({ ...config, borderRadius: parseFloat(e.target.value) })}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-[8px] text-zinc-700 font-black">
                 <span>0mm</span>
@@ -111,9 +111,9 @@ export default function QrGenerator() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
               03. Identificação / Label
             </h3>
             <div className="flex items-center gap-3 mb-2">
@@ -121,7 +121,7 @@ export default function QrGenerator() {
                 type="checkbox"
                 checked={config.includeText}
                 onChange={(e) => setConfig({ ...config, includeText: e.target.checked })}
-                className="w-4 h-4 accent-[#00E5FF]"
+                className="w-4 h-4 accent-[#632CE5]"
               />
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Incluir Texto na Placa</span>
             </div>
@@ -134,7 +134,7 @@ export default function QrGenerator() {
                     type="text"
                     value={config.label}
                     onChange={(e) => setConfig({ ...config, label: e.target.value })}
-                    className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                    className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -144,7 +144,7 @@ export default function QrGenerator() {
                       type="number"
                       value={config.labelSize}
                       onChange={(e) => setConfig({ ...config, labelSize: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                      className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -153,7 +153,7 @@ export default function QrGenerator() {
                       type="number"
                       value={config.labelDepth}
                       onChange={(e) => setConfig({ ...config, labelDepth: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-[#111] border border-zinc-800 p-2 rounded text-[10px] text-white font-bold"
+                      className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold"
                     />
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function QrGenerator() {
             <button
                onClick={exportSTL}
               disabled={qrMatrix.length === 0}
-              className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="w-full bg-[#632CE5] text-[#212121] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
               Exportar para STL
@@ -181,7 +181,7 @@ export default function QrGenerator() {
       <div className="flex-1 relative">
         <div className="absolute inset-0">
           <Canvas shadows camera={{ position: [50, 50, 50], fov: 45 }} gl={{ antialias: true }}>
-            <color attach="background" args={["#080808"]} />
+            <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-50, -50, -50]} intensity={0.5} />
@@ -203,12 +203,12 @@ export default function QrGenerator() {
 
         {/* HUD OVERLAYS */}
         <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-md border border-zinc-900 p-4 rounded-xl space-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-4 rounded-xl space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">3D Real-time Preview</span>
+              <div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
+              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">3D Real-time Preview</span>
             </div>
-            <div className="text-[16px] font-black text-white uppercase tracking-tighter">
+            <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter">
               {plateDimensions.width.toFixed(1)} x {plateDimensions.height.toFixed(1)} mm
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function QrGenerator() {
 
         {successMsg && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-emerald-500 text-black px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-2xl">
+            <div className="bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-lg hover:bg-[#7C4DFF]">
               <Check className="w-4 h-4" />
               {successMsg}
             </div>
@@ -224,7 +224,7 @@ export default function QrGenerator() {
         )}
 
         <div className="absolute bottom-6 right-6">
-          <div className="bg-zinc-950/80 backdrop-blur-md border border-zinc-900 p-3 rounded-lg flex gap-4 text-[8px] text-zinc-500 font-black uppercase tracking-widest">
+          <div className="bg-[#E8E9E3]/80 backdrop-blur-md border border-[#E2E3DD] p-3 rounded-lg flex gap-4 text-[8px] text-zinc-500 font-black uppercase tracking-widest">
             <div className="flex items-center gap-2">
               <Move className="w-3 h-3" /> Orbit
             </div>

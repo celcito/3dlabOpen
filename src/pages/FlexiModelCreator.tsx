@@ -86,15 +86,15 @@ export default function FlexiModelCreator() {
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#080808]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
       {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[#0c0c0c] border-r border-zinc-900 overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-80 bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center">
-              <Waves className="w-6 h-6 text-[#00E5FF]" />
+            <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
+              <Waves className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-white">Flexi Maker</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Flexi Maker</h1>
           </div>
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Crie modelos articulados print-in-place.</p>
         </header>
@@ -102,98 +102,98 @@ export default function FlexiModelCreator() {
         <section className="space-y-6">
           <div className="space-y-4">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
               01. Estrutura
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Número de Segmentos</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.segments}</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.segments}</span>
               </div>
               <input 
                 type="range" min="3" max="20" step="1" 
                 value={config.segments} 
                 onChange={(e) => setConfig({...config, segments: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Afinamento (Taper)</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{Math.round(config.taper * 100)}%</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{Math.round(config.taper * 100)}%</span>
               </div>
               <input 
                 type="range" min="0.2" max="1" step="0.05" 
                 value={config.taper} 
                 onChange={(e) => setConfig({...config, taper: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
               02. Dimensões (mm)
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Largura Máx</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.width}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.width}mm</span>
               </div>
               <input 
                 type="range" min="10" max="50" step="1" 
                 value={config.width} 
                 onChange={(e) => setConfig({...config, width: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Altura Máx</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.height}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.height}mm</span>
               </div>
               <input 
                 type="range" min="5" max="40" step="1" 
                 value={config.height} 
                 onChange={(e) => setConfig({...config, height: parseInt(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
+          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
             <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <LinkIcon className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <LinkIcon className="w-3.5 h-3.5 text-[#632CE5]" />
               03. Articulações
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Folga da Dobradiça</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.hingeGap}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.hingeGap}mm</span>
               </div>
               <input 
                 type="range" min="0.2" max="1" step="0.05" 
                 value={config.hingeGap} 
                 onChange={(e) => setConfig({...config, hingeGap: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
                 <label className="text-[9px] uppercase font-bold text-zinc-600">Tamanho Dobradiça</label>
-                <span className="text-[10px] font-mono text-[#00E5FF]">{config.hingeSize}mm</span>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.hingeSize}mm</span>
               </div>
               <input 
                 type="range" min="2" max="10" step="0.5" 
                 value={config.hingeSize} 
                 onChange={(e) => setConfig({...config, hingeSize: parseFloat(e.target.value)})}
-                className="w-full accent-[#00E5FF] h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function FlexiModelCreator() {
           <div className="pt-6">
             <button
               onClick={handleExportSTL}
-              className="w-full bg-[#00E5FF] text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(0,229,255,0.2)] group"
+              className="w-full bg-[#632CE5] text-[#212121] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] group"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
               Download STL Flexi
@@ -214,7 +214,7 @@ export default function FlexiModelCreator() {
       <div className="flex-1 relative">
         <div className="absolute inset-0">
           <Canvas shadows camera={{ position: [30, 30, 30], fov: 45 }}>
-            <color attach="background" args={["#080808"]} />
+            <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-50, -50, -50]} intensity={0.5} />
@@ -234,12 +234,12 @@ export default function FlexiModelCreator() {
 
         {/* HUD */}
         <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-black/80 backdrop-blur-md border border-zinc-900 p-4 rounded-xl space-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-4 rounded-xl space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#00E5FF] animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-widest">Articulated Mesh Preview</span>
+              <div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
+              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">Articulated Mesh Preview</span>
             </div>
-            <div className="text-[16px] font-black text-white uppercase tracking-tighter">
+            <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter">
               {config.segments} Segmentos Articulados
             </div>
           </div>
@@ -247,7 +247,7 @@ export default function FlexiModelCreator() {
 
         {successMsg && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-emerald-500 text-black px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-2xl">
+            <div className="bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-lg hover:bg-[#7C4DFF]">
               <Check className="w-4 h-4" />
               {successMsg}
             </div>

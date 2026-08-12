@@ -18,3 +18,13 @@ View your app in AI Studio: https://ai.studio/apps/e70f375f-a99d-4a66-81e6-9da01
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Split3MF is now the default workflow
+
+`/` redireciona para **[/split-3mf](http://localhost:3000/split-3mf)** — importe 3MF/GLB/OBJ
+coloridos, segmentação automática por cor, editor de fronteira por pincel, 5 cap methods,
+4 connector types e export multi-cor em 3MF/GLB/OBJ/STL. 100% client-side, zero upload.
+
+- Fluxo legado de pintura manual continua em `/viewer3d`.
+- TDD: [`docs/tdd/SPLIT3MF_V2_REVIVAL.md`](docs/tdd/SPLIT3MF_V2_REVIVAL.md)
+- Testes: `npm test` (unit) · `npm run test:e2e` (Playwright)

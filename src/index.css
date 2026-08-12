@@ -1,24 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-}
-
 body {
-  background-color: #080808;
-  color: white;
+  background-color: #F9FAF4;
+  color: #1A1C19;
 }
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -27,6 +22,9 @@ body {
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar: var(--sidebar);
+    --color-brand-glow: #A78BFA;
+    --color-surface-soft: #FAF9F7;
+    --color-grid-line: #E3E0DB;
     --color-chart-5: var(--chart-5);
     --color-chart-4: var(--chart-4);
     --color-chart-3: var(--chart-3);
@@ -50,6 +48,22 @@ body {
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
+    --color-on-surface-variant: var(--on-surface-variant);
+    --color-on-surface: var(--on-surface);
+    --color-on-primary-container: var(--on-primary-container);
+    --color-primary-container: var(--primary-container);
+    --color-primary-fixed-dim: var(--primary-fixed-dim);
+    --color-on-tertiary: var(--on-tertiary);
+    --color-inverse-primary: var(--inverse-primary);
+    --color-inverse-surface: var(--inverse-surface);
+    --color-inverse-on-surface: var(--inverse-on-surface);
+    --color-surface-container-lowest: var(--surface-container-lowest);
+    --color-surface-container-low: var(--surface-container-low);
+    --color-surface-container-high: var(--surface-container-high);
+    --color-outline-variant: var(--outline-variant);
+    --color-outline: var(--outline);
+    --color-surface-pure: var(--surface-pure);
+    --color-surface: var(--surface);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -60,72 +74,149 @@ body {
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    /* ── M2CR Studio — Brand palette (Material 3, light) ── */
+    --primary: #632CE5;
+    --primary-container: #7C4DFF;
+    --on-primary: #ffffff;
+    --on-primary-container: #FCF6FF;
+    --primary-fixed: #E8DEFF;
+    --primary-fixed-dim: #CDBDFF;
+    --on-primary-fixed: #20005F;
+    --on-primary-fixed-variant: #4F00D0;
+    --inverse-primary: #CDBDFF;
+
+    --secondary: #5F5E5E;
+    --secondary-container: #E2DFDE;
+    --on-secondary: #ffffff;
+    --on-secondary-container: #636262;
+
+    --tertiary: #904500;
+    --tertiary-container: #FFDBC7;
+    --on-tertiary: #ffffff;
+    --on-tertiary-container: #FFF7F4;
+
+    --amber: #F59E0B;
+    --amber-container: #FFFBEB;
+    --on-amber: #1A1C19;
+    --on-amber-container: #92400E;
+
+    /* ── Surfaces: M2CR warm scale ── */
+    --background: #F9FAF4;
+    --foreground: #1A1C19;
+    --on-background: #1A1C19;
+    --surface: #F9FAF4;
+    --surface-pure: #FFFFFF;
+    --surface-dim: #D9DBD5;
+    --surface-bright: #F9FAF4;
+    --surface-container-lowest: #FFFFFF;
+    --surface-container-low: #F3F4EE;
+    --surface-container: #EDEEE8;
+    --surface-container-high: #E8E9E3;
+    --surface-container-highest: #E2E3DD;
+    --surface-variant: #E2E3DD;
+    --on-surface: #1A1C19;
+    --on-surface-variant: #494455;
+    --inverse-surface: #2E312D;
+    --inverse-on-surface: #F0F1EB;
+    --surface-tint: #6833EA;
+    --outline: #7A7487;
+    --outline-variant: #CAC3D8;
+
+    --error: #DC2626;
+    --error-container: #FEE2E2;
+    --on-error: #ffffff;
+    --on-error-container: #991B1B;
+
+    --muted: #EDEEE8;
+    --muted-foreground: #494455;
+    --accent: #E8DEFF;
+    --accent-foreground: #4F00D0;
+    --destructive: #BA1A1A;
+
+    --card: #FFFFFF;
+    --card-foreground: #1A1C19;
+    --popover: #FFFFFF;
+    --popover-foreground: #1A1C19;
+
+    --border: #E2E3DD;
+    --input: #D8D5D0;
+    --ring: #632CE5;
+    --radius: 0.5rem;
+
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #1A1C19;
+    --sidebar-primary: #632CE5;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #7C4DFF;
+    --sidebar-accent-foreground: #FCF6FF;
+    --sidebar-border: #CAC3D8;
+    --sidebar-ring: #632CE5;
+
+    --chart-1: #632CE5;
+    --chart-2: #F97316;
+    --chart-3: #3B82F6;
+    --chart-4: #F59E0B;
+    --chart-5: #CDBDFF;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --background: #1A1A1A;
+    --foreground: #E8E6E1;
+    --card: #222220;
+    --card-foreground: #E8E6E1;
+    --popover: #1A1A1A;
+    --popover-foreground: #E8E6E1;
+    --primary: #A78BFA;
+    --primary-container: #3B0764;
+    --on-primary: #3B0764;
+    --on-primary-container: #DDD6FE;
+    --primary-fixed-dim: #6D28D9;
+    --on-primary-fixed-variant: #C4B5FD;
+    --secondary: #FB923C;
+    --secondary-container: #431407;
+    --on-secondary: #431407;
+    --on-secondary-container: #FED7AA;
+    --tertiary: #60A5FA;
+    --tertiary-container: #172554;
+    --on-tertiary: #172554;
+    --on-tertiary-container: #BFDBFE;
+    --surface: #1A1A1A;
+    --surface-pure: #2C2C2A;
+    --surface-dim: #121212;
+    --surface-bright: #2C2C2A;
+    --surface-container-lowest: #0F0F0F;
+    --surface-container-low: #1A1A1A;
+    --surface-container: #222220;
+    --surface-container-high: #2A2A28;
+    --surface-container-highest: #333330;
+    --surface-variant: #3D3D3A;
+    --on-surface: #E8E6E1;
+    --on-surface-variant: #B4B2A9;
+    --inverse-surface: #E8E6E1;
+    --inverse-on-surface: #2C2C2A;
+    --surface-tint: #A78BFA;
+    --outline: #888780;
+    --outline-variant: #3D3D3A;
+    --error: #F87171;
+    --error-container: #450A0A;
+    --on-error: #450A0A;
+    --on-error-container: #FECACA;
+    --muted: #222220;
+    --muted-foreground: #B4B2A9;
+    --accent: #3B0764;
+    --accent-foreground: #DDD6FE;
+    --destructive: #F87171;
+    --border: #333330;
+    --input: #3D3D3A;
+    --ring: #A78BFA;
+    --sidebar: #222220;
+    --sidebar-foreground: #E8E6E1;
+    --sidebar-primary: #A78BFA;
+    --sidebar-primary-foreground: #3B0764;
+    --sidebar-accent: #3B0764;
+    --sidebar-accent-foreground: #DDD6FE;
+    --sidebar-border: #333330;
+    --sidebar-ring: #A78BFA;
 }
 
 @layer base {
@@ -140,11 +231,57 @@ body {
     }
 }
 
+/* ── M2CR Workbench utilities ── */
+.label-caps {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+.code-sm {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.canvas-bg {
+  background-color: #F3F4EE;
+  background-image: linear-gradient(#E2E3DD 1px, transparent 1px), linear-gradient(90deg, #E2E3DD 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+input[type='range'].cad-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+}
+input[type='range'].cad-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background: #7C4DFF;
+  cursor: pointer;
+  margin-top: -6px;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+input[type='range'].cad-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: #E2DFDE;
+  border-radius: 2px;
+}
+
 @keyframes scanner-loop {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(200%); }
 }
-
 @keyframes progress-indefinite {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(200%); }

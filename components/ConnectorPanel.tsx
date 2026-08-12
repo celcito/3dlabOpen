@@ -1,3 +1,7 @@
+/*
+ * @deprecated since V1 of the Split3MF module. Use `/split-3mf` instead.
+ * Kept for one release as a reference to the legacy Python-based connector flow.
+ */
 import { useState, useMemo } from "react";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
