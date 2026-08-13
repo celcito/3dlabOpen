@@ -49,7 +49,11 @@ export async function parseOBJ(text: string): Promise<ParsedOBJ> {
         currentGroup = args[0] || currentGroup;
         break;
       case "f": {
-        const face = args.map((token) => ({ v: parseInt(token.split("/")[0], 10) - 1 }));
+        const vertexCount = positions.length / 3;
+        const face = args.map((token) => {
+          const rawIndex = parseInt(token.split("/")[0], 10);
+          return { v: rawIndex < 0 ? vertexCount + rawIndex : rawIndex - 1 };
+        });
         if (face.length >= 3) {
           rawFaces.push(face);
           faceGroups.push(currentGroup);
@@ -65,7 +69,7 @@ export async function parseOBJ(text: string): Promise<ParsedOBJ> {
 
   // Face-level groups → output-vertex groups.
   const finalPos: number[] = [];
-  const indexMap = new Map<number, number>();
+  const indexMap = new Map<string, number>();
   const finalIndices: number[] = [];
   const vertexGroup = new Map<number, string>(); // outVertexIndex -> group name
   const groupNames: string[] = [];
@@ -77,15 +81,20 @@ export async function parseOBJ(text: string): Promise<ParsedOBJ> {
 
   rawFaces.forEach((face, fi) => {
     const groupName = getGroup(faceGroups[fi]);
-    for (const corner of face) {
-      let out = indexMap.get(corner.v);
-      if (out === undefined) {
-        out = finalPos.length / 3;
-        indexMap.set(corner.v, out);
-        finalPos.push(positions[corner.v * 3], positions[corner.v * 3 + 1], positions[corner.v * 3 + 2]);
+    for (let i = 1; i < face.length - 1; i++) {
+      const triangle = [face[0], face[i], face[i + 1]];
+      if (triangle.some((corner) => corner.v < 0 || corner.v >= positions.length / 3)) continue;
+      for (const corner of triangle) {
+        const key = `${corner.v}:${groupName}`;
+        let out = indexMap.get(key);
+        if (out === undefined) {
+          out = finalPos.length / 3;
+          indexMap.set(key, out);
+          finalPos.push(positions[corner.v * 3], positions[corner.v * 3 + 1], positions[corner.v * 3 + 2]);
+        }
+        finalIndices.push(out);
+        vertexGroup.set(out, groupName);
       }
-      finalIndices.push(out);
-      vertexGroup.set(out, groupName);
     }
   });
 

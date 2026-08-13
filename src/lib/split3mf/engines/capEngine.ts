@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import cdt2d from "cdt2d";
 import type { CapMethod } from "../state/splitTypes";
+import { loadManifold } from "./manifoldLoader";
 
 export interface CapRequest {
   method: CapMethod;
@@ -264,41 +265,45 @@ export function capBoundaries(request: CapRequest): CapResult {
     if (loop.vertexIds.length < 3) continue;
     const { poly } = projectLoopTo2D(loop, positions);
     const triangulated = triangulateLoop2D(poly, request.resolution);
-    const cells = triangulated.cells.length > 0 ? triangulated.cells : fanTriangulation(poly);
+    const cells = request.method === "centroid_cap"
+      ? fanTriangulation(poly)
+      : triangulated.cells.length > 0
+      ? triangulated.cells
+      : fanTriangulation(poly);
 
-    // Cap ring vertices (bottom) — the triangulated polygon already references
-    // ring-local indices 0..n-1.
+    // Reuse the existing boundary ring for the bottom surface and add only a
+    // displaced top ring, keeping the cap connected to the source mesh.
     const ringCount = loop.vertexIds.length;
     const capPos: number[] = [];
-    for (const vi of loop.vertexIds) {
-      capPos.push(positions[vi * 3], positions[vi * 3 + 1], positions[vi * 3 + 2]);
-    }
-    // Offset a copy by thickness along the loop normal → top disk.
     const n = loop.normal;
-    for (let i = 0; i < ringCount; i++) {
-      capPos.push(capPos[i * 3] + n.x * thickness, capPos[i * 3 + 1] + n.y * thickness, capPos[i * 3 + 2] + n.z * thickness);
+    for (const vi of loop.vertexIds) {
+      capPos.push(
+        positions[vi * 3] + n.x * thickness,
+        positions[vi * 3 + 1] + n.y * thickness,
+        positions[vi * 3 + 2] + n.z * thickness
+      );
     }
 
     const baseIdx = outPos.length / 3;
-    const topBase = baseIdx + ringCount;
+    const topBase = baseIdx;
 
-    // Bottom disk (as triangulated) + top disk (reversed winding).
+    // Top disk closes the opening; the original boundary surface supplies the
+    // opposite side and the walls connect both rings.
     for (const cell of cells) {
       if (cell[0] === undefined || cell[1] === undefined || cell[2] === undefined) continue;
-      outIdx.push(baseIdx + cell[0], baseIdx + cell[1], baseIdx + cell[2]);
       outIdx.push(topBase + cell[2], topBase + cell[1], topBase + cell[0]);
     }
     // Side walls connecting bottom ring to top ring.
     for (let i = 0; i < ringCount; i++) {
       const j = (i + 1) % ringCount;
       outIdx.push(
-        baseIdx + i, baseIdx + j, topBase + i,
-        baseIdx + j, topBase + j, topBase + i
+        loop.vertexIds[i], loop.vertexIds[j], topBase + i,
+        loop.vertexIds[j], topBase + j, topBase + i
       );
     }
 
     outPos.push(...capPos);
-    added += ringCount * 2;
+    added += ringCount;
   }
 
   return {
@@ -307,4 +312,39 @@ export function capBoundaries(request: CapRequest): CapResult {
     usedFallback,
     addedVertices: added,
   };
+}
+
+/**
+ * Builds the requested cap synchronously, then validates soap-film output with
+ * Manifold-3D when its WASM module is available. The CPU result remains the
+ * explicit fallback for environments where WASM cannot load.
+ */
+export async function capBoundariesAsync(request: CapRequest): Promise<CapResult> {
+  const result = capBoundaries(request);
+  if (request.method !== "soap_film" || result.addedVertices === 0) return result;
+
+  try {
+    const manifold = await loadManifold();
+    const numProp = 3;
+    const mesh = new manifold.Mesh({
+      numProp,
+      vertProperties: result.positions,
+      triVerts: new Uint32Array(result.indices),
+    });
+    const solid = new manifold.Manifold(mesh);
+    const output = solid.getMesh();
+    const positions: number[] = [];
+    for (let i = 0; i < output.vertProperties.length; i += output.numProp) {
+      positions.push(output.vertProperties[i], output.vertProperties[i + 1], output.vertProperties[i + 2]);
+    }
+    solid.delete();
+    return {
+      positions: new Float32Array(positions),
+      indices: Array.from(output.triVerts),
+      usedFallback: false,
+      addedVertices: Math.max(0, positions.length / 3 - request.positions.length / 3),
+    };
+  } catch {
+    return { ...result, usedFallback: true };
+  }
 }

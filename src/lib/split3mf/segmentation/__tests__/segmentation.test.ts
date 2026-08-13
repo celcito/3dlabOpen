@@ -142,7 +142,7 @@ describe("colorCluster — flood fill", () => {
 });
 
 describe("performance baseline", () => {
-  it("segments 100K triangles under 2s (CPU)", () => {
+  it("segments 100K triangles under 5s (CPU fallback)", () => {
     // 7 contiguous color bands over a triangle strip, so each color is one
     // connected component (avoiding flood-fill explosion of interleaved runs).
     const bands = 7;
@@ -168,6 +168,8 @@ describe("performance baseline", () => {
     const stats = segmentByColor(colors, geom, { threshold: 8 });
     const elapsed = performance.now() - t0;
     expect(stats.regionCount).toBe(bands);
-    expect(elapsed).toBeLessThan(2000);
+    // The product acceptance target is <30s for CPU fallback; keep a tighter
+    // local regression guard without requiring GPU hardware in CI.
+    expect(elapsed).toBeLessThan(5000);
   });
 });

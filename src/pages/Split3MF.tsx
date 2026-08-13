@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { Bounds, Grid, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { useSplit3MFState } from "../hooks/useSplit3MFState";
 import { parseSplitFile } from "../lib/split3mf/parsers";
@@ -14,6 +14,7 @@ import { SplitExportBar } from "../../components/split3mf/SplitExportBar";
 import BoundaryBrush from "../../components/split3mf/BoundaryBrush";
 import BoundaryLines from "../../components/split3mf/BoundaryLines";
 import type { ParsedSplitFile } from "../lib/split3mf/state/splitTypes";
+import { RotateCcw, Loader2, Brush } from "lucide-react";
 
 const BRUSH_COLORS = ["#632CE5", "#FF1744", "#00FF41", "#D500F9", "#FF9100", "#FFEA00", "#2979FF", "#FF4081"];
 
@@ -32,6 +33,8 @@ export default function Split3MF() {
       return false;
     }
   });
+  // Counter that bumps when a new model is loaded so <Bounds> re-fits the camera.
+  const [geometryEpoch, setGeometryEpoch] = useState(0);
 
   const sceneGeom = useMemo(
     () =>
@@ -49,9 +52,14 @@ export default function Split3MF() {
       setLoading(true);
       setError(null);
       try {
-        const parsed = await parseSplitFile(file);
-        split.loadFile(parsed);
+         const parsed = await parseSplitFile(file);
+         const position = parsed.geometry.getAttribute("position");
+         if (!position || position.count === 0 || parsed.geometry.index?.count === 0) {
+           throw new Error("The file contains no renderable triangles");
+         }
+         split.loadFile(parsed);
         setFileName(file.name);
+        setGeometryEpoch((n) => n + 1);
 
         // Auto-segment by color when the parser didn't produce a region mask
         // but the mesh carries vertex colors (e.g. GLB with painted colors).
@@ -65,10 +73,11 @@ export default function Split3MF() {
         }
       } catch (err) {
         console.error("Split3MF parse failed:", err);
+        split.reset();
+        setFileName(null);
         setErrorTone("error");
-        setError(
-          "Não foi possível interpretar este arquivo. Use um .3mf pintado, .glb com cores de vértice ou .obj com grupos."
-        );
+        const reason = err instanceof Error ? err.message : "erro desconhecido";
+        setError(`Não foi possível interpretar o arquivo: ${reason}`);
       } finally {
         setLoading(false);
       }
@@ -90,7 +99,7 @@ export default function Split3MF() {
 
   const autoSegment = async (parsed: ParsedSplitFile): Promise<boolean> => {
     try {
-      const stats = segmentGeometry(parsed.geometry, { forceCpu: true });
+      const stats = segmentGeometry(parsed.geometry);
       if (stats.regionCount === 0) return false;
       const regions = stats.regionColors.map((color, i) => ({
         id: i + 1,
@@ -129,6 +138,10 @@ export default function Split3MF() {
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 4000);
+      } catch (err) {
+        console.error("Split3MF export failed:", err);
+        setErrorTone("error");
+        setError("A exportação falhou. Reduza os conectores/caps ou tente outro formato.");
       } finally {
         setExporting(false);
       }
@@ -160,6 +173,14 @@ export default function Split3MF() {
 
   const brushControls = (
     <div className="space-y-4">
+      <div className="rounded-lg border border-[#D8D0F0] bg-[#F7F4FF] p-3 text-[11px] text-[#494455]">
+        <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#632CE5]">Como separar</div>
+        <ol className="space-y-1.5">
+          <li><b>1.</b> Crie uma região para cada peça.</li>
+          <li><b>2.</b> Selecione a região e pinte sua superfície.</li>
+          <li><b>3.</b> Repita para as outras peças e exporte.</li>
+        </ol>
+      </div>
       <div>
         <div className="text-[10px] uppercase tracking-wider text-[#7A7487] font-bold mb-2">Região ativa</div>
         <div className="flex flex-wrap gap-1.5">
@@ -192,9 +213,10 @@ export default function Split3MF() {
       </div>
 
       <div className="bg-[#F2F0F5] rounded-lg p-3 text-[11px] text-[#494455] space-y-1">
-        <p><b className="text-[#1A1C19]">Esquerda (arrastar)</b> — puxar para a região ativa</p>
-        <p><b className="text-[#1A1C19]">Direita (arrastar)</b> — empurrar pintura da fronteira</p>
-        <p>Role sobre o modelo para aplicar o pincel.</p>
+        <p><b className="text-[#1A1C19]">Esquerda (arrastar)</b> — pintar a região ativa</p>
+        <p><b className="text-[#1A1C19]">Direita (arrastar)</b> — apagar pintura da fronteira</p>
+        <p><b className="text-[#1A1C19]">Botão direito + arrastar</b> — girar a câmera</p>
+        <p>Roda do mouse — zoom. Botão do meio — mover.</p>
       </div>
 
       <div className="space-y-1">
@@ -284,52 +306,95 @@ export default function Split3MF() {
           }
         />
 
-        <div className="flex-1 relative bg-[#F3F4EE]">
+        <div data-testid="split3mf-viewport" className="flex-1 min-w-0 min-h-0 relative bg-[#F9FAF4] p-3 h-full flex flex-col">
+          <div className="flex-1 w-full border border-[#E8E9E3] rounded-lg relative overflow-hidden bg-[#F9FAF4] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]">
+          {/* Viewport header — anchors the 3D area as a clearly bounded viewport. */}
+          <div className="absolute top-6 left-6 z-20 px-3.5 py-2.5 bg-[#F9FAF4]/85 border border-[#E8E9E3] backdrop-blur-md rounded text-[10px] uppercase tracking-wider text-zinc-500 space-y-1.5 pointer-events-none select-none">
+            <div className="text-[#632CE5] font-bold text-[11px] mb-1">3D Navigation Guide</div>
+            <div>Left Click + Drag: <span className="font-bold">{state.regions.length ? "Paint Model" : "Rotate Camera"}</span></div>
+            <div>Right Click + Drag: <span className="font-bold">Rotate Camera</span></div>
+            <div>Scroll Wheel: <span className="font-bold">Zoom In / Out</span></div>
+            <div>Middle Click + Drag: <span className="font-bold">Pan Camera</span></div>
+          </div>
           {!state.geometry ? (
-            <EmptyState
-              title="Nenhum modelo carregado"
-              subtitle="Arraste um 3MF, GLB ou OBJ no painel Importar para começar."
-            />
+            loading ? (
+              <LoadingOverlay message={`Processando ${fileName ?? "arquivo"}…`} />
+            ) : (
+              <EmptyState
+                title="Nenhum modelo carregado"
+                subtitle="Arraste um 3MF, GLB ou OBJ no painel Importar para começar."
+              />
+            )
           ) : (
             <Canvas
+              shadows
               dpr={[1, 2]}
-              camera={{ position: [40, 30, 40], fov: 45 }}
+              className="absolute inset-0"
+              camera={{ position: [4, 3, 4], fov: 45 }}
+              onCreated={({ camera, gl }) => {
+                camera.lookAt(0, 0, 0);
+                gl.setClearColor("#F3F4EE", 1);
+              }}
+              frameloop="always"
             >
               <SplitScene
+                key={`${sceneGeom.uuid}-${geometryEpoch}`}
                 geometry={sceneGeom}
                 regionMask={state.regionMask}
-                activeRegionId={state.boundary.activeRegionId}
+                activeRegionColor={activeRegionColor(state)}
                 brushRadius={state.boundary.brushRadius}
                 onEdit={(e) => split.applyBoundaryBrush(e.kind, e.vertexIndex, brushRadiusHops)}
               />
             </Canvas>
           )}
 
-          {/* Empty state: model loaded, nothing painted yet */}
-          {state.geometry && state.regionMask && countPainted(state.regionMask) === 0 && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <EmptyState
-                title="Sem regiões pintadas"
-                subtitle="Pinte para começar: crie uma região e arraste o pincel (esquerda puxa, direita empurra)."
-              />
+          {/* Loading overlay while geometry is being re-meshed (e.g. segmenting). */}
+          {state.geometry && loading && <LoadingOverlay message="Segmentando modelo…" />}
+
+          {/* Hint when the model is loaded but nothing is painted yet. Positioned to the
+              bottom-left so it never covers the 3D viewport. */}
+          {state.geometry && !loading && countPaintedOrEmpty(state.regionMask, state.regions.length) === 0 && (
+            <div className="absolute left-4 bottom-4 max-w-xs pointer-events-none">
+              <div className="bg-[#2A2C28]/90 backdrop-blur-md border border-[#3A3C38] rounded-xl px-4 py-3 shadow-lg">
+                <div className="flex items-center gap-2 text-[#00C853]">
+                  <Brush size={14} strokeWidth={2.5} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Pronto para pintar</span>
+                </div>
+                <div className="text-[11px] text-[#E8E9E3] mt-1 leading-snug">
+                  Crie uma região na aba <b className="text-white">Fronteira</b> e arraste o pincel sobre o modelo
+                  (esquerda puxa, direita empurra).
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Overlay stats */}
+          {/* Overlay stats + actions */}
           {state.geometry && (
-            <div className="absolute top-4 right-4 pointer-events-none">
-              <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] rounded-xl px-4 py-3">
-                <div className="text-[9px] font-black uppercase tracking-widest text-[#7A7487]">
+            <div className="absolute top-4 right-4 flex items-start gap-2 z-20">
+              <button
+                type="button"
+                title="Recentrar câmera"
+                onClick={() => setGeometryEpoch((n) => n + 1)}
+                className="shrink-0 bg-[#2A2C28]/90 hover:bg-[#3A3C38] backdrop-blur-md border border-[#3A3C38] rounded-xl w-10 h-10 flex items-center justify-center text-[#E8E9E3] hover:text-white shadow-lg"
+              >
+                <RotateCcw size={16} strokeWidth={2.2} />
+              </button>
+              <div className="bg-[#2A2C28]/90 backdrop-blur-md border border-[#3A3C38] rounded-xl px-4 py-3 shadow-lg">
+                <div className="text-[9px] font-black uppercase tracking-widest text-[#A5A59F]">
                   {state.regions.length} regiões ·{" "}
-                  {state.regionMask ? countPainted(state.regionMask) : "sem máscara"}
-                  % pintado
+                  {state.regions.length === 0
+                    ? "sem regiões"
+                    : state.regionMask
+                    ? `${countPainted(state.regionMask)}% pintado`
+                    : "pronto para pintar"}
                 </div>
-                <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter mt-0.5">
+                <div className="text-[16px] font-black text-white uppercase tracking-tighter mt-0.5">
                   {fileName ?? "Split 3MF"}
                 </div>
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
@@ -342,14 +407,33 @@ function countPainted(mask: Uint8Array): number {
   return Math.round((n / mask.length) * 100);
 }
 
+/** True when the user hasn't painted anything yet: either no regions exist,
+ *  no mask is set, or every vertex is still region 0 (base). */
+function countPaintedOrEmpty(mask: Uint8Array | null, regionCount: number): number {
+  if (regionCount === 0) return 0;
+  if (!mask) return 0;
+  return countPainted(mask);
+}
+
+function LoadingOverlay({ message }: { message: string }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-[#1A1C19]/80 backdrop-blur-sm z-10">
+      <div className="flex items-center gap-3 bg-[#2A2C28] border border-[#3A3C38] rounded-xl px-5 py-3 shadow-md">
+        <Loader2 className="w-5 h-5 text-[#00C853] animate-spin" />
+        <span className="text-[12px] font-semibold text-[#E8E9E3]">{message}</span>
+      </div>
+    </div>
+  );
+}
+
 function EmptyState({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6">
-      <div className="w-16 h-16 rounded-2xl bg-[#E8E9E3] flex items-center justify-center text-[#632CE5]">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-6 pointer-events-none">
+      <div className="w-16 h-16 rounded-2xl bg-[#2A2C28] border border-[#3A3C38] flex items-center justify-center text-[#00C853]">
         <Scaff3d />
       </div>
-      <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter">{title}</div>
-      <div className="text-[12px] text-[#7A7487] max-w-sm">{subtitle}</div>
+      <div className="text-[16px] font-black text-[#E8E9E3] uppercase tracking-tighter">{title}</div>
+      <div className="text-[12px] text-[#A5A59F] max-w-sm">{subtitle}</div>
     </div>
   );
 }
@@ -367,42 +451,51 @@ function Scaff3d() {
 function SplitScene({
   geometry,
   regionMask,
-  activeRegionId,
+  activeRegionColor,
   brushRadius,
   onEdit,
 }: {
   geometry: THREE.BufferGeometry;
   regionMask: Uint8Array;
-  activeRegionId: number;
+  activeRegionColor: string;
   brushRadius: number;
   onEdit: (e: { vertexIndex: number; kind: "pull" | "push" }) => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   return (
-    <group>
-      <color attach="background" args={["#F3F4EE"]} />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[30, 50, 20]} intensity={1} />
-      <pointLight position={[-30, -20, -30]} intensity={0.4} />
-      <mesh
-        ref={meshRef}
-        geometry={geometry}
-      >
-        <meshStandardMaterial vertexColors roughness={0.5} metalness={0.1} side={THREE.DoubleSide} />
-      </mesh>
-      <BoundaryLines
-        regionMask={regionMask}
-        geometry={geometry}
-        regions={undefined}
-      />
+    <>
+      {/* Bounds + model + boundary lines live inside one tree so the camera
+          fits the geometry on every fresh model load (Canvas re-mounts). The
+          brush sphere stays outside so its motion never distorts the bounds. */}
+      <Bounds fit clip margin={1.9} maxDuration={0.2}>
+        <color attach="background" args={["#F3F4EE"]} />
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[30, 50, 20]} intensity={1} />
+        <pointLight position={[-30, -20, -30]} intensity={0.4} />
+        <mesh ref={meshRef} geometry={geometry}>
+          <meshStandardMaterial vertexColors roughness={0.5} metalness={0.1} side={THREE.DoubleSide} />
+        </mesh>
+        <BoundaryLines
+          regionMask={regionMask}
+          geometry={geometry}
+          regions={undefined}
+        />
+        <OrbitControls makeDefault />
+      </Bounds>
+      <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
       <BoundaryBrush
         geometry={geometry}
         meshRef={meshRef}
-        activeRegionId={activeRegionId}
+        activeRegionColor={activeRegionColor}
         brushRadius={brushRadius}
         onEdit={onEdit}
       />
-      <OrbitControls makeDefault />
-    </group>
+    </>
   );
+}
+
+function activeRegionColor(state: ReturnType<typeof useSplit3MFState>["state"]): string {
+  const id = state.boundary.activeRegionId;
+  const found = state.regions.find((r) => r.id === id);
+  return found?.color ?? "#FFFFFF";
 }

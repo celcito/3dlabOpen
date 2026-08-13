@@ -74,4 +74,16 @@ describe("parseOBJ", () => {
   it("throws on empty OBJ", async () => {
     await expect(parseOBJ("")).rejects.toThrow(/no vertices/);
   });
+
+  it("triangulates quad faces and supports negative indices", async () => {
+    const parsed = await parseOBJ(`
+      v 0 0 0
+      v 1 0 0
+      v 1 1 0
+      v 0 1 0
+      f -4 -3 -2 -1
+    `);
+    expect(parsed.geometry.index!.count).toBe(6);
+    expect(parsed.geometry.index!.count % 3).toBe(0);
+  });
 });

@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import type { SplitState, RegionId } from "../state/splitTypes";
-import { capBoundaries } from "../engines/capEngine";
+import { capBoundariesAsync } from "../engines/capEngine";
 import { findBoundaryEdges, planConnectorPlacements, connectorArea } from "../engines/connectorEngine";
-import { fusePlug } from "../engines/connectorFusion";
+import { carveSocket, fusePlug } from "../engines/connectorFusion";
 import { exportThreeMF, mergePieces } from "./threeMFExporter";
 import { exportGLB } from "./glbExporter";
 import { exportOBJ } from "./objExporter";
@@ -68,6 +68,7 @@ export function splitPieces(state: SplitState): ExportPiece[] {
     const region = regionById.get(id);
     pieces.push({
       geometry,
+      regionId: id,
       color: region ? region.color : BASE_COLOR,
       name: region ? region.name : `region_${id}`,
     });
@@ -79,23 +80,22 @@ function dominantRegion(mask: Uint8Array, i0: number, i1: number, i2: number): R
   const a = mask[i0] || 0;
   const b = mask[i1] || 0;
   const c = mask[i2] || 0;
-  if (a !== 0) return a;
-  if (b !== 0) return b;
-  if (c !== 0) return c;
-  return a; // all zero
+  if (a === b || a === c) return a;
+  if (b === c) return b;
+  return a !== 0 ? a : b !== 0 ? b : c;
 }
 
 /**
  * Applies caps (per region) and/or connector plugs to the pieces. Returns new
  * pieces (originals are left untouched).
  */
-export function applyPieceMods(state: SplitState, pieces: ExportPiece[], options: SplitExportOptionsShim): ExportPiece[] {
+export async function applyPieceMods(state: SplitState, pieces: ExportPiece[], options: SplitExportOptionsShim): Promise<ExportPiece[]> {
   let out = pieces.map((p) => ({ ...p, geometry: p.geometry.clone() }));
 
   if (options.capPieces && state.geometry) {
-    out = out.map((p) => {
+    out = await Promise.all(out.map(async (p) => {
       const geo = p.geometry;
-      const cap = capBoundaries({
+      const cap = await capBoundariesAsync({
         method: state.capConfig.method,
         thickness: state.capConfig.thickness,
         resolution: state.capConfig.resolution,
@@ -109,7 +109,7 @@ export function applyPieceMods(state: SplitState, pieces: ExportPiece[], options
       g.setIndex(cap.indices);
       g.computeVertexNormals();
       return { ...p, geometry: g };
-    });
+    }));
   }
 
   if (options.includeConnectors && state.connectorConfig.type !== "none" && state.geometry) {
@@ -126,6 +126,12 @@ export function applyPieceMods(state: SplitState, pieces: ExportPiece[], options
           depthMm: state.connectorConfig.depthMm,
           socketToleranceMm: state.connectorConfig.socketToleranceMm,
           side: state.connectorConfig.side,
+          manualPositions: state.connectorConfig.position === "manual"
+            ? state.connectorConfig.manualPositions?.map((position) => ({
+                ...position,
+                point: new THREE.Vector3(...position.point),
+              }))
+            : undefined,
         }
       );
       const area = connectorArea(state.connectorConfig.areaPercent, state.connectorConfig.type, edges);
@@ -140,11 +146,19 @@ export function applyPieceMods(state: SplitState, pieces: ExportPiece[], options
           regionA: pl.regionA,
           regionB: pl.regionB,
         };
-        out = out.map((p) =>
-          p.geometry.attributes.position.count > 0
-            ? { ...p, geometry: fusePlug(p.geometry, fp, { type: state.connectorConfig.type, depthMm: state.connectorConfig.depthMm, socketToleranceMm: state.connectorConfig.socketToleranceMm }) }
-            : p
-        );
+        const plugRegion = state.connectorConfig.side === "part_plug" ? fp.regionA : fp.regionB;
+        const socketRegion = state.connectorConfig.side === "part_plug" ? fp.regionB : fp.regionA;
+        out = out.map((p) => {
+          if (p.geometry.attributes.position.count === 0) return p;
+          const fusionOptions = {
+            type: state.connectorConfig.type,
+            depthMm: state.connectorConfig.depthMm,
+            socketToleranceMm: state.connectorConfig.socketToleranceMm,
+          } as const;
+          if (p.regionId === plugRegion) return { ...p, geometry: fusePlug(p.geometry, fp, fusionOptions) };
+          if (p.regionId === socketRegion) return { ...p, geometry: carveSocket(p.geometry, fp, fusionOptions) };
+          return p;
+        });
       }
     }
   }
@@ -176,7 +190,7 @@ export interface SplitExportOptionsShim {
  */
 export async function exportSplit(state: SplitState, options: SplitExportOptionsShim): Promise<Blob> {
   const basePieces = splitPieces(state);
-  const pieces = applyPieceMods(state, basePieces, options);
+  const pieces = await applyPieceMods(state, basePieces, options);
   const filename = options.filename ?? "split";
 
   switch (options.format) {

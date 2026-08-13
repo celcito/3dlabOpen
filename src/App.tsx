@@ -29,7 +29,7 @@ const Split3MF = lazy(() => import("./pages/Split3MF"));
 
 const NAV_ITEMS = [
   { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
-  { to: "/", icon: BoxSelect, label: "3D Slicer", description: "3D Viewer & Slicer" },
+  { to: "/viewer3d", icon: BoxSelect, label: "3D Slicer", description: "3D Viewer & Slicer" },
   { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
   { to: "/image-to-3d", icon: Image, label: "Image to 3D", description: "Image to 3D Model" },
   { to: "/vase-generator", icon: Flower, label: "Vase Maker", description: "Vasos Paramétricos" },

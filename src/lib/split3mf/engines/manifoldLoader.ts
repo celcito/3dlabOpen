@@ -1,4 +1,5 @@
 import { getManifoldModule, setWasmUrl } from "manifold-3d/lib/wasm.js";
+import wasmUrl from "manifold-3d/manifold.wasm?url";
 
 type ManifoldModule = Awaited<ReturnType<typeof getManifoldModule>>;
 
@@ -20,10 +21,7 @@ export async function loadManifold(): Promise<ManifoldModule> {
   if (loading) return loading;
 
   loading = (async () => {
-    const envUrl = (globalThis as { importMetaEnv?: Record<string, string> }).importMetaEnv?.VITE_MANIFOLD_WASM_URL;
-    if (envUrl) {
-      setWasmUrl(envUrl);
-    }
+    setWasmUrl(wasmUrl);
     try {
       const mod = await getManifoldModule();
       cached = mod;

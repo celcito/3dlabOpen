@@ -42,6 +42,37 @@ describe("findBoundaryEdges", () => {
     }
   });
 
+  it("preserves the actual region ids in placements", () => {
+    const { positions, indices, mask } = twoRegionSharedEdge();
+    const edges = findBoundaryEdges(positions, indices, mask);
+    const placements = planConnectorPlacements(edges, 1, {
+      type: "cylinder",
+      areaPercent: 5,
+      depthMm: 4,
+      socketToleranceMm: 0.2,
+      side: "part_plug",
+    });
+    expect(placements[0].regionA).toBeGreaterThan(0);
+    expect(placements[0].regionB).toBeGreaterThan(0);
+    expect(placements[0].regionA).not.toBe(placements[0].regionB);
+  });
+
+  it("uses manual connector positions matched to the requested region pair", () => {
+    const { positions, indices, mask } = twoRegionSharedEdge();
+    const edges = findBoundaryEdges(positions, indices, mask);
+    const point = new THREE.Vector3(1.5, 0.5, 0);
+    const placements = planConnectorPlacements(edges, 4, {
+      type: "cylinder",
+      areaPercent: 5,
+      depthMm: 4,
+      socketToleranceMm: 0.2,
+      side: "part_plug",
+      manualPositions: [{ regionA: 1, regionB: 2, point }],
+    });
+    expect(placements).toHaveLength(1);
+    expect(placements[0].point.toArray()).toEqual(point.toArray());
+  });
+
   it("returns empty for single-region mask", () => {
     const { positions, indices } = twoRegionSharedEdge();
     const mask = new Uint8Array(8).fill(1);
