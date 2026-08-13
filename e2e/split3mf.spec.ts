@@ -62,9 +62,11 @@ test.describe("Split3MF", () => {
     const cy = box.y + box.height / 2;
 
     await page.mouse.move(cx, cy);
+    await page.waitForTimeout(100);
     await page.mouse.down();
     for (let i = 0; i < 12; i++) {
       await page.mouse.move(cx - 20 + i * 4, cy + Math.sin(i / 2) * 12);
+      await page.waitForTimeout(20);
     }
     await page.mouse.up();
 

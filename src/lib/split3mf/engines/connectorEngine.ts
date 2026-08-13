@@ -20,6 +20,15 @@ export interface ConnectorPlacement {
   regionB: number;
 }
 
+export interface BoundaryEdge {
+  a: number;
+  b: number;
+  midpoint: THREE.Vector3;
+  normal: THREE.Vector3;
+  regionA: number;
+  regionB: number;
+}
+
 export interface ConnectorPlanOptions {
   type: ConnectorType;
   areaPercent: number; // 1-20
@@ -37,36 +46,60 @@ export function findBoundaryEdges(
   positions: Float32Array,
   indices: number[] | Uint32Array | Uint16Array | Uint8Array,
   regionMask: Uint8Array
-): { a: number; b: number; midpoint: THREE.Vector3; normal: THREE.Vector3 }[] {
-  const edges: { a: number; b: number; midpoint: THREE.Vector3; normal: THREE.Vector3 }[] = [];
+): BoundaryEdge[] {
+  const edges: BoundaryEdge[] = [];
+  const byGeometryEdge = new Map<string, typeof edges>();
   const faceCount = Math.floor(indices.length / 3);
   for (let f = 0; f < faceCount; f++) {
     const i0 = indices[f * 3];
     const i1 = indices[f * 3 + 1];
     const i2 = indices[f * 3 + 2];
-    const tri: [number, number, number][] = [[i0, i1, i2]];
-    for (const [a, b, c] of tri) {
-      const pairs: [number, number][] = [[a, b], [b, c], [c, a]];
-      for (const [x, y] of pairs) {
-        if (regionMask[x] === 0 || regionMask[y] === 0) continue;
-        if (regionMask[x] === regionMask[y]) continue;
-        const ax = positions[x * 3], ay = positions[x * 3 + 1], az = positions[x * 3 + 2];
-        const bx = positions[y * 3], by = positions[y * 3 + 1], bz = positions[y * 3 + 2];
-        const mid = new THREE.Vector3((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
-        const n = new THREE.Vector3(bx - ax, by - ay, bz - az).normalize();
-        // If it already exists (face shared), skip duplicate.
-        edges.push({ a: x, b: y, midpoint: mid, normal: n });
-      }
+    const faceNormal = new THREE.Vector3()
+      .crossVectors(
+        new THREE.Vector3(positions[i1 * 3] - positions[i0 * 3], positions[i1 * 3 + 1] - positions[i0 * 3 + 1], positions[i1 * 3 + 2] - positions[i0 * 3 + 2]),
+        new THREE.Vector3(positions[i2 * 3] - positions[i0 * 3], positions[i2 * 3 + 1] - positions[i0 * 3 + 1], positions[i2 * 3 + 2] - positions[i0 * 3 + 2])
+      )
+      .normalize();
+    const faceRegion = dominantRegion(regionMask[i0], regionMask[i1], regionMask[i2]);
+    const pairs: [number, number][] = [[i0, i1], [i1, i2], [i2, i0]];
+    for (const [x, y] of pairs) {
+      const regionX = regionMask[x];
+      const regionY = regionMask[y];
+      if (regionX === 0 || regionY === 0) continue;
+      const ax = positions[x * 3], ay = positions[x * 3 + 1], az = positions[x * 3 + 2];
+      const bx = positions[y * 3], by = positions[y * 3 + 1], bz = positions[y * 3 + 2];
+      const mid = new THREE.Vector3((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
+      const n = faceNormal.lengthSq() > 1e-10 ? faceNormal : new THREE.Vector3(bx - ax, by - ay, bz - az).normalize();
+      const directBoundary = regionX !== regionY ? [{ a: x, b: y, midpoint: mid, normal: n, regionA: regionX, regionB: regionY }] : [];
+      const key = [pointKey(ax, ay, az), pointKey(bx, by, bz)].sort().join("|");
+      const candidates = byGeometryEdge.get(key) ?? [];
+      candidates.push(...directBoundary);
+      if (faceRegion !== 0) candidates.push({ a: x, b: y, midpoint: mid, normal: n, regionA: faceRegion, regionB: faceRegion });
+      byGeometryEdge.set(key, candidates);
     }
   }
-  // Deduplicate symmetric pairs.
-  const seen = new Set<string>();
-  return edges.filter((e) => {
-    const key = e.a < e.b ? `${e.a}:${e.b}` : `${e.b}:${e.a}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+
+  for (const candidates of byGeometryEdge.values()) {
+    const regions = Array.from(
+      new Set(candidates.flatMap((e) => [e.regionA, e.regionB]).filter((id) => id !== 0))
+    );
+    if (regions.length < 2) continue;
+    const first = candidates.find((e) => e.regionA === regions[0])!;
+    for (const regionB of regions.slice(1)) {
+      edges.push({ ...first, regionB });
+    }
+  }
+  return edges;
+}
+
+function dominantRegion(a: number, b: number, c: number): number {
+  if (a === b || a === c) return a;
+  if (b === c) return b;
+  return a || b || c;
+}
+
+function pointKey(x: number, y: number, z: number): string {
+  return `${x.toFixed(6)},${y.toFixed(6)},${z.toFixed(6)}`;
 }
 
 /**
@@ -74,7 +107,7 @@ export function findBoundaryEdges(
  * Returns up to `count` placements (fewer if the boundary is short).
  */
 export function planConnectorPlacements(
-  boundaryEdges: { a: number; b: number; midpoint: THREE.Vector3; normal: THREE.Vector3 }[],
+  boundaryEdges: BoundaryEdge[],
   count: number,
   options: ConnectorPlanOptions
 ): ConnectorPlacement[] {
@@ -87,6 +120,25 @@ export function planConnectorPlacements(
 
   const area = connectorArea(options.areaPercent, options.type, boundaryEdges);
 
+  if (options.manualPositions?.length) {
+    return options.manualPositions.flatMap((manual) => {
+      const candidate = boundaryEdges
+        .filter((edge) => sameRegionPair(edge, manual.regionA, manual.regionB))
+        .sort((a, b) => a.midpoint.distanceToSquared(manual.point) - b.midpoint.distanceToSquared(manual.point))[0];
+      if (!candidate) return [];
+      return [{
+        point: manual.point.clone(),
+        direction: candidate.normal.clone(),
+        up: new THREE.Vector3(0, 1, 0),
+        area,
+        depth: options.depthMm,
+        toleranceMm: options.socketToleranceMm,
+        regionA: manual.regionA,
+        regionB: manual.regionB,
+      }];
+    });
+  }
+
   for (let k = 0; k < clampedCount; k++) {
     const idx = Math.round((k / Math.max(clampedCount - 1, 1)) * (midpoints.length - 1));
     const p = midpoints[idx].clone();
@@ -97,11 +149,15 @@ export function planConnectorPlacements(
       area,
       depth: options.depthMm,
       toleranceMm: options.socketToleranceMm,
-      regionA: 1,
-      regionB: 2,
+        regionA: boundaryEdges[idx].regionA,
+        regionB: boundaryEdges[idx].regionB,
     });
   }
   return placements;
+}
+
+function sameRegionPair(edge: BoundaryEdge, regionA: number, regionB: number): boolean {
+  return (edge.regionA === regionA && edge.regionB === regionB) || (edge.regionA === regionB && edge.regionB === regionA);
 }
 
 /**

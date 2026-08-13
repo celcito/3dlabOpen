@@ -8,7 +8,9 @@ export interface DisplayGeometryRequest {
   rawColors?: Float32Array | null;
 }
 
-const BASE_COLOR = new THREE.Color("#e0e0e0");
+// Keep unpainted geometry dark enough to remain legible on the light Viewer
+// workspace, matching the legacy Viewer3D base group color.
+const BASE_COLOR = new THREE.Color("#333333");
 
 /**
  * Builds a THREE.BufferGeometry from split state. When a region mask is
@@ -44,6 +46,14 @@ export function buildDisplayGeometry(req: DisplayGeometryRequest): THREE.BufferG
     out.setAttribute("color", new THREE.BufferAttribute(rawColors, 3));
   } else if (geometry.colors) {
     out.setAttribute("color", new THREE.BufferAttribute(geometry.colors, 3));
+  } else {
+    const colors = new Float32Array(geometry.positions.length);
+    for (let i = 0; i < colors.length; i += 3) {
+      colors[i] = BASE_COLOR.r;
+      colors[i + 1] = BASE_COLOR.g;
+      colors[i + 2] = BASE_COLOR.b;
+    }
+    out.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   }
 
   if (geometry.indices) {

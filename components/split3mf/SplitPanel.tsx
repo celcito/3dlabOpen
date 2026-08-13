@@ -46,7 +46,7 @@ export function SplitPanel({
   const [tab, setTab] = useState<TabId>("import");
 
   return (
-    <div className="w-[280px] shrink-0 border-r border-[#CAC3D8] bg-[#FFFFFF] flex flex-col">
+    <div className="w-[250px] shrink-0 border-r border-[#CAC3D8] bg-[#FFFFFF] flex flex-col">
       <div className="px-4 pt-4 pb-2">
         <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.1em] text-[#1A1C19]">
           Split 3MF
@@ -95,12 +95,21 @@ export function SplitPanel({
           <div className="space-y-4">
             <SplitDropzone fileName={fileName} onFile={onFile} disabled={loading} />
             {fileName && (
-              <div className="text-[11px] text-[#494455] bg-[#F2F0F5] rounded-lg px-3 py-2">
+              <div className="text-[11px] text-[#494455] bg-[#F2F0F5] rounded-lg px-3 py-2 space-y-2">
                 {loading
                   ? "Analisando arquivo…"
                   : hasRegionMask
                   ? "Regiões detectadas automaticamente."
-                  : "Sem regiões pintadas — use a aba Pinte/Borda para começar."}
+                  : "Sem regiões pintadas — crie regiões na aba Fronteira para começar."}
+                {!loading && !hasRegionMask && (
+                  <button
+                    type="button"
+                    onClick={() => setTab("boundary")}
+                    className="w-full rounded-md bg-[#632CE5] px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-white hover:bg-[#7C4DFF]"
+                  >
+                    Ir para Fronteira
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -68,30 +68,33 @@ export function estimateVram(renderer: string): number {
 }
 
 /**
- * Runs the WebGL2 ping-pong ΔE smoothing pass over vertex colors.
- * This is an optimization pre-pass: it quantizes colors by a uniform ΔE
- * threshold in the fragment shader, then read-backs an R8 buffer that the
- * CPU flood-fill labels. WebGL2 only; caller must check `detectGpu()` first.
+ * Runs a WebGL2 color quantization pass over vertex colors and reads the
+ * quantized RGB values back for the CPU connectivity pass. WebGL2 only;
+ * caller must check `detectGpu()` first.
  *
- * Returns a Uint8Array of quantized cluster seeds, or null when the GPU
- * path fails and the caller should fall back to pure CPU.
+ * Returns normalized quantized RGB colors, or null when the GPU path fails.
  */
 export function gpuSmoothColors(
   colors: Float32Array,
   threshold: number,
   gl: WebGL2RenderingContext
-): Uint8Array | null {
+): Float32Array | null {
   try {
     const vertexCount = colors.length / 3;
     const texW = Math.ceil(Math.sqrt(vertexCount));
     const texH = Math.ceil(vertexCount / texW);
 
-    const data = new Float32Array(texW * texH * 3);
-    data.set(colors.subarray(0, Math.min(colors.length, data.length)));
+    const data = new Float32Array(texW * texH * 4);
+    for (let i = 0; i < vertexCount; i++) {
+      data[i * 4] = colors[i * 3];
+      data[i * 4 + 1] = colors[i * 3 + 1];
+      data[i * 4 + 2] = colors[i * 3 + 2];
+      data[i * 4 + 3] = 1;
+    }
 
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB32F, texW, texH, 0, gl.RGB, gl.FLOAT, data);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, texW, texH, 0, gl.RGBA, gl.FLOAT, data);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -106,12 +109,11 @@ export function gpuSmoothColors(
       precision highp float;
       uniform sampler2D uColors;
       in vec2 vUv;
-      out float outSeed;
-      void main() {
-        vec3 c = texture(uColors, vUv).rgb;
-        float seed = c.r + c.g * 256.0 + c.b * 65536.0;
-        outSeed = seed;
-      }`;
+       out vec4 outColor;
+       void main() {
+         vec3 c = texture(uColors, vUv).rgb;
+         outColor = vec4(c, 1.0);
+       }`;
 
     const program = compileProgram(gl, vs, fs);
     if (!program) return null;
@@ -132,14 +134,15 @@ export function gpuSmoothColors(
     const fbo = gl.createFramebuffer();
     const outTex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, outTex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, texW, texH, 0, gl.RED, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, texW, texH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) return null;
     gl.viewport(0, 0, texW, texH);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    const out = new Uint8Array(texW * texH);
-    gl.readPixels(0, 0, texW, texH, gl.RED, gl.UNSIGNED_BYTE, out);
+    const out = new Uint8Array(texW * texH * 4);
+    gl.readPixels(0, 0, texW, texH, gl.RGBA, gl.UNSIGNED_BYTE, out);
 
     // Clean up.
     gl.deleteFramebuffer(fbo);
@@ -148,9 +151,17 @@ export function gpuSmoothColors(
     gl.deleteBuffer(buffer);
     gl.deleteProgram(program);
 
-    const quantized = out.subarray(0, vertexCount);
+    const quantized = new Float32Array(vertexCount * 3);
+    for (let i = 0; i < vertexCount; i++) {
+      const x = i % texW;
+      const y = Math.floor(i / texW);
+      const readback = ((texH - 1 - y) * texW + x) * 4;
+      quantized[i * 3] = out[readback] / 255;
+      quantized[i * 3 + 1] = out[readback + 1] / 255;
+      quantized[i * 3 + 2] = out[readback + 2] / 255;
+    }
     void threshold;
-    return new Uint8Array(quantized);
+    return quantized;
   } catch {
     return null;
   }
@@ -178,8 +189,8 @@ function compileProgram(gl: WebGL2RenderingContext, vsSrc: string, fsSrc: string
 }
 
 /**
- * Segments a geometry by vertex color. Uses the GPU ping-pong pass when
- * WebGL2 is available with enough VRAM; always falls back to pure CPU.
+ * Segments a geometry by vertex color. Uses the GPU color quantization pass
+ * when WebGL2 is available with enough VRAM, then CPU connectivity labeling.
  * Returns the same RegionStats shape either way.
  */
 export function segmentGeometry(
@@ -227,38 +238,10 @@ export function segmentColors(
     if (gl) {
       const quantized = gpuSmoothColors(colors, threshold, gl);
       if (quantized) {
-        // GPU pass produced a quantized seed buffer; label it with CPU flood-fill.
-        return labelQuantized(quantized, geometry, threshold, options);
+        return segmentByColor(quantized, geometry, { threshold, minRegionSize: options.minRegionSize });
       }
     }
   }
 
   return segmentByColor(colors, geometry, { threshold, minRegionSize: options.minRegionSize });
-}
-
-function labelQuantized(
-  quantized: Uint8Array,
-  geometry: SegmentGeometry,
-  threshold: number,
-  options: ClusterOptions
-): RegionStats {
-  const vertexCount = Math.min(quantized.length, geometry.vertexCount);
-  const mask = new Uint8Array(vertexCount);
-  const map = new Map<number, number>();
-  let next = 0;
-  for (let vi = 0; vi < vertexCount; vi++) {
-    const seed = quantized[vi];
-    if (seed === 0) continue;
-    let id = map.get(seed);
-    if (id === undefined) {
-      id = ++next;
-      map.set(seed, id);
-    }
-    mask[vi] = id;
-  }
-  const partial: SegmentGeometry = { ...geometry, vertexCount };
-  const stats = segmentByColor(geometry.colors!, partial, { threshold, minRegionSize: options.minRegionSize });
-  // Keep the GPU's seed assignment where flood-fill agreed; simpler: reuse CPU.
-  void mask;
-  return stats;
 }

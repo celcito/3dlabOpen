@@ -81,7 +81,7 @@ describe("parseThreeMF", () => {
   it("extracts regionMask from basematerials pid/pindex", async () => {
     const buf = await build3mf(CUBE_TWO_COLORS);
     const parsed = await parseThreeMF(buf);
-    expect(parsed.geometry.attributes.position.count).toBe(8);
+    expect(parsed.geometry.attributes.position.count).toBe(12);
     expect(parsed.regionMask).toBeDefined();
     const mask = parsed.regionMask!;
     // Vertices 0-3 (bottom, color 0) share one region; 4-7 (top, color 1) another.
@@ -118,7 +118,7 @@ describe("parseThreeMF", () => {
     const zip = new JSZip();
     zip.file("foo.txt", "hello");
     const buf = await zip.generateAsync({ type: "arraybuffer" });
-    await expect(parseThreeMF(buf)).rejects.toThrow(/missing 3D\/3dmodel/);
+    await expect(parseThreeMF(buf)).rejects.toThrow(/sem arquivo de modelo 3D/);
   });
 
   it("handles model with no basematerials (regionMask absent)", async () => {
@@ -167,5 +167,53 @@ describe("parseThreeMF", () => {
     expect(mask[3]).toBe(mask[4]);
     expect(mask[3]).toBe(mask[5]);
     expect(mask[0]).not.toBe(mask[3]);
+  });
+
+  it("duplicates shared vertices when adjacent triangles use different materials", async () => {
+    const model = `<?xml version="1.0"?>
+    <model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+      <resources>
+        <basematerials id="4">
+          <base name="A" displaycolor="#FF0000" />
+          <base name="B" displaycolor="#00FF00" />
+        </basematerials>
+        <object id="1"><mesh>
+          <vertices>
+            <vertex x="0" y="0" z="0" /><vertex x="1" y="0" z="0" />
+            <vertex x="1" y="1" z="0" /><vertex x="0" y="1" z="0" />
+          </vertices>
+          <triangles>
+            <triangle v1="0" v2="1" v3="2" pid="4" pindex="0" />
+            <triangle v1="0" v2="2" v3="3" pid="4" pindex="1" />
+          </triangles>
+        </mesh></object>
+      </resources>
+      <build><item objectid="1" /></build>
+    </model>`;
+    const parsed = await parseThreeMF(await build3mf(model));
+    expect(parsed.regionMask).toBeDefined();
+    expect(parsed.geometry.attributes.position.count).toBe(6);
+    expect(new Set(parsed.regionMask)).toEqual(new Set([1, 2]));
+  });
+
+  it("expands component assemblies and applies 12-value 3MF transforms", async () => {
+    const model = `<?xml version="1.0"?>
+    <model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+      <resources>
+        <object id="1"><mesh>
+          <vertices><vertex x="0" y="0" z="0" /><vertex x="1" y="0" z="0" /><vertex x="0" y="1" z="0" /></vertices>
+          <triangles><triangle v1="0" v2="1" v3="2" /></triangles>
+        </mesh></object>
+        <object id="2"><components>
+          <component objectid="1" transform="2 0 0 0 1 0 0 0 1 5 0 0" />
+        </components></object>
+      </resources>
+      <build><item objectid="2" /></build>
+    </model>`;
+    const parsed = await parseThreeMF(await build3mf(model));
+    const position = parsed.geometry.attributes.position;
+    expect(position.count).toBe(3);
+    const xs = Array.from({ length: position.count }, (_, i) => position.getX(i));
+    expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(2);
   });
 });

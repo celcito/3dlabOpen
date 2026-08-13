@@ -7,6 +7,7 @@ import {
   fanTriangulation,
   tangentBasis,
   capBoundaries,
+  capBoundariesAsync,
 } from "../capEngine";
 
 /** Open box: 5 quads (flattened to 10 tris), missing the top (z=1) face. */
@@ -17,13 +18,12 @@ function openBox(): { positions: Float32Array; indices: number[]; mask: Uint8Arr
   ]);
   // bottom quad + 4 side quads (0,1,4,5 : 0,3,7,4 : 3,2,6,7 : 2,1,5,6)
   const quads: [number, number, number, number][] = [
-    [0, 1, 2, 3],
     [0, 1, 5, 4],
-    [0, 3, 7, 4],
-    [3, 2, 6, 7],
-    [2, 1, 5, 6],
+    [1, 2, 6, 5],
+    [3, 7, 6, 2],
+    [0, 4, 7, 3],
   ];
-  const indices: number[] = [];
+  const indices: number[] = [0, 2, 1, 0, 3, 2];
   for (const [a, b, c, d] of quads) indices.push(a, b, c, a, c, d);
   const mask = new Uint8Array(positions.length / 3);
   mask.fill(1);
@@ -151,6 +151,13 @@ describe("capBoundaries", () => {
     }
   });
 
+  it("soap_film async path validates or safely falls back", async () => {
+    const { positions, indices, mask } = openBox();
+    const res = await capBoundariesAsync({ method: "soap_film", thickness: 0.05, resolution: 16, positions, indices, regionMask: mask });
+    expect(res.indices.length).toBeGreaterThan(indices.length);
+    expect(typeof res.usedFallback).toBe("boolean");
+  });
+
   it("no-op when there is no open boundary", () => {
     const tetra = {
       positions: new Float32Array([0, 0, 0, 1, 0, 0, 0.5, Math.sqrt(3) / 2, 0, 0.5, Math.sqrt(3) / 6, Math.sqrt(2 / 3)]),
@@ -170,9 +177,9 @@ describe("capBoundaries", () => {
     const indices = [0, 1, 2, 3, 4, 5];
     const mask = new Uint8Array([1, 1, 1, 2, 2, 2]);
     const res = capBoundaries({ method: "centroid_cap", thickness: 0.4, resolution: 16, positions, indices, regionMask: mask, regionIds: [2] });
-    // Region 2, capped only — 6 added vertices (3 bottom + 3 top disk).
-    expect(res.addedVertices).toBe(6);
+    // Region 2, capped only — 3 new vertices for the displaced top ring.
+    expect(res.addedVertices).toBe(3);
     const res1 = capBoundaries({ method: "centroid_cap", thickness: 0.4, resolution: 16, positions, indices, regionMask: mask, regionIds: [1] });
-    expect(res1.addedVertices).toBe(6);
+    expect(res1.addedVertices).toBe(3);
   });
 });

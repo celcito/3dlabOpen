@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Grid, Text, TransformControls } from "@react-three/drei";
+import { Bounds, OrbitControls, Grid, Text, TransformControls } from "@react-three/drei";
 import * as THREE from "three";
 import { Upload, Download, Paintbrush, PaintBucket, Move, RotateCcw, Eye, EyeOff, Trash2, Sliders, Play, Plus, Info, Check, RefreshCw, Sparkles, Layers, Undo, Eraser, Ruler, Clock, Printer, Settings, FileJson, Save, BoxSelect, Loader2, Circle, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -404,6 +404,7 @@ export default function Viewer3D() {
   const [importUnit, setImportUnit] = useState<"mm" | "inch">("mm");
   const [importScale, setImportScale] = useState(1.0);
   const [showConversionSettings, setShowConversionSettings] = useState(false);
+  const [viewportEpoch, setViewportEpoch] = useState(0);
    const modelImport = useViewerModelImport({
      importUnit,
      importScale,
@@ -1112,6 +1113,8 @@ export default function Viewer3D() {
                   <pointLight position={[-10, 5, -10]} intensity={0.8} color="#632CE5" />
                   <directionalLight position={[5, 10, 5]} intensity={2.0} castShadow />
                   <directionalLight position={[-5, -10, -5]} intensity={0.6} />
+                  <Bounds key={`${modelGeometry.uuid}-${viewportEpoch}`} fit clip margin={1.2} maxDuration={0.2}>
+                    <group>
                   {previewSeparated ? (
                     <>
                       {subGeometries.map((sub, idx) => (
@@ -1212,6 +1215,8 @@ export default function Viewer3D() {
                       ))}
                     </group>
                   )}
+                    </group>
+                  </Bounds>
                   <OrbitControls ref={controlsRef} makeDefault enabled={true} mouseButtons={{ LEFT: (placementMode || (paintMode && !previewSeparated)) ? null : THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: (paintMode && !previewSeparated) ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN }} touches={{ ONE: (placementMode || (paintMode && !previewSeparated)) ? null : THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }} />
                   <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
                   {watermarkEnabled && watermarkText.trim() !== "" && (
@@ -1233,7 +1238,7 @@ export default function Viewer3D() {
                 <div className="absolute top-6 right-6 flex flex-col gap-2 z-10">
                   <button title="Zoom In" onClick={zoomIn} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><Plus className="w-5 h-5" /></button>
                   <button title="Zoom Out" onClick={zoomOut} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><span className="text-xl font-bold leading-none select-none">-</span></button>
-                  <button title="Reset Camera" onClick={resetCamera} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><RotateCcw className="w-4 h-4" /></button>
+                   <button title="Reset Camera" onClick={() => { resetCamera(); setViewportEpoch((epoch) => epoch + 1); }} className="w-10 h-10 flex items-center justify-center bg-[#F9FAF4]/90 border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5] backdrop-blur-md transition-all active:scale-95 rounded"><RotateCcw className="w-4 h-4" /></button>
                 </div>
               </>
             ) : (

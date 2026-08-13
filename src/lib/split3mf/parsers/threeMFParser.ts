@@ -21,20 +21,37 @@ interface MatColor {
  */
 export async function parseThreeMF(arrayBuffer: ArrayBuffer): Promise<ParsedThreeMF> {
   const zip = await JSZip.loadAsync(arrayBuffer);
-  const modelEntry = zip.file("3D/3dmodel.model");
+  const modelEntry = findModelEntry(zip);
   if (!modelEntry) {
-    throw new Error("Invalid 3MF: missing 3D/3dmodel.model");
+    throw new Error("3MF sem arquivo de modelo 3D (.model)");
   }
   const xml = await modelEntry.async("string");
-  const doc = new DOMParser().parseFromString(xml, "application/xml");
-  const parserError = doc.querySelector("parsererror");
-  if (parserError) throw new Error("Invalid 3MF XML");
+  const doc = parseModelXml(xml);
 
   const model = doc.querySelector("model");
   const unit = model?.getAttribute("unit") || "millimeter";
 
-  const materials = collectMaterials(doc);
-  const objects = collectObjects(doc, materials);
+  // Bambu Studio stores large meshes in 3D/Objects/object_*.model and keeps
+  // only component references in the package's core model.
+  const modelDocs = [doc];
+  const referencedPaths = new Set<string>();
+  doc.querySelectorAll("component").forEach((component) => {
+    const path = component.getAttribute("p:path") || component.getAttributeNS("http://schemas.microsoft.com/3dmanufacturing/production/2015/06", "path");
+    if (path) referencedPaths.add(normalizeZipPath(path));
+  });
+  for (const path of referencedPaths) {
+    const entry = zip.file(path) ?? findZipEntry(zip, path);
+    if (!entry || entry === modelEntry) continue;
+    const externalXml = await entry.async("string");
+    try {
+      modelDocs.push(parseModelXml(externalXml));
+    } catch {
+      // Metadata files can use the .model suffix in third-party packages.
+    }
+  }
+
+  const materials = modelDocs.flatMap((modelDoc) => collectMaterials(modelDoc));
+  const objects = modelDocs.flatMap((modelDoc) => collectObjects(modelDoc, materials));
 
   // Build selection from the first <build> only.
   const build = doc.querySelector("build");
@@ -54,15 +71,50 @@ export async function parseThreeMF(arrayBuffer: ArrayBuffer): Promise<ParsedThre
   }
 
   const parts: { obj: ParsedObject; transform?: number[] }[] = [];
-  for (const item of buildItems) {
-    const obj = objects.find((o) => o.id === item.objectid);
-    if (obj) parts.push({ obj, transform: item.transform });
-  }
-  // Include any object referenced as a <component> child too.
-  collectComponentReferences(doc, objects, parts);
+  const appendObject = (objectId: number, parentTransform?: number[], stack = new Set<number>()) => {
+    if (stack.has(objectId)) return;
+    const obj = objects.find((candidate) => candidate.id === objectId);
+    if (!obj) return;
+    const nextStack = new Set(stack).add(objectId);
+    if (obj.vertices.length > 0 && obj.triangles.length > 0) {
+      parts.push({ obj, transform: parentTransform });
+    }
+    for (const component of obj.components) {
+      appendObject(component.objectid, composeTransform(parentTransform, component.transform), nextStack);
+    }
+  };
+  for (const item of buildItems) appendObject(item.objectid, item.transform);
 
   const merged = mergeParts(parts, unit, materials);
   return merged;
+}
+
+function normalizeZipPath(path: string): string {
+  return path.replace(/^\/+/, "");
+}
+
+function findZipEntry(zip: JSZip, path: string): JSZip.JSZipObject | null {
+  const normalized = path.toLowerCase();
+  return Object.values(zip.files).find((entry) => !entry.dir && entry.name.toLowerCase() === normalized) ?? null;
+}
+
+function parseModelXml(xml: string): Document {
+  const doc = new DOMParser().parseFromString(xml, "application/xml");
+  if (doc.querySelector("parsererror") || !doc.querySelector("model")) {
+    throw new Error("3MF com XML de modelo inválido");
+  }
+  return doc;
+}
+
+function findModelEntry(zip: JSZip): JSZip.JSZipObject | null {
+  const exact = zip.file("3D/3dmodel.model");
+  if (exact) return exact;
+
+  // Some slicers change the case or store the core model under another 3D path.
+  const candidates = Object.values(zip.files).filter(
+    (entry) => !entry.dir && entry.name.toLowerCase().endsWith(".model")
+  );
+  return candidates.find((entry) => entry.name.toLowerCase().includes("3d/")) ?? candidates[0] ?? null;
 }
 
 interface ParsedObject {
@@ -71,6 +123,8 @@ interface ParsedObject {
   vertices: number[];
   triangles: number[][];
   materials: number[] | null;
+  triangleMaterials: (number | null)[];
+  components: { objectid: number; transform?: number[] }[];
   parentTransform?: number[];
 }
 
@@ -137,15 +191,27 @@ function collectObjects(doc: Document, materials: MatColor[]): ParsedObject[] {
       }
     });
 
-    // Effective material id per vertex: per-vertex pid wins, else per-triangle.
+    // Keep the effective material per triangle so shared vertices can be split
+    // at material seams during merge.
     const perVertexMats: (number | null)[] = new Array(vertices.length / 3).fill(null);
-    triangles.forEach((tri, ti) => {
-      const matId = trianglePids[ti] ?? vertexPids[tri[0]] ?? null;
+    const triangleMaterials = triangles.map((tri, ti) => trianglePids[ti] ?? vertexPids[tri[0]] ?? null);
+    triangleMaterials.forEach((matId, ti) => {
       if (matId === null) return;
-      tri.forEach((vi) => { if (perVertexMats[vi] === null) perVertexMats[vi] = matId; });
+      triangles[ti].forEach((vi) => { if (perVertexMats[vi] === null) perVertexMats[vi] = matId; });
     });
     // Backfill from vertex pids for vertices never referenced (rare).
     vertexPids.forEach((pid, vi) => { if (perVertexMats[vi] === null) perVertexMats[vi] = pid; });
+
+    const components: { objectid: number; transform?: number[] }[] = [];
+    el.querySelectorAll(":scope > components > component").forEach((component) => {
+      const objectid = Number(component.getAttribute("objectid"));
+      if (Number.isNaN(objectid)) return;
+      const transform = component.getAttribute("transform");
+      components.push({
+        objectid,
+        transform: transform ? transform.trim().split(/\s+/).map(Number) : undefined,
+      });
+    });
 
     objects.push({
       id,
@@ -153,25 +219,33 @@ function collectObjects(doc: Document, materials: MatColor[]): ParsedObject[] {
       vertices,
       triangles,
       materials: perVertexMats,
+      triangleMaterials,
+      components,
     });
   });
   return objects;
 }
 
-function collectComponentReferences(
-  doc: Document,
-  objects: ParsedObject[],
-  parts: { obj: ParsedObject; transform?: number[] }[]
-) {
-  doc.querySelectorAll("component").forEach((comp) => {
-    const id = Number(comp.getAttribute("objectid"));
-    if (Number.isNaN(id)) return;
-    const obj = objects.find((o) => o.id === id);
-    if (!obj) return;
-    if (parts.some((p) => p.obj.id === id)) return;
-    const t = comp.getAttribute("transform");
-    parts.push({ obj, transform: t ? t.trim().split(/\s+/).map(Number) : undefined });
-  });
+function composeTransform(parent?: number[], child?: number[]): number[] | undefined {
+  if (!parent && !child) return undefined;
+  const parentMatrix = toMatrix4(parent);
+  const childMatrix = toMatrix4(child);
+  return new THREE.Matrix4().multiplyMatrices(parentMatrix, childMatrix).toArray();
+}
+
+function toMatrix4(values?: number[]): THREE.Matrix4 {
+  if (!values || values.length === 0) return new THREE.Matrix4();
+  if (values.length === 12) {
+    // 3MF stores transforms as nine row-major rotation/scale values followed
+    // by the translation vector: m00 m01 m02 m10 ... m22 tx ty tz.
+    return new THREE.Matrix4().set(
+      values[0], values[1], values[2], values[9],
+      values[3], values[4], values[5], values[10],
+      values[6], values[7], values[8], values[11],
+      0, 0, 0, 1
+    );
+  }
+  return new THREE.Matrix4().fromArray(values);
 }
 
 function mergeParts(
@@ -190,21 +264,23 @@ function mergeParts(
   let nextRegionId = 0;
 
   for (const { obj, transform } of parts) {
-    const matrix = transform ? new THREE.Matrix4().fromArray(transform) : new THREE.Matrix4();
+    const matrix = toMatrix4(transform);
     const unitScale = unitToMeters(unit);
-    const baseVertex = positions.length / 3;
     const localRegionForMat = new Map<number, number>();
+    const localVertexByMaterial = new Map<string, number>();
+    const transformedVertices: number[] = [];
 
     const v = new THREE.Vector3();
     for (let i = 0; i < obj.vertices.length; i += 3) {
       v.set(obj.vertices[i], obj.vertices[i + 1], obj.vertices[i + 2]);
       if (unitScale !== 1) v.multiplyScalar(unitScale);
       v.applyMatrix4(matrix);
-      positions.push(v.x, v.y, v.z);
+      transformedVertices.push(v.x, v.y, v.z);
     }
 
-    for (let vi = 0; vi < obj.vertices.length / 3; vi++) {
-      const matId = obj.materials?.[vi] ?? null;
+    for (let ti = 0; ti < obj.triangles.length; ti++) {
+      const tri = obj.triangles[ti];
+      const matId = obj.triangleMaterials[ti] ?? null;
       let regionId = 0;
       if (matId !== null) {
         if (!localRegionForMat.has(matId)) {
@@ -216,11 +292,24 @@ function mergeParts(
         }
         regionId = localRegionForMat.get(matId)!;
       }
-      regionMask.push(regionId);
-    }
-
-    for (const tri of obj.triangles) {
-      indices.push(baseVertex + tri[0], baseVertex + tri[1], baseVertex + tri[2]);
+      const outputTriangle: number[] = [];
+      for (const sourceVertex of tri) {
+        const key = `${sourceVertex}:${matId ?? 0}`;
+        let outputVertex = localVertexByMaterial.get(key);
+        if (outputVertex === undefined) {
+          outputVertex = positions.length / 3;
+          localVertexByMaterial.set(key, outputVertex);
+          const offset = sourceVertex * 3;
+          positions.push(
+            transformedVertices[offset],
+            transformedVertices[offset + 1],
+            transformedVertices[offset + 2]
+          );
+          regionMask.push(regionId);
+        }
+        outputTriangle.push(outputVertex);
+      }
+      indices.push(outputTriangle[0], outputTriangle[1], outputTriangle[2]);
     }
   }
 

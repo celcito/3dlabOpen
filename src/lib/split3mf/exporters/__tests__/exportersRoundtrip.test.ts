@@ -126,8 +126,8 @@ describe("F6 — roundtrip export/parse", () => {
     const g1 = new THREE.BoxGeometry(1, 1, 1).toNonIndexed();
     const g2 = new THREE.BoxGeometry(1, 1, 1).toNonIndexed();
     const { obj, mtl } = buildObjAndMtl([
-      { geometry: g1, color: "#FF0000", name: "A" },
-      { geometry: g2, color: "#00FF00", name: "B" },
+      { geometry: g1, regionId: 1, color: "#FF0000", name: "A" },
+      { geometry: g2, regionId: 2, color: "#00FF00", name: "B" },
     ]);
     expect(obj).toContain("usemtl piece_0");
     expect(obj).toContain("usemtl piece_1");
@@ -184,6 +184,18 @@ describe("splitPieces", () => {
     const pieces = splitPieces(state);
     expect(pieces[0].name.startsWith("Regiao_")).toBe(true);
     expect(pieces[0].color).toMatch(/^#/);
+  });
+
+  it("assigns a mixed triangle to the majority region", async () => {
+    const { state } = await stateFrom3mf();
+    state.geometry = {
+      positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+      indices: new Uint32Array([0, 1, 2]),
+    };
+    state.regionMask = new Uint8Array([1, 2, 2]);
+    const pieces = splitPieces(state);
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0].regionId).toBe(2);
   });
 });
 
