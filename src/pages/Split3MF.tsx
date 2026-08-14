@@ -5,7 +5,9 @@ import * as THREE from "three";
 import { useSplit3MFState } from "../hooks/useSplit3MFState";
 import { parseSplitFile } from "../lib/split3mf/parsers";
 import { segmentGeometry } from "../lib/split3mf/segmentation/gpuSegmenter";
-import { exportSplit } from "../lib/split3mf/exporters";
+import { exportSplit, splitPieces } from "../lib/split3mf/exporters";
+import type { ExportPiece } from "../lib/split3mf/exporters";
+import { buildConnectorPrimitive, findBoundaryEdges, placementMatrix, planConnectorPlacements } from "../lib/split3mf/engines/connectorEngine";
 import { buildDisplayGeometry } from "../lib/split3mf/display/displayGeometry";
 import { SplitPanel } from "../../components/split3mf/SplitPanel";
 import { CapMethodPicker } from "../../components/split3mf/CapMethodPicker";
@@ -14,7 +16,8 @@ import { SplitExportBar } from "../../components/split3mf/SplitExportBar";
 import BoundaryBrush from "../../components/split3mf/BoundaryBrush";
 import BoundaryLines from "../../components/split3mf/BoundaryLines";
 import type { ParsedSplitFile } from "../lib/split3mf/state/splitTypes";
-import { RotateCcw, Loader2, Brush } from "lucide-react";
+import type { ConnectorConfig } from "../lib/split3mf/state/splitTypes";
+import { RotateCcw, Loader2, Brush, MousePointer2, Check, X } from "lucide-react";
 
 const BRUSH_COLORS = ["#632CE5", "#FF1744", "#00FF41", "#D500F9", "#FF9100", "#FFEA00", "#2979FF", "#FF4081"];
 
@@ -35,17 +38,27 @@ export default function Split3MF() {
   });
   // Counter that bumps when a new model is loaded so <Bounds> re-fits the camera.
   const [geometryEpoch, setGeometryEpoch] = useState(0);
+  const [selectionMode, setSelectionMode] = useState<"paint" | "click">("paint");
+  const [platePreview, setPlatePreview] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<number[]>([]);
+  const previewPieces = useMemo(() => splitPieces(state), [state]);
 
-  const sceneGeom = useMemo(
-    () =>
-      buildDisplayGeometry({
+  const sceneGeom = useMemo(() => {
+    const display = buildDisplayGeometry({
         geometry: state.geometry,
         regionMask: state.regionMask,
         regions: state.regions,
         rawColors: state.regionMask ? null : state.geometry?.colors ?? null,
-      }),
-    [state.geometry, state.regionMask, state.regions]
-  );
+      });
+
+    // 3MF uses Z as the print-up axis while Three.js displays Y up.
+    if (display.attributes.position && fileName?.toLowerCase().endsWith(".3mf")) {
+      display.setAttribute("position", display.attributes.position.clone());
+      if (display.attributes.normal) display.setAttribute("normal", display.attributes.normal.clone());
+      display.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+    }
+    return display;
+  }, [state.geometry, state.regionMask, state.regions, fileName]);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -173,14 +186,63 @@ export default function Split3MF() {
 
   const brushControls = (
     <div className="space-y-4">
+      <div className="flex gap-1.5">
+        <button
+          type="button"
+          aria-pressed={selectionMode === "paint"}
+          onClick={() => {
+            setSelectionMode("paint");
+            setPendingSelection([]);
+          }}
+          className={`flex-1 rounded-lg border px-2 py-2 text-[11px] font-bold transition-colors ${selectionMode === "paint" ? "border-[#632CE5] bg-[#632CE5] text-white" : "border-[#D8D0F0] bg-white text-[#632CE5] hover:bg-[#F7F4FF]"}`}
+        >
+          Pintura
+        </button>
+        <button
+          type="button"
+          aria-pressed={selectionMode === "click"}
+          onClick={() => {
+            setSelectionMode("click");
+            setPendingSelection([]);
+          }}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg border px-2 py-2 text-[11px] font-bold transition-colors ${selectionMode === "click" ? "border-[#632CE5] bg-[#632CE5] text-white" : "border-[#D8D0F0] bg-white text-[#632CE5] hover:bg-[#F7F4FF]"}`}
+        >
+          <MousePointer2 className="h-3.5 w-3.5" /> Clique
+        </button>
+      </div>
       <div className="rounded-lg border border-[#D8D0F0] bg-[#F7F4FF] p-3 text-[11px] text-[#494455]">
         <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#632CE5]">Como separar</div>
         <ol className="space-y-1.5">
           <li><b>1.</b> Crie uma região para cada peça.</li>
-          <li><b>2.</b> Selecione a região e pinte sua superfície.</li>
+          <li><b>2.</b> Selecione a região e clique na peça ou pinte sua superfície.</li>
           <li><b>3.</b> Repita para as outras peças e exporte.</li>
         </ol>
       </div>
+      {selectionMode === "click" && pendingSelection.length > 0 && (
+        <div className="rounded-lg border border-[#FFD166] bg-[#FFF8E1] p-3 text-[11px] text-[#5C4810] space-y-2">
+          <p><b>{pendingSelection.length} parte(s) selecionada(s).</b> Você pode clicar em outras partes antes de confirmar.</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                split.selectComponents(pendingSelection);
+                setPendingSelection([]);
+                setPlatePreview(true);
+              }}
+              className="flex-1 flex items-center justify-center gap-1 rounded-md bg-[#00C853] px-2 py-1.5 text-[10px] font-black uppercase tracking-wide text-white hover:bg-[#00B34A]"
+            >
+              <Check className="h-3.5 w-3.5" /> Confirmar
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingSelection([])}
+              className="flex-1 flex items-center justify-center gap-1 rounded-md border border-[#D4B45C] px-2 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#5C4810] hover:bg-[#FFF1BD]"
+            >
+              <X className="h-3.5 w-3.5" /> Cancelar
+            </button>
+          </div>
+        </div>
+      )}
       <div>
         <div className="text-[10px] uppercase tracking-wider text-[#7A7487] font-bold mb-2">Região ativa</div>
         <div className="flex flex-wrap gap-1.5">
@@ -213,7 +275,8 @@ export default function Split3MF() {
       </div>
 
       <div className="bg-[#F2F0F5] rounded-lg p-3 text-[11px] text-[#494455] space-y-1">
-        <p><b className="text-[#1A1C19]">Esquerda (arrastar)</b> — pintar a região ativa</p>
+        {selectionMode === "click" && <p><b className="text-[#1A1C19]">Clique esquerdo</b> — selecionar a peça conectada inteira</p>}
+        {selectionMode === "paint" && <p><b className="text-[#1A1C19]">Esquerda (arrastar)</b> — pintar a região ativa</p>}
         <p><b className="text-[#1A1C19]">Direita (arrastar)</b> — apagar pintura da fronteira</p>
         <p><b className="text-[#1A1C19]">Botão direito + arrastar</b> — girar a câmera</p>
         <p>Roda do mouse — zoom. Botão do meio — mover.</p>
@@ -304,14 +367,15 @@ export default function Split3MF() {
           exportBar={
             <SplitExportBar disabled={!state.geometry || exporting} onExport={handleExport} />
           }
+          openBoundaryKey={geometryEpoch}
         />
 
-        <div data-testid="split3mf-viewport" className="flex-1 min-w-0 min-h-0 relative bg-[#F9FAF4] p-3 h-full flex flex-col">
+        <div data-testid="split3mf-viewport" className="flex-1 min-w-0 min-h-0 relative bg-[#F9FAF4] p-1.5 h-full flex flex-col">
           <div className="flex-1 w-full border border-[#E8E9E3] rounded-lg relative overflow-hidden bg-[#F9FAF4] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]">
           {/* Viewport header — anchors the 3D area as a clearly bounded viewport. */}
           <div className="absolute top-6 left-6 z-20 px-3.5 py-2.5 bg-[#F9FAF4]/85 border border-[#E8E9E3] backdrop-blur-md rounded text-[10px] uppercase tracking-wider text-zinc-500 space-y-1.5 pointer-events-none select-none">
             <div className="text-[#632CE5] font-bold text-[11px] mb-1">3D Navigation Guide</div>
-            <div>Left Click + Drag: <span className="font-bold">{state.regions.length ? "Paint Model" : "Rotate Camera"}</span></div>
+            <div>Left Click + Drag: <span className="font-bold">{selectionMode === "click" ? "Select Connected Piece" : state.regions.length ? "Paint Model" : "Rotate Camera"}</span></div>
             <div>Right Click + Drag: <span className="font-bold">Rotate Camera</span></div>
             <div>Scroll Wheel: <span className="font-bold">Zoom In / Out</span></div>
             <div>Middle Click + Drag: <span className="font-bold">Pan Camera</span></div>
@@ -337,14 +401,37 @@ export default function Split3MF() {
               }}
               frameloop="always"
             >
+              {platePreview && previewPieces.length > 0 ? (
+                <PlateScene
+                  pieces={previewPieces}
+                  is3mf={fileName?.toLowerCase().endsWith(".3mf") ?? false}
+                  sourceGeometry={state.geometry}
+                  regionMask={state.regionMask}
+                  connectorConfig={state.connectorConfig}
+                />
+              ) : (
               <SplitScene
                 key={`${sceneGeom.uuid}-${geometryEpoch}`}
                 geometry={sceneGeom}
                 regionMask={state.regionMask}
                 activeRegionColor={activeRegionColor(state)}
                 brushRadius={state.boundary.brushRadius}
+                brushEnabled={selectionMode === "click" || state.regions.length > 0}
+                selectMode={selectionMode === "click"}
                 onEdit={(e) => split.applyBoundaryBrush(e.kind, e.vertexIndex, brushRadiusHops)}
+                onEditComplete={() => {
+                  if (state.regionMask && countPainted(state.regionMask) > 0) setPlatePreview(true);
+                }}
+                onSelect={(vertexIndex) =>
+                  setPendingSelection((current) =>
+                    current.includes(vertexIndex)
+                      ? current.filter((index) => index !== vertexIndex)
+                      : [...current, vertexIndex]
+                  )
+                }
+                selectedVertices={pendingSelection}
               />
+              )}
             </Canvas>
           )}
 
@@ -371,6 +458,18 @@ export default function Split3MF() {
           {/* Overlay stats + actions */}
           {state.geometry && (
             <div className="absolute top-4 right-4 flex items-start gap-2 z-20">
+              {platePreview && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlatePreview(false);
+                    setPendingSelection([]);
+                  }}
+                  className="rounded-xl border border-[#3A3C38] bg-[#2A2C28]/90 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#E8E9E3] hover:bg-[#3A3C38]"
+                >
+                  Editar separação
+                </button>
+              )}
               <button
                 type="button"
                 title="Recentrar câmera"
@@ -453,13 +552,23 @@ function SplitScene({
   regionMask,
   activeRegionColor,
   brushRadius,
+  brushEnabled,
+  selectMode,
   onEdit,
+  onEditComplete,
+  onSelect,
+  selectedVertices,
 }: {
   geometry: THREE.BufferGeometry;
   regionMask: Uint8Array;
   activeRegionColor: string;
   brushRadius: number;
+  brushEnabled: boolean;
+  selectMode: boolean;
   onEdit: (e: { vertexIndex: number; kind: "pull" | "push" }) => void;
+  onEditComplete: () => void;
+  onSelect: (vertexIndex: number) => void;
+  selectedVertices: number[];
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   return (
@@ -467,7 +576,7 @@ function SplitScene({
       {/* Bounds + model + boundary lines live inside one tree so the camera
           fits the geometry on every fresh model load (Canvas re-mounts). The
           brush sphere stays outside so its motion never distorts the bounds. */}
-      <Bounds fit clip margin={1.9} maxDuration={0.2}>
+      <Bounds fit clip margin={1.15} maxDuration={0.2}>
         <color attach="background" args={["#F3F4EE"]} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[30, 50, 20]} intensity={1} />
@@ -480,7 +589,15 @@ function SplitScene({
           geometry={geometry}
           regions={undefined}
         />
-        <OrbitControls makeDefault />
+        <SelectionMarkers geometry={geometry} vertexIndices={selectedVertices} />
+        <OrbitControls
+          makeDefault
+          enableDamping={false}
+          dampingFactor={0}
+          rotateSpeed={0.7}
+          zoomSpeed={0.8}
+          panSpeed={0.8}
+        />
       </Bounds>
       <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
       <BoundaryBrush
@@ -488,9 +605,148 @@ function SplitScene({
         meshRef={meshRef}
         activeRegionColor={activeRegionColor}
         brushRadius={brushRadius}
+        enabled={brushEnabled}
+        selectMode={selectMode}
         onEdit={onEdit}
+        onEditComplete={onEditComplete}
+        onSelect={onSelect}
       />
     </>
+  );
+}
+
+function SelectionMarkers({ geometry, vertexIndices }: { geometry: THREE.BufferGeometry; vertexIndices: number[] }) {
+  const position = geometry.attributes.position;
+  const radius = useMemo(() => {
+    geometry.computeBoundingSphere();
+    return Math.max((geometry.boundingSphere?.radius ?? 1) * 0.045, 0.03);
+  }, [geometry]);
+
+  return (
+    <group>
+      {vertexIndices.map((vertexIndex) => (
+        <mesh
+          key={vertexIndex}
+          position={[position.getX(vertexIndex), position.getY(vertexIndex), position.getZ(vertexIndex)]}
+          renderOrder={1000}
+        >
+          <sphereGeometry args={[radius, 12, 12]} />
+          <meshBasicMaterial color="#FFD166" depthTest={false} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function PlateScene({
+  pieces,
+  is3mf,
+  sourceGeometry,
+  regionMask,
+  connectorConfig,
+}: {
+  pieces: ExportPiece[];
+  is3mf: boolean;
+  sourceGeometry: ReturnType<typeof useSplit3MFState>["state"]["geometry"];
+  regionMask: Uint8Array | null;
+  connectorConfig: ConnectorConfig;
+}) {
+  const layout = useMemo(() => {
+    const rotation = new THREE.Matrix4().makeRotationX(is3mf ? Math.PI / 2 : 0);
+    const prepared = pieces.map((piece) => {
+      const geometry = piece.geometry.clone();
+      if (is3mf) {
+        geometry.setAttribute("position", geometry.attributes.position.clone());
+        if (geometry.attributes.normal) geometry.setAttribute("normal", geometry.attributes.normal.clone());
+        geometry.applyMatrix4(rotation);
+      }
+      geometry.computeBoundingBox();
+      return { piece, geometry, box: geometry.boundingBox!.clone() };
+    });
+    const maxWidth = Math.max(10, ...prepared.map(({ box }) => box.max.x - box.min.x));
+    const maxDepth = Math.max(10, ...prepared.map(({ box }) => box.max.z - box.min.z));
+    const columns = Math.min(3, Math.max(1, prepared.length));
+    const rows = Math.ceil(prepared.length / columns);
+    const slotX = maxWidth * 1.45;
+    const slotZ = maxDepth * 1.45;
+    const plateWidth = Math.max(20, columns * slotX + maxWidth * 0.5);
+    const plateDepth = Math.max(20, rows * slotZ + maxDepth * 0.5);
+    return {
+      plateWidth,
+      plateDepth,
+      pieces: prepared.map((entry, index) => {
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+        const x = (column - (columns - 1) / 2) * slotX;
+        const z = (row - (rows - 1) / 2) * slotZ;
+        const center = entry.box.getCenter(new THREE.Vector3());
+        const bottom = entry.box.min.y;
+        entry.geometry.translate(x - center.x, 0.12 - bottom, z - center.z);
+        return { ...entry, translation: new THREE.Vector3(x - center.x, 0.12 - bottom, z - center.z) };
+      }),
+    };
+  }, [pieces, is3mf]);
+
+  const connectorPreview = useMemo(() => {
+    if (connectorConfig.type === "none" || !sourceGeometry?.indices || !regionMask) return [];
+    const edges = findBoundaryEdges(sourceGeometry.positions, sourceGeometry.indices, regionMask);
+    const placements = planConnectorPlacements(edges, Math.min(4, edges.length), {
+      type: connectorConfig.type,
+      areaPercent: connectorConfig.areaPercent,
+      depthMm: connectorConfig.depthMm,
+      socketToleranceMm: connectorConfig.socketToleranceMm,
+      side: connectorConfig.side,
+      manualPositions: connectorConfig.position === "manual"
+        ? connectorConfig.manualPositions?.map((position) => ({
+            ...position,
+            point: new THREE.Vector3(...position.point),
+          }))
+        : undefined,
+    });
+    const translations = new Map(layout.pieces.map(({ piece, translation }) => [piece.regionId, translation]));
+    return placements.flatMap((placement, index) => {
+      const plugTranslation = translations.get(connectorConfig.side === "part_plug" ? placement.regionA : placement.regionB);
+      const socketTranslation = translations.get(connectorConfig.side === "part_plug" ? placement.regionB : placement.regionA);
+      if (!plugTranslation || !socketTranslation) return [];
+      const socketArea = placement.area * (1 + connectorConfig.socketToleranceMm / Math.sqrt(placement.area));
+      const makeGeometry = (area: number, depth: number, translation: THREE.Vector3) => {
+        const geometry = buildConnectorPrimitive(connectorConfig.type, area, depth);
+        const point = placement.point.clone().add(translation);
+        const matrix = placementMatrix({ ...placement, point });
+        geometry.applyMatrix4(matrix);
+        return geometry;
+      };
+      return [
+        { key: `plug-${index}`, geometry: makeGeometry(placement.area, placement.depth, plugTranslation), color: "#00C853", opacity: 0.9 },
+        { key: `socket-${index}`, geometry: makeGeometry(socketArea, placement.depth + connectorConfig.socketToleranceMm, socketTranslation), color: "#FF9100", opacity: 0.38 },
+      ];
+    });
+  }, [connectorConfig, layout.pieces, regionMask, sourceGeometry]);
+
+  return (
+    <Bounds fit clip margin={1.15} maxDuration={0.2}>
+      <color attach="background" args={["#F3F4EE"]} />
+      <ambientLight intensity={0.65} />
+      <directionalLight position={[30, 50, 20]} intensity={1.2} />
+      <group>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[layout.plateWidth, 0.2, layout.plateDepth]} />
+          <meshStandardMaterial color="#D8DAD2" roughness={0.85} />
+        </mesh>
+        {layout.pieces.map(({ piece, geometry }) => (
+          <mesh key={piece.regionId} geometry={geometry}>
+            <meshStandardMaterial color={piece.color} roughness={0.48} metalness={0.08} side={THREE.DoubleSide} />
+          </mesh>
+        ))}
+        {connectorPreview.map(({ key, geometry, color, opacity }) => (
+          <mesh key={key} geometry={geometry} renderOrder={20}>
+            <meshStandardMaterial color={color} transparent opacity={opacity} depthWrite={false} side={THREE.DoubleSide} />
+          </mesh>
+        ))}
+      </group>
+      <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
+      <OrbitControls makeDefault enableDamping={false} dampingFactor={0} rotateSpeed={0.7} zoomSpeed={0.8} panSpeed={0.8} />
+    </Bounds>
   );
 }
 

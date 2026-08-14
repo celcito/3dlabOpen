@@ -9,6 +9,7 @@ import {
   type SegmentGeometry,
 } from "../colorCluster";
 import { segmentColors, detectGpu, estimateVram } from "../gpuSegmenter";
+import { selectConnectedComponent } from "../boundaryEditor";
 
 /** Two 4-vertex quads: red on the left, blue on the right (indexed). */
 function twoColorQuads(): { colors: Float32Array; geom: SegmentGeometry } {
@@ -138,6 +139,19 @@ describe("colorCluster — flood fill", () => {
     const set = new Set<number>();
     for (let i = 0; i < 8; i++) set.add(filled[i]);
     expect(set.size).toBe(2); // two islands
+  });
+});
+
+describe("boundary editor — click selection", () => {
+  it("assigns only the disconnected piece under the click", () => {
+    const geometry: SegmentGeometry = {
+      vertexCount: 8,
+      indices: new Uint32Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
+    };
+    const mask = new Uint8Array([0, 0, 0, 0, 2, 2, 2, 2]);
+    const selected = selectConnectedComponent(mask, geometry, 1, 1);
+
+    expect(Array.from(selected)).toEqual([1, 1, 1, 1, 2, 2, 2, 2]);
   });
 });
 

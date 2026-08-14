@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Upload, Brush, Layers, PlugZap, Download } from "lucide-react";
 import { SplitDropzone } from "./SplitDropzone";
 import { CapMethodPicker } from "./CapMethodPicker";
@@ -18,6 +18,7 @@ export interface SplitPanelProps {
   cap: React.ReactNode;
   connector: React.ReactNode;
   exportBar: React.ReactNode;
+  openBoundaryKey?: number;
 }
 
 const TABS = [
@@ -42,8 +43,13 @@ export function SplitPanel({
   cap,
   connector,
   exportBar,
+  openBoundaryKey,
 }: SplitPanelProps) {
   const [tab, setTab] = useState<TabId>("import");
+
+  useEffect(() => {
+    if (openBoundaryKey && openBoundaryKey > 0) setTab("boundary");
+  }, [openBoundaryKey]);
 
   return (
     <div className="w-[250px] shrink-0 border-r border-[#CAC3D8] bg-[#FFFFFF] flex flex-col">
