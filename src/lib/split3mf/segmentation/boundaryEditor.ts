@@ -55,6 +55,45 @@ export function pullBoundary(
   return paintRegion(mask, geometry, vertexIndex, targetRegion, radius);
 }
 
+/** Assigns the complete disconnected mesh island containing `vertexIndex`. */
+export function selectConnectedComponent(
+  mask: Uint8Array,
+  geometry: SegmentGeometry,
+  vertexIndex: number,
+  targetRegion: number
+): Uint8Array {
+  return selectConnectedComponents(mask, geometry, [vertexIndex], targetRegion);
+}
+
+/** Assigns several disconnected mesh islands in one operation. */
+export function selectConnectedComponents(
+  mask: Uint8Array,
+  geometry: SegmentGeometry,
+  vertexIndices: number[],
+  targetRegion: number
+): Uint8Array {
+  const out = new Uint8Array(mask);
+  if (vertexIndices.length === 0) return out;
+  const adjacency = buildAdjacency(geometry);
+  const visited = new Uint8Array(mask.length);
+  for (const vertexIndex of vertexIndices) {
+    if (vertexIndex < 0 || vertexIndex >= mask.length || visited[vertexIndex]) continue;
+    const queue = [vertexIndex];
+    visited[vertexIndex] = 1;
+    while (queue.length > 0) {
+      const vi = queue.pop()!;
+      out[vi] = targetRegion;
+      for (const neighbor of adjacency.neighbors[vi]) {
+        if (!visited[neighbor]) {
+          visited[neighbor] = 1;
+          queue.push(neighbor);
+        }
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Right brush = push away from the target region: the painted neighborhood
  * is assigned to the *most common* region among its neighbors that is not

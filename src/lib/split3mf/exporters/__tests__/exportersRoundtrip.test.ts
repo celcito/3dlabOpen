@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as THREE from "three";
 import JSZip from "jszip";
 import { parseSplitFile } from "../../parsers";
-import { exportSplit, splitPieces } from "../index";
+import { arrangePiecesOnPlate, exportSplit, splitPieces } from "../index";
 import { parseThreeMF } from "../../parsers/threeMFParser";
 import { parseGLB } from "../../parsers/glbParser";
 import { parseOBJ } from "../../parsers/objParser";
@@ -171,6 +171,17 @@ describe("F6 — roundtrip export/parse", () => {
 });
 
 describe("splitPieces", () => {
+  it("arranges pieces apart for a 3MF print plate", () => {
+    const makePiece = (regionId: number) => {
+      const geometry = new THREE.BoxGeometry(2, 2, 2);
+      return { geometry, regionId, color: "#fff", name: `piece-${regionId}` };
+    };
+    const arranged = arrangePiecesOnPlate([makePiece(1), makePiece(2)], "3mf");
+    const centers = arranged.map((piece) => piece.geometry.boundingBox?.getCenter(new THREE.Vector3()).x ?? 0);
+
+    expect(Math.abs(centers[0] - centers[1])).toBeGreaterThan(2);
+  });
+
   it("produces one piece per region", async () => {
     const { state } = await stateFrom3mf();
     const pieces = splitPieces(state);

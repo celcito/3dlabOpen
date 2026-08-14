@@ -19,7 +19,11 @@ interface BoundaryBrushProps {
   meshRef?: React.RefObject<THREE.Mesh | null>;
   activeRegionColor?: string;
   brushRadius: number; // mm for visual indicator; 1..6 topological hops
+  enabled?: boolean;
   onEdit?: (event: BrushEditEvent) => void;
+  onEditComplete?: () => void;
+  selectMode?: boolean;
+  onSelect?: (vertexIndex: number) => void;
   onHover?: (event: BrushHoverEvent) => void;
 }
 
@@ -37,7 +41,11 @@ export default function BoundaryBrush({
   meshRef,
   activeRegionColor,
   brushRadius,
+  enabled = true,
   onEdit,
+  onEditComplete,
+  selectMode = false,
+  onSelect,
   onHover,
 }: BoundaryBrushProps) {
   const { camera, raycaster, pointer } = useThree();
@@ -159,16 +167,33 @@ export default function BoundaryBrush({
         position={initialPos}
         visible={false}
         onPointerDown={(e) => {
+          if (!enabled) return;
+          if (selectMode) {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            if (e.button === 0) {
+              const point = raycastModel() ?? hoverPos.current;
+              const vi = point ? hitVertex(point) : null;
+              if (vi !== null) onSelect?.(vi);
+            }
+            return;
+          }
+          // Let OrbitControls own the middle button for camera panning.
+          if (e.button === 1) return;
           e.stopPropagation();
-          dragging.current = { buttons: e.buttons };
-          dispatchEdit(e.buttons === 2 ? "push" : "pull");
+          dragging.current = { buttons: e.button === 2 ? 2 : 1 };
+          dispatchEdit(e.button === 2 ? "push" : "pull");
         }}
         onPointerMove={(e) => {
+          if (!enabled) return;
+          if (selectMode) return;
           if (dragging.current && e.buttons === 1) throttledDrag("pull");
           else if (dragging.current && e.buttons === 2) throttledDrag("push");
         }}
         onPointerUp={() => {
+          const wasDragging = dragging.current !== null;
           dragging.current = null;
+          if (wasDragging) onEditComplete?.();
         }}
         onContextMenu={(e) => e.nativeEvent.preventDefault()}
       />

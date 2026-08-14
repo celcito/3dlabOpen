@@ -9,6 +9,8 @@ import {
 import {
   pullBoundary,
   pushBoundary,
+  selectConnectedComponent,
+  selectConnectedComponents,
   smoothBoundary,
 } from "../lib/split3mf/segmentation/boundaryEditor";
 import type { SegmentGeometry } from "../lib/split3mf/segmentation/colorCluster";
@@ -79,6 +81,36 @@ export function useSplit3MFState() {
     dispatch({ type: "applyBoundaryEdit", mask: next });
   }, [state.geometry, state.regionMask, state.boundary.smoothness]);
 
+  const selectComponent = useCallback(
+    (vertexIndex: number) => {
+      const geom = state.geometry;
+      if (!geom) return;
+      const segGeom: SegmentGeometry = {
+        indices: geom.indices ?? null,
+        vertexCount: geom.positions.length / 3,
+      };
+      const mask = state.regionMask ?? new Uint8Array(segGeom.vertexCount);
+      const next = selectConnectedComponent(mask, segGeom, vertexIndex, state.boundary.activeRegionId);
+      dispatch({ type: "applyBoundaryEdit", mask: next });
+    },
+    [state.geometry, state.regionMask, state.boundary.activeRegionId]
+  );
+
+  const selectComponents = useCallback(
+    (vertexIndices: number[]) => {
+      const geom = state.geometry;
+      if (!geom) return;
+      const segGeom: SegmentGeometry = {
+        indices: geom.indices ?? null,
+        vertexCount: geom.positions.length / 3,
+      };
+      const mask = state.regionMask ?? new Uint8Array(segGeom.vertexCount);
+      const next = selectConnectedComponents(mask, segGeom, vertexIndices, state.boundary.activeRegionId);
+      dispatch({ type: "applyBoundaryEdit", mask: next });
+    },
+    [state.geometry, state.regionMask, state.boundary.activeRegionId]
+  );
+
   const canUndo = state.history.length > 0;
 
   return useMemo(() => ({
@@ -94,8 +126,10 @@ export function useSplit3MFState() {
     setRegionMask,
     applyBoundaryBrush,
     smoothBoundaries,
+    selectComponent,
+    selectComponents,
     defaults: { cap: DEFAULT_CAP_CONFIG, connector: DEFAULT_CONNECTOR_CONFIG, boundary: DEFAULT_BOUNDARY },
-  }), [state, loadFile, reset, undo, canUndo, setCapConfig, setConnectorConfig, setBoundary, setRegions, setRegionMask, applyBoundaryBrush, smoothBoundaries]);
+  }), [state, loadFile, reset, undo, canUndo, setCapConfig, setConnectorConfig, setBoundary, setRegions, setRegionMask, applyBoundaryBrush, smoothBoundaries, selectComponent, selectComponents]);
 }
 
 const FALLBACK_COLORS = ["#632CE5", "#FF1744", "#00FF41", "#D500F9", "#FF9100", "#FF4081", "#FFEA00", "#2979FF"];

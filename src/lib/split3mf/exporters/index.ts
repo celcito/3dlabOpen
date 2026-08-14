@@ -76,6 +76,54 @@ export function splitPieces(state: SplitState): ExportPiece[] {
   return pieces;
 }
 
+/** Places exported pieces apart on a virtual print bed instead of preserving
+ * the source assembly coordinates. 3MF uses Z-up; other supported formats use
+ * the viewer's Y-up convention. */
+export function arrangePiecesOnPlate(pieces: ExportPiece[], format: SplitExportOptionsShim["format"]): ExportPiece[] {
+  if (pieces.length === 0) return [];
+  const zUp = format === "3mf";
+  const depthAxis = zUp ? "y" : "z";
+  const verticalAxis = zUp ? "z" : "y";
+  const prepared = pieces.map((piece) => {
+    const geometry = piece.geometry.clone();
+    geometry.computeBoundingBox();
+    return { piece, geometry, box: geometry.boundingBox!.clone() };
+  });
+  const maxWidth = Math.max(10, ...prepared.map(({ box }) => box.max.x - box.min.x));
+  const maxDepth = Math.max(10, ...prepared.map(({ box }) => axisSize(box, depthAxis)));
+  const columns = Math.min(3, Math.max(1, prepared.length));
+  const rows = Math.ceil(prepared.length / columns);
+  const slotX = maxWidth * 1.45;
+  const slotDepth = maxDepth * 1.45;
+
+  return prepared.map(({ piece, geometry, box }, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const x = (column - (columns - 1) / 2) * slotX;
+    const depth = (row - (rows - 1) / 2) * slotDepth;
+    const centerX = (box.min.x + box.max.x) / 2;
+    const centerDepth = axisCenter(box, depthAxis);
+    const bottom = axisMin(box, verticalAxis);
+    const translation = new THREE.Vector3(x - centerX, 0, 0);
+    translation[depthAxis] = depth - centerDepth;
+    translation[verticalAxis] = 0.1 - bottom;
+    geometry.translate(translation.x, translation.y, translation.z);
+    return { ...piece, geometry };
+  });
+}
+
+function axisMin(box: THREE.Box3, axis: "x" | "y" | "z"): number {
+  return box.min[axis];
+}
+
+function axisCenter(box: THREE.Box3, axis: "x" | "y" | "z"): number {
+  return (box.min[axis] + box.max[axis]) / 2;
+}
+
+function axisSize(box: THREE.Box3, axis: "x" | "y" | "z"): number {
+  return box.max[axis] - box.min[axis];
+}
+
 function dominantRegion(mask: Uint8Array, i0: number, i1: number, i2: number): RegionId | undefined {
   const a = mask[i0] || 0;
   const b = mask[i1] || 0;
@@ -190,7 +238,8 @@ export interface SplitExportOptionsShim {
  */
 export async function exportSplit(state: SplitState, options: SplitExportOptionsShim): Promise<Blob> {
   const basePieces = splitPieces(state);
-  const pieces = await applyPieceMods(state, basePieces, options);
+  const modifiedPieces = await applyPieceMods(state, basePieces, options);
+  const pieces = arrangePiecesOnPlate(modifiedPieces, options.format);
   const filename = options.filename ?? "split";
 
   switch (options.format) {
