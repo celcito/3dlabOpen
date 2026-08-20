@@ -30,6 +30,68 @@ from tripo_api import create_task, wait_and_download, TripoError
 JOBS_DIR = Path(__file__).parent.parent / "tmp" / "jobs"
 JOBS_DIR.mkdir(parents=True, exist_ok=True)
 
+HUNYUAN_VERSIONS = [
+    {"id": "hunyuan3d-2", "label": "Hunyuan3D-2"},
+    {"id": "hunyuan3d-2.1", "label": "Hunyuan3D-2.1"},
+    {"id": "hunyuan3d-mini", "label": "Hunyuan3D Mini"},
+]
+
+
+def provider_catalog():
+    local_available = False
+    try:
+        import torch
+        _ = torch
+        local_available = True
+    except ImportError:
+        pass
+
+    return [
+        {
+            "id": "local",
+            "label": "TripoSR local",
+            "modes": ["image", "text"],
+            "available": local_available,
+            "reason": None if local_available else "Instale o runtime local do TripoSR.",
+            "hint": "Sem custo de API; usa o modelo instalado nesta máquina.",
+        },
+        {
+            "id": "tripo",
+            "label": "Tripo AI",
+            "modes": ["image"],
+            "available": bool(os.environ.get("TRIPO_API_KEY")),
+            "reason": None if os.environ.get("TRIPO_API_KEY") else "Configure TRIPO_API_KEY no ambiente.",
+            "hint": "Geração em nuvem com o adaptador Tripo existente.",
+            "pricing": "Consulte os créditos da sua conta Tripo AI.",
+            "model_version": os.environ.get("TRIPO_MODEL_VERSION", "v2.0-20240919"),
+        },
+        {
+            "id": "meshy",
+            "label": "Meshy AI",
+            "modes": ["image"],
+            "available": bool(os.environ.get("MESHY_API_KEY")),
+            "reason": None if os.environ.get("MESHY_API_KEY") else "Configure MESHY_API_KEY no ambiente.",
+            "hint": "Geração de imagem para 3D via Meshy AI.",
+            "pricing": "Cobrado por tarefa; os créditos consumidos variam conforme o modelo.",
+        },
+        {
+            "id": "hunyuan3d",
+            "label": "Hunyuan3D",
+            "modes": ["image"],
+            "available": False,
+            "reason": "Adaptador Hunyuan3D ainda não configurado.",
+            "hint": "Escolha uma versão quando o backend Hunyuan estiver instalado.",
+            "versions": [
+                {**version, "available": False, "reason": "Backend Hunyuan3D não configurado."}
+                for version in HUNYUAN_VERSIONS
+            ],
+        },
+    ]
+
+
+def normalize_provider(provider: str) -> str:
+    return "tripo" if provider == "cloud" else provider
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -94,14 +156,14 @@ def _run_inference(job_id: str, image_path: str, output_dir: str, mc_resolution:
         update_job(job_id, "error", progress=0, step="error", error=str(e))
 
 
-def _run_cloud_inference(job_id: str, image_path: str, output_dir: str, mc_resolution: int = 256):
+def _run_cloud_inference(job_id: str, image_path: str, output_dir: str, mc_resolution: int = 256, model_version: str | None = None):
     try:
         def progress(percent: int, step: str):
             update_job(job_id, "processing", progress=percent, step=step)
 
         update_job(job_id, "processing", progress=0, step="cloud_uploading")
 
-        task_id = create_task(image_path, mc_resolution)
+        task_id = create_task(image_path, mc_resolution, model_version=model_version)
 
         update_job(job_id, "processing", progress=5, step="cloud_processing")
         logger.info(f"Cloud job {job_id} → Tripo task {task_id}")
@@ -118,24 +180,48 @@ def _run_cloud_inference(job_id: str, image_path: str, output_dir: str, mc_resol
     except TripoError as e:
         logger.exception(f"Cloud job {job_id} failed: {e}")
         update_job(job_id, "error", progress=0, step="error", error=str(e))
+
+
+def _run_meshy_inference(job_id: str, image_path: str, output_dir: str, model_version: str | None = None):
+    try:
+        from meshy_api import create_task, wait_and_download
+
+        def progress(percent: int, step: str):
+            update_job(job_id, "processing", progress=percent, step=step)
+
+        update_job(job_id, "processing", progress=0, step="meshy_uploading")
+        task_id = create_task(image_path, model_version=model_version)
+        files = wait_and_download(task_id, output_dir, progress_callback=progress)
+        update_job(job_id, "done", progress=100, step="complete", files=files)
+        logger.info(f"Meshy job {job_id} completed: {files}")
+    except Exception as e:
+        logger.exception(f"Meshy job {job_id} failed: {e}")
+        update_job(job_id, "error", progress=0, step="error", error=str(e))
     except Exception as e:
         logger.exception(f"Cloud job {job_id} failed: {e}")
         update_job(job_id, "error", progress=0, step="error", error=str(e))
 
 
 @app.post("/generate")
-async def generate(image: UploadFile = File(...), mc_resolution: int = 256, provider: str = "local"):
+async def generate(image: UploadFile = File(...), mc_resolution: int = 256, provider: str = "local", model_version: str | None = None):
     if mc_resolution not in (128, 256, 384, 512):
         raise HTTPException(400, "mc_resolution must be 128, 256, 384, or 512")
     allowed_types = {"image/png", "image/jpeg", "image/webp"}
     if not image.content_type or image.content_type not in allowed_types:
         raise HTTPException(400, f"File must be a raster image ({', '.join(allowed_types)}), got {image.content_type}")
 
-    if provider not in ("local", "cloud"):
-        raise HTTPException(400, "provider must be 'local' or 'cloud'")
+    provider = normalize_provider(provider)
+    if provider not in ("local", "tripo", "meshy", "hunyuan3d"):
+        raise HTTPException(400, "provider must be local, tripo, meshy, or hunyuan3d")
 
-    if provider == "cloud" and not os.environ.get("TRIPO_API_KEY"):
+    if provider == "tripo" and not os.environ.get("TRIPO_API_KEY"):
         raise HTTPException(500, "TRIPO_API_KEY environment variable is not set")
+    if provider == "meshy" and not os.environ.get("MESHY_API_KEY"):
+        raise HTTPException(500, "MESHY_API_KEY environment variable is not set")
+    if provider == "hunyuan3d":
+        raise HTTPException(501, "Hunyuan3D está listado por versão, mas o backend ainda não foi configurado")
+    if provider != "hunyuan3d":
+        model_version = None
 
     job_id = create_job()
     job_dir = JOBS_DIR / job_id
@@ -157,10 +243,16 @@ async def generate(image: UploadFile = File(...), mc_resolution: int = 256, prov
 
     output_dir = job_dir
 
-    if provider == "cloud":
+    if provider == "tripo":
         threading.Thread(
             target=_run_cloud_inference,
-            args=(job_id, str(image_path), str(output_dir), mc_resolution),
+            args=(job_id, str(image_path), str(output_dir), mc_resolution, model_version),
+            daemon=True,
+        ).start()
+    elif provider == "meshy":
+        threading.Thread(
+            target=_run_meshy_inference,
+            args=(job_id, str(image_path), str(output_dir), model_version),
             daemon=True,
         ).start()
     else:
@@ -175,22 +267,7 @@ async def generate(image: UploadFile = File(...), mc_resolution: int = 256, prov
 
 @app.get("/providers")
 async def list_providers():
-    providers = []
-    try:
-        import torch
-        _ = torch
-        providers.append({"id": "local", "label": "TripoSR (local)", "available": True})
-    except ImportError:
-        providers.append({"id": "local", "label": "TripoSR (local)", "available": False})
-
-    has_cloud = bool(os.environ.get("TRIPO_API_KEY"))
-    providers.append({
-        "id": "cloud",
-        "label": "Tripo v2.0 (cloud)",
-        "available": has_cloud,
-        "model_version": os.environ.get("TRIPO_MODEL_VERSION", "v2.0-20240919"),
-    })
-    return {"providers": providers}
+    return {"providers": provider_catalog()}
 
 
 @app.get("/jobs/{job_id}/stream")
@@ -581,8 +658,9 @@ async def text_to_3d_endpoint(request: dict):
     if mc_resolution not in (128, 256, 384, 512):
         raise HTTPException(400, "mc_resolution must be 128, 256, 384, or 512")
 
-    if provider == "cloud":
-        raise HTTPException(400, "Text-to-3D is only supported with local provider. Use image upload for cloud.")
+    provider = normalize_provider(provider)
+    if provider != "local":
+        raise HTTPException(400, "Text-to-3D usa somente o provedor TripoSR local nesta versão.")
 
     job_id = create_job()
     job_dir = JOBS_DIR / job_id

@@ -211,7 +211,7 @@ export default function FlexiModelCreator() {
       </div>
 
       {/* VIEWPORT */}
-      <div className="flex-1 relative">
+       <div className="workbench-viewport flex-1 relative">
         <div className="absolute inset-0">
           <Canvas shadows camera={{ position: [30, 30, 30], fov: 45 }}>
             <color attach="background" args={["#F3F4EE"]} />

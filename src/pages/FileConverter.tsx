@@ -3,7 +3,7 @@ import { Upload, Download, FileBox, RefreshCw, FileText, CheckCircle2, AlertCirc
 import { useFileConverter } from "../hooks/useFileConverter";
 
 export default function FileConverter() {
-  const { files, outputFormat, isConverting, fileInputRef, handleFileChange, handleDragOver, handleDrop, removeFile, clearAll, convertBatch, changeOutputFormat, getOutputFilename, pendingCount } = useFileConverter();
+  const { files, outputFormat, isConverting, isLoading, loadingFileId, fileInputRef, handleFileChange, handleDragOver, handleDrop, removeFile, clearAll, convertBatch, changeOutputFormat, getOutputFilename, pendingCount } = useFileConverter();
 
   return (
     <div className="flex-1 flex flex-col p-8 overflow-y-auto">
@@ -50,10 +50,12 @@ export default function FileConverter() {
         <div className="flex flex-col gap-6">
           {/* Upload Area */}
           <div 
-            className={`border-2 border-dashed border-[#E8E9E3] bg-[#E8E9E3] hover:border-[#632CE5] rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer`}
+            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all relative ${
+              isLoading ? "border-[#632CE5] bg-[#632CE5]/5 cursor-wait" : "border-[#E8E9E3] bg-[#E8E9E3] hover:border-[#632CE5] cursor-pointer"
+            }`}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => { if (!isLoading && !isConverting) fileInputRef.current?.click(); }}
           >
             <input 
               type="file" 
@@ -65,11 +67,19 @@ export default function FileConverter() {
             />
             
             <div className="w-12 h-12 rounded-full bg-[#E8E9E3] flex items-center justify-center mb-4">
-              <Upload className="w-6 h-6 text-[#632CE5]" />
+              {isLoading ? (
+                <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
+              ) : (
+                <Upload className="w-6 h-6 text-[#632CE5]" />
+              )}
             </div>
-            <h3 className="text-lg font-bold text-[#1A1C19] mb-2">Adicionar Modelos 3D</h3>
+            <h3 className="text-lg font-bold text-[#1A1C19] mb-2">
+              {isLoading ? "Carregando arquivos..." : "Adicionar Modelos 3D"}
+            </h3>
             <p className="text-sm text-zinc-500">
-              Arraste arquivos ou clique para selecionar (STL, OBJ, FBX). Você pode adicionar múltiplos arquivos de uma vez.
+              {isLoading
+                ? "Lendo e interpretando o modelo 3D — aguarde..."
+                : "Arraste arquivos ou clique para selecionar (STL, OBJ, FBX). Você pode adicionar múltiplos arquivos de uma vez."}
             </p>
           </div>
 
@@ -103,7 +113,7 @@ export default function FileConverter() {
                     {isConverting ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        Processando...
+                        {isLoading ? "Carregando..." : "Convertendo..."}
                       </>
                     ) : (
                       <>
@@ -168,10 +178,12 @@ export default function FileConverter() {
                       ) : (
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
                           f.status === "pending" ? "text-zinc-500 bg-[#F9FAF4]" :
+                          f.status === "converting" && loadingFileId === f.id ? "text-[#632CE5] bg-[#632CE5]/10" :
                           f.status === "converting" ? "text-[#632CE5] bg-[#632CE5]/10" :
                           "text-red-500 bg-red-500/10"
                         }`}>
                           {f.status === "pending" ? "Pendente" : 
+                           f.status === "converting" && loadingFileId === f.id ? "Carregando" : 
                            f.status === "converting" ? "Convertendo" : 
                            "Erro"}
                         </span>

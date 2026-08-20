@@ -370,8 +370,8 @@ export default function Split3MF() {
           openBoundaryKey={geometryEpoch}
         />
 
-        <div data-testid="split3mf-viewport" className="flex-1 min-w-0 min-h-0 relative bg-[#F9FAF4] p-1.5 h-full flex flex-col">
-          <div className="flex-1 w-full border border-[#E8E9E3] rounded-lg relative overflow-hidden bg-[#F9FAF4] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]">
+        <div data-testid="split3mf-viewport" className="workbench-viewport flex-1 min-w-0 min-h-0 relative bg-[#F3F4EE] h-full flex flex-col">
+          <div className="workbench-viewport flex-1 w-full relative overflow-hidden bg-[#F3F4EE]">
           {/* Viewport header — anchors the 3D area as a clearly bounded viewport. */}
           <div className="absolute top-6 left-6 z-20 px-3.5 py-2.5 bg-[#F9FAF4]/85 border border-[#E8E9E3] backdrop-blur-md rounded text-[10px] uppercase tracking-wider text-zinc-500 space-y-1.5 pointer-events-none select-none">
             <div className="text-[#632CE5] font-bold text-[11px] mb-1">3D Navigation Guide</div>
@@ -599,7 +599,7 @@ function SplitScene({
           panSpeed={0.8}
         />
       </Bounds>
-      <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
+      <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} />
       <BoundaryBrush
         geometry={geometry}
         meshRef={meshRef}
@@ -744,7 +744,7 @@ function PlateScene({
           </mesh>
         ))}
       </group>
-      <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
+      <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} />
       <OrbitControls makeDefault enableDamping={false} dampingFactor={0} rotateSpeed={0.7} zoomSpeed={0.8} panSpeed={0.8} />
     </Bounds>
   );

@@ -11,7 +11,12 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    include: ["src/lib/split3mf/**/*.test.ts", "src/hooks/**/*.test.ts"],
+    include: [
+      "src/lib/split3mf/**/*.test.ts",
+      "src/lib/fastener/**/*.test.ts",
+      "src/lib/imageTools/**/*.test.ts",
+      "src/hooks/**/*.test.ts",
+    ],
     globals: false,
   },
 });

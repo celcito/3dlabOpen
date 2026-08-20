@@ -1102,8 +1102,8 @@ export default function Viewer3D() {
         </div>
       </header>
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_360px] overflow-hidden">
-        <div className="relative bg-[#F9FAF4] p-6 h-full flex flex-col">
-          <div className="flex-1 w-full border border-[#E8E9E3] rounded-lg relative overflow-hidden bg-[#F9FAF4] bg-[radial-gradient(#1a1a1a_1px,transparent_1px)] [background-size:20px_20px]">
+        <div className="workbench-viewport relative bg-[#F3F4EE] h-full flex flex-col">
+          <div className="workbench-viewport flex-1 w-full relative overflow-hidden bg-[#F3F4EE]">
             {modelGeometry ? (
               <>
                 <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }}>
@@ -1218,7 +1218,7 @@ export default function Viewer3D() {
                     </group>
                   </Bounds>
                   <OrbitControls ref={controlsRef} makeDefault enabled={true} mouseButtons={{ LEFT: (placementMode || (paintMode && !previewSeparated)) ? null : THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: (paintMode && !previewSeparated) ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN }} touches={{ ONE: (placementMode || (paintMode && !previewSeparated)) ? null : THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }} />
-                  <Grid infiniteGrid fadeDistance={30} sectionColor="#333" cellColor="#111" />
+                  <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} />
                   {watermarkEnabled && watermarkText.trim() !== "" && (
                     <Text position={watermarkParams.position} rotation={watermarkParams.rotation} fontSize={watermarkSize} color={watermarkStyle === "recessed" ? "#0a0a0a" : watermarkColor} maxWidth={Math.max(modelDimensions.x, modelDimensions.y, modelDimensions.z) * 1.5} textAlign="center" anchorX="center" anchorY="middle" depthOffset={watermarkStyle === "overlay" ? -1 : 0} outlineWidth={watermarkStyle === "recessed" ? 0.012 : 0} outlineColor={watermarkStyle === "recessed" ? watermarkColor : "transparent"}>
                       {watermarkText}

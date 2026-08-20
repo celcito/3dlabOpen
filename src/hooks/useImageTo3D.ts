@@ -5,8 +5,33 @@ import { useMultiJobStream } from "../../hooks/useMultiJobStream";
 export interface Provider {
   id: string;
   label: string;
+  modes: ("image" | "text")[];
   available: boolean;
+  reason?: string | null;
+  hint?: string;
+  pricing?: string;
   model_version?: string;
+  versions?: { id: string; label: string; available: boolean; reason?: string }[];
+}
+
+const IMAGE_PROVIDER_KEY = "m2cr.provider.image";
+const TEXT_PROVIDER_KEY = "m2cr.provider.text";
+const HUNYUAN_VERSION_KEY = "m2cr.provider.hunyuanVersion";
+
+function readPreference(key: string, fallback: string): string {
+  try {
+    return localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writePreference(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage can be unavailable in private browsing or embedded contexts.
+  }
 }
 
 export function useImageTo3D() {
@@ -14,7 +39,9 @@ export function useImageTo3D() {
   const [uploading, setUploading] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [provider, setProvider] = useState("local");
+  const [provider, setProvider] = useState(() => readPreference(IMAGE_PROVIDER_KEY, "local"));
+  const [textProvider, setTextProvider] = useState(() => readPreference(TEXT_PROVIDER_KEY, "local"));
+  const [modelVersion, setModelVersion] = useState(() => readPreference(HUNYUAN_VERSION_KEY, "hunyuan3d-2"));
   const [availableProviders, setAvailableProviders] = useState<Provider[]>([]);
   const [multiMode, setMultiMode] = useState(false);
   const [multiCount, setMultiCount] = useState(4);
@@ -34,11 +61,24 @@ export function useImageTo3D() {
       .then((response) => response.json())
       .then((data) => {
         setAvailableProviders(data.providers || []);
-        const cloud = (data.providers || []).find((p: Provider) => p.available && p.id === "cloud");
-        if (cloud) setProvider("cloud");
+        const imageProvider = (data.providers || []).find((p: Provider) => p.available && p.modes?.includes("image"));
+        if (!(data.providers || []).some((p: Provider) => p.id === provider && p.available && p.modes?.includes("image"))) {
+          setProvider(imageProvider?.id || "local");
+        }
+        const textProviderOption = (data.providers || []).find((p: Provider) => p.available && p.modes?.includes("text"));
+        if (!(data.providers || []).some((p: Provider) => p.id === textProvider && p.available && p.modes?.includes("text"))) {
+          setTextProvider(textProviderOption?.id || "local");
+        }
       })
-      .catch(() => setProvider("local"));
+      .catch(() => {
+        setProvider("local");
+        setTextProvider("local");
+      });
   }, []);
+
+  useEffect(() => writePreference(IMAGE_PROVIDER_KEY, provider), [provider]);
+  useEffect(() => writePreference(TEXT_PROVIDER_KEY, textProvider), [textProvider]);
+  useEffect(() => writePreference(HUNYUAN_VERSION_KEY, modelVersion), [modelVersion]);
 
   const handleGenerate = async () => {
     if (!file) return;
@@ -47,9 +87,12 @@ export function useImageTo3D() {
     try {
       const formData = new FormData();
       formData.append("image", file);
-      formData.append("mcResolution", String(resolution));
-      formData.append("provider", provider);
-      const response = await fetch("/api/img2-3d/generate", { method: "POST", body: formData });
+      const params = new URLSearchParams({
+        mc_resolution: String(resolution),
+        provider,
+      });
+      if (modelVersion) params.set("model_version", modelVersion);
+      const response = await fetch(`/api/img2-3d?${params.toString()}`, { method: "POST", body: formData });
       if (!response.ok) {
         const data = await response.json().catch(() => ({ error: "Unknown error" }));
         throw new Error(data.error || `HTTP ${response.status}`);
@@ -70,7 +113,7 @@ export function useImageTo3D() {
       const response = await fetch("/api/text-to-3d", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, mcResolution: resolution, provider }),
+        body: JSON.stringify({ prompt, mcResolution: resolution, provider: textProvider }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({ error: "Unknown error" }));
@@ -96,6 +139,7 @@ export function useImageTo3D() {
         formData.append("image", currentFile);
         formData.append("mcResolution", String(resolution));
         formData.append("provider", provider);
+        formData.append("modelVersion", modelVersion);
         const response = await fetch("/api/img2-3d", { method: "POST", body: formData });
         if (!response.ok) {
           const data = await response.json().catch(() => ({ error: "Unknown error" }));
@@ -135,7 +179,8 @@ export function useImageTo3D() {
 
   return {
     file, setFile, uploading, setUploading, jobId, setJobId, error, setError,
-    provider, setProvider, availableProviders, multiMode, setMultiMode,
+    provider, setProvider, textProvider, setTextProvider, modelVersion, setModelVersion,
+    availableProviders, multiMode, setMultiMode,
     multiCount, setMultiCount, multiFiles, setMultiFiles, multiUploading,
     setMultiUploading, resolution, setResolution, textMode, setTextMode,
     prompt, setPrompt, textUploading, setTextUploading, textJobId, setTextJobId,
