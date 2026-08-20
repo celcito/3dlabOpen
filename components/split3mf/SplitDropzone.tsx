@@ -9,7 +9,7 @@ export interface SplitDropzoneProps {
 
 const SOFT_LIMIT = 50 * 1024 * 1024;
 const HARD_LIMIT = 200 * 1024 * 1024;
-const ACCEPTED = [".3mf", ".glb", ".obj"];
+const ACCEPTED = [".3mf", ".glb", ".gltf", ".obj"];
 
 export function SplitDropzone({ fileName, onFile, disabled }: SplitDropzoneProps) {
   const [dragOver, setDragOver] = useState(false);
@@ -19,7 +19,7 @@ export function SplitDropzone({ fileName, onFile, disabled }: SplitDropzoneProps
   const accept = useCallback((f: File) => {
     const ext = f.name.split(".").pop()?.toLowerCase() || "";
     if (!ACCEPTED.includes(`.${ext}`)) {
-      setWarn(`Formato ".${ext}" não suportado. Use .3mf, .glb ou .obj.`);
+       setWarn(`Formato ".${ext}" não suportado. Use .3mf, .glb, .gltf ou .obj.`);
       return;
     }
     if (f.size > HARD_LIMIT) {
@@ -69,13 +69,13 @@ export function SplitDropzone({ fileName, onFile, disabled }: SplitDropzoneProps
             <p className="text-[11px] uppercase tracking-widest text-[#494455] font-bold">
               Arraste ou clique
             </p>
-            <p className="text-[10px] text-[#7A7487] mt-1">3MF, GLB ou OBJ · até 200 MB</p>
+            <p className="text-[10px] text-[#7A7487] mt-1">3MF, GLB, GLTF ou OBJ · até 200 MB</p>
           </>
         )}
         <input
           ref={inputRef}
           type="file"
-          accept=".3mf,.glb,.obj"
+           accept=".3mf,.glb,.gltf,.obj"
           onChange={handleChange}
           className="hidden"
           disabled={disabled}

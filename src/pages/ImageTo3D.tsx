@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import {
   Image, Loader2, CheckCircle, XCircle, Download, Box, ExternalLink,
-  LayoutGrid, LayoutList, Type, Cloud, Cpu,
+  LayoutGrid, LayoutList, Type,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UploadDropzone } from "@/components/UploadDropzone";
-import { useImageTo3D, type Provider } from "../hooks/useImageTo3D";
+import { useImageTo3D } from "../hooks/useImageTo3D";
+import { ProviderPicker } from "../components/ProviderPicker";
 
 const MAX_MULTI = 4;
 const MULTI_OPTIONS = [2, 3, 4] as const;
@@ -31,7 +32,8 @@ export default function ImageTo3D() {
   const navigate = useNavigate();
   const {
     file, setFile, uploading, setUploading, jobId, setJobId, error, setError,
-    provider, setProvider, multiMode, setMultiMode, multiCount, setMultiCount,
+    provider, setProvider, textProvider, setTextProvider, modelVersion, setModelVersion,
+    availableProviders, multiMode, setMultiMode, multiCount, setMultiCount,
     multiFiles, setMultiFiles, multiUploading, setMultiUploading, resolution,
     setResolution, textMode, setTextMode, prompt, setPrompt, textUploading,
     setTextUploading, textJobId, setTextJobId, progress, connected,
@@ -41,6 +43,9 @@ export default function ImageTo3D() {
     textIsProcessing, textIsDone, textIsError, textShowProgress, formatDownloadUrl,
     multiFormatDownloadUrl, multiProcessing, multiHasResults, multiJobEntries,
   } = useImageTo3D();
+
+  const selectedProviderId = textMode ? textProvider : provider;
+  const selectedProvider = availableProviders.find((item) => item.id === selectedProviderId);
 
 
   return (
@@ -74,33 +79,14 @@ export default function ImageTo3D() {
               Texto
             </button>
           </div>
-          <div className="text-[10px] uppercase tracking-widest text-zinc-500">
-            <div>Engine</div>
-            <div className="flex items-center gap-1 mt-1">
-              <button
-                onClick={() => setProvider("local")}
-                className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors ${
-                  provider === "local"
-                    ? "bg-[#632CE5] text-white"
-                    : "bg-[#F9FAF4] text-zinc-400 hover:text-[#212121]"
-                }`}
-              >
-                <Cpu className="w-3 h-3" />
-                local
-              </button>
-              <button
-                onClick={() => setProvider("cloud")}
-                className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors ${
-                  provider === "cloud"
-                    ? "bg-[#632CE5] text-white"
-                    : "bg-[#F9FAF4] text-zinc-400 hover:text-[#212121]"
-                }`}
-              >
-                <Cloud className="w-3 h-3" />
-                cloud
-              </button>
-            </div>
-          </div>
+          <ProviderPicker
+            providers={availableProviders}
+            mode={textMode ? "text" : "image"}
+            value={textMode ? textProvider : provider}
+            version={modelVersion}
+            onChange={textMode ? setTextProvider : setProvider}
+            onVersionChange={setModelVersion}
+          />
         </div>
       </header>
 
@@ -394,7 +380,7 @@ export default function ImageTo3D() {
 
       <footer className="h-12 border-t border-[#E2E3DD] px-6 flex items-center justify-between bg-[#F9FAF4] shrink-0">
         <div className="flex gap-6 items-center text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
-          <span>Engine: <span className="text-[#632CE5]">{provider === "cloud" ? "Tripo Cloud" : "TripoSR"}</span></span>
+          <span>Engine: <span className="text-[#632CE5]">{selectedProvider?.label || selectedProviderId}</span></span>
           <span>Mode: <span className={multiMode || textMode ? "text-[#632CE5]" : "text-zinc-500"}>{textMode ? "Texto → 3D" : multiMode ? "Multi-View" : "Single"}</span></span>
         </div>
       </footer>

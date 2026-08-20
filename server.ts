@@ -13,6 +13,71 @@ const IMG2_3D_PY_URL = process.env.IMG2_3D_PY_URL || "http://127.0.0.1:8001";
 const JOBS_DIR = path.join(process.cwd(), "jobs");
 const upload = multer();
 
+function formatGeminiError(error: unknown, fallback: string): string {
+  const message = errorMessage(error);
+  if (isRateLimited(error)) {
+    return "O limite da API Gemini foi atingido para este projeto ou modelo. Aguarde, verifique a quota no Google AI Studio/Cloud Console ou use outra chave/projeto.";
+  }
+  if (/API_KEY_INVALID|api key not valid|invalid api key/i.test(message)) {
+    return "A GEMINI_API_KEY foi rejeitada pelo Google. Gere uma nova chave no Google AI Studio, atualize o arquivo .env e reinicie o servidor.";
+  }
+  return message || fallback;
+}
+
+function geminiStatus(error: unknown): number {
+  return isRateLimited(error) ? 429 : 502;
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  try {
+    return JSON.stringify(error) || "";
+  } catch {
+    return String(error ?? "");
+  }
+}
+
+function isRateLimited(error: unknown): boolean {
+  const candidate = error as { status?: unknown; code?: unknown; error?: { code?: unknown; status?: unknown } };
+  const status = Number(candidate?.status ?? candidate?.code ?? candidate?.error?.code ?? candidate?.error?.status);
+  return status === 429 || /429|RESOURCE_EXHAUSTED|rate limit|quota/i.test(errorMessage(error));
+}
+
+async function generateOpenAIImage(prompt: string, aspectRatio: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
+
+  const size = aspectRatio === "9:16" || aspectRatio === "3:4"
+    ? "1024x1536"
+    : aspectRatio === "16:9" || aspectRatio === "4:3"
+    ? "1536x1024"
+    : "1024x1024";
+  const response = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_IMAGE_MODEL || "gpt-image-1",
+      prompt,
+      n: 1,
+      size,
+      quality: "medium",
+      output_format: "png",
+    }),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`OpenAI image API failed (${response.status}): ${detail.slice(0, 500)}`);
+  }
+  const data = await response.json() as { data?: Array<{ b64_json?: string }> };
+  const encoded = data.data?.[0]?.b64_json;
+  if (!encoded) throw new Error("OpenAI não retornou a imagem em base64.");
+  return `data:image/png;base64,${encoded}`;
+}
+
 function pyStream(url: string, signal?: AbortSignal): Promise<{ ok: boolean; status: number; body: ReadableStream<Uint8Array> | null }> {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
@@ -82,14 +147,17 @@ Return only the optimized prompt.`;
       res.json({ optimizedPrompt: response.text });
     } catch (error: any) {
       console.error("Gemini API Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate prompt" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to generate prompt") });
     }
   });
 
   // AI Figures Image Generation API
   app.post("/api/ai-figures/generate-image", async (req, res) => {
+    let enhancedPrompt = "";
+    let fallbackAspectRatio = "1:1";
     try {
       const { prompt, aspectRatio = "1:1", model = "gemini-3.1-flash-lite-image", physicalFormat = "statue" } = req.body;
+      fallbackAspectRatio = aspectRatio;
       if (!prompt) {
         return res.status(400).json({ error: "Prompt is required" });
       }
@@ -108,7 +176,7 @@ Return only the optimized prompt.`;
       });
 
       // We append description details to get a high-quality 3D printing/resin model style preview
-      let enhancedPrompt = "";
+       enhancedPrompt = "";
       if (physicalFormat === "articulated") {
         enhancedPrompt = `3D print-in-place articulated sensory flexi fidget toy of: ${prompt}. Showcasing flexible segmented interlocking joints, flat bottom, resting on a plain dark studio table surface, realistic plastic material, high quality render.`;
       } else if (physicalFormat === "articulated_keychain") {
@@ -156,7 +224,23 @@ Return only the optimized prompt.`;
       res.json({ imageUrl });
     } catch (error: any) {
       console.error("Gemini Image API Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate image" });
+      let fallbackErrorMessage = "";
+      if (geminiStatus(error) === 429 && process.env.OPENAI_API_KEY) {
+        try {
+          const fallbackImageUrl = await generateOpenAIImage(enhancedPrompt, fallbackAspectRatio);
+          console.warn("Gemini image quota reached; image generated with OpenAI fallback");
+          return res.json({ imageUrl: fallbackImageUrl, provider: "openai", fallback: true });
+        } catch (fallbackError: any) {
+          console.error("OpenAI image fallback failed:", fallbackError);
+          fallbackErrorMessage = errorMessage(fallbackError).slice(0, 500);
+        }
+      }
+      if (fallbackErrorMessage) {
+        return res.status(502).json({
+          error: `Gemini atingiu a quota e o fallback OpenAI também falhou: ${fallbackErrorMessage}`,
+        });
+      }
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to generate image") });
     }
   });
 
@@ -167,8 +251,9 @@ Return only the optimized prompt.`;
         return res.status(400).json({ error: "Image file is required" });
       }
 
-      const mcResolution = req.body.mcResolution || 256;
-      const provider = req.body.provider || "local";
+      const mcResolution = req.body.mcResolution || req.query.mc_resolution || 256;
+      const provider = req.body.provider || req.query.provider || "local";
+      const modelVersion = req.body.modelVersion || req.query.model_version || "";
 
       const formData = new FormData();
       const blob = new Blob([req.file.buffer], { type: req.file.mimetype });
@@ -178,6 +263,7 @@ Return only the optimized prompt.`;
         mc_resolution: String(mcResolution),
         provider,
       });
+      if (modelVersion) params.set("model_version", modelVersion);
 
       const response = await fetch(`${IMG2_3D_PY_URL}/generate?${params}`, {
         method: "POST",
@@ -341,7 +427,7 @@ Return only the optimized prompt.`;
           prompt,
           mc_resolution: mcResolution,
           clean_prompt: cleanPrompt !== false,
-          provider,
+          provider: provider === "cloud" ? "local" : provider,
         }),
       });
 
@@ -610,7 +696,7 @@ You must output a JSON object with two fields:
       });
     } catch (error: any) {
       console.error("Gemini Image Analysis Error:", error);
-      res.status(500).json({ error: error.message || "Failed to analyze image" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to analyze image") });
     }
   });
 
@@ -785,7 +871,7 @@ Return a JSON object matching this schema:
       res.json(parsedData);
     } catch (error: any) {
       console.error("Marketing Details Generation Error:", error);
-      res.status(500).json({ error: error.message || "Failed to generate marketing details" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to generate marketing details") });
     }
   });
 
@@ -845,7 +931,7 @@ Return a JSON object matching this schema:
       res.json({ operationName: operation.name });
     } catch (error: any) {
       console.error("Video Generation Error:", error);
-      res.status(500).json({ error: error.message || "Failed to initiate video generation" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to initiate video generation") });
     }
   });
 
@@ -877,7 +963,7 @@ Return a JSON object matching this schema:
       res.json({ done: updated.done, error: updated.error });
     } catch (error: any) {
       console.error("Video Status Error:", error);
-      res.status(500).json({ error: error.message || "Failed to check video status" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to check video status") });
     }
   });
 
@@ -934,7 +1020,7 @@ Return a JSON object matching this schema:
       });
     } catch (error: any) {
       console.error("Video Download Error:", error);
-      res.status(500).json({ error: error.message || "Failed to download generated video" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to download generated video") });
     }
   });
 
@@ -973,7 +1059,7 @@ Output ONLY the raw <svg> code. Do not include markdown formatting or backticks.
       res.json({ svgCode });
     } catch (error: any) {
       console.warn("Gemini SVG API auth error, please refresh session");
-      res.status(500).json({ error: error.message || "Failed to generate SVG" });
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to generate SVG") });
     }
   });
 

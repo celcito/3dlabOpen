@@ -6,8 +6,20 @@ type ManifoldModule = Awaited<ReturnType<typeof getManifoldModule>>;
 let cached: ManifoldModule | null = null;
 let loadError: string | null = null;
 let loading: Promise<ManifoldModule> | null = null;
+let wasmUrlOverride: string | null = null;
 
 export type { ManifoldModule };
+
+/**
+ * Overrides the WASM URL used by the next `loadManifold()` call. In the
+ * browser the Vite `?url` import is correct; tests running in Node must point
+ * at the absolute path to `manifold.wasm` (e.g. `path.join(process.cwd(),
+ * "node_modules/manifold-3d/manifold.wasm")`).
+ */
+export function setManifoldWasmUrl(url: string): void {
+  wasmUrlOverride = url;
+  resetManifold();
+}
 
 /**
  * Lazily loads the manifold-3d WASM module (singleton). Loads once and
@@ -21,7 +33,7 @@ export async function loadManifold(): Promise<ManifoldModule> {
   if (loading) return loading;
 
   loading = (async () => {
-    setWasmUrl(wasmUrl);
+    setWasmUrl(wasmUrlOverride ?? wasmUrl);
     try {
       const mod = await getManifoldModule();
       cached = mod;

@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
@@ -10,10 +10,11 @@ import { addPegSocketJoint } from "../../lib/csg";
 import { sliceMeshIntoSegments, jointArticulatedSegments, SegmentData } from "../lib/meshSlicing";
 import { toastExportError } from "@/lib/toast";
 import {
-  UploadCloud, Download, Sliders, Layers,
+  Download, Sliders, Layers,
   Check, Waves, Loader2, ImageIcon
 } from "lucide-react";
 import { useFlexiFromPhoto } from "../hooks/useFlexiFromPhoto";
+import { SplitDropzone } from "../../components/split3mf/SplitDropzone";
 
 export default function FlexiFromPhoto() {
   const {
@@ -21,7 +22,6 @@ export default function FlexiFromPhoto() {
     setSegmentsPreview, fileName, setFileName, status, setStatus, successMsg,
     showNotification,
   } = useFlexiFromPhoto();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- 1. Import do mesh gerado a partir da foto (saída do pipeline TripoSR/Hunyuan3D) ---
   const handleFileUpload = useCallback((file: File) => {
@@ -158,25 +158,7 @@ export default function FlexiFromPhoto() {
             <ImageIcon className="w-3.5 h-3.5 text-[#632CE5]" />
             01. Importar Mesh (.glb / .obj)
           </h3>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".glb,.gltf,.obj"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) handleFileUpload(f);
-            }}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full border border-dashed border-[#E8E9E3] hover:border-[#632CE5]/50 rounded-xl py-6 flex flex-col items-center gap-2 text-zinc-500 hover:text-[#632CE5] transition-all"
-          >
-            <UploadCloud className="w-6 h-6" />
-            <span className="text-[10px] font-bold uppercase tracking-wide">
-              {fileName || "Selecionar arquivo do pipeline foto→3D"}
-            </span>
-          </button>
+          <SplitDropzone fileName={fileName} onFile={handleFileUpload} disabled={status === "loading"} />
           {status === "loading" && (
             <div className="flex items-center gap-2 text-[10px] text-zinc-500">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando malha...
