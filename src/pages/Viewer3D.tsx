@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { capBoundaryHoles, addPeg, addSocket, addReinforcedSocket } from "../../lib/csg";
+import { capBoundaryHoles, addPeg, addSocket, addReinforcedSocket, booleanDifferenceWithTolerance, booleanUnionWithTolerance } from "../../lib/csg";
 import { useViewerCamera } from "../hooks/viewer3d/useViewerCamera";
 import { useWatermark } from "../hooks/viewer3d/useWatermark";
 import { usePrintEstimator } from "../hooks/viewer3d/usePrintEstimator";
@@ -392,6 +392,7 @@ export default function Viewer3D() {
   const [isolateGroupId, setIsolateGroupId] = useState<number | null>(null);
   const [autoIsolateActive, setAutoIsolateActive] = useState(false);
   const [previewSeparated, setPreviewSeparated] = useState(false);
+  const [showConnectors, setShowConnectors] = useState(true);
   const [finalizedPreview, setFinalizedPreview] = useState(false);
   const [previewValidation, setPreviewValidation] = useState<"idle" | "valid" | "warning">("idle");
   const [separationDistance, setSeparationDistance] = useState<number>(1.0);
@@ -401,10 +402,12 @@ export default function Viewer3D() {
   const [selectedManualJointId, setSelectedManualJointId] = useState<string | null>(null);
    const [placementMode, setPlacementMode] = useState(false);
    const [transformMode, setTransformMode] = useState<"translate" | "rotate" | "scale">("translate");
-  const [importUnit, setImportUnit] = useState<"mm" | "inch">("mm");
-  const [importScale, setImportScale] = useState(1.0);
-  const [showConversionSettings, setShowConversionSettings] = useState(false);
-  const [viewportEpoch, setViewportEpoch] = useState(0);
+   const [importUnit, setImportUnit] = useState<"mm" | "inch">("mm");
+   const [importScale, setImportScale] = useState(1.0);
+   const [showConversionSettings, setShowConversionSettings] = useState(false);
+   const [viewportEpoch, setViewportEpoch] = useState(0);
+   const [booleanMode, setBooleanMode] = useState(false);
+   const [booleanTolerance, setBooleanTolerance] = useState(0.2);
    const modelImport = useViewerModelImport({
      importUnit,
      importScale,
@@ -430,15 +433,23 @@ export default function Viewer3D() {
 
    const effectiveIsolateGroupId = autoIsolateActive ? activeGroupId : isolateGroupId;
    const fileInputRef = useRef<HTMLInputElement>(null);
+   const jointsSectionRef = useRef<HTMLDivElement>(null);
    const { controlsRef, zoomIn, zoomOut, resetCamera } = useViewerCamera();
 
     const adjacencyList = useViewerTopology(modelGeometry);
     const { pushStateToHistory, handleUndo, resetPainting, fillRemainingWithActiveGroup, fillAllWithActiveGroup, expandConnectedPaint } = useViewerPainting({ geometry: modelGeometry, vertexGroups, setVertexGroups, history, setHistory, activeGroupId, effectiveIsolateGroupId, groupColor: (id) => getGroupColor(id), adjacencyList });
     const { segmentLegs, setSegmentLegs, segmentArms, setSegmentArms, segmentTorso, setSegmentTorso, autoSegmentAnatomy, autoSegmentShells, autoSegmentSmart } = useViewerSegmentation({ geometry: modelGeometry, adjacencyList, groups, setGroups, setVertexGroups, pushHistory: () => pushStateToHistory(), onProcessing: (message) => { setIsProcessing(Boolean(message)); if (message) setProcessingMessage(message); } });
     const extractedJoints = useViewerJoints({ modelGeometry, vertexGroups, adjacencyList, groups, jointType, jointSizes });
-    const extractedPreview = useViewerSeparatedPreview({ previewSeparated, modelGeometry, vertexGroups, groups, jointType, jointSizes, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, getGroupName: extractedJoints.getGroupName, setPlacementMode: extractedJoints.setPlacementMode });
-    const extractedExports = useViewerExports({ modelGeometry, setModelGeometry, vertexGroups, setVertexGroups, groups, fileName, jointType, jointSizes, capSelection, setIsProcessing, setProcessingMessage, setStats, setHistory, setGroupJointTypes: extractedJoints.setGroupJointTypes, setManualJoints: extractedJoints.setManualJoints, setPlacementMode: extractedJoints.setPlacementMode, getGroupName: extractedJoints.getGroupName, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, jointConfigurationWarning: null });
+    const extractedPreview = useViewerSeparatedPreview({ previewSeparated, modelGeometry, vertexGroups, groups, jointType, jointSizes, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, getGroupName: extractedJoints.getGroupName, setPlacementMode: extractedJoints.setPlacementMode, showConnectors, booleanMode, booleanTolerance });
+    const extractedExports = useViewerExports({ modelGeometry, setModelGeometry, vertexGroups, setVertexGroups, groups, fileName, jointType, jointSizes, capSelection, setIsProcessing, setProcessingMessage, setStats, setHistory, setGroupJointTypes: extractedJoints.setGroupJointTypes, setManualJoints: extractedJoints.setManualJoints, setPlacementMode: extractedJoints.setPlacementMode, getGroupName: extractedJoints.getGroupName, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, jointConfigurationWarning: null, showConnectors });
     void extractedJoints; void extractedPreview; void extractedExports;
+
+  // Auto-scroll para a seção de encaixes ao entrar no preview ou modo de colocação
+  useEffect(() => {
+    if ((previewSeparated || placementMode) && jointsSectionRef.current) {
+      jointsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [previewSeparated, placementMode]);
 
   // ATUALIZADO: groupJointRoles agora respeita marcação manual e usa adjacencyList
   const groupJointRoles = useMemo(() => {
@@ -846,7 +857,7 @@ export default function Viewer3D() {
   // NOVO: Geometrias dos encaixes para preview no modo separado.
   // Usa os MESMOS specs do export (manual + auto), então o preview reflete o STL final.
   const jointGeometries = useMemo(() => {
-    if (!previewSeparated || !modelGeometry) return [];
+    if (!previewSeparated || !modelGeometry || !showConnectors) return [];
      const joints: { id?: string; groupId: number; neighborId: number; type: 'peg' | 'socket' | 'magnet'; position: THREE.Vector3; direction: THREE.Vector3; color: string; neighborName: string; scale: number; reinforcement?: { diameter: number; height: number; wall: number } }[] = [];
 
     groups.forEach((group) => {
@@ -868,9 +879,16 @@ export default function Viewer3D() {
       });
     });
     return joints;
-  }, [previewSeparated, modelGeometry, groups, vertexGroups, jointType, groupJointTypes, manualJoints, jointSizes]);
+  }, [previewSeparated, modelGeometry, groups, vertexGroups, jointType, groupJointTypes, manualJoints, jointSizes, showConnectors]);
 
   const validatePreviewJoints = () => {
+    if (!showConnectors) {
+      setPreviewValidation("valid");
+      setFinalizedPreview(true);
+      setSeparationDistance(0);
+      setPlacementMode(false);
+      return;
+    }
     const pairs = new Map<string, { peg: number; socket: number; magnet: number }>();
     for (const joint of jointGeometries) {
       const key = [joint.groupId, joint.neighborId].sort((a, b) => a - b).join(":");
@@ -891,6 +909,30 @@ export default function Viewer3D() {
   };
 
   useEffect(() => { return () => { subGeometries.forEach(sub => sub.geometry.dispose()); }; }, [subGeometries]);
+
+  const connectorGeometries = useMemo(() => {
+    const pegR = jointSizes.pegDiameter / 2;
+    const pegL = jointSizes.pegLength;
+    const socketR = jointSizes.pegDiameter / 2 + jointSizes.fitTolerance;
+    const socketL = jointSizes.pegLength + jointSizes.fitTolerance;
+    const magnetR = jointSizes.magnetDiameter / 2;
+    const magnetL = jointSizes.magnetDepth;
+    return {
+      peg: new THREE.CylinderGeometry(pegR, pegR, pegL, 6),
+      socket: new THREE.CylinderGeometry(socketR, socketL, 6, 1, true),
+      socketBoss: new THREE.CylinderGeometry(jointSizes.reinforcementDiameter / 2, jointSizes.reinforcementDiameter / 2, jointSizes.reinforcementHeight + jointSizes.reinforcementWall, 6),
+      magnet: new THREE.CylinderGeometry(magnetR, magnetR, magnetL, 6),
+    };
+  }, [jointSizes.pegDiameter, jointSizes.pegLength, jointSizes.fitTolerance, jointSizes.magnetDiameter, jointSizes.magnetDepth, jointSizes.reinforcementDiameter, jointSizes.reinforcementHeight, jointSizes.reinforcementWall]);
+
+  useEffect(() => {
+    return () => {
+      connectorGeometries.peg.dispose();
+      connectorGeometries.socket.dispose();
+      connectorGeometries.socketBoss.dispose();
+      connectorGeometries.magnet.dispose();
+    };
+  }, [connectorGeometries]);
 
   const handleGeometryUpdated = () => {};
 
@@ -978,6 +1020,33 @@ export default function Viewer3D() {
     else { const count = modelGeometry.attributes.position.count; for (let i = 0; i < count; i += 3) cb(i, i + 1, i + 2); }
   };
 
+  const extractGroupGeometry = (groupId: number): THREE.BufferGeometry | null => {
+    if (!modelGeometry) return null;
+    const positionAttr = modelGeometry.attributes.position;
+    const indexAttr = modelGeometry.index;
+    const positions: number[] = [];
+    const addTri = (a: number, b: number, c: number) => {
+      const g0 = vertexGroups[a] || 0, g1 = vertexGroups[b] || 0, g2 = vertexGroups[c] || 0;
+      if (!classifyTriangleGroup(g0, g1, g2, groupId)) return;
+      positions.push(
+        positionAttr.getX(a), positionAttr.getY(a), positionAttr.getZ(a),
+        positionAttr.getX(b), positionAttr.getY(b), positionAttr.getZ(b),
+        positionAttr.getX(c), positionAttr.getY(c), positionAttr.getZ(c),
+      );
+    };
+    if (indexAttr) {
+      const arr = indexAttr.array;
+      for (let i = 0; i < arr.length; i += 3) addTri(arr[i], arr[i + 1], arr[i + 2]);
+    } else {
+      const count = positionAttr.count;
+      for (let i = 0; i < count; i += 3) if (i + 2 < count) addTri(i, i + 1, i + 2);
+    }
+    if (positions.length === 0) return null;
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    return capBoundaryHoles(geom);
+  };
+
   const exportSeparatedPart = async (groupId: number) => {
     if (!modelGeometry) return;
     if (jointType === "default" && jointConfigurationWarning) {
@@ -1019,34 +1088,54 @@ export default function Viewer3D() {
         const rawGeometry = new THREE.BufferGeometry();
         rawGeometry.setAttribute("position", new THREE.Float32BufferAttribute(exportPositions, 3));
         let exportGeometry = capBoundaryHoles(rawGeometry);
-        const maleCentroid = jointType === "default" ? computeGroupCentroid(groupId) : null;
-         findNeighborGroups(groupId).forEach((neighborId) => {
-           getPairJointSpecs(groupId, neighborId).forEach((spec) => {
-              const myType = getEffectiveJointType(groupId, neighborId);
-              const intoGroup = spec.normalFrom.clone().negate();
-              const connectorPosition = snapPointToGeometryBoundary(rawGeometry, spec.position);
-              const transformScale = spec.scale ?? 1;
-              if (jointType === "magnet") {
-                exportGeometry = addSocket(exportGeometry, connectorPosition, intoGroup, jointSizes.magnetDiameter * transformScale, jointSizes.magnetDepth * transformScale, 6);
-              } else if (myType === 'female') {
-                exportGeometry = addReinforcedSocket(
-                  exportGeometry,
-                  connectorPosition,
-                  intoGroup,
-                 (jointSizes.pegDiameter + jointSizes.fitTolerance * 2) * transformScale,
-                 (jointSizes.pegLength + jointSizes.fitTolerance) * transformScale,
-                 jointSizes.reinforcementDiameter * transformScale,
-                 jointSizes.reinforcementHeight * transformScale,
-                 jointSizes.reinforcementWall * transformScale,
-                 6,
-               );
+
+        if (booleanMode) {
+          const neighbors = findNeighborGroups(groupId);
+          for (const neighborId of neighbors) {
+            if (neighborId === 0) continue;
+            const myType = getEffectiveJointType(groupId, neighborId);
+            const neighborGeom = extractGroupGeometry(neighborId);
+            if (!neighborGeom) continue;
+            try {
+              if (myType === 'female') {
+                exportGeometry = booleanDifferenceWithTolerance(exportGeometry, neighborGeom, booleanTolerance);
               } else {
-                const pegLength = jointSizes.pegLength * transformScale;
-                const embed = maleCentroid ? Math.max(0.5, Math.min(pegLength, connectorPosition.distanceTo(maleCentroid))) : 0.5;
-                exportGeometry = addPeg(exportGeometry, connectorPosition, spec.normalFrom, jointSizes.pegDiameter * transformScale, pegLength, 6, embed);
-             }
-          });
-        });
+                exportGeometry = booleanUnionWithTolerance(exportGeometry, neighborGeom, booleanTolerance);
+              }
+            } catch (err) {
+              console.warn(`[boolean] CSG failed for pair ${groupId}x${neighborId}:`, err);
+            }
+          }
+        } else {
+          const maleCentroid = jointType === "default" ? computeGroupCentroid(groupId) : null;
+           findNeighborGroups(groupId).forEach((neighborId) => {
+             getPairJointSpecs(groupId, neighborId).forEach((spec) => {
+                const myType = getEffectiveJointType(groupId, neighborId);
+                const intoGroup = spec.normalFrom.clone().negate();
+                const connectorPosition = snapPointToGeometryBoundary(rawGeometry, spec.position);
+                const transformScale = spec.scale ?? 1;
+                if (jointType === "magnet") {
+                  exportGeometry = addSocket(exportGeometry, connectorPosition, intoGroup, jointSizes.magnetDiameter * transformScale, jointSizes.magnetDepth * transformScale, 6);
+                } else if (myType === 'female') {
+                  exportGeometry = addReinforcedSocket(
+                    exportGeometry,
+                    connectorPosition,
+                    intoGroup,
+                   (jointSizes.pegDiameter + jointSizes.fitTolerance * 2) * transformScale,
+                   (jointSizes.pegLength + jointSizes.fitTolerance) * transformScale,
+                   jointSizes.reinforcementDiameter * transformScale,
+                   jointSizes.reinforcementHeight * transformScale,
+                   jointSizes.reinforcementWall * transformScale,
+                   6,
+                 );
+                } else {
+                  const pegLength = jointSizes.pegLength * transformScale;
+                  const embed = maleCentroid ? Math.max(0.5, Math.min(pegLength, connectorPosition.distanceTo(maleCentroid))) : 0.5;
+                  exportGeometry = addPeg(exportGeometry, connectorPosition, spec.normalFrom, jointSizes.pegDiameter * transformScale, pegLength, 6, embed);
+              }
+           });
+         });
+        }
         exportGeometry.computeVertexNormals();
         const exportMesh = new THREE.Mesh(exportGeometry, new THREE.MeshBasicMaterial());
         const exporter = new STLExporter();
@@ -1054,8 +1143,10 @@ export default function Viewer3D() {
         const blob = new Blob([result], { type: "application/octet-stream" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        const roleLabel = findNeighborGroups(groupId).map(n => { const type = getEffectiveJointType(groupId, n); const tag = jointType === "magnet" ? "IMA" : type === 'female' ? "FEMEA" : "MACHO"; return `${tag}-vs-${getGroupName(n).replace(/\s+/g, "")}`; }).join("_");
-        const jointSuffix = roleLabel ? `_${roleLabel}` : "_SEM_ENCAIXE";
+        const roleLabel = booleanMode
+          ? findNeighborGroups(groupId).map(n => { const type = getEffectiveJointType(groupId, n); return `${type === 'female' ? "BOOL_FEMEA" : "BOOL_MACHO"}-vs-${getGroupName(n).replace(/\s+/g, "")}`; }).join("_")
+          : findNeighborGroups(groupId).map(n => { const type = getEffectiveJointType(groupId, n); const tag = jointType === "magnet" ? "IMA" : type === 'female' ? "FEMEA" : "MACHO"; return `${tag}-vs-${getGroupName(n).replace(/\s+/g, "")}`; }).join("_");
+        const jointSuffix = roleLabel ? `_${roleLabel}` : booleanMode ? "_BOOLEAN" : "_SEM_ENCAIXE";
         const cleanName = fileName.replace(/\.[a-zA-Z0-9]+$/, "");
         link.download = `${cleanName}_${getGroupName(groupId).replace(/\s+/g, "_")}${jointSuffix}.stl`;
         link.click();
@@ -1146,7 +1237,7 @@ export default function Viewer3D() {
                           const l = jointSizes.pegLength;
                           const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
                           return (
-                               <mesh key={`peg-${idx}`} geometry={new THREE.CylinderGeometry(r, r, l, 6)} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
+                               <mesh key={`peg-${idx}`} geometry={connectorGeometries.peg} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                                 <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedManualJointId ? 0.9 : 0.4} transparent opacity={joint.id === selectedManualJointId ? 1 : 0.85} />
                             </mesh>
                           );
@@ -1159,10 +1250,10 @@ export default function Viewer3D() {
                           const bossPos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(-(reinforcement.height - reinforcement.wall) / 2));
                           return (
                              <group key={`socket-${idx}`} scale={[joint.scale, joint.scale, joint.scale]}>
-                               <mesh geometry={new THREE.CylinderGeometry(reinforcement.diameter / 2, reinforcement.diameter / 2, bossLength, 6)} position={bossPos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
+                               <mesh geometry={connectorGeometries.socketBoss} position={bossPos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                                 <meshStandardMaterial color="#FF1744" transparent opacity={joint.id === selectedManualJointId ? 0.5 : 0.25} wireframe />
                               </mesh>
-                               <mesh geometry={new THREE.CylinderGeometry(r, r, l, 6, 1, true)} position={pos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
+                               <mesh geometry={connectorGeometries.socket} position={pos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                                 <meshBasicMaterial color={joint.color} wireframe transparent opacity={joint.id === selectedManualJointId ? 1 : 0.75} />
                               </mesh>
                             </group>
@@ -1172,7 +1263,7 @@ export default function Viewer3D() {
                           const l = jointSizes.magnetDepth;
                           const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
                           return (
-                             <mesh key={`magnet-${idx}`} geometry={new THREE.CylinderGeometry(r, r, l, 6)} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
+                             <mesh key={`magnet-${idx}`} geometry={connectorGeometries.magnet} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedManualJointId(id); }} onPointerMove={(event) => { const id = joint.id || selectedManualJointId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveManualJointFromRay(id, event.ray, joint.groupId, offset); } }}>
                               <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedManualJointId ? 1 : 0.5} transparent opacity={joint.id === selectedManualJointId ? 1 : 0.9} metalness={0.8} roughness={0.2} />
                             </mesh>
                           );
@@ -1270,6 +1361,9 @@ export default function Viewer3D() {
                      <Slider value={[separationDistance]} onValueChange={(val) => setSeparationDistance(val[0])} min={0.0} max={4.0} step={0.05} className="flex-1" />
                      <span className="font-mono text-xs text-emerald-400 w-12 text-right font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span>
                    </div>
+                   <button onClick={() => setShowConnectors(!showConnectors)} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors whitespace-nowrap ${showConnectors ? "bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-400 hover:text-[#212121]"}`} title={showConnectors ? "Ocultar encaixes no preview" : "Mostrar encaixes no preview"}>
+                     <Settings className="w-3 h-3" /> {showConnectors ? "Encaixes" : "Sem Encaixes"}
+                   </button>
                    <button onClick={validatePreviewJoints} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-[#632CE5] text-white border-[#632CE5]" : "bg-[#632CE5] text-white border-[#632CE5] hover:bg-[#632CE5]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Finalizado" : "Finalizar"}</button>
                    {finalizedPreview && <span className={`text-[9px] font-bold uppercase whitespace-nowrap ${previewValidation === "valid" ? "text-emerald-400" : "text-amber-400"}`}>{previewValidation === "valid" ? "Encaixe OK" : "Revisar encaixe"}</span>}
                   </div>
@@ -1414,8 +1508,8 @@ export default function Viewer3D() {
               <div className="p-6 border border-dashed border-[#E8E9E3] rounded bg-[#F9FAF4] text-center text-[10px] text-zinc-500 uppercase tracking-wider">Upload a 3D model first</div>
             )}
           </section>
-          {modelGeometry && (
-            <section className="border-t border-[#E2E3DD] pt-6">
+          {modelGeometry && !booleanMode && (
+            <section ref={jointsSectionRef} className="border-t border-[#E2E3DD] pt-6">
               <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[#632CE5]" /> 05. Encaixes & Conectores</h3>
                 <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-4 leading-relaxed">Snap-fit hexagonal com folga configurável, ímãs ou posicionamento manual.</p>
                 <div className="bg-[#632CE5]/5 border border-[#632CE5]/20 rounded p-2 text-[8px] leading-relaxed text-zinc-400">
@@ -1499,7 +1593,7 @@ export default function Viewer3D() {
                     ))}
                     {selectedManualJoint && jointBounds && (
                       <div className="space-y-2 p-2 bg-[#FFD700]/5 rounded border border-[#FFD700]/30">
-                         <div className="flex items-center justify-between text-[8px] uppercase font-bold text-[#FFD700]"><span>Ajustar encaixe</span><button onClick={() => setSelectedManualJointId(null)} className="text-zinc-500 hover:text-[#1A1C19]">Fechar</button></div>
+                         <div className="flex items-center justify-between text-[8px] uppercase font-bold text-[#FFD700]"><span>Ajustar encaixe</span><div className="flex items-center gap-2"><button onClick={() => { setManualJoints(prev => prev.filter(x => x.id !== selectedManualJointId)); setSelectedManualJointId(null); }} className="text-[#FF1744] hover:text-[#FF1744] font-bold flex items-center gap-1"><Trash2 className="w-3 h-3" /> Excluir</button><button onClick={() => setSelectedManualJointId(null)} className="text-zinc-500 hover:text-[#1A1C19]">Fechar</button></div></div>
                          <div className="grid grid-cols-3 gap-1">
                            {([
                              ["translate", "Mover"],
@@ -1535,6 +1629,55 @@ export default function Viewer3D() {
                       </div>
                     )}
                   </div>
+                )}
+              </div>
+            </section>
+          )}
+          {modelGeometry && (
+            <section className="border-t border-[#E2E3DD] pt-6">
+              <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[#00FF41]" /> 05b. Modo Booleano</h3>
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-4 leading-relaxed">Subtração CSG volumétrica entre peças. A parte fêmea recebe uma cavidade com a forma exata da parte macho.</p>
+              <div className="bg-white border border-[#E2E3DD] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-zinc-300">Ativar Modo Boolean</span>
+                  <button
+                    onClick={() => { setBooleanMode(!booleanMode); if (!booleanMode) { setPlacementMode(false); } }}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border transition-all ${booleanMode ? "bg-[#00FF41]/20 border-[#00FF41] text-[#00FF41]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-400 hover:text-[#212121]"}`}
+                  >
+                    {booleanMode ? "ATIVADO" : "DESATIVADO"}
+                  </button>
+                </div>
+                {booleanMode && (
+                  <>
+                    <div className="bg-[#00FF41]/5 border border-[#00FF41]/20 rounded p-2 text-[8px] leading-relaxed text-zinc-400">
+                      <strong className="text-[#00FF41]">Como funciona:</strong> A parte fêmea terá uma cavidade com a forma exata da parte macho. A tolerância cria o espaço necessário para impressão 3D.
+                    </div>
+                    <div className="space-y-1.5 border-t border-[#E2E3DD]/60 pt-2.5">
+                      <div className="flex justify-between text-[9px] uppercase font-bold text-zinc-400">
+                        <span>Tolerância / Folga</span>
+                        <span className="text-[#00FF41] font-mono">{booleanTolerance.toFixed(2)} mm</span>
+                      </div>
+                      <Slider
+                        value={[booleanTolerance]}
+                        onValueChange={(val) => { const n = Array.isArray(val) ? val[0] : val; if (typeof n === "number" && !isNaN(n)) setBooleanTolerance(n); }}
+                        min={0.0} max={1.0} step={0.01}
+                      />
+                      <p className="text-[8px] text-zinc-600">Espaço entre as peças para encaixe. 0.1-0.3mm recomendado para FDM.</p>
+                    </div>
+                    <div className="border-t border-[#E2E3DD]/60 pt-2.5 space-y-1.5">
+                      <div className="flex items-center gap-2 text-[8px] uppercase font-bold text-zinc-400">
+                        <span className="w-2 h-2 rounded-full bg-[#632CE5] inline-block" /> Macho = volumes fundidos
+                      </div>
+                      <div className="flex items-center gap-2 text-[8px] uppercase font-bold text-zinc-400">
+                        <span className="w-2 h-2 rounded-full bg-[#FF1744] inline-block" /> Fêmea = cavidade CSG
+                      </div>
+                    </div>
+                    {booleanMode && (
+                      <div className="bg-[#E8E9E3] p-2 rounded border border-[#E2E3DD] text-[8px] text-zinc-500 leading-relaxed">
+                        <strong className="text-zinc-300">Fluxo:</strong> Pinte as partes → Configure macho/fêmea → Exporte. A subtração é aplicada automaticamente na exportação.
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </section>

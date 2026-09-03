@@ -6,7 +6,7 @@ import { addPeg, addSocket, addReinforcedSocket, capBoundaryHoles } from "../../
 
 const belongsToGroup = (a: number, b: number, c: number, group: number) => group === 0 ? a === 0 && b === 0 && c === 0 : [a, b, c].filter((value) => value === group).length >= 2;
 
-export function useViewerExports({ modelGeometry, setModelGeometry, vertexGroups, setVertexGroups, groups, fileName, jointType, jointSizes, capSelection, setIsProcessing, setProcessingMessage, setStats, setHistory, setGroupJointTypes, setManualJoints, setPlacementMode, getGroupName, findNeighborGroups, getPairJointSpecs, getEffectiveJointType, jointConfigurationWarning }: any) {
+export function useViewerExports({ modelGeometry, setModelGeometry, vertexGroups, setVertexGroups, groups, fileName, jointType, jointSizes, capSelection, setIsProcessing, setProcessingMessage, setStats, setHistory, setGroupJointTypes, setManualJoints, setPlacementMode, getGroupName, findNeighborGroups, getPairJointSpecs, getEffectiveJointType, jointConfigurationWarning, showConnectors = true }: any) {
   const [isExporting, setIsExporting] = useState<number | null>(null);
   const [loadingCap, setLoadingCap] = useState(false);
   const [isCapped, setIsCapped] = useState(false);
@@ -47,7 +47,9 @@ export function useViewerExports({ modelGeometry, setModelGeometry, vertexGroups
       if (index) for (let i = 0; i < index.count; i += 3) add(index.getX(i), index.getX(i + 1), index.getX(i + 2)); else for (let i = 0; i < position.count; i += 3) if (i + 2 < position.count) add(i, i + 1, i + 2);
       if (!values.length) return;
       let geometry = new THREE.BufferGeometry(); geometry.setAttribute("position", new THREE.Float32BufferAttribute(values, 3)); geometry = capBoundaryHoles(geometry);
-      findNeighborGroups(groupId).forEach((neighborId: number) => getPairJointSpecs(groupId, neighborId).forEach((spec: any) => { const type = getEffectiveJointType(groupId, neighborId), direction = spec.normalFrom.clone(), point = spec.position; if (jointType === "magnet") geometry = addSocket(geometry, point, direction.clone().negate(), jointSizes.magnetDiameter, jointSizes.magnetDepth, 6); else if (type === "female") geometry = addReinforcedSocket(geometry, point, direction.clone().negate(), jointSizes.pegDiameter + jointSizes.fitTolerance * 2, jointSizes.pegLength + jointSizes.fitTolerance, jointSizes.reinforcementDiameter, jointSizes.reinforcementHeight, jointSizes.reinforcementWall, 6); else geometry = addPeg(geometry, point, direction, jointSizes.pegDiameter, jointSizes.pegLength, 6, 0.5); }));
+      if (showConnectors) {
+        findNeighborGroups(groupId).forEach((neighborId: number) => getPairJointSpecs(groupId, neighborId).forEach((spec: any) => { const type = getEffectiveJointType(groupId, neighborId), direction = spec.normalFrom.clone(), point = spec.position; if (jointType === "magnet") geometry = addSocket(geometry, point, direction.clone().negate(), jointSizes.magnetDiameter, jointSizes.magnetDepth, 6); else if (type === "female") geometry = addReinforcedSocket(geometry, point, direction.clone().negate(), jointSizes.pegDiameter + jointSizes.fitTolerance * 2, jointSizes.pegLength + jointSizes.fitTolerance, jointSizes.reinforcementDiameter, jointSizes.reinforcementHeight, jointSizes.reinforcementWall, 6); else geometry = addPeg(geometry, point, direction, jointSizes.pegDiameter, jointSizes.pegLength, 6, 0.5); }));
+      }
       geometry.computeVertexNormals(); const result = new STLExporter().parse(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()), { binary: true }); const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([result], { type: "application/octet-stream" })); link.download = `${fileName.replace(/\.[a-zA-Z0-9]+$/, "")}_${getGroupName(groupId).replace(/\s+/g, "_")}.stl`; link.click();
     } finally { setIsExporting(null); setIsProcessing(false); }
   };

@@ -244,6 +244,169 @@ Return only the optimized prompt.`;
     }
   });
 
+  // Puzzle Generator - Generate Image API
+  app.post("/api/puzzle/generate-image", async (req, res) => {
+    let enhancedPrompt = "";
+    let fallbackAspectRatio = "1:1";
+    try {
+      const { prompt, style = "Desenho infantil", model = "gemini-3.1-flash-lite-image", aspectRatio = "1:1" } = req.body;
+      fallbackAspectRatio = aspectRatio;
+      if (!prompt) {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key is not configured" });
+      }
+
+      const ai = new GoogleGenAI({ 
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      enhancedPrompt = `${style} style illustration of: ${prompt}. High quality, detailed, vibrant colors, suitable for puzzle or memory game card.`;
+
+      const response = await ai.models.generateContent({
+        model,
+        contents: {
+          parts: [
+            {
+              text: enhancedPrompt,
+            },
+          ],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio,
+          }
+        },
+      });
+
+      let imageUrl = "";
+      const candidates = response.candidates;
+      if (candidates && candidates[0] && candidates[0].content && candidates[0].content.parts) {
+        for (const part of candidates[0].content.parts) {
+          if (part.inlineData) {
+            const base64EncodeString = part.inlineData.data;
+            imageUrl = `data:image/png;base64,${base64EncodeString}`;
+            break;
+          }
+        }
+      }
+
+      if (!imageUrl) {
+        throw new Error("Não foi possível gerar a imagem a partir do modelo Gemini.");
+      }
+
+      res.json({ imageUrl });
+    } catch (error: any) {
+      console.error("Puzzle Image API Error:", error);
+      let fallbackErrorMessage = "";
+      if (geminiStatus(error) === 429 && process.env.OPENAI_API_KEY) {
+        try {
+          const fallbackImageUrl = await generateOpenAIImage(enhancedPrompt, fallbackAspectRatio);
+          console.warn("Gemini image quota reached; image generated with OpenAI fallback");
+          return res.json({ imageUrl: fallbackImageUrl, provider: "openai", fallback: true });
+        } catch (fallbackError: any) {
+          console.error("OpenAI image fallback failed:", fallbackError);
+          fallbackErrorMessage = errorMessage(fallbackError).slice(0, 500);
+        }
+      }
+      if (fallbackErrorMessage) {
+        return res.status(502).json({
+          error: `Gemini atingiu a quota e o fallback OpenAI também falhou: ${fallbackErrorMessage}`,
+        });
+      }
+      res.status(geminiStatus(error)).json({ error: formatGeminiError(error, "Failed to generate puzzle image") });
+    }
+  });
+
+  // Puzzle Generator - Generate Memory Game Themes API
+  app.post("/api/puzzle/generate-memory-themes", async (req, res) => {
+    try {
+      const { theme, count = 6, style = "Desenho infantil" } = req.body;
+      if (!theme) {
+        return res.status(400).json({ error: "Theme is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key is not configured" });
+      }
+
+      const ai = new GoogleGenAI({ 
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      const prompt = `Generate a list of ${count} distinct, thematic items for a memory card game with the theme "${theme}" in ${style} style. Each item should be unique and visually distinct. Return ONLY a JSON array of strings, each string being a detailed image prompt for one card. Example: ["A cute orange cat wearing a hat", "A blue fish swimming in a bowl", ...]`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: {
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.STRING,
+            },
+          },
+        },
+      });
+
+      let items: string[] = [];
+      const candidates = response.candidates;
+      if (candidates && candidates[0] && candidates[0].content && candidates[0].content.parts) {
+        for (const part of candidates[0].content.parts) {
+          if (part.text) {
+            try {
+              const parsed = JSON.parse(part.text);
+              if (Array.isArray(parsed)) {
+                items = parsed.slice(0, count);
+              }
+            } catch (e) {
+              console.error("Failed to parse themes JSON:", e);
+            }
+            break;
+          }
+        }
+      }
+
+      if (items.length === 0) {
+        // Fallback: generate basic items
+        for (let i = 1; i <= count; i++) {
+          items.push(`${theme} - Item ${i}`);
+        }
+      }
+
+      res.json({ items });
+    } catch (error: any) {
+      console.error("Memory Themes API Error:", error);
+      // Return fallback items
+      const count = req.body.count || 6;
+      const theme = req.body.theme || "Theme";
+      const items = [];
+      for (let i = 1; i <= count; i++) {
+        items.push(`${theme} - Item ${i}`);
+      }
+      res.json({ items, fallback: true });
+    }
+  });
+
   // Image-to-3D API (proxy to Python FastAPI service)
   app.post("/api/img2-3d", upload.single("image"), async (req, res) => {
     try {

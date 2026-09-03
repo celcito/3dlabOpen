@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { buildTabLifterParts, buildTabLifterSingleColor } from "../tabLifterGeometry";
 import { setManifoldWasmUrl } from "../../split3mf/engines/manifoldLoader";
 import { isWatertight, signedVolume } from "../../fastener/threads";
+import { OPENER_PRESETS, buildOpenerPreset } from "../openerPresets";
 import type { TracedRegion } from "../traceImage";
 
 beforeAll(() => {
@@ -163,6 +164,94 @@ describe("tab lifter geometry", () => {
     expect(pieces.length).toBe(1);
     expect(isWatertight(pieces[0].geometry)).toBe(true);
     expect(signedVolume(pieces[0].geometry)).toBeGreaterThan(0);
+  });
+
+  it("silhouetteMode makes the base follow the region union, not the rectangle", async () => {
+    const small = rectShape(10, 10); // x[-5,5], y[-5,5]
+    const cfg = {
+      ...baseCfg,
+      bevel: 0,
+      slotDepth: 0,
+      keyring: false,
+      silhouetteMode: true,
+      regions: [region("#1d4ed8", small)],
+    };
+    const pieces = await buildTabLifterParts(cfg);
+    expect(pieces.length).toBe(2); // base + relief
+    // Base = the region extruded at full thickness, NOT the 40x70 rectangle.
+    expect(signedVolume(pieces[0].geometry)).toBeCloseTo(10 * 10 * 6, 0);
+    expect(isWatertight(pieces[0].geometry)).toBe(true);
+    const rectPieces = await buildTabLifterParts({ ...cfg, silhouetteMode: false });
+    expect(signedVolume(rectPieces[0].geometry)).toBeCloseTo(40 * 70 * 6, 0);
+  });
+
+  it("silhouetteMode unions disjoint region shapes into one base", async () => {
+    const left = new THREE.Shape();
+    left.moveTo(-15, -35); left.lineTo(-5, -35); left.lineTo(-5, 35); left.lineTo(-15, 35); left.closePath();
+    const right = new THREE.Shape();
+    right.moveTo(5, -35); right.lineTo(15, -35); right.lineTo(15, 35); right.lineTo(5, 35); right.closePath();
+    const cfg = {
+      ...baseCfg,
+      bevel: 0,
+      slotDepth: 0,
+      keyring: false,
+      silhouetteMode: true,
+      regions: [region("#1d4ed8", left, right)],
+    };
+    const pieces = await buildTabLifterParts(cfg);
+    // Two disjoint 10x70 strips → unioned base = 2 * (10*70*6).
+    expect(signedVolume(pieces[0].geometry)).toBeCloseTo(2 * 10 * 70 * 6, 0);
+    expect(isWatertight(pieces[0].geometry)).toBe(true);
+  });
+
+  it("silhouetteMode still carves the closed slot from the drawing top", async () => {
+    const cfg = {
+      ...baseCfg,
+      bevel: 0,
+      slotDepth: 14,
+      slotGap: 12,
+      slotWall: 1.5,
+      keyring: false,
+      silhouetteMode: true,
+      regions: [region("#1d4ed8", rectShape(20, 70))],
+    };
+    const withSlot = await buildTabLifterParts(cfg);
+    const without = await buildTabLifterParts({ ...cfg, slotDepth: 0 });
+    const removed = signedVolume(without[0].geometry) - signedVolume(withSlot[0].geometry);
+    expect(removed).toBeCloseTo(12 * 14 * (6 - 2 * 1.5), 1);
+    expect(isWatertight(withSlot[0].geometry)).toBe(true);
+  });
+
+  it("every preset in silhouette mode carves a real closed pocket (no hollow)", { timeout: 30000 }, async () => {
+    // Regression for the "peça oca" bug: in silhouette mode the base used to
+    // be a fragile union of separate prisms that (a) broke manifold on the
+    // butterfly and (b) let the rasgo eat a 2 mm disconnected head without
+    // forming any cavity — no internal structure to capture the tab. Every
+    // preset must now produce a solid, watertight body with a genuine sealed
+    // pocket at the rasgo.
+    for (const preset of OPENER_PRESETS) {
+      const traced = buildOpenerPreset(preset, 60);
+      const cfg = {
+        ...baseCfg,
+        bevel: 0,
+        slotDepth: 14,
+        slotGap: 12,
+        slotWall: 1.5,
+        keyring: false,
+        silhouetteMode: true,
+        outer: traced.outer,
+        regions: traced.regions,
+      };
+      const withSlot = await buildTabLifterParts(cfg);
+      const without = await buildTabLifterParts({ ...cfg, slotDepth: 0 });
+      const removed = signedVolume(without[0].geometry) - signedVolume(withSlot[0].geometry);
+      // The rasgo carves a real cavity (structure exists)...
+      expect(removed, `${preset.id} should carve a pocket`).toBeGreaterThan(0);
+      // ...but it is a CLOSED pocket: less than a full through-slot
+      // (gap x depth x full thickness), so both faces stay solid ("tampado").
+      expect(removed, `${preset.id} pocket must stay sealed on both faces`).toBeLessThan(cfg.slotGap * cfg.slotDepth * cfg.handleThickness);
+      expect(isWatertight(withSlot[0].geometry), `${preset.id} piece must be watertight`).toBe(true);
+    }
   });
 
   it("single-colour merge is watertight", async () => {
