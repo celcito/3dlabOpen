@@ -358,3 +358,68 @@ export function splitByPlane(
 
   return { partA, partB };
 }
+
+/**
+ * Performs a CSG boolean difference with tolerance: expands `tool` by
+ * `tolerance` uniformly (via vertex displacement along normals) before
+ * subtracting it from `base`. This creates a cavity in `base` that
+ * matches `tool`'s shape with a configurable gap for FDM/SLA print fit.
+ *
+ * Returns the resulting geometry (base with cavity carved out).
+ */
+export function booleanDifferenceWithTolerance(
+  base: THREE.BufferGeometry,
+  tool: THREE.BufferGeometry,
+  tolerance: number
+): THREE.BufferGeometry {
+  if (tolerance <= 0) return subtract(base, tool);
+
+  const expanded = tool.clone();
+  expanded.computeVertexNormals();
+  const posAttr = expanded.attributes.position;
+  const normAttr = expanded.attributes.normal;
+  const center = new THREE.Vector3();
+  expanded.computeBoundingBox();
+  expanded.boundingBox!.getCenter(center);
+
+  for (let i = 0; i < posAttr.count; i++) {
+    const nx = normAttr.getX(i);
+    const ny = normAttr.getY(i);
+    const nz = normAttr.getZ(i);
+    posAttr.setX(i, posAttr.getX(i) + nx * tolerance);
+    posAttr.setY(i, posAttr.getY(i) + ny * tolerance);
+    posAttr.setZ(i, posAttr.getZ(i) + nz * tolerance);
+  }
+  posAttr.needsUpdate = true;
+  expanded.computeVertexNormals();
+
+  return subtract(base, expanded);
+}
+
+/**
+ * Fuses `tool` into `base` via CSG union, after expanding `tool` by
+ * `tolerance` along its vertex normals. Used on the male part to absorb
+ * the overlapping volume so the exported piece is a single watertight mesh.
+ */
+export function booleanUnionWithTolerance(
+  base: THREE.BufferGeometry,
+  tool: THREE.BufferGeometry,
+  tolerance: number
+): THREE.BufferGeometry {
+  if (tolerance <= 0) return union(base, tool);
+
+  const expanded = tool.clone();
+  expanded.computeVertexNormals();
+  const posAttr = expanded.attributes.position;
+  const normAttr = expanded.attributes.normal;
+
+  for (let i = 0; i < posAttr.count; i++) {
+    posAttr.setX(i, posAttr.getX(i) + normAttr.getX(i) * tolerance);
+    posAttr.setY(i, posAttr.getY(i) + normAttr.getY(i) * tolerance);
+    posAttr.setZ(i, posAttr.getZ(i) + normAttr.getZ(i) * tolerance);
+  }
+  posAttr.needsUpdate = true;
+  expanded.computeVertexNormals();
+
+  return union(base, expanded);
+}

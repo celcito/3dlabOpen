@@ -9,16 +9,22 @@ import { toast, toastExportError } from "@/lib/toast";
 import { 
   Sparkles, Layers, Download, Plus, Trash2, Sliders, HelpCircle,
   Eye, EyeOff, RotateCcw, Copy, Folder, BookOpen, Save, FileDown,
-  Info, Settings, LayoutGrid, Check, AlertTriangle, ArrowUpDown, Move, Type
+  Info, Settings, LayoutGrid, Check, AlertTriangle, ArrowUpDown, Move, Type,
+  FileCode
 } from "lucide-react";
 import { usePlateCreator } from "../hooks/usePlateCreator";
 import { usePlateSceneGeometry, useTextGeometry } from "../hooks/plate/usePlateSceneGeometry";
+// NOTA: ajuste este caminho relativo para onde os arquivos svgToShapes.ts e
+// plateBridge.ts forem colocados no seu projeto (ex: lib/, utils/, etc).
+import { svgToExtrudedGeometry } from "../lib/svgToShapes";
+import { consumePendingSvg } from "../lib/plateBridge";
+import { union, subtract, intersect } from "../../lib/csg";
 
 // Types
 interface PlateLayer {
   id: string;
-  type: "text" | "icon";
-  content: string; // The text content or the icon ID
+  type: "text" | "icon" | "svg";
+  content: string; // Texto, id do ícone procedural, ou markup SVG bruto (quando type === "svg")
   x: number;       // Position X offset
   y: number;       // Position Y offset
   size: number;    // Scale / Font Size
@@ -27,10 +33,15 @@ interface PlateLayer {
   color: string;   // Color in hex
   visible: boolean;
   style: "raised" | "engraved"; // raised = sticks out, engraved = slots inside
+  fontFamily: string; // Font family ID for text layers
+  booleanMode: "none" | "union" | "subtract" | "intersect"; // Boolean operation mode
+  flipX?: boolean; // Mirror horizontally
+  flipY?: boolean; // Mirror vertically
 }
 
 interface PlateConfig {
   shape: "rounded_rect" | "circle" | "oval" | "hexagon" | "shield" | "banner" | "text_based";
+  orientation: "horizontal" | "vertical"; // Orientação da placa
   width: number;
   height: number;
   thickness: number;
@@ -51,6 +62,19 @@ interface SavedPlate {
   config: PlateConfig;
   layers: PlateLayer[];
 }
+
+// Font registry — all typeface.json fonts available from Three.js examples CDN
+const FONT_REGISTRY: Record<string, { name: string; url: string; style: string }> = {
+  helvetiker_regular: { name: "Helvetiker Regular", url: "https://unpkg.com/three@0.150.0/examples/fonts/helvetiker_regular.typeface.json", style: "Sans-Serif" },
+  helvetiker_bold: { name: "Helvetiker Bold", url: "https://unpkg.com/three@0.150.0/examples/fonts/helvetiker_bold.typeface.json", style: "Sans-Serif Bold" },
+  gentilis_regular: { name: "Gentilis Regular", url: "https://unpkg.com/three@0.150.0/examples/fonts/gentilis_regular.typeface.json", style: "Serif" },
+  gentilis_bold: { name: "Gentilis Bold", url: "https://unpkg.com/three@0.150.0/examples/fonts/gentilis_bold.typeface.json", style: "Serif Bold" },
+  optimer_regular: { name: "Optimer Regular", url: "https://unpkg.com/three@0.150.0/examples/fonts/optimer_regular.typeface.json", style: "Slab Serif" },
+  optimer_bold: { name: "Optimer Bold", url: "https://unpkg.com/three@0.150.0/examples/fonts/optimer_bold.typeface.json", style: "Slab Serif Bold" },
+  droid_serif_regular: { name: "Droid Serif Regular", url: "https://unpkg.com/three@0.150.0/examples/fonts/droid/droid_serif_regular.typeface.json", style: "Serif" },
+  droid_sans_regular: { name: "Droid Sans Regular", url: "https://unpkg.com/three@0.150.0/examples/fonts/droid/droid_sans_regular.typeface.json", style: "Sans-Serif" },
+  droid_sans_bold: { name: "Droid Sans Bold", url: "https://unpkg.com/three@0.150.0/examples/fonts/droid/droid_sans_bold.typeface.json", style: "Sans-Serif Bold" },
+};
 
 // Procedural icons shapes generator
 function getProceduralIconShape(iconId: string): THREE.Shape {
@@ -411,12 +435,47 @@ function TextMesh({
   );
 }
 
+// Component to render an imported SVG layer (vindo do Design Editor ou de upload manual)
+// as extruded, watertight-ready geometry, memoized so re-parsing only happens when the
+// underlying SVG markup, depth, or scale actually change.
+function SvgLayerMesh({
+  layer,
+  isSelected,
+  showWireframe
+}: {
+  layer: PlateLayer;
+  isSelected: boolean;
+  showWireframe: boolean;
+}) {
+  const geometry = useMemo(() => {
+    return svgToExtrudedGeometry(layer.content, {
+      depth: layer.depth / 10,
+      targetSize: layer.size,
+    });
+  }, [layer.content, layer.depth, layer.size]);
+
+  if (!geometry) return null;
+
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial 
+        color={layer.color}
+        roughness={0.3}
+        metalness={0.1}
+        wireframe={showWireframe}
+        emissive={layer.color}
+        emissiveIntensity={isSelected ? 0.25 : 0.0}
+      />
+    </mesh>
+  );
+}
+
 // 3D Canvas rendering component
 function Scene({ 
   config, 
   layers, 
   activeLayerId,
-  font, 
+  fonts, 
   explodedView,
   showWireframe,
   setActiveLayerId,
@@ -426,7 +485,7 @@ function Scene({
   config: PlateConfig; 
   layers: PlateLayer[]; 
   activeLayerId: string | null;
-  font: Font | null;
+  fonts: Record<string, Font>;
   explodedView: number;
   showWireframe: boolean;
   setActiveLayerId: (id: string | null) => void;
@@ -452,16 +511,106 @@ function Scene({
     getPlateBaseShape,
   );
 
+  // Compute base plate geometry (memoized)
+  const basePlateGeometry = useMemo(() => {
+    if (config.shape === "text_based") return null;
+    return new THREE.ExtrudeGeometry(plateBaseShape, extrudeSettings);
+  }, [plateBaseShape, extrudeSettings, config.shape]);
+
+  // Compute border geometry if applicable
+  const borderGeometry = useMemo(() => {
+    if (config.borderStyle === "none" || config.shape === "text_based") return null;
+    const borderShape = getPlateBaseShape({
+      ...config,
+      width: config.width - (config.borderWidth * 2),
+      height: config.height - (config.borderWidth * 2),
+      borderRadius: Math.max(1, config.borderRadius - config.borderWidth),
+      mountingHoles: "none"
+    });
+    return new THREE.ExtrudeGeometry(borderShape, {
+      steps: 1,
+      depth: config.borderHeight / 10,
+      bevelEnabled: false
+    });
+  }, [config, getPlateBaseShape]);
+
+  // Apply CSG boolean operations from layers to base plate
+  const finalBaseGeometry = useMemo(() => {
+    if (!basePlateGeometry) return null;
+    let result = basePlateGeometry.clone();
+
+    // Collect all boolean operations and apply them in order
+    const booleanLayers = layers.filter(l => l.visible && l.booleanMode !== "none");
+    for (const layer of booleanLayers) {
+      let layerGeom: THREE.BufferGeometry | null = null;
+
+      if (layer.type === "text" && fonts[layer.fontFamily || "helvetiker_regular"]) {
+        layerGeom = new TextGeometry(layer.content, {
+          font: fonts[layer.fontFamily || "helvetiker_regular"],
+          size: layer.size / 10,
+          depth: layer.depth / 10,
+          curveSegments: 12,
+          bevelEnabled: true,
+          bevelThickness: 0.03,
+          bevelSize: 0.015,
+          bevelSegments: 3,
+        });
+      } else if (layer.type === "icon") {
+        const iconShape = getProceduralIconShape(layer.content);
+        layerGeom = new THREE.ExtrudeGeometry(iconShape, {
+          steps: 1,
+          depth: layer.depth / 10,
+          bevelEnabled: true,
+          bevelThickness: 0.04,
+          bevelSize: 0.02,
+          bevelSegments: 2,
+        });
+      } else if (layer.type === "svg") {
+        layerGeom = svgToExtrudedGeometry(layer.content, {
+          depth: layer.depth / 10,
+          targetSize: layer.size,
+        });
+      }
+
+      if (!layerGeom) continue;
+
+      // Transform layer geometry to world position
+      const matrix = new THREE.Matrix4();
+      const rotationRad = (layer.rotation * Math.PI) / 180;
+      const flipX = (layer as any).flipX ? -1 : 1;
+      const flipY = (layer as any).flipY ? -1 : 1;
+      matrix.makeRotationZ(rotationRad);
+      matrix.scale(new THREE.Vector3(flipX, flipY, 1));
+      matrix.setPosition(layer.x, layer.y, (config.thickness / 10) - (layer.style === "engraved" ? 0.1 : 0));
+
+      try {
+        if (layer.booleanMode === "subtract") {
+          result = subtract(result, layerGeom, matrix);
+        } else if (layer.booleanMode === "union") {
+          result = union(result, layerGeom, matrix);
+        } else if (layer.booleanMode === "intersect") {
+          result = intersect(result, layerGeom, matrix);
+        }
+      } catch (err) {
+        console.warn(`CSG operation failed for layer "${layer.content}":`, err);
+      }
+    }
+
+    result.computeVertexNormals();
+    return result;
+  }, [basePlateGeometry, layers, fonts, config.thickness, config.shape]);
+
   // Handle auto-render refresh on parameter changes
   useEffect(() => {
     invalidate();
-  }, [config, layers, activeLayerId, font, explodedView, showWireframe, invalidate]);
+  }, [config, layers, activeLayerId, fonts, explodedView, showWireframe, invalidate]);
 
   return (
     <group position={[0, 0, 0]}>
-      {/* 1. BASE PLATE MESH */}
-      {config.shape !== "text_based" && (
+      {/* 1. BASE PLATE MESH (with CSG boolean operations applied) */}
+      {finalBaseGeometry && (
         <mesh 
+          geometry={finalBaseGeometry}
           castShadow 
           receiveShadow
           onClick={(e) => {
@@ -469,35 +618,20 @@ function Scene({
             setActiveLayerId(null);
           }}
         >
-          <extrudeGeometry args={[plateBaseShape, extrudeSettings]} />
           <meshStandardMaterial {...materialProps} />
         </mesh>
       )}
 
       {/* Plate Border Line Relief decoration */}
-      {config.borderStyle !== "none" && config.shape !== "text_based" && (
+      {borderGeometry && (
         <mesh 
           position={[0, 0, (config.thickness / 10) + (config.borderStyle === "relief" ? 0.05 : -0.05)]}
+          geometry={borderGeometry}
           onClick={(e) => {
             e.stopPropagation();
             setActiveLayerId(null);
           }}
         >
-          <extrudeGeometry args={[
-            // slightly smaller shape for borders
-            getPlateBaseShape({
-              ...config,
-              width: config.width - (config.borderWidth * 2),
-              height: config.height - (config.borderWidth * 2),
-              borderRadius: Math.max(1, config.borderRadius - config.borderWidth),
-              mountingHoles: "none" // no holes in border contour
-            }), 
-            {
-              steps: 1,
-              depth: config.borderHeight / 10,
-              bevelEnabled: false
-            }
-          ]} />
           <meshStandardMaterial 
             color={config.borderStyle === "relief" ? "#121212" : "#0d0d0d"}
             roughness={0.5}
@@ -507,20 +641,37 @@ function Scene({
         </mesh>
       )}
 
+      {/* Orientation indicator — subtle arrow showing plate direction */}
+      <group position={[0, 0, (config.thickness / 10) + 0.02]}>
+        <mesh rotation={[0, 0, config.orientation === "horizontal" ? 0 : Math.PI / 2]}>
+          <planeGeometry args={[0.8, 0.15]} />
+          <meshBasicMaterial color="#632CE5" opacity={0.3} transparent />
+        </mesh>
+        <mesh position={[config.orientation === "horizontal" ? 0.45 : 0, config.orientation === "vertical" ? 0.45 : 0, 0]} rotation={[0, 0, config.orientation === "horizontal" ? 0 : Math.PI / 2]}>
+          <coneGeometry args={[0.12, 0.2, 4]} />
+          <meshBasicMaterial color="#632CE5" opacity={0.3} transparent />
+        </mesh>
+      </group>
+
       {/* 2. OVERLAPPING TEXT AND ICON LAYERS */}
       {layers.map((layer, index) => {
         if (!layer.visible) return null;
+        // Skip layers that are already applied to the base via CSG
+        if (layer.booleanMode && layer.booleanMode !== "none") return null;
 
         const isSelected = activeLayerId === layer.id;
         // Apply explosion lift factor: moves the layer out in +Z axis
         const zOffset = (config.thickness / 10) + (explodedView * index * 1.5) + (layer.style === "engraved" ? -0.1 : 0.01);
         const rotationRad = (layer.rotation * Math.PI) / 180;
+        const flipX = (layer as any).flipX ? -1 : 1;
+        const flipY = (layer as any).flipY ? -1 : 1;
 
         return (
           <group 
             key={layer.id} 
             position={[layer.x, layer.y, zOffset]} 
             rotation={[0, 0, rotationRad]}
+            scale={[flipX, flipY, 1]}
             onClick={(e) => {
               e.stopPropagation();
               setActiveLayerId(layer.id);
@@ -571,12 +722,15 @@ function Scene({
                   emissiveIntensity={isSelected ? 0.35 : 0.0}
                 />
               </mesh>
+            ) : layer.type === "svg" ? (
+              // Imported vector art (from Design Editor or manual .svg upload)
+              <SvgLayerMesh layer={layer} isSelected={isSelected} showWireframe={showWireframe} />
             ) : (
-              // Text Rendering: use Text from drei for high fidelity client display OR extruded TextGeometry if loaded
-              font ? (
+              // Text Rendering: use TextGeometry with per-layer font, fallback to drei Text
+              fonts[layer.fontFamily || "helvetiker_regular"] ? (
                 <TextMesh 
                   layer={layer} 
-                  font={font} 
+                  font={fonts[layer.fontFamily || "helvetiker_regular"]} 
                   isSelected={isSelected} 
                   showWireframe={showWireframe} 
                 />
@@ -834,6 +988,7 @@ export default function PlateCreator() {
   // Base config state
   const [config, setConfig] = useState<PlateConfig>({
     shape: "rounded_rect",
+    orientation: "horizontal",
     width: 160,
     height: 100,
     thickness: 6,
@@ -880,33 +1035,82 @@ export default function PlateCreator() {
   const [activeLayerId, setActiveLayerId] = useState<string | null>("text-1");
   const [explodedView, setExplodedView] = useState<number>(0.0); // 0 = flat, 1 = maximum separated
   const [showWireframe, setShowWireframe] = useState<boolean>(false);
-  const [font, setFont] = useState<Font | null>(null);
-  const [fontLoadingState, setFontLoadingState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [fonts, setFonts] = useState<Record<string, Font>>({});
+  const [fontLoadingStates, setFontLoadingStates] = useState<Record<string, "idle" | "loading" | "loaded" | "error">>({});
   const [plateName, setPlateName] = useState<string>("Minha Placa Decorativa");
   const [savedLibrary, setSavedLibrary] = useState<SavedPlate[]>([]);
   const { successMsg, showSuccessNotification } = usePlateCreator();
   const [controlsEnabled, setControlsEnabled] = useState<boolean>(true);
+  const svgFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Font loading system
-  useEffect(() => {
-    if (fontLoadingState === "idle") {
-      setFontLoadingState("loading");
-      const loader = new FontLoader();
-      // Fetch Helvetica-like regular json font from unpkg standard Three.js mirror
-      loader.load(
-        "https://unpkg.com/three@0.150.0/examples/fonts/helvetiker_regular.typeface.json",
-        (loadedFont) => {
-          setFont(loadedFont);
-          setFontLoadingState("loaded");
-        },
-        undefined,
-        (err) => {
-          console.error("FontLoader failed to load web typeface:", err);
-          setFontLoadingState("error");
-        }
-      );
+  // Undo/Redo history for layer operations
+  const [layersHistory, setLayersHistory] = useState<PlateLayer[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+
+  const pushToHistory = (currentLayers: PlateLayer[]) => {
+    setLayersHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(JSON.parse(JSON.stringify(currentLayers)));
+      if (newHistory.length > 50) newHistory.shift();
+      return newHistory;
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  };
+
+  const undo = () => {
+    if (historyIndex <= 0) return;
+    const prevLayers = layersHistory[historyIndex - 1];
+    if (prevLayers) {
+      setLayers(prevLayers);
+      setHistoryIndex(prev => prev - 1);
     }
-  }, [fontLoadingState]);
+  };
+
+  const redo = () => {
+    if (historyIndex >= layersHistory.length - 1) return;
+    const nextLayers = layersHistory[historyIndex + 1];
+    if (nextLayers) {
+      setLayers(nextLayers);
+      setHistoryIndex(prev => prev + 1);
+    }
+  };
+
+  // Multi-font loading system — loads fonts on demand
+  const loadFont = (fontId: string) => {
+    if (fonts[fontId] || fontLoadingStates[fontId] === "loading") return;
+    const entry = FONT_REGISTRY[fontId];
+    if (!entry) return;
+    setFontLoadingStates(prev => ({ ...prev, [fontId]: "loading" }));
+    const loader = new FontLoader();
+    loader.load(
+      entry.url,
+      (loadedFont) => {
+        setFonts(prev => ({ ...prev, [fontId]: loadedFont }));
+        setFontLoadingStates(prev => ({ ...prev, [fontId]: "loaded" }));
+      },
+      undefined,
+      (err) => {
+        console.error(`FontLoader failed to load ${entry.name}:`, err);
+        setFontLoadingStates(prev => ({ ...prev, [fontId]: "error" }));
+      }
+    );
+  };
+
+  // Load default font on mount
+  useEffect(() => {
+    loadFont("helvetiker_regular");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-load fonts used by text layers
+  useEffect(() => {
+    layers.forEach(layer => {
+      if (layer.type === "text" && layer.fontFamily) {
+        loadFont(layer.fontFamily);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers]);
 
   // Load user saved plates library
   useEffect(() => {
@@ -919,6 +1123,31 @@ export default function PlateCreator() {
       }
     }
   }, []);
+
+  // Ponte com o Design Editor: se o usuário clicou em "Enviar para Placa 3D" lá,
+  // consome a arte pendente e já cria a camada automaticamente ao entrar aqui.
+  useEffect(() => {
+    const pending = consumePendingSvg();
+    if (pending) {
+      handleAddSvgLayer(pending.svg, pending.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keyboard shortcuts: Ctrl+Z = undo, Ctrl+Y = redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [historyIndex, layersHistory]);
 
   // Selected active layer helper
   const activeLayer = useMemo(() => {
@@ -950,6 +1179,7 @@ export default function PlateCreator() {
   };
 
   const handleAddTextLayer = () => {
+    pushToHistory(layers);
     const newId = `text-${Date.now()}`;
     const newLayer: PlateLayer = {
       id: newId,
@@ -962,13 +1192,16 @@ export default function PlateCreator() {
       rotation: 0,
       color: "#FFFFFF",
       visible: true,
-      style: "raised"
+      style: "raised",
+      fontFamily: "helvetiker_regular",
+      booleanMode: "none"
     };
     setLayers(prev => [...prev, newLayer]);
     setActiveLayerId(newId);
   };
 
   const handleAddIconLayer = (iconType: string) => {
+    pushToHistory(layers);
     const newId = `icon-${Date.now()}`;
     const newLayer: PlateLayer = {
       id: newId,
@@ -981,14 +1214,59 @@ export default function PlateCreator() {
       rotation: 0,
       color: "#121212",
       visible: true,
-      style: "raised"
+      style: "raised",
+      fontFamily: "helvetiker_regular",
+      booleanMode: "none"
     };
     setLayers(prev => [...prev, newLayer]);
     setActiveLayerId(newId);
   };
 
+  // Cria uma nova camada vetorial a partir de markup SVG bruto — usado tanto pelo
+  // upload manual de arquivo .svg quanto pela ponte automática vinda do Design Editor.
+  const handleAddSvgLayer = (svgMarkup: string, label?: string) => {
+    pushToHistory(layers);
+    const newId = `svg-${Date.now()}`;
+    const newLayer: PlateLayer = {
+      id: newId,
+      type: "svg",
+      content: svgMarkup,
+      x: 0,
+      y: 0,
+      size: 3.5,
+      depth: 3.5,
+      rotation: 0,
+      color: "#121212",
+      visible: true,
+      style: "raised",
+      fontFamily: "helvetiker_regular",
+      booleanMode: "none"
+    };
+    setLayers(prev => [...prev, newLayer]);
+    setActiveLayerId(newId);
+    showSuccessNotification(label ? `Arte "${label}" importada!` : "Arte SVG importada!");
+  };
+
+  const handleSvgFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result as string;
+      if (typeof text === "string") {
+        handleAddSvgLayer(text, file.name);
+      }
+    };
+    reader.onerror = () => {
+      toast.warning("Não foi possível ler o arquivo SVG.");
+    };
+    reader.readAsText(file);
+    e.target.value = ""; // allow re-selecting the same file later
+  };
+
   const handleDeleteLayer = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
+    pushToHistory(layers);
     setLayers(prev => prev.filter(l => l.id !== id));
     if (activeLayerId === id) {
       setActiveLayerId(null);
@@ -997,6 +1275,7 @@ export default function PlateCreator() {
 
   const handleDuplicateLayer = (layer: PlateLayer, e: React.MouseEvent) => {
     e.stopPropagation();
+    pushToHistory(layers);
     const newId = `${layer.type}-${Date.now()}`;
     const duplicated: PlateLayer = {
       ...layer,
@@ -1011,7 +1290,7 @@ export default function PlateCreator() {
   const moveLayerOrder = (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= layers.length) return;
-    
+    pushToHistory(layers);
     const reordered = [...layers];
     const temp = reordered[index];
     reordered[index] = reordered[targetIndex];
@@ -1021,8 +1300,16 @@ export default function PlateCreator() {
 
   // Preset loading
   const loadPreset = (preset: typeof PLATE_PRESETS[0]) => {
-    setConfig({ ...preset.config });
-    setLayers(preset.layers.map(l => ({ ...l, id: `${l.type}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}` })));
+    setConfig({ 
+      ...preset.config,
+      orientation: preset.config.orientation || (preset.config.width >= preset.config.height ? "horizontal" : "vertical")
+    });
+    setLayers(preset.layers.map(l => ({
+      ...l,
+      id: `${l.type}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      fontFamily: l.fontFamily || "helvetiker_regular",
+      booleanMode: l.booleanMode || "none"
+    })));
     setPlateName(`Placa ${preset.name}`);
     setActiveLayerId(preset.layers[0]?.id || null);
     setExplodedView(0);
@@ -1046,8 +1333,15 @@ export default function PlateCreator() {
   };
 
   const loadSavedPlate = (plate: SavedPlate) => {
-    setConfig(plate.config);
-    setLayers(plate.layers);
+    setConfig({
+      ...plate.config,
+      orientation: plate.config.orientation || (plate.config.width >= plate.config.height ? "horizontal" : "vertical")
+    });
+    setLayers(plate.layers.map(l => ({
+      ...l,
+      fontFamily: l.fontFamily || "helvetiker_regular",
+      booleanMode: l.booleanMode || "none"
+    })));
     setPlateName(plate.name);
     setActiveLayerId(plate.layers[0]?.id || null);
     showSuccessNotification(`Placa "${plate.name}" carregada!`);
@@ -1069,12 +1363,9 @@ export default function PlateCreator() {
       const exporter = new STLExporter();
       
       if (mode === "combined") {
-        // Mode 1: Combined full plate as one piece
-        const group = new THREE.Group();
-        
-        // Add Base plate mesh
+        // Mode 1: Combined full plate — apply CSG boolean operations, then export as single mesh
         const baseShape = getPlateBaseShape(config, layers);
-        const extrudeSettings = {
+        const extrudeOpts = {
           steps: 1,
           depth: config.thickness / 10,
           bevelEnabled: true,
@@ -1082,68 +1373,95 @@ export default function PlateCreator() {
           bevelSize: 0.1,
           bevelSegments: 3,
         };
-        const baseMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(baseShape, extrudeSettings));
-        group.add(baseMesh);
+        let combinedGeom = new THREE.ExtrudeGeometry(baseShape, extrudeOpts);
 
-        // Add border relief if enabled
+        // Add border as union if enabled
         if (config.borderStyle !== "none") {
-          const borderMesh = new THREE.Mesh(
-            new THREE.ExtrudeGeometry(
-              getPlateBaseShape({
-                ...config,
-                width: config.width - (config.borderWidth * 2),
-                height: config.height - (config.borderWidth * 2),
-                borderRadius: Math.max(1, config.borderRadius - config.borderWidth),
-                mountingHoles: "none"
-              }), 
-              { steps: 1, depth: config.borderHeight / 10, bevelEnabled: false }
-            )
-          );
-          borderMesh.position.set(0, 0, (config.thickness / 10) + (config.borderStyle === "relief" ? 0.05 : -0.05));
-          group.add(borderMesh);
+          const borderShape = getPlateBaseShape({
+            ...config,
+            width: config.width - (config.borderWidth * 2),
+            height: config.height - (config.borderWidth * 2),
+            borderRadius: Math.max(1, config.borderRadius - config.borderWidth),
+            mountingHoles: "none"
+          });
+          const borderGeom = new THREE.ExtrudeGeometry(borderShape, { steps: 1, depth: config.borderHeight / 10, bevelEnabled: false });
+          const borderMatrix = new THREE.Matrix4();
+          borderMatrix.setPosition(0, 0, (config.thickness / 10) + (config.borderStyle === "relief" ? 0.05 : -0.05));
+          try { combinedGeom = union(combinedGeom, borderGeom, borderMatrix); } catch {}
         }
 
-        // Add active visible layers
+        // Apply boolean operations from layers
+        layers.forEach((layer) => {
+          if (!layer.visible || !layer.booleanMode || layer.booleanMode === "none") return;
+          let layerGeom: THREE.BufferGeometry | null = null;
+
+          if (layer.type === "text") {
+            const layerFont = fonts[layer.fontFamily || "helvetiker_regular"];
+            if (layerFont) {
+              layerGeom = new TextGeometry(layer.content, {
+                font: layerFont, size: layer.size / 10, depth: layer.depth / 10,
+                curveSegments: 12, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.015, bevelSegments: 3,
+              });
+            }
+          } else if (layer.type === "icon") {
+            layerGeom = new THREE.ExtrudeGeometry(getProceduralIconShape(layer.content), {
+              steps: 1, depth: layer.depth / 10, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.02, bevelSegments: 2,
+            });
+          } else if (layer.type === "svg") {
+            layerGeom = svgToExtrudedGeometry(layer.content, { depth: layer.depth / 10, targetSize: layer.size });
+          }
+
+          if (!layerGeom) return;
+          const matrix = new THREE.Matrix4();
+          const rotationRad = (layer.rotation * Math.PI) / 180;
+          const flipX = (layer as any).flipX ? -1 : 1;
+          const flipY = (layer as any).flipY ? -1 : 1;
+          matrix.makeRotationZ(rotationRad);
+          matrix.scale(new THREE.Vector3(flipX, flipY, 1));
+          matrix.setPosition(layer.x, layer.y, (config.thickness / 10) - (layer.style === "engraved" ? 0.1 : 0));
+
+          try {
+            if (layer.booleanMode === "subtract") combinedGeom = subtract(combinedGeom, layerGeom, matrix);
+            else if (layer.booleanMode === "union") combinedGeom = union(combinedGeom, layerGeom, matrix);
+            else if (layer.booleanMode === "intersect") combinedGeom = intersect(combinedGeom, layerGeom, matrix);
+          } catch (err) { console.warn(`CSG export failed for "${layer.content}":`, err); }
+        });
+
+        // Add non-boolean visible layers as separate meshes
         layers.forEach((layer) => {
           if (!layer.visible) return;
+          if (layer.booleanMode && layer.booleanMode !== "none") return; // already applied via CSG
           const rotationRad = (layer.rotation * Math.PI) / 180;
+          const flipX = (layer as any).flipX ? -1 : 1;
+          const flipY = (layer as any).flipY ? -1 : 1;
           let layerMesh: THREE.Mesh | null = null;
 
           if (layer.type === "icon") {
-            const shape = getProceduralIconShape(layer.content);
-            layerMesh = new THREE.Mesh(
-              new THREE.ExtrudeGeometry(shape, {
-                steps: 1,
-                depth: layer.depth / 10,
-                bevelEnabled: true,
-                bevelThickness: 0.04,
-                bevelSize: 0.02,
-                bevelSegments: 2
-              })
-            );
-          } else if (layer.type === "text" && font) {
-            layerMesh = new THREE.Mesh(
-              new TextGeometry(layer.content, {
-                font: font,
-                size: layer.size / 10,
-                depth: layer.depth / 10,
-                curveSegments: 12,
-                bevelEnabled: true,
-                bevelThickness: 0.03,
-                bevelSize: 0.015,
-                bevelSegments: 3
-              })
-            );
+            layerMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(getProceduralIconShape(layer.content), {
+              steps: 1, depth: layer.depth / 10, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.02, bevelSegments: 2
+            }));
+          } else if (layer.type === "svg") {
+            const geo = svgToExtrudedGeometry(layer.content, { depth: layer.depth / 10, targetSize: layer.size });
+            if (geo) layerMesh = new THREE.Mesh(geo);
+          } else if (layer.type === "text") {
+            const layerFont = fonts[layer.fontFamily || "helvetiker_regular"];
+            if (layerFont) {
+              layerMesh = new THREE.Mesh(new TextGeometry(layer.content, {
+                font: layerFont, size: layer.size / 10, depth: layer.depth / 10,
+                curveSegments: 12, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.015, bevelSegments: 3
+              }));
+            }
           }
-
           if (layerMesh) {
             layerMesh.position.set(layer.x, layer.y, (config.thickness / 10) + (layer.style === "engraved" ? -0.1 : 0.01));
             layerMesh.rotation.set(0, 0, rotationRad);
-            group.add(layerMesh);
+            layerMesh.scale.set(flipX, flipY, 1);
           }
         });
 
-        // Parse and export
+        combinedGeom.computeVertexNormals();
+        const group = new THREE.Group();
+        group.add(new THREE.Mesh(combinedGeom));
         const result = exporter.parse(group, { binary: true });
         triggerDownload(result, `${plateName.toLowerCase().replace(/\s+/g, "-")}-placa-completa.stl`);
         showSuccessNotification("STL Unificado exportado com sucesso!");
@@ -1195,22 +1513,35 @@ export default function PlateCreator() {
                 bevelEnabled: false
               })
             );
-          } else if (layer.type === "text" && font) {
-            guideMesh = new THREE.Mesh(
-              new TextGeometry(layer.content, {
-                font: font,
-                size: layer.size / 10,
-                depth: 0.04,
-                curveSegments: 8,
-                bevelEnabled: false
-              })
-            );
+          } else if (layer.type === "svg") {
+            const geo = svgToExtrudedGeometry(layer.content, {
+              depth: 0.04,
+              targetSize: layer.size,
+              bevelEnabled: false
+            });
+            if (geo) guideMesh = new THREE.Mesh(geo);
+          } else if (layer.type === "text") {
+            const layerFont = fonts[layer.fontFamily || "helvetiker_regular"];
+            if (layerFont) {
+              guideMesh = new THREE.Mesh(
+                new TextGeometry(layer.content, {
+                  font: layerFont,
+                  size: layer.size / 10,
+                  depth: 0.04,
+                  curveSegments: 8,
+                  bevelEnabled: false
+                })
+              );
+            }
           }
 
           if (guideMesh) {
             // align with the face of the plate
+            const flipX = (layer as any).flipX ? -1 : 1;
+            const flipY = (layer as any).flipY ? -1 : 1;
             guideMesh.position.set(layer.x, layer.y, (config.thickness / 10) - 0.02);
             guideMesh.rotation.set(0, 0, rotationRad);
+            guideMesh.scale.set(flipX, flipY, 1);
             group.add(guideMesh);
           }
         });
@@ -1239,26 +1570,39 @@ export default function PlateCreator() {
                 bevelSegments: 2
               })
             );
-          } else if (layer.type === "text" && font) {
-            layerMesh = new THREE.Mesh(
-              new TextGeometry(layer.content, {
-                font: font,
-                size: layer.size / 10,
-                depth: layer.depth / 10,
-                curveSegments: 12,
-                bevelEnabled: true,
-                bevelThickness: 0.03,
-                bevelSize: 0.015,
-                bevelSegments: 3
-              })
-            );
+          } else if (layer.type === "svg") {
+            const geo = svgToExtrudedGeometry(layer.content, {
+              depth: layer.depth / 10,
+              targetSize: layer.size,
+            });
+            if (geo) layerMesh = new THREE.Mesh(geo);
+          } else if (layer.type === "text") {
+            const layerFont = fonts[layer.fontFamily || "helvetiker_regular"];
+            if (layerFont) {
+              layerMesh = new THREE.Mesh(
+                new TextGeometry(layer.content, {
+                  font: layerFont,
+                  size: layer.size / 10,
+                  depth: layer.depth / 10,
+                  curveSegments: 12,
+                  bevelEnabled: true,
+                  bevelThickness: 0.03,
+                  bevelSize: 0.015,
+                  bevelSegments: 3
+                })
+              );
+            }
           }
 
           if (layerMesh) {
             // Export centered on flat origin (0, 0, 0) for clean slicing!
             group.add(layerMesh);
             const result = exporter.parse(group, { binary: true });
-            const label = layer.type === "text" ? layer.content.substring(0, 8) : layer.content;
+            const label = layer.type === "text" 
+              ? layer.content.substring(0, 8) 
+              : layer.type === "svg" 
+                ? "arte-svg" 
+                : layer.content;
             triggerDownload(result, `${plateName.toLowerCase().replace(/\s+/g, "-")}-PECA-${idx + 1}-${label}.stl`);
             exportedCount++;
           }
@@ -1379,7 +1723,7 @@ export default function PlateCreator() {
                   config={config} 
                   layers={layers} 
                   activeLayerId={activeLayerId}
-                  font={font}
+                  fonts={fonts}
                   explodedView={explodedView}
                   showWireframe={showWireframe}
                   setActiveLayerId={setActiveLayerId}
@@ -1466,6 +1810,54 @@ export default function PlateCreator() {
 
               {/* Grid selectors */}
               <div className="space-y-3">
+                {/* Orientation selector */}
+                <div>
+                  <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1.5">Orientação da Placa</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfig(prev => ({
+                          ...prev,
+                          orientation: "horizontal",
+                          width: Math.max(prev.width, prev.height),
+                          height: Math.min(prev.width, prev.height)
+                        }));
+                      }}
+                      className={`py-2.5 px-2 rounded border text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                        config.orientation === "horizontal"
+                          ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5"
+                          : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
+                      }`}
+                    >
+                      <span className="text-base">▬</span> Horizontal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfig(prev => ({
+                          ...prev,
+                          orientation: "vertical",
+                          width: Math.min(prev.width, prev.height),
+                          height: Math.max(prev.width, prev.height)
+                        }));
+                      }}
+                      className={`py-2.5 px-2 rounded border text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                        config.orientation === "vertical"
+                          ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/5"
+                          : "border-[#E8E9E3] text-zinc-500 hover:border-[#E8E9E3] bg-white/40"
+                      }`}
+                    >
+                      <span className="text-base">▮</span> Vertical
+                    </button>
+                  </div>
+                  <p className="text-[7px] text-zinc-500 mt-1 leading-relaxed">
+                    {config.orientation === "horizontal"
+                      ? "Placa horizontal — ideal para nomes, frases e textos longos."
+                      : "Placa vertical — ideal para listas, placas de identificação e colunas."}
+                  </p>
+                </div>
+
                 <div>
                   <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1.5">Formato da Placa</label>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -1501,28 +1893,69 @@ export default function PlateCreator() {
                 </div>
 
                 {/* Dimensions inputs */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Largura (mm)</label>
-                    <input 
-                      type="number" 
-                      min="50" 
-                      max="300"
-                      value={config.width}
-                      onChange={(e) => setConfig(prev => ({ ...prev, width: parseInt(e.target.value) || 100 }))}
-                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
-                    />
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest font-bold">Dimensões (mm)</label>
+                    <button
+                      type="button"
+                      onClick={() => setConfig(prev => ({
+                        ...prev,
+                        width: prev.height,
+                        height: prev.width
+                      }))}
+                      className="bg-[#E8E9E3] hover:bg-[#632CE5]/10 text-zinc-500 hover:text-[#632CE5] border border-[#E8E9E3] hover:border-[#632CE5]/30 px-2 py-0.5 rounded text-[7px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer"
+                      title="Inverter largura e altura"
+                    >
+                      ⇄ Inverter
+                    </button>
                   </div>
-                  <div>
-                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Altura (mm)</label>
-                    <input 
-                      type="number" 
-                      min="50" 
-                      max="300"
-                      value={config.height}
-                      onChange={(e) => setConfig(prev => ({ ...prev, height: parseInt(e.target.value) || 100 }))}
-                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[7.5px] font-mono text-zinc-400 block mb-0.5">Largura</label>
+                      <input 
+                        type="number" 
+                        min="50" 
+                        max="300"
+                        value={config.width}
+                        onChange={(e) => setConfig(prev => ({ ...prev, width: parseInt(e.target.value) || 100 }))}
+                        className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[7.5px] font-mono text-zinc-400 block mb-0.5">Altura</label>
+                      <input 
+                        type="number" 
+                        min="50" 
+                        max="300"
+                        value={config.height}
+                        onChange={(e) => setConfig(prev => ({ ...prev, height: parseInt(e.target.value) || 100 }))}
+                        className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono"
+                      />
+                    </div>
+                  </div>
+                  {/* Quick size presets */}
+                  <div className="flex gap-1 mt-1.5">
+                    {[
+                      { label: "Peq", w: 120, h: 80 },
+                      { label: "Méd", w: 160, h: 100 },
+                      { label: "Gra", w: 200, h: 120 },
+                      { label: "XG", w: 250, h: 150 }
+                    ].map(preset => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setConfig(prev => ({
+                          ...prev,
+                          width: config.orientation === "horizontal" ? preset.w : preset.h,
+                          height: config.orientation === "horizontal" ? preset.h : preset.w
+                        }))}
+                        className="flex-1 bg-[#E8E9E3] hover:bg-[#632CE5]/10 text-zinc-500 hover:text-[#632CE5] border border-[#E8E9E3] hover:border-[#632CE5]/30 py-0.5 rounded text-[7px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                   </div>
                 </div>
 
@@ -1584,7 +2017,20 @@ export default function PlateCreator() {
                 {/* Material style and Mounting holes options */}
                 <div className="grid grid-cols-2 gap-3 border-t border-[#E2E3DD]/60 pt-3">
                   <div>
-                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Orifícios de Fixação</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest font-bold">Orifícios</label>
+                      <button
+                        type="button"
+                        onClick={() => setConfig(prev => ({
+                          ...prev,
+                          mountingHoles: prev.orientation === "horizontal" ? "two_sides" : "top_center"
+                        }))}
+                        className="bg-[#E8E9E3] hover:bg-[#632CE5]/10 text-zinc-500 hover:text-[#632CE5] border border-[#E8E9E3] hover:border-[#632CE5]/30 px-1.5 py-0 rounded text-[6.5px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer"
+                        title="Recomendado para orientação atual"
+                      >
+                        Auto
+                      </button>
+                    </div>
                     <select
                       value={config.mountingHoles}
                       onChange={(e) => setConfig(prev => ({ ...prev, mountingHoles: e.target.value as any }))}
@@ -1595,9 +2041,14 @@ export default function PlateCreator() {
                       <option value="two_sides">2 furos laterais</option>
                       <option value="four_corners">4 furos nos cantos</option>
                     </select>
+                    <p className="text-[6.5px] text-zinc-500 mt-0.5 leading-relaxed">
+                      {config.orientation === "horizontal" 
+                        ? "Recomendado: 2 furos laterais para fixação em parede horizontal."
+                        : "Recomendado: 1 furo topo centro para fixação em parede vertical."}
+                    </p>
                   </div>
                   <div>
-                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Material de Exibição</label>
+                    <label className="text-[8.5px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">Material</label>
                     <select
                       value={config.materialFinish}
                       onChange={(e) => setConfig(prev => ({ ...prev, materialFinish: e.target.value as any }))}
@@ -1638,8 +2089,6 @@ export default function PlateCreator() {
                 </div>
               </div>
 
-            </div>
-
             {/* Visual Overlapping Layers Control Block */}
             <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
               <div className="flex items-center justify-between">
@@ -1648,6 +2097,32 @@ export default function PlateCreator() {
                   <h3 className="text-[11px] font-black uppercase tracking-wider text-[#1A1C19]">Sobreposição de Camadas ({layers.length})</h3>
                 </div>
                 <div className="flex gap-1.5">
+                  {/* Undo/Redo buttons */}
+                  <button
+                    type="button"
+                    onClick={undo}
+                    disabled={historyIndex <= 0}
+                    className="bg-white border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5]/30 disabled:opacity-30 disabled:cursor-not-allowed px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider cursor-pointer"
+                    title="Desfazer (Ctrl+Z)"
+                  >
+                    ↩
+                  </button>
+                  <button
+                    type="button"
+                    onClick={redo}
+                    disabled={historyIndex >= layersHistory.length - 1}
+                    className="bg-white border border-[#E8E9E3] text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5]/30 disabled:opacity-30 disabled:cursor-not-allowed px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider cursor-pointer"
+                    title="Refazer (Ctrl+Y)"
+                  >
+                    ↪
+                  </button>
+                  <input
+                    ref={svgFileInputRef}
+                    type="file"
+                    accept=".svg,image/svg+xml"
+                    onChange={handleSvgFileChange}
+                    className="hidden"
+                  />
                   <button
                     type="button"
                     onClick={handleAddTextLayer}
@@ -1662,6 +2137,14 @@ export default function PlateCreator() {
                   >
                     <Plus className="w-3 h-3" /> + ÍCONE
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => svgFileInputRef.current?.click()}
+                    title="Importar um arquivo .svg (ex: exportado do Design Editor)"
+                    className="bg-[#E8E9E3] text-zinc-300 hover:bg-[#F9FAF4] px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider flex items-center gap-1 cursor-pointer"
+                  >
+                    <FileCode className="w-3 h-3" /> + SVG
+                  </button>
                 </div>
               </div>
 
@@ -1669,7 +2152,7 @@ export default function PlateCreator() {
               <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
                 {layers.length === 0 ? (
                   <div className="text-center py-4 bg-white/40 border border-[#E2E3DD]/60 rounded text-[10px] text-zinc-500 uppercase">
-                    Nenhuma camada sobreposta. Adicione um texto ou ícone acima!
+                    Nenhuma camada sobreposta. Adicione um texto, ícone ou SVG acima!
                   </div>
                 ) : (
                   layers.map((layer, idx) => {
@@ -1693,11 +2176,17 @@ export default function PlateCreator() {
                           <div className="flex items-center gap-1">
                             {layer.type === "text" ? (
                               <Type className="w-3 h-3 text-zinc-500 shrink-0" />
-                            ) : (
+                            ) : layer.type === "icon" ? (
                               <Sparkles className="w-3 h-3 text-zinc-500 shrink-0" />
+                            ) : (
+                              <FileCode className="w-3 h-3 text-zinc-500 shrink-0" />
                             )}
                             <span className="text-[10px] font-bold text-[#1A1C19] truncate max-w-[110px] font-mono uppercase">
-                              {layer.type === "text" ? `"${layer.content}"` : `ÍCONE: ${layer.content}`}
+                              {layer.type === "text" 
+                                ? `"${layer.content}"` 
+                                : layer.type === "icon" 
+                                  ? `ÍCONE: ${layer.content}` 
+                                  : "ARTE SVG"}
                             </span>
                           </div>
                         </div>
@@ -1767,10 +2256,10 @@ export default function PlateCreator() {
                 </div>
 
                 <div className="space-y-3">
-                  {/* Layer text / icon type content editor */}
+                  {/* Layer text / icon / svg content editor */}
                   <div>
                     <label className="text-[8px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">
-                      {activeLayer.type === "text" ? "Editar Texto" : "Tipo de Ícone"}
+                      {activeLayer.type === "text" ? "Editar Texto" : activeLayer.type === "icon" ? "Tipo de Ícone" : "Arte Importada"}
                     </label>
                     {activeLayer.type === "text" ? (
                       <input 
@@ -1779,7 +2268,7 @@ export default function PlateCreator() {
                         onChange={(e) => updateActiveLayerField("content", e.target.value.toUpperCase())}
                         className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full font-mono uppercase"
                       />
-                    ) : (
+                    ) : activeLayer.type === "icon" ? (
                       <select
                         value={activeLayer.content}
                         onChange={(e) => updateActiveLayerField("content", e.target.value)}
@@ -1799,21 +2288,82 @@ export default function PlateCreator() {
                         <option value="rocket">Foguete Espacial (Rocket)</option>
                         <option value="shield">Brasão de Escudo</option>
                       </select>
+                    ) : (
+                      <div className="bg-white/60 border border-[#E8E9E3] rounded px-2.5 py-2 text-[9.5px] text-zinc-500 font-mono uppercase">
+                        Vetor importado (~{Math.max(1, Math.round(activeLayer.content.length / 1024))} KB de dados SVG). Exclua e importe novamente para trocar.
+                      </div>
                     )}
                   </div>
 
-                  {/* Sliders layout for positions X & Y */}
+                  {/* Font family picker (text layers only) */}
+                  {activeLayer.type === "text" && (
+                    <div>
+                      <label className="text-[8px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">
+                        Família da Fonte
+                      </label>
+                      <select
+                        value={activeLayer.fontFamily || "helvetiker_regular"}
+                        onChange={(e) => {
+                          updateActiveLayerField("fontFamily", e.target.value);
+                          loadFont(e.target.value);
+                        }}
+                        className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full cursor-pointer font-mono"
+                      >
+                        {Object.entries(FONT_REGISTRY).map(([id, font]) => (
+                          <option key={id} value={id}>
+                            {font.name} — {font.style}
+                            {fontLoadingStates[id] === "loading" ? " (carregando...)" : ""}
+                            {fontLoadingStates[id] === "error" ? " (falhou)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Boolean operation mode */}
+                  <div>
+                    <label className="text-[8px] font-mono text-zinc-400 uppercase tracking-widest block font-bold mb-1">
+                      Modo Booleano
+                    </label>
+                    <select
+                      value={activeLayer.booleanMode || "none"}
+                      onChange={(e) => updateActiveLayerField("booleanMode", e.target.value)}
+                      className="bg-white/80 border border-[#E8E9E3] rounded px-2.5 py-1.5 text-xs text-[#212121] outline-none w-full cursor-pointer font-mono"
+                    >
+                      <option value="none">Nenhum (sobrepor)</option>
+                      <option value="union">Unir (solder com base)</option>
+                      <option value="subtract">Subtrair (escavar na base)</option>
+                      <option value="intersect">Interseção (apenas sobreposição)</option>
+                    </select>
+                    <p className="text-[7px] text-zinc-500 mt-1 leading-relaxed">
+                      {activeLayer.booleanMode === "subtract"
+                        ? "Esta camada será escavada/cortada da placa base."
+                        : activeLayer.booleanMode === "union"
+                          ? "Esta camada será fundida à placa base em uma peça única."
+                          : activeLayer.booleanMode === "intersect"
+                            ? "Apenas a interseção desta camada com a base será mantida."
+                            : "Camada independente, sobreposta à base."}
+                    </p>
+                  </div>
+
+                  {/* Position X & Y with numeric inputs */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                         <span>POSIÇÃO X (mm)</span>
-                        <span className="text-[#632CE5]">{Math.round(activeLayer.x * 10)}</span>
+                        <input
+                          type="number"
+                          value={Math.round(activeLayer.x * 10)}
+                          onChange={(e) => updateActiveLayerField("x", parseFloat(e.target.value) / 10 || 0)}
+                          className="w-12 text-right bg-transparent text-[#632CE5] outline-none font-mono text-[8px]"
+                          step="1"
+                        />
                       </div>
                       <input 
                         type="range" 
                         min="-15" 
                         max="15" 
-                        step="0.2"
+                        step="0.1"
                         value={activeLayer.x}
                         onChange={(e) => updateActiveLayerField("x", parseFloat(e.target.value))}
                         className="w-full accent-[#632CE5] cursor-pointer"
@@ -1822,13 +2372,19 @@ export default function PlateCreator() {
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                         <span>POSIÇÃO Y (mm)</span>
-                        <span className="text-[#632CE5]">{Math.round(activeLayer.y * 10)}</span>
+                        <input
+                          type="number"
+                          value={Math.round(activeLayer.y * 10)}
+                          onChange={(e) => updateActiveLayerField("y", parseFloat(e.target.value) / 10 || 0)}
+                          className="w-12 text-right bg-transparent text-[#632CE5] outline-none font-mono text-[8px]"
+                          step="1"
+                        />
                       </div>
                       <input 
                         type="range" 
                         min="-15" 
                         max="15" 
-                        step="0.2"
+                        step="0.1"
                         value={activeLayer.y}
                         onChange={(e) => updateActiveLayerField("y", parseFloat(e.target.value))}
                         className="w-full accent-[#632CE5] cursor-pointer"
@@ -1836,18 +2392,53 @@ export default function PlateCreator() {
                     </div>
                   </div>
 
-                  {/* Font Size & Extrusion thickness sliders */}
+                  {/* Alignment tools */}
+                  <div className="flex gap-1.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => updateActiveLayerField("x", 0)}
+                      className="flex-1 bg-[#E8E9E3] hover:bg-[#632CE5]/10 text-zinc-500 hover:text-[#632CE5] border border-[#E8E9E3] hover:border-[#632CE5]/30 px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer"
+                      title="Centralizar horizontalmente"
+                    >
+                      ← Centro X →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateActiveLayerField("y", 0)}
+                      className="flex-1 bg-[#E8E9E3] hover:bg-[#632CE5]/10 text-zinc-500 hover:text-[#632CE5] border border-[#E8E9E3] hover:border-[#632CE5]/30 px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer"
+                      title="Centralizar verticalmente"
+                    >
+                      ↓ Centro Y ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { updateActiveLayerField("x", 0); updateActiveLayerField("y", 0); }}
+                      className="flex-1 bg-[#632CE5]/10 hover:bg-[#632CE5]/20 text-[#632CE5] border border-[#632CE5]/30 px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer"
+                      title="Centralizar ambos os eixos"
+                    >
+                      ⊕ Centro
+                    </button>
+                  </div>
+
+                  {/* Scale & Depth with numeric inputs + flip buttons */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
-                        <span>TAMANHO / ESCALA</span>
-                        <span className="text-[#632CE5]">{activeLayer.size}x</span>
+                        <span>ESCALA</span>
+                        <input
+                          type="number"
+                          value={activeLayer.size}
+                          onChange={(e) => updateActiveLayerField("size", Math.max(0.1, parseFloat(e.target.value) || 0.1))}
+                          className="w-12 text-right bg-transparent text-[#632CE5] outline-none font-mono text-[8px]"
+                          step="0.1"
+                          min="0.1"
+                        />
                       </div>
                       <input 
                         type="range" 
-                        min="0.5" 
-                        max="8.0" 
-                        step="0.1"
+                        min="0.1" 
+                        max="12.0" 
+                        step="0.05"
                         value={activeLayer.size}
                         onChange={(e) => updateActiveLayerField("size", parseFloat(e.target.value))}
                         className="w-full accent-[#632CE5] cursor-pointer"
@@ -1855,14 +2446,21 @@ export default function PlateCreator() {
                     </div>
                     <div>
                       <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
-                        <span>ALTURA RELEVO (Z)</span>
-                        <span className="text-[#632CE5]">{activeLayer.depth}mm</span>
+                        <span>ALTURA (Z mm)</span>
+                        <input
+                          type="number"
+                          value={activeLayer.depth}
+                          onChange={(e) => updateActiveLayerField("depth", Math.max(0.1, parseFloat(e.target.value) || 0.1))}
+                          className="w-12 text-right bg-transparent text-[#632CE5] outline-none font-mono text-[8px]"
+                          step="0.5"
+                          min="0.1"
+                        />
                       </div>
                       <input 
                         type="range" 
-                        min="1" 
+                        min="0.1" 
                         max="15" 
-                        step="0.5"
+                        step="0.1"
                         value={activeLayer.depth}
                         onChange={(e) => updateActiveLayerField("depth", parseFloat(e.target.value))}
                         className="w-full accent-[#632CE5] cursor-pointer"
@@ -1870,21 +2468,71 @@ export default function PlateCreator() {
                     </div>
                   </div>
 
-                  {/* Rotation Angle slider */}
+                  {/* Rotation with numeric input + quick angle buttons */}
                   <div>
                     <div className="flex justify-between text-[8px] font-mono text-zinc-400 mb-1">
                       <span>ROTAÇÃO (GRAUS)</span>
-                      <span className="text-[#632CE5]">{activeLayer.rotation}°</span>
+                      <input
+                        type="number"
+                        value={activeLayer.rotation}
+                        onChange={(e) => updateActiveLayerField("rotation", parseInt(e.target.value) || 0)}
+                        className="w-12 text-right bg-transparent text-[#632CE5] outline-none font-mono text-[8px]"
+                        step="1"
+                      />
                     </div>
                     <input 
                       type="range" 
                       min="-180" 
                       max="180" 
-                      step="5"
+                      step="1"
                       value={activeLayer.rotation}
                       onChange={(e) => updateActiveLayerField("rotation", parseInt(e.target.value))}
                       className="w-full accent-[#632CE5] cursor-pointer"
                     />
+                    <div className="flex gap-1 mt-1">
+                      {[-90, -45, 0, 45, 90, 180].map(angle => (
+                        <button
+                          key={angle}
+                          type="button"
+                          onClick={() => updateActiveLayerField("rotation", angle)}
+                          className={`flex-1 py-0.5 rounded text-[7px] font-mono font-bold transition-all cursor-pointer ${
+                            activeLayer.rotation === angle 
+                              ? "bg-[#632CE5] text-white" 
+                              : "bg-[#E8E9E3] text-zinc-500 hover:bg-[#632CE5]/10 hover:text-[#632CE5]"
+                          }`}
+                        >
+                          {angle}°
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Flip / Mirror buttons */}
+                  <div className="flex gap-1.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => updateActiveLayerField("flipX" as any, !(activeLayer as any).flipX)}
+                      className={`flex-1 border px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer ${
+                        (activeLayer as any).flipX 
+                          ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" 
+                          : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-500 hover:text-[#632CE5] hover:border-[#632CE5]/30"
+                      }`}
+                      title="Espelhar horizontalmente"
+                    >
+                      ⇔ Espelhar X
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateActiveLayerField("flipY" as any, !(activeLayer as any).flipY)}
+                      className={`flex-1 border px-2 py-1 rounded text-[8px] font-mono uppercase font-bold tracking-wider transition-all cursor-pointer ${
+                        (activeLayer as any).flipY 
+                          ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" 
+                          : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-500 hover:text-[#632CE5] hover:border-[#632CE5]/30"
+                      }`}
+                      title="Espelhar verticalmente"
+                    >
+                      ⇕ Espelhar Y
+                    </button>
                   </div>
 
                   {/* Extruded vs Engraved selector styles */}
@@ -2063,8 +2711,6 @@ export default function PlateCreator() {
           </div>
 
         </div>
-
-      </div>
 
     </div>
   );

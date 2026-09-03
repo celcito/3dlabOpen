@@ -4,12 +4,43 @@ import {
   Trash2, MoveUp, MoveDown, Download, Layers, 
   Settings, MousePointer2, Plus, Layout, 
   Undo, Redo, Save, FileJson, FileCode, Play, Palette,
-  BringToFront, SendToBack, Copy, FlipHorizontal, FlipVertical
+  BringToFront, SendToBack, Copy, FlipHorizontal, FlipVertical,
+  Send
 } from "lucide-react";
 import { useDesignEditor } from "../hooks/useDesignEditor";
+// NOTA: ajuste este caminho relativo para onde plateBridge.ts for colocado no seu projeto.
+import { sendSvgToPlateCreator } from "../lib/plateBridge";
+
+// NOTA: ajuste para a rota real da tela do Criador de Placas 3D no seu app.
+const PLATE_CREATOR_ROUTE = "/plate-creator";
 
 export default function DesignEditor() {
-  const { canvasRef, containerRef, selectedObject, properties, addRect, addCircle, addTriangle, addText, handleImageUpload, deleteObject, bringForward, sendBackwards, bringToFront, sendToBack, handlePropertyChange, exportSVG, exportPNG } = useDesignEditor();
+  const { 
+    canvasRef, containerRef, selectedObject, properties, 
+    addRect, addCircle, addTriangle, addText, handleImageUpload, 
+    deleteObject, bringForward, sendBackwards, bringToFront, sendToBack, 
+    handlePropertyChange, exportSVG, exportPNG,
+    // REQUISITO: o hook useDesignEditor precisa expor essa função retornando o SVG
+    // como string (ex: `getSVGString: () => fabricCanvasRef.current?.toSVG() ?? ""`).
+    // Sem ela, "Enviar para Placa 3D" não tem como pegar a arte sem forçar um download.
+    getSVGString,
+  } = useDesignEditor() as ReturnType<typeof useDesignEditor> & {
+    getSVGString?: () => string;
+  };
+
+  const handleSendToPlateCreator = () => {
+    if (typeof getSVGString !== "function") {
+      console.error(
+        "useDesignEditor() não expõe getSVGString(). Adicione um retorno " +
+        "`getSVGString: () => fabricCanvas.toSVG()` no hook para habilitar este botão."
+      );
+      return;
+    }
+    const svg = getSVGString();
+    if (!svg) return;
+    sendSvgToPlateCreator(svg, "Arte do Design Editor");
+    window.location.href = PLATE_CREATOR_ROUTE;
+  };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F9FAF4]">
@@ -46,10 +77,18 @@ export default function DesignEditor() {
           </button>
           <button 
             onClick={exportPNG}
-            className="flex items-center gap-2 px-5 py-2 bg-[#632CE5] rounded text-[9px] font-black uppercase tracking-widest text-black hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+            className="flex items-center gap-2 px-4 py-2 bg-[#E8E9E3] border border-[#E8E9E3] rounded text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-[#632CE5] hover:border-[#632CE5]/40 transition-all"
           >
             <Download className="w-3.5 h-3.5" />
             Salvar PNG
+          </button>
+          <button 
+            onClick={handleSendToPlateCreator}
+            title="Envia a arte atual (como SVG) direto pro Criador de Placas 3D"
+            className="flex items-center gap-2 px-5 py-2 bg-[#632CE5] rounded text-[9px] font-black uppercase tracking-widest text-black hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+          >
+            <Send className="w-3.5 h-3.5" />
+            Enviar para Placa 3D
           </button>
         </div>
       </div>

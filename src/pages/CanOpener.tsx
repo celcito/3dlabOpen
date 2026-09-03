@@ -109,6 +109,7 @@ export default function CanOpener() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [presetSilhouette, setPresetSilhouette] = useState(false);
   const [traced, setTraced] = useState<TracedImage | null>(null);
   const [isTracing, setIsTracing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -251,6 +252,9 @@ export default function CanOpener() {
       baseColor: palette[0] ?? DEFAULT_TAB_UI.baseColor,
       keyring: tabUi.keyring,
       keyringDiameter: tabUi.keyringDiameter,
+      // Preset drawings can either sit on a rectangular base (default) or
+      // make the opener follow the drawing's own silhouette.
+      silhouetteMode: presetSilhouette && activePresetId !== null,
     };
   }, [traced, colorRegions, palette, tabUi]);
 
@@ -328,6 +332,7 @@ export default function CanOpener() {
     setImageFile(null);
     setImageUrl(null);
     setActivePresetId(null);
+    setPresetSilhouette(false);
     setTraced(null);
     setUi(DEFAULT_UI);
     setTabUi(DEFAULT_TAB_UI);
@@ -477,6 +482,20 @@ export default function CanOpener() {
                       </button>
                     );
                   })}
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-[#E2E3DD] mt-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-[#494455] block">Seguir a silhueta do desenho</label>
+                    <p className="text-[9px] text-[#687064] leading-relaxed">
+                      A base acompanha o contorno do desenho em vez do retângulo.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={presetSilhouette}
+                    onChange={(e) => setPresetSilhouette(e.target.checked)}
+                    className="accent-[#632CE5] w-4 h-4 rounded bg-[#F3F4EE] border-[#E2E3DD]"
+                  />
                 </div>
               </div>
 

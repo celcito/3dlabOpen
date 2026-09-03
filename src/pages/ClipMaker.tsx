@@ -71,7 +71,7 @@ export interface ClipConfig {
 export interface PresetItem {
   id: string;
   name: string;
-  category: "floral" | "symbols" | "geometric" | "cute" | "giant";
+  category: "floral" | "symbols" | "geometric" | "cute" | "giant" | "bts";
   sizeCategory: ClipSizeCategory;
   defaultTopStyle: TopStyle;
   icon: string;
@@ -631,6 +631,198 @@ export const PRESETS: PresetItem[] = [
       <path d="M 45 52 L 30 85 L 42 75 L 48 85 Z" fill="none" stroke="currentColor" stroke-width="5"/>
       <path d="M 55 52 L 70 85 L 58 75 L 52 85 Z" fill="none" stroke="currentColor" stroke-width="5"/>
     </svg>`
+  },
+
+  // 6. BTS & K-POP
+  {
+    id: "bts_logo",
+    name: "BTS Logo (Portas)",
+    category: "bts",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "💜",
+    description: "Logo oficial BTS — duas portas trapezoidais abrindo para fora com o texto BTS",
+    svg: `<svg viewBox="0 0 100 110">
+      <polygon points="18,20 46,20 40,72 24,72" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="54,20 82,20 76,72 60,72" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+      <text x="50" y="98" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="22" fill="currentColor" letter-spacing="3">BTS</text>
+    </svg>`
+  },
+  {
+    id: "bts_army_logo",
+    name: "ARMY Logo",
+    category: "bts",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "🫶",
+    description: "Logo invertido do fandom ARMY — portas se fechando com o texto ARMY",
+    svg: `<svg viewBox="0 0 100 110">
+      <polygon points="24,20 40,20 46,72 18,72" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="60,20 76,20 82,72 54,72" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+      <text x="50" y="98" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="18" fill="currentColor" letter-spacing="2">ARMY</text>
+    </svg>`
+  },
+  {
+    id: "bts_heart",
+    name: "Coração Roxo BTS",
+    category: "bts",
+    sizeCategory: "small",
+    defaultTopStyle: "solid_embossed",
+    icon: "💜",
+    description: "Coração roxo icônico do BTS — símbolo do amor entre BTS e ARMY",
+    svg: `<svg viewBox="0 0 100 110">
+      <path d="M 50 82 C 20 60 10 42 10 28 C 10 15 22 10 34 10 C 43 10 48 16 50 20 C 52 16 57 10 66 10 C 78 10 90 15 90 28 C 90 42 80 60 50 82 Z" fill="currentColor"/>
+      <text x="50" y="105" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="14" fill="currentColor" letter-spacing="2">BTS</text>
+    </svg>`
+  },
+  {
+    id: "bts_lightstick",
+    name: "Army Bomb (Lightstick)",
+    category: "bts",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "🪩",
+    description: "Lightstick oficial Army Bomb com esfera transparente e botão laranja",
+    svg: `<svg viewBox="0 0 100 110">
+      <line x1="50" y1="48" x2="50" y2="92" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="50" cy="34" r="24" fill="none" stroke="currentColor" stroke-width="5"/>
+      <circle cx="50" cy="34" r="8" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="50" cy="34" r="3" fill="currentColor"/>
+      <line x1="42" y1="92" x2="58" y2="92" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+      <text x="50" y="106" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="12" fill="currentColor" letter-spacing="2">BTS</text>
+    </svg>`
+  },
+
+  // 7. ANIMAIS
+  {
+    id: "owl_line",
+    name: "Coruja Sábia",
+    category: "cute",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "🦉",
+    description: "Coruja estilizada com olhos grandes, chifres e penas detalhadas em traço contínuo",
+    svg: `<svg viewBox="0 0 100 100">
+      <ellipse cx="50" cy="58" rx="28" ry="30" fill="none" stroke="currentColor" stroke-width="5"/>
+      <circle cx="38" cy="48" r="10" fill="none" stroke="currentColor" stroke-width="4"/>
+      <circle cx="62" cy="48" r="10" fill="none" stroke="currentColor" stroke-width="4"/>
+      <circle cx="38" cy="48" r="4" fill="currentColor"/>
+      <circle cx="62" cy="48" r="4" fill="currentColor"/>
+      <path d="M 46,56 L 50,62 L 54,56" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M 26,38 L 32,28 L 40,40" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M 74,38 L 68,28 L 60,40" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M 30,72 C 38,78 62,78 70,72" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M 34,80 L 38,88 M 50,82 L 50,90 M 66,80 L 62,88" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>`
+  },
+  {
+    id: "bee_solid",
+    name: "Abelha Mel",
+    category: "cute",
+    sizeCategory: "small",
+    defaultTopStyle: "solid_embossed",
+    icon: "🐝",
+    description: "Abelha fofa com listras, asas e antenadas em alto relevo",
+    svg: `<svg viewBox="0 0 100 100">
+      <ellipse cx="50" cy="58" rx="22" ry="18" fill="currentColor"/>
+      <rect x="40" y="48" width="20" height="4" fill="#ffffff"/>
+      <rect x="38" y="58" width="24" height="4" fill="#ffffff"/>
+      <rect x="40" y="68" width="20" height="4" fill="#ffffff"/>
+      <ellipse cx="32" cy="42" rx="12" ry="8" fill="currentColor" opacity="0.6" transform="rotate(-20 32 42)"/>
+      <ellipse cx="68" cy="42" rx="12" ry="8" fill="currentColor" opacity="0.6" transform="rotate(20 68 42)"/>
+      <circle cx="42" cy="52" r="3" fill="#ffffff"/>
+      <circle cx="58" cy="52" r="3" fill="#ffffff"/>
+      <circle cx="42" cy="52" r="1.5" fill="currentColor"/>
+      <circle cx="58" cy="52" r="1.5" fill="currentColor"/>
+      <path d="M 46,58 Q 50,62 54,58" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <line x1="44" y1="38" x2="40" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="56" y1="38" x2="60" y2="28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="40" cy="27" r="2" fill="currentColor"/>
+      <circle cx="60" cy="27" r="2" fill="currentColor"/>
+      <path d="M 70,62 L 78,68" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    </svg>`
+  },
+
+  // 8. FRUTAS & LEGUMES
+  {
+    id: "strawberry_solid",
+    name: "Morango Doce",
+    category: "cute",
+    sizeCategory: "small",
+    defaultTopStyle: "solid_embossed",
+    icon: "🍓",
+    description: "Morango com sementes, cabinho e folhas em alto relevo",
+    svg: `<svg viewBox="0 0 100 100"><path d="M 50 88 C 28 78 16 58 20 40 C 24 26 36 20 50 20 C 64 20 76 26 80 40 C 84 58 72 78 50 88 Z" fill="currentColor"/><path d="M 50 20 L 50 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 50 20 C 44 28 38 34 30 38" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 50 20 C 56 28 62 34 70 38" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="38" cy="50" r="2" fill="#ffffff"/><circle cx="50" cy="46" r="2" fill="#ffffff"/><circle cx="62" cy="50" r="2" fill="#ffffff"/><circle cx="44" cy="62" r="2" fill="#ffffff"/><circle cx="56" cy="62" r="2" fill="#ffffff"/><circle cx="50" cy="74" r="2" fill="#ffffff"/></svg>`
+  },
+  {
+    id: "banana_line",
+    name: "Banana",
+    category: "cute",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "🍌",
+    description: "Banana curvada com casca e ponta em traço contínuo",
+    svg: `<svg viewBox="0 0 100 100"><path d="M 72 20 C 80 30 82 50 74 72 C 68 86 56 92 48 90 C 56 82 62 64 60 46 C 58 30 50 18 40 16 C 50 14 64 10 72 20 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M 72 20 C 68 26 64 32 62 38" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 48 90 L 44 94" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>`
+  },
+  {
+    id: "apple_solid",
+    name: "Maçã",
+    category: "cute",
+    sizeCategory: "small",
+    defaultTopStyle: "solid_embossed",
+    icon: "🍎",
+    description: "Maçã redinha com cabinho e folha em relevo",
+    svg: `<svg viewBox="0 0 100 100"><path d="M 50 85 C 30 85 14 68 14 48 C 14 30 28 20 38 20 C 44 20 48 24 50 28 C 52 24 56 20 62 20 C 72 20 86 30 86 48 C 86 68 70 85 50 85 Z" fill="currentColor"/><path d="M 50 28 L 50 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 50 18 C 56 14 62 16 60 22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`
+  },
+  {
+    id: "grape_line",
+    name: "Uva",
+    category: "cute",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "🍇",
+    description: "Cacho de uvas redondas com gomos e folha",
+    svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="9" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="36" cy="44" r="9" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="64" cy="44" r="9" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="43" cy="62" r="9" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="57" cy="62" r="9" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="76" r="9" fill="none" stroke="currentColor" stroke-width="4"/><path d="M 50 36 L 50 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 50 22 C 58 18 64 20 60 28" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`
+  },
+  {
+    id: "pineapple_line",
+    name: "Abacaxi",
+    category: "cute",
+    sizeCategory: "medium",
+    defaultTopStyle: "line_art",
+    icon: "🍍",
+    description: "Abacaxi com textura de diamante e coroa de folhas",
+    svg: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="60" rx="22" ry="28" fill="none" stroke="currentColor" stroke-width="5"/><path d="M 50 32 L 50 8 M 40 34 L 34 12 M 60 34 L 66 12 M 44 30 L 42 10 M 56 30 L 58 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 34 48 L 66 48 M 32 58 L 68 58 M 34 68 L 66 68" fill="none" stroke="currentColor" stroke-width="2"/><path d="M 42 42 L 58 54 M 58 42 L 42 54 M 42 52 L 58 64 M 58 52 L 42 64 M 42 62 L 58 74 M 58 62 L 42 74" fill="none" stroke="currentColor" stroke-width="2"/></svg>`
+  },
+  {
+    id: "carrot_line",
+    name: "Cenoura",
+    category: "cute",
+    sizeCategory: "small",
+    defaultTopStyle: "line_art",
+    icon: "🥕",
+    description: "Cenoura pontiaguda com folhas e listras",
+    svg: `<svg viewBox="0 0 100 100"><path d="M 50 90 C 42 80 36 60 38 40 C 40 28 44 20 50 18 C 56 20 60 28 62 40 C 64 60 58 80 50 90 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M 50 18 L 50 6 M 44 22 L 36 10 M 56 22 L 64 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M 40 45 L 60 45 M 42 58 L 58 58 M 44 70 L 56 70" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`
+  },
+  {
+    id: "eggplant_solid",
+    name: "Berinjela",
+    category: "cute",
+    sizeCategory: "medium",
+    defaultTopStyle: "solid_embossed",
+    icon: "🍆",
+    description: "Berinjela curva com calyx e caule em relevo",
+    svg: `<svg viewBox="0 0 100 100"><path d="M 48 88 C 28 82 18 60 22 40 C 26 22 38 16 50 16 C 62 16 72 24 74 40 C 78 56 72 78 52 88 Z" fill="currentColor"/><path d="M 44 18 C 38 12 40 8 46 10 M 50 16 L 50 8 M 56 18 C 62 12 60 8 54 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`
+  },
+  {
+    id: "pepper_line",
+    name: "Pimenta",
+    category: "cute",
+    sizeCategory: "small",
+    defaultTopStyle: "line_art",
+    icon: "🌶️",
+    description: "Pimenta curva pontiaguda com caule em traço contínuo",
+    svg: `<svg viewBox="0 0 100 100"><path d="M 42 22 C 36 30 28 50 30 68 C 32 82 40 92 52 94 C 56 86 58 70 56 52 C 54 36 48 24 42 22 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M 42 22 L 42 12 M 42 16 C 48 10 54 12 52 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`
   }
 ];
 
@@ -1431,7 +1623,7 @@ export default function ClipMaker() {
   const [isTracing, setIsTracing] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
-
+  const [showSvgEditor, setShowSvgEditor] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const triggerSuccess = (msg: string) => {
@@ -1948,6 +2140,7 @@ export default function ClipMaker() {
                       { id: "geometric", label: "Geometria", icon: "🔷" },
                       { id: "cute", label: "Fofos", icon: "🦋" },
                       { id: "giant", label: "Gigantes", icon: "🪽" },
+                      { id: "bts", label: "BTS", icon: "💜" },
                     ].map(cat => (
                       <button
                         key={cat.id}
@@ -2069,6 +2262,60 @@ export default function ClipMaker() {
                     </div>
                   </div>
                 </div>
+
+                {/* SVG CODE EDITOR */}
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      if (!showSvgEditor && !customSvgString) {
+                        const preset = PRESETS.find(p => p.id === activePresetId);
+                        if (preset) setCustomSvgString(preset.svg);
+                      }
+                      setShowSvgEditor(!showSvgEditor);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                      showSvgEditor
+                        ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
+                        : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5" />
+                      Editor SVG
+                    </span>
+                    <span className="text-[9px] font-mono opacity-60">{showSvgEditor ? "▲ fechar" : "▼ editar código"}</span>
+                  </button>
+
+                  {showSvgEditor && (
+                    <div className="mt-2 space-y-2 animate-in fade-in duration-150">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono text-[#687064]">
+                          {customSvgString ? "SVG editado (personalizado)" : "SVG do preset — editando cria cópia"}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const preset = PRESETS.find(p => p.id === activePresetId);
+                            if (preset) setCustomSvgString(preset.svg);
+                          }}
+                          className="text-[9px] font-bold text-[#632CE5] hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <RotateCcw className="w-3 h-3" /> Resetar
+                        </button>
+                      </div>
+                      <textarea
+                        value={customSvgString || currentSvg}
+                        onChange={(e) => setCustomSvgString(e.target.value)}
+                        spellCheck={false}
+                        className="w-full h-48 p-3 rounded-lg border border-[#E2E3DD] bg-[#1A1C19] text-[#A1FC76] font-mono text-[10px] leading-relaxed resize-y focus:outline-none focus:border-[#632CE5] focus:ring-1 focus:ring-[#632CE5]/30 transition-all"
+                        placeholder="<svg viewBox='0 0 100 100'>...</svg>"
+                      />
+                      <p className="text-[8px] text-[#687064] font-mono">
+                        Edite o SVG acima — a pré-visualização 3D atualiza em tempo real
+                      </p>
+                    </div>
+                  )}
+                </div>
+
               </div>
             )}
 
@@ -2857,6 +3104,7 @@ export default function ClipMaker() {
                 { id: "geometric", label: "🔷 Geometria", count: PRESETS.filter(p => p.category === "geometric").length },
                 { id: "cute", label: "🦋 Fofos", count: PRESETS.filter(p => p.category === "cute").length },
                 { id: "giant", label: "🪽 Gigantes", count: PRESETS.filter(p => p.category === "giant").length },
+                { id: "bts", label: "💜 BTS", count: PRESETS.filter(p => p.category === "bts").length },
               ].map(cat => {
                 const isActive = galleryCategory === cat.id;
                 return (
@@ -2949,8 +3197,8 @@ export default function ClipMaker() {
                             <span className="text-[#494455]">
                               {preset.defaultTopStyle === "line_art" ? "Line Art" : preset.defaultTopStyle === "solid_embossed" ? "Sólido" : "Medalhão"}
                             </span>
-                          </div>
-                        </div>
+                  </div>
+                </div>
                       </div>
                     );
                   })}

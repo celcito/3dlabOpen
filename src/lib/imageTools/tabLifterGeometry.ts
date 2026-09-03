@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { csgSubtract } from "../fastener/boolean";
+import { loadManifold } from "../split3mf/engines/manifoldLoader";
 import { buildHandleGeometry, mergeCompatible } from "./canOpenerGeometry";
 import type { TracedRegion } from "./traceImage";
 import type { ExportPiece } from "../split3mf/exporters/types";
@@ -56,6 +57,10 @@ export interface TabLifterConfig {
   keyring: boolean;
   /** Keyring hole diameter in mm. */
   keyringDiameter: number;
+  /** Follow the UNION silhouette of all region shapes as the base outline,
+   *  instead of `outer`. Used by preset drawings (borboleta, coração…) so the
+   *  opener takes the shape of the drawing, not a rectangle. */
+  silhouetteMode?: boolean;
 }
 
 /** Minimum material (mm) that must remain between the slot and the opposite edge. */
@@ -71,6 +76,7 @@ const EDGE_MARGIN = 2;
 export async function buildTabLifterParts(cfg: TabLifterConfig): Promise<ExportPiece[]> {
   const outer = cfg.outer;
   const regions = cfg.regions;
+  const silhouette = Boolean(cfg.silhouetteMode) && regions.length > 0;
 
   const box = new THREE.Box2();
   outer.getPoints().forEach((p) => box.expandByPoint(p));
@@ -84,34 +90,40 @@ export async function buildTabLifterParts(cfg: TabLifterConfig): Promise<ExportP
   // Reliefs sit on a flat front face; a bevel would leave them overhanging.
   const useBevel = regions.length === 0 ? cfg.bevel : 0;
 
-  // "Fechar o fundo": the base becomes a solid slab (silhouette without its
-  // internal holes) so no see-through areas remain. The base colour fills the
-  // closed background.
-  const baseOuter = cfg.fillBackground ? closeShapeHoles(outer) : outer;
+  let body: THREE.BufferGeometry;
+  if (silhouette) {
+    // The base IS the drawing: extrude every region shape and union them, so
+    // the opener follows the silhouette of the preset instead of a rectangle.
+    body = await buildSilhouetteBody(regions, cfg.handleThickness, cx, minY);
+  } else {
+    // "Fechar o fundo": the base becomes a solid slab (silhouette without its
+    // internal holes) so no see-through areas remain. The base colour fills
+    // the closed background.
+    const baseOuter = cfg.fillBackground ? closeShapeHoles(outer) : outer;
+    body = buildHandleGeometry({
+      outer: baseOuter,
+      details: [],
+      handleThickness: cfg.handleThickness,
+      bevel: useBevel,
+      engraving: "none",
+      engravingDepth: 0,
+      tip: "none",
+      tipLength: 12,
+      hookWidth: 4,
+      hookDepth: 4,
+      wheelRadius: 4,
+      wheelTube: 0.6,
+      armWidth: 3,
+      armDepth: 2,
+      keyring: cfg.keyring,
+      keyringDiameter: cfg.keyringDiameter,
+      // The top edge is where the rasgo sits; keep the keyring hole on the
+      // opposite (bottom) edge so they never overlap.
+      keyringBottom: true,
+    });
+  }
 
-  let body = buildHandleGeometry({
-    outer: baseOuter,
-    details: [],
-    handleThickness: cfg.handleThickness,
-    bevel: useBevel,
-    engraving: "none",
-    engravingDepth: 0,
-    tip: "none",
-    tipLength: 12,
-    hookWidth: 4,
-    hookDepth: 4,
-    wheelRadius: 4,
-    wheelTube: 0.6,
-    armWidth: 3,
-    armDepth: 2,
-    keyring: cfg.keyring,
-    keyringDiameter: cfg.keyringDiameter,
-    // The top edge is where the rasgo sits; keep the keyring hole on the
-    // opposite (bottom) edge so they never overlap.
-    keyringBottom: true,
-  });
-
-  const slot = buildSlotTool(cfg, outer, cx, minY, width, height);
+  const slot = buildSlotTool(cfg, outer, regions, silhouette, cx, minY, width, height);
   if (slot) {
     const res = await csgSubtract(body, slot);
     body.dispose();
@@ -179,6 +191,102 @@ function verticalEdgeSpan(outer: THREE.Shape, x: number): { bottom: number | nul
   return { bottom: minY, top: maxY };
 }
 
+/**
+ * Sample a shape contour (outer or hole) as a closed [x, y] polygon for
+ * manifold's `CrossSection`. SVG shapes were already flipped to Y-up.
+ */
+function contourPolygon(path: THREE.Shape | THREE.Path, segments: number): [number, number][] {
+  const pts = path.getPoints(segments);
+  const out: [number, number][] = [];
+  for (const p of pts) out.push([p.x, p.y]);
+  if (pts.length > 1) out.push([pts[0].x, pts[0].y]); // close the ring
+  return out;
+}
+
+/**
+ * Extrude the UNION of every region shape at full thickness into one solid —
+ * the base takes the drawing's silhouette instead of a rectangle. Unlike a
+ * 3D union of separate `ExtrudeGeometry` prisms (which can feed manifold
+ * non-manifold inputs when a sampled SVG contour self-intersects), this
+ * unions the 2D `CrossSection`s — manifold by construction — then extrudes
+ * once, so the base is always a single watertight solid. Shapes are already
+ * in the same frame as `outer`, so the standard centring (`-cx`, `-minY`)
+ * keeps the piece aligned with the reliefs.
+ */
+async function buildSilhouetteBody(
+  regions: TracedRegion[],
+  thickness: number,
+  cx: number,
+  minY: number
+): Promise<THREE.BufferGeometry> {
+  const mod = await loadManifold();
+  const unionSections: ReturnType<typeof mod.CrossSection.union>[] = [];
+  for (const region of regions) {
+    for (const shape of region.shapes) {
+      const contours: [number, number][][] = [contourPolygon(shape, 24)];
+      for (const hole of shape.holes) contours.push(contourPolygon(hole, 24));
+      // EvenOdd is winding-independent: SVG-derived shapes are often clockwise
+      // in the Y-up frame, and the default "Positive" rule would read them as
+      // empty. Parity also keeps nested hole contours cutting correctly.
+      unionSections.push(new mod.CrossSection(contours, "EvenOdd"));
+    }
+  }
+  if (unionSections.length === 0) throw new Error("Nenhum contorno para construir a silhueta.");
+
+  let silhouette = unionSections[0];
+  for (let i = 1; i < unionSections.length; i++) {
+    const u = mod.CrossSection.union(silhouette, unionSections[i]);
+    silhouette.delete();
+    unionSections[i].delete();
+    silhouette = u;
+  }
+
+  const solid = mod.Manifold.extrude(silhouette, thickness);
+  silhouette.delete();
+  // Manifold transform methods return a NEW manifold — they leave `this`
+  // untouched. Dropping the result was leaving the body in the source frame.
+  const placed = solid.translate(-cx, -minY, -thickness / 2);
+  solid.delete();
+
+  const mesh = placed.getMesh();
+  const out = new THREE.BufferGeometry();
+  out.setAttribute("position", new THREE.Float32BufferAttribute(Array.from(mesh.vertProperties), 3));
+  out.setIndex(new THREE.BufferAttribute(new Uint32Array(mesh.triVerts), 1));
+  out.computeVertexNormals();
+
+  placed.delete();
+  return out;
+}
+
+/**
+ * Vertical runs of material at a column x (in the shape's original, uncentred
+ * frame). In silhouette mode these come from the union of every region shape
+ * (the drawing silhouette); otherwise from the outer contour alone. Overlapping
+ * runs are merged.
+ */
+function materialSegmentsAt(
+  x: number,
+  outer: THREE.Shape,
+  regions: TracedRegion[],
+  silhouette: boolean
+): { bottom: number; top: number }[] {
+  const shapes = silhouette ? regions.flatMap((r) => r.shapes) : [outer];
+  const segs: { bottom: number; top: number }[] = [];
+  for (const shape of shapes) {
+    const s = verticalEdgeSpan(shape, x);
+    if (s.bottom !== null && s.top !== null) segs.push({ bottom: s.bottom, top: s.top });
+  }
+  if (segs.length === 0) return [];
+  segs.sort((a, b) => a.bottom - b.bottom);
+  const merged: { bottom: number; top: number }[] = [];
+  for (const s of segs) {
+    const last = merged[merged.length - 1];
+    if (last && s.bottom <= last.top + 1e-6) last.top = Math.max(last.top, s.top);
+    else merged.push({ ...s });
+  }
+  return merged;
+}
+
 /** Open notch carved from the piece's top edge at the chosen column, with an
  *  opening and depth that stay within the material that actually exists at
  *  that exact column — not the piece's overall bounding box — so it never
@@ -186,6 +294,8 @@ function verticalEdgeSpan(outer: THREE.Shape, x: number): { bottom: number | nul
 function buildSlotTool(
   cfg: TabLifterConfig,
   outer: THREE.Shape,
+  regions: TracedRegion[],
+  silhouette: boolean,
   cx: number,
   minY: number,
   width: number,
@@ -206,34 +316,28 @@ function buildSlotTool(
 
   // Find the real material span at the slot's X — this puts the notch on the
   // piece's actual top edge and limits its depth to what is really there.
-  let span = verticalEdgeSpan(outer, xOrig);
-  if (span.bottom === null || span.top === null) {
+  const segsAt = (x: number) => materialSegmentsAt(x, outer, regions, silhouette);
+  let segs = segsAt(xOrig);
+  if (segs.length === 0) {
     for (const dx of [1, 2, 4, 8, 16]) {
-      const alt = verticalEdgeSpan(outer, xOrig + dx);
-      if (alt.bottom !== null && alt.top !== null) {
-        span = alt;
-        break;
-      }
-      const alt2 = verticalEdgeSpan(outer, xOrig - dx);
-      if (alt2.bottom !== null && alt2.top !== null) {
-        span = alt2;
-        break;
-      }
+      segs = segsAt(xOrig + dx);
+      if (segs.length > 0) break;
+      segs = segsAt(xOrig - dx);
+      if (segs.length > 0) break;
     }
   }
-  const topYOrig = span.top ?? minY + height;
-  const bottomYOrig = span.bottom ?? minY;
+  if (segs.length === 0) return null;
+
+  // The opening lives at the top-most run of material at this column.
+  const topSeg = segs.reduce((a, b) => (b.top > a.top ? b : a));
+  const topYOrig = topSeg.top;
+  const bottomYOrig = topSeg.bottom;
 
   // Shrink the gap if either side of the opening would poke past the
   // silhouette (e.g. near a narrowing column), instead of cutting into thin
   // air on one side.
   for (let i = 0; i < 6; i++) {
-    const left = verticalEdgeSpan(outer, xOrig - safeGap / 2);
-    const right = verticalEdgeSpan(outer, xOrig + safeGap / 2);
-    if (
-      left.bottom !== null && left.top !== null &&
-      right.bottom !== null && right.top !== null
-    ) break;
+    if (segsAt(xOrig - safeGap / 2).length > 0 && segsAt(xOrig + safeGap / 2).length > 0) break;
     safeGap *= 0.7;
     if (safeGap <= 0.5) return null;
   }

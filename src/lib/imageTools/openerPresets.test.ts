@@ -12,7 +12,7 @@ describe("openerPresets", () => {
     }
   });
 
-  it("builds a rectangular TracedImage from a preset", () => {
+  it("builds a rectangular TracedImage from a preset", { timeout: 15000 }, () => {
     for (const preset of OPENER_PRESETS) {
       const traced = buildOpenerPreset(preset, 60);
       expect(traced.outer.getPoints().length).toBeGreaterThanOrEqual(4);

@@ -38,7 +38,7 @@ export const OPENER_PRESETS: OpenerPreset[] = [
       </g>
       <g fill="#5E35B1">
         <ellipse cx="50" cy="54" rx="4" ry="26"/>
-        <circle cx="50" cy="18" r="3"/>
+        <circle cx="50" cy="25" r="3.5"/>
         <path d="M 47 22 Q 42 14 38 12" fill="none" stroke="#5E35B1" stroke-width="2.5" stroke-linecap="round"/>
         <path d="M 53 22 Q 58 14 62 12" fill="none" stroke="#5E35B1" stroke-width="2.5" stroke-linecap="round"/>
       </g>
