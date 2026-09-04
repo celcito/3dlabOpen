@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { capBoundaryHoles, addPeg, addSocket, addReinforcedSocket, booleanDifferenceWithTolerance, booleanUnionWithTolerance } from "../../lib/csg";
+import { capBoundaryHoles, addPeg, addSocket, addReinforcedSocket } from "../../lib/csg";
 import { useViewerCamera } from "../hooks/viewer3d/useViewerCamera";
 import { useWatermark } from "../hooks/viewer3d/useWatermark";
 import { usePrintEstimator } from "../hooks/viewer3d/usePrintEstimator";
@@ -408,6 +408,7 @@ export default function Viewer3D() {
    const [viewportEpoch, setViewportEpoch] = useState(0);
    const [booleanMode, setBooleanMode] = useState(false);
    const [booleanTolerance, setBooleanTolerance] = useState(0.2);
+   const [booleanGeometries, setBooleanGeometries] = useState<{ groupId: number; geometry: THREE.BufferGeometry; color: string; direction: THREE.Vector3 }[] | null>(null);
    const modelImport = useViewerModelImport({
      importUnit,
      importScale,
@@ -844,11 +845,12 @@ export default function Viewer3D() {
         const geom = new THREE.BufferGeometry();
         geom.setAttribute("position", new THREE.Float32BufferAttribute(exportPositions, 3));
         if (exportNormals.length > 0) geom.setAttribute("normal", new THREE.Float32BufferAttribute(exportNormals, 3));
+        const cappedGeom = capBoundaryHoles(geom);
         const groupCenter = new THREE.Vector3(sumX / (groupVertCount || 1), sumY / (groupVertCount || 1), sumZ / (groupVertCount || 1));
         const direction = new THREE.Vector3().subVectors(groupCenter, modelCenter);
         if (direction.lengthSq() < 0.0001) direction.set((gId % 3 - 1) * 0.5, ((gId + 1) % 3 - 1) * 0.5, ((gId + 2) % 3 - 1) * 0.5);
         direction.normalize();
-        results.push({ groupId: gId, color: groups.find(g => g.id === gId)?.color || "#888888", name: groups.find(g => g.id === gId)?.name || "Restante", geometry: geom, direction });
+        results.push({ groupId: gId, color: groups.find(g => g.id === gId)?.color || "#888888", name: groups.find(g => g.id === gId)?.name || "Restante", geometry: cappedGeom, direction });
       }
     });
     return results;
@@ -882,6 +884,7 @@ export default function Viewer3D() {
   }, [previewSeparated, modelGeometry, groups, vertexGroups, jointType, groupJointTypes, manualJoints, jointSizes, showConnectors]);
 
   const validatePreviewJoints = () => {
+    setSelectedManualJointId(null);
     if (!showConnectors) {
       setPreviewValidation("valid");
       setFinalizedPreview(true);
@@ -908,7 +911,58 @@ export default function Viewer3D() {
     if (!valid) alert("Atenção: o preview não encontrou um par completo de macho e fêmea. Ajuste a fronteira ou o tipo das peças.");
   };
 
+  const computeBooleanPreview = () => {
+    if (!modelGeometry) return;
+    setProcessingMessage("Calculando boolean...");
+    setIsProcessing(true);
+    setTimeout(() => {
+      try {
+        const results: { groupId: number; geometry: THREE.BufferGeometry; color: string; direction: THREE.Vector3 }[] = [];
+        for (const sub of subGeometries) {
+          if (sub.groupId === 0) continue;
+          let geom = sub.geometry.clone();
+          const maleCentroid = jointType === "default" ? computeGroupCentroid(sub.groupId) : null;
+          findNeighborGroups(sub.groupId).forEach((neighborId) => {
+            if (neighborId === 0) return;
+            getPairJointSpecs(sub.groupId, neighborId).forEach((spec) => {
+              const myType = getEffectiveJointType(sub.groupId, neighborId);
+              const intoGroup = spec.normalFrom.clone().negate();
+              const connectorPosition = snapPointToGeometryBoundary(geom, spec.position);
+              const transformScale = spec.scale ?? 1;
+              try {
+                if (jointType === "magnet") {
+                  geom = addSocket(geom, connectorPosition, intoGroup, jointSizes.magnetDiameter * transformScale, jointSizes.magnetDepth * transformScale, 6);
+                } else if (myType === 'female') {
+                  geom = addReinforcedSocket(geom, connectorPosition, intoGroup, (jointSizes.pegDiameter + jointSizes.fitTolerance * 2) * transformScale, (jointSizes.pegLength + jointSizes.fitTolerance) * transformScale, jointSizes.reinforcementDiameter * transformScale, jointSizes.reinforcementHeight * transformScale, jointSizes.reinforcementWall * transformScale, 6);
+                } else {
+                  const pegLength = jointSizes.pegLength * transformScale;
+                  const embed = maleCentroid ? Math.max(0.5, Math.min(pegLength, connectorPosition.distanceTo(maleCentroid))) : 0.5;
+                  geom = addPeg(geom, connectorPosition, spec.normalFrom, jointSizes.pegDiameter * transformScale, pegLength, 6, embed);
+                }
+              } catch (err) {
+                console.warn(`[boolean preview] CSG failed for ${sub.groupId}x${neighborId}:`, err);
+              }
+            });
+          });
+          geom.computeVertexNormals();
+          results.push({ groupId: sub.groupId, geometry: geom, color: sub.color, direction: sub.direction });
+        }
+        booleanGeometries?.forEach(bg => bg.geometry.dispose());
+        setBooleanGeometries(results);
+      } catch (err) {
+        console.error("[boolean preview] failed:", err);
+      } finally {
+        setIsProcessing(false);
+        setProcessingMessage("");
+      }
+    }, 50);
+  };
+
+  useEffect(() => { setBooleanGeometries(null); }, [manualJoints, groupJointTypes, jointSizes.pegDiameter, jointSizes.pegLength, jointSizes.fitTolerance, jointSizes.reinforcementDiameter, jointSizes.reinforcementHeight, jointSizes.reinforcementWall, jointSizes.magnetDiameter, jointSizes.magnetDepth]);
+
   useEffect(() => { return () => { subGeometries.forEach(sub => sub.geometry.dispose()); }; }, [subGeometries]);
+
+  useEffect(() => { return () => { booleanGeometries?.forEach(bg => bg.geometry.dispose()); }; }, [booleanGeometries]);
 
   const connectorGeometries = useMemo(() => {
     const pegR = jointSizes.pegDiameter / 2;
@@ -919,7 +973,7 @@ export default function Viewer3D() {
     const magnetL = jointSizes.magnetDepth;
     return {
       peg: new THREE.CylinderGeometry(pegR, pegR, pegL, 6),
-      socket: new THREE.CylinderGeometry(socketR, socketL, 6, 1, true),
+      socket: new THREE.CylinderGeometry(socketR, socketR, socketL, 6, 1, true),
       socketBoss: new THREE.CylinderGeometry(jointSizes.reinforcementDiameter / 2, jointSizes.reinforcementDiameter / 2, jointSizes.reinforcementHeight + jointSizes.reinforcementWall, 6),
       magnet: new THREE.CylinderGeometry(magnetR, magnetR, magnetL, 6),
     };
@@ -1020,33 +1074,6 @@ export default function Viewer3D() {
     else { const count = modelGeometry.attributes.position.count; for (let i = 0; i < count; i += 3) cb(i, i + 1, i + 2); }
   };
 
-  const extractGroupGeometry = (groupId: number): THREE.BufferGeometry | null => {
-    if (!modelGeometry) return null;
-    const positionAttr = modelGeometry.attributes.position;
-    const indexAttr = modelGeometry.index;
-    const positions: number[] = [];
-    const addTri = (a: number, b: number, c: number) => {
-      const g0 = vertexGroups[a] || 0, g1 = vertexGroups[b] || 0, g2 = vertexGroups[c] || 0;
-      if (!classifyTriangleGroup(g0, g1, g2, groupId)) return;
-      positions.push(
-        positionAttr.getX(a), positionAttr.getY(a), positionAttr.getZ(a),
-        positionAttr.getX(b), positionAttr.getY(b), positionAttr.getZ(b),
-        positionAttr.getX(c), positionAttr.getY(c), positionAttr.getZ(c),
-      );
-    };
-    if (indexAttr) {
-      const arr = indexAttr.array;
-      for (let i = 0; i < arr.length; i += 3) addTri(arr[i], arr[i + 1], arr[i + 2]);
-    } else {
-      const count = positionAttr.count;
-      for (let i = 0; i < count; i += 3) if (i + 2 < count) addTri(i, i + 1, i + 2);
-    }
-    if (positions.length === 0) return null;
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    return capBoundaryHoles(geom);
-  };
-
   const exportSeparatedPart = async (groupId: number) => {
     if (!modelGeometry) return;
     if (jointType === "default" && jointConfigurationWarning) {
@@ -1090,22 +1117,35 @@ export default function Viewer3D() {
         let exportGeometry = capBoundaryHoles(rawGeometry);
 
         if (booleanMode) {
-          const neighbors = findNeighborGroups(groupId);
-          for (const neighborId of neighbors) {
-            if (neighborId === 0) continue;
-            const myType = getEffectiveJointType(groupId, neighborId);
-            const neighborGeom = extractGroupGeometry(neighborId);
-            if (!neighborGeom) continue;
-            try {
-              if (myType === 'female') {
-                exportGeometry = booleanDifferenceWithTolerance(exportGeometry, neighborGeom, booleanTolerance);
+          const maleCentroid = jointType === "default" ? computeGroupCentroid(groupId) : null;
+          findNeighborGroups(groupId).forEach((neighborId) => {
+            if (neighborId === 0) return;
+            getPairJointSpecs(groupId, neighborId).forEach((spec) => {
+              const myType = getEffectiveJointType(groupId, neighborId);
+              const intoGroup = spec.normalFrom.clone().negate();
+              const connectorPosition = snapPointToGeometryBoundary(rawGeometry, spec.position);
+              const transformScale = spec.scale ?? 1;
+              if (jointType === "magnet") {
+                exportGeometry = addSocket(exportGeometry, connectorPosition, intoGroup, jointSizes.magnetDiameter * transformScale, jointSizes.magnetDepth * transformScale, 6);
+              } else if (myType === 'female') {
+                exportGeometry = addReinforcedSocket(
+                  exportGeometry,
+                  connectorPosition,
+                  intoGroup,
+                  (jointSizes.pegDiameter + jointSizes.fitTolerance * 2) * transformScale,
+                  (jointSizes.pegLength + jointSizes.fitTolerance) * transformScale,
+                  jointSizes.reinforcementDiameter * transformScale,
+                  jointSizes.reinforcementHeight * transformScale,
+                  jointSizes.reinforcementWall * transformScale,
+                  6,
+                );
               } else {
-                exportGeometry = booleanUnionWithTolerance(exportGeometry, neighborGeom, booleanTolerance);
+                const pegLength = jointSizes.pegLength * transformScale;
+                const embed = maleCentroid ? Math.max(0.5, Math.min(pegLength, connectorPosition.distanceTo(maleCentroid))) : 0.5;
+                exportGeometry = addPeg(exportGeometry, connectorPosition, spec.normalFrom, jointSizes.pegDiameter * transformScale, pegLength, 6, embed);
               }
-            } catch (err) {
-              console.warn(`[boolean] CSG failed for pair ${groupId}x${neighborId}:`, err);
-            }
-          }
+            });
+          });
         } else {
           const maleCentroid = jointType === "default" ? computeGroupCentroid(groupId) : null;
            findNeighborGroups(groupId).forEach((neighborId) => {
@@ -1208,7 +1248,7 @@ export default function Viewer3D() {
                     <group>
                   {previewSeparated ? (
                     <>
-                      {subGeometries.map((sub, idx) => (
+                      {(booleanGeometries || subGeometries).map((sub: any, idx: number) => (
                         <mesh
                           key={idx}
                           geometry={sub.geometry}
@@ -1225,7 +1265,7 @@ export default function Viewer3D() {
                           <meshStandardMaterial color={sub.color} roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
                         </mesh>
                       ))}
-                      {jointGeometries.map((joint, idx) => {
+                      {!booleanGeometries && jointGeometries.map((joint, idx) => {
                         const subGeometry = subGeometries.find(s => s.groupId === joint.groupId);
                         if (!subGeometry) return null;
                         const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance);
@@ -1348,7 +1388,7 @@ export default function Viewer3D() {
                   <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3 h-3" /> Bucket</button>
                   <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[#FF1744] text-[#212121] border-[#FF1744]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Borracha"><Eraser className="w-3 h-3" /> Eraser</button>
                   <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[#632CE5] text-[#212121] border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`}><Move className="w-3 h-3" /> Rotate</button>
-                   <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-[#632CE5] text-white border-[#632CE5] font-bold" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
+                    <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); setBooleanGeometries(null); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-[#632CE5] text-white border-[#632CE5] font-bold" : "bg-[#E8E9E3] text-zinc-400 border-[#E8E9E3] hover:text-[#212121]"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
                   <span className="w-px self-stretch bg-[#F9FAF4] mx-0.5" />
                   <button onClick={expandConnectedPaint} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] hover:border-[#632CE5] transition-colors" title="Preencher Parte Conectada"><PaintBucket className="w-3 h-3 text-[#632CE5]" /> Fill Connected</button>
                   <button onClick={fillRemainingWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[#E8E9E3] border border-[#E8E9E3] text-zinc-400 hover:text-[#212121] hover:border-[#632CE5] transition-colors"><Paintbrush className="w-3 h-3" /> Fill Remaining</button>
@@ -1361,10 +1401,22 @@ export default function Viewer3D() {
                      <Slider value={[separationDistance]} onValueChange={(val) => setSeparationDistance(val[0])} min={0.0} max={4.0} step={0.05} className="flex-1" />
                      <span className="font-mono text-xs text-emerald-400 w-12 text-right font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span>
                    </div>
-                   <button onClick={() => setShowConnectors(!showConnectors)} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors whitespace-nowrap ${showConnectors ? "bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-400 hover:text-[#212121]"}`} title={showConnectors ? "Ocultar encaixes no preview" : "Mostrar encaixes no preview"}>
-                     <Settings className="w-3 h-3" /> {showConnectors ? "Encaixes" : "Sem Encaixes"}
-                   </button>
-                   <button onClick={validatePreviewJoints} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-[#632CE5] text-white border-[#632CE5]" : "bg-[#632CE5] text-white border-[#632CE5] hover:bg-[#632CE5]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Finalizado" : "Finalizar"}</button>
+                    <button onClick={() => setShowConnectors(!showConnectors)} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors whitespace-nowrap ${showConnectors ? "bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]" : "bg-[#E8E9E3] border-[#E8E9E3] text-zinc-400 hover:text-[#212121]"}`} title={showConnectors ? "Ocultar encaixes no preview" : "Mostrar encaixes no preview"}>
+                      <Settings className="w-3 h-3" /> {showConnectors ? "Encaixes" : "Sem Encaixes"}
+                    </button>
+                    <button onClick={computeBooleanPreview} disabled={isProcessing} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors whitespace-nowrap ${booleanGeometries ? "bg-[#00FF41]/20 border-[#00FF41] text-[#00FF41]" : "bg-[#FFD700]/10 border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700]/20"}`} title="Calcular CSG e mostrar resultado real">
+                      <Sparkles className="w-3 h-3" /> {booleanGeometries ? "Boolean OK" : "Gerar Boolean"}
+                    </button>
+                    <button onClick={() => {
+                      if (finalizedPreview) {
+                        setFinalizedPreview(false);
+                        setPreviewValidation("idle");
+                        setSeparationDistance(1.0);
+                        setBooleanGeometries(null);
+                      } else {
+                        validatePreviewJoints();
+                      }
+                    }} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-emerald-400/20 text-emerald-400 border-emerald-400" : "bg-[#632CE5] text-white border-[#632CE5]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Reabrir Preview" : "Finalizar"}</button>
                    {finalizedPreview && <span className={`text-[9px] font-bold uppercase whitespace-nowrap ${previewValidation === "valid" ? "text-emerald-400" : "text-amber-400"}`}>{previewValidation === "valid" ? "Encaixe OK" : "Revisar encaixe"}</span>}
                   </div>
                 ) : (
