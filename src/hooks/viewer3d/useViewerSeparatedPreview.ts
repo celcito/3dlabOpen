@@ -1,10 +1,40 @@
 import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
-import { capBoundaryHoles, booleanDifferenceWithTolerance, booleanUnionWithTolerance } from "../../../lib/csg";
+import { capBoundaryHoles, isWatertight, booleanDifferenceWithToleranceRetry, booleanUnionWithToleranceRetry } from "../../../lib/csg";
 
 function classifyTriangleGroup(g0: number, g1: number, g2: number, target: number) {
   if (target === 0) return g0 === 0 && g1 === 0 && g2 === 0;
   return [g0, g1, g2].filter((group) => group === target).length >= 2;
+}
+
+export interface CSGFailure {
+  groupId: number;
+  neighborId: number;
+  groupName: string;
+  neighborName: string;
+  error: string;
+  phase: "manifold" | "boolean";
+  toleranceUsed?: number;
+}
+
+export interface BoundaryDiagnostic {
+  groupId: number;
+  neighborId: number;
+  groupName: string;
+  neighborName: string;
+  specsFound: number;
+  hasBoundary: boolean;
+}
+
+export interface JointDiagnostic {
+  groupId: number;
+  neighborId: number;
+  groupName: string;
+  neighborName: string;
+  type: "peg" | "socket" | "magnet";
+  anchorFound: boolean;
+  csgOk: boolean;
+  error?: string;
 }
 
 export function useViewerSeparatedPreview({
@@ -13,6 +43,8 @@ export function useViewerSeparatedPreview({
   const [finalizedPreview, setFinalizedPreview] = useState(false);
   const [previewValidation, setPreviewValidation] = useState<"idle" | "valid" | "warning">("idle");
   const [separationDistance, setSeparationDistance] = useState(1);
+  const [csgFailures, setCsgFailures] = useState<CSGFailure[]>([]);
+  const [boundaryDiagnostics, setBoundaryDiagnostics] = useState<BoundaryDiagnostic[]>([]);
 
   const subGeometries = useMemo(() => {
     if (!previewSeparated || !modelGeometry) return [];
@@ -79,8 +111,8 @@ export function useViewerSeparatedPreview({
     return capBoundaryHoles(geom);
   };
 
-  const booleanSubGeometries = useMemo(() => {
-    if (!previewSeparated || !modelGeometry || !booleanMode) return [];
+  const { booleanSubGeometries, failures, diagnostics } = useMemo(() => {
+    if (!previewSeparated || !modelGeometry || !booleanMode) return { booleanSubGeometries: [], failures: [], diagnostics: [] };
     const center = new THREE.Vector3();
     const position = modelGeometry.attributes.position;
     const step = Math.max(1, Math.floor(position.count / 1000));
@@ -88,24 +120,75 @@ export function useViewerSeparatedPreview({
     for (let i = 0; i < position.count; i += step) { center.x += position.getX(i); center.y += position.getY(i); center.z += position.getZ(i); sampleCount++; }
     center.divideScalar(sampleCount || 1);
 
-    return Array.from(new Set([0, ...groups.map((g: any) => g.id)])).flatMap((groupId) => {
+    const collectedFailures: CSGFailure[] = [];
+    const collectedDiagnostics: BoundaryDiagnostic[] = [];
+    const diagnosticTable: JointDiagnostic[] = [];
+
+    const results = Array.from(new Set([0, ...groups.map((g: any) => g.id)])).flatMap((groupId) => {
       let geom = extractGroupGeometry(groupId);
       if (!geom) return [];
 
       const neighbors = findNeighborGroups(groupId);
       for (const neighborId of neighbors) {
         if (neighborId === 0) continue;
-        const myType = getEffectiveJointType(groupId, neighborId);
         const neighborGeom = extractGroupGeometry(neighborId);
         if (!neighborGeom) continue;
+
+        const groupName = getGroupName(groupId);
+        const neighborName = getGroupName(neighborId);
+        const specs = getPairJointSpecs(groupId, neighborId);
+        const hasBoundary = specs.length > 0;
+
+        collectedDiagnostics.push({
+          groupId, neighborId, groupName, neighborName,
+          specsFound: specs.length, hasBoundary,
+        });
+
+        if (!hasBoundary) {
+          diagnosticTable.push({
+            groupId, neighborId, groupName, neighborName,
+            type: getEffectiveJointType(groupId, neighborId) === "female" ? "socket" : "peg",
+            anchorFound: false, csgOk: false, error: "Fronteira não encontrada",
+          });
+          continue;
+        }
+
+        const myType = getEffectiveJointType(groupId, neighborId);
+
+        const checkA = isWatertight(geom);
+        const checkB = isWatertight(neighborGeom);
+        if (!checkA.watertight || !checkB.watertight) {
+          const msg = `Malha não watertight: ${!checkA.watertight ? groupName : neighborName} (${checkA.boundaryEdgeCount === -1 ? "sem índice" : checkA.boundaryEdgeCount + " edges"}/${checkB.boundaryEdgeCount === -1 ? "sem índice" : checkB.boundaryEdgeCount + " edges"})`;
+          collectedFailures.push({ groupId, neighborId, groupName, neighborName, error: msg, phase: "manifold" });
+          diagnosticTable.push({
+            groupId, neighborId, groupName, neighborName,
+            type: myType === "female" ? "socket" : "peg",
+            anchorFound: true, csgOk: false, error: msg,
+          });
+          continue;
+        }
+
         try {
+          let result: { geometry: THREE.BufferGeometry; toleranceUsed: number };
           if (myType === 'female') {
-            geom = booleanDifferenceWithTolerance(geom, neighborGeom, booleanTolerance);
+            result = booleanDifferenceWithToleranceRetry(geom, neighborGeom, booleanTolerance);
           } else {
-            geom = booleanUnionWithTolerance(geom, neighborGeom, booleanTolerance);
+            result = booleanUnionWithToleranceRetry(geom, neighborGeom, booleanTolerance);
           }
+          geom = result.geometry;
+          diagnosticTable.push({
+            groupId, neighborId, groupName, neighborName,
+            type: myType === "female" ? "socket" : "peg",
+            anchorFound: true, csgOk: true,
+          });
         } catch (err) {
-          console.warn(`[boolean preview] CSG failed for ${groupId}x${neighborId}:`, err);
+          const msg = err instanceof Error ? err.message : String(err);
+          collectedFailures.push({ groupId, neighborId, groupName, neighborName, error: msg, phase: "boolean" });
+          diagnosticTable.push({
+            groupId, neighborId, groupName, neighborName,
+            type: myType === "female" ? "socket" : "peg",
+            anchorFound: true, csgOk: false, error: msg,
+          });
         }
       }
 
@@ -121,11 +204,23 @@ export function useViewerSeparatedPreview({
       const group = groups.find((g: any) => g.id === groupId);
       return [{ groupId, color: group?.color || "#888888", name: group?.name || "Restante", geometry: geom, direction }];
     });
-  }, [previewSeparated, modelGeometry, vertexGroups, groups, booleanMode, booleanTolerance, findNeighborGroups, getEffectiveJointType]);
+
+    return { booleanSubGeometries: results, failures: collectedFailures, diagnostics: collectedDiagnostics };
+  }, [previewSeparated, modelGeometry, vertexGroups, groups, booleanMode, booleanTolerance, findNeighborGroups, getEffectiveJointType, getGroupName, getPairJointSpecs]);
+
+  useEffect(() => {
+    setCsgFailures(failures);
+    setBoundaryDiagnostics(diagnostics);
+  }, [failures, diagnostics]);
 
   const validatePreviewJoints = () => {
     if (booleanMode) {
-      setPreviewValidation("valid"); setFinalizedPreview(true); setSeparationDistance(0); setPlacementMode(false);
+      if (csgFailures.length > 0) {
+        setPreviewValidation("warning");
+      } else {
+        setPreviewValidation("valid");
+      }
+      setFinalizedPreview(true); setSeparationDistance(0); setPlacementMode(false);
       return;
     }
     const pairs = new Map<string, { peg: number; socket: number; magnet: number }>();
@@ -136,5 +231,5 @@ export function useViewerSeparatedPreview({
   };
   useEffect(() => () => { subGeometries.forEach((sub: any) => sub.geometry.dispose()); booleanSubGeometries.forEach((sub: any) => sub.geometry.dispose()); }, [subGeometries, booleanSubGeometries]);
   const effectiveSubGeometries = booleanMode ? booleanSubGeometries : subGeometries;
-  return { subGeometries: effectiveSubGeometries, jointGeometries: booleanMode ? [] : jointGeometries, finalizedPreview, setFinalizedPreview, previewValidation, setPreviewValidation, separationDistance, setSeparationDistance, validatePreviewJoints };
+  return { subGeometries: effectiveSubGeometries, jointGeometries: booleanMode ? [] : jointGeometries, finalizedPreview, setFinalizedPreview, previewValidation, setPreviewValidation, separationDistance, setSeparationDistance, validatePreviewJoints, csgFailures, boundaryDiagnostics };
 }
