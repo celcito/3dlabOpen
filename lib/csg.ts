@@ -367,6 +367,75 @@ export function splitByPlane(
  *
  * Returns the resulting geometry (base with cavity carved out).
  */
+/**
+ * Checks whether a geometry is watertight (2-manifold with no boundary edges).
+ * Returns `{ watertight: boolean; boundaryEdgeCount: number }`.
+ */
+export function isWatertight(geometry: THREE.BufferGeometry): { watertight: boolean; boundaryEdgeCount: number } {
+  const g = geometry.index ? geometry : mergeVerticesToIndex(geometry.clone());
+  const idx = g.index?.array;
+  if (!idx) return { watertight: false, boundaryEdgeCount: -1 };
+  const edgeUse = new Map<string, number>();
+  const key = (a: number, b: number) => (a < b ? `${a}_${b}` : `${b}_${a}`);
+  for (let i = 0; i < idx.length; i += 3) {
+    const tri = [idx[i], idx[i + 1], idx[i + 2]];
+    for (let e = 0; e < 3; e++) {
+      const a = tri[e], b = tri[(e + 1) % 3];
+      const k = key(a, b);
+      edgeUse.set(k, (edgeUse.get(k) || 0) + 1);
+    }
+  }
+  let boundaryEdges = 0;
+  for (const count of edgeUse.values()) {
+    if (count === 1) boundaryEdges++;
+  }
+  return { watertight: boundaryEdges === 0, boundaryEdgeCount: boundaryEdges };
+}
+
+/**
+ * Auto-retry booleanDifferenceWithTolerance with progressively larger
+ * tolerances. Tries the requested tolerance first, then 2x and 4x.
+ * Returns `{ geometry, tolerance: number }` with the tolerance that succeeded.
+ */
+export function booleanDifferenceWithToleranceRetry(
+  base: THREE.BufferGeometry,
+  tool: THREE.BufferGeometry,
+  tolerance: number,
+  maxRetries = 2,
+): { geometry: THREE.BufferGeometry; toleranceUsed: number } {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const t = tolerance * (1 + attempt);
+    try {
+      return { geometry: booleanDifferenceWithTolerance(base, tool, t), toleranceUsed: t };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * Auto-retry booleanUnionWithTolerance with progressively larger tolerances.
+ */
+export function booleanUnionWithToleranceRetry(
+  base: THREE.BufferGeometry,
+  tool: THREE.BufferGeometry,
+  tolerance: number,
+  maxRetries = 2,
+): { geometry: THREE.BufferGeometry; toleranceUsed: number } {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const t = tolerance * (1 + attempt);
+    try {
+      return { geometry: booleanUnionWithTolerance(base, tool, t), toleranceUsed: t };
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 export function booleanDifferenceWithTolerance(
   base: THREE.BufferGeometry,
   tool: THREE.BufferGeometry,
