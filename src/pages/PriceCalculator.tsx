@@ -109,11 +109,11 @@ function HelpTooltip({ text, position = "top" }: { text: string; position?: "top
 
   return (
     <div className="relative group inline-flex items-center ml-1.5 select-none shrink-0 align-middle">
-      <span className="text-zinc-500 hover:text-[#632CE5] transition-colors cursor-help focus:outline-none p-0.5">
+      <span className="text-zinc-700 hover:text-[#632CE5] transition-colors cursor-help focus:outline-none p-0.5">
         <Info className="w-3.5 h-3.5" />
       </span>
       <div 
-        className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-[#E8E9E3] border border-[#E8E9E3] rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}
+        className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-700 bg-[#E8E9E3] border border-[#E8E9E3] rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}
       >
         <p className="tracking-wide uppercase text-[#632CE5] font-black text-[9px] mb-1 font-sans">Dica de Ajuda / Help Tip</p>
         <p className="font-sans normal-case font-medium">{text}</p>
@@ -131,11 +131,11 @@ function SliderRow({
   return (
     <div className="mb-4">
       <div className="flex justify-between mb-1">
-        <Label className="text-[11px] text-zinc-400 flex items-center">
+        <Label className="text-[11px] text-zinc-600 flex items-center">
           <span>{label}</span>
           {tooltip && <HelpTooltip text={tooltip} />}
         </Label>
-        <span className="text-[11px] font-semibold text-zinc-300 font-mono">
+        <span className="text-[11px] font-semibold text-zinc-600 font-mono">
           {value}{suffix}
         </span>
       </div>
@@ -148,9 +148,9 @@ function SliderRow({
         onChange={e => onChange(Number(e.target.value))}
         className="w-full accent-[#632CE5] h-1 bg-[#E8E9E3] border border-[#E2E3DD] rounded cursor-pointer"
       />
-      <div className="flex justify-between text-[10px] text-zinc-600 mt-0.5 font-mono">
+      <div className="flex justify-between text-[10px] text-zinc-800 mt-0.5 font-mono">
         <span>{min}{suffix}</span>
-        {hint && <span className="text-zinc-500 font-sans">{hint}</span>}
+        {hint && <span className="text-zinc-600 font-sans">{hint}</span>}
         <span>{max}{suffix}</span>
       </div>
     </div>
@@ -165,13 +165,13 @@ function NumInput({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label className="text-[10px] uppercase tracking-wider text-zinc-400 flex items-center">
+      <Label className="text-[10px] uppercase tracking-wider text-zinc-600 flex items-center">
         <span>{label}</span>
         {tooltip && <HelpTooltip text={tooltip} />}
       </Label>
       <div className="flex items-center bg-white border border-[#E2E3DD] rounded-md overflow-hidden focus-within:border-[#632CE5]/50 transition-colors">
         {prefix && (
-          <span className="pl-2.5 pr-1 text-zinc-500 text-xs font-mono">{prefix}</span>
+          <span className="pl-2.5 pr-1 text-zinc-700 text-xs font-mono">{prefix}</span>
         )}
         <Input
           type="number"
@@ -188,7 +188,7 @@ function NumInput({
 function MetricCard({ label, value, accent, colorClass }: { label: string; value: string; accent?: boolean; colorClass?: string }) {
   return (
     <div className={`bg-white border rounded-lg p-4 text-center ${accent ? "border-[#632CE5]/40 shadow-[0_0_15px_rgba(124,58,237,0.05)]" : "border-[#E2E3DD]"}`}>
-      <div className="text-[8px] uppercase tracking-[0.1em] text-zinc-500 mb-1.5 font-black">{label}</div>
+      <div className="text-[8px] uppercase tracking-[0.1em] text-zinc-700 mb-1.5 font-black">{label}</div>
       <div className={`text-xl font-bold font-mono ${colorClass ? colorClass : (accent ? "text-[#632CE5]" : "text-[#1A1C19]")}`}>{value}</div>
     </div>
   );
@@ -198,11 +198,11 @@ function BreakdownBar({ label, value, total, color }: { label: string; value: nu
   const pct = total > 0 ? Math.max(2, Math.round((value / total) * 100)) : 2;
   return (
     <div className="flex items-center gap-3 mb-2.5">
-      <span className="text-[11px] text-zinc-500 min-w-[150px] truncate">{label}</span>
+      <span className="text-[11px] text-zinc-700 min-w-[150px] truncate">{label}</span>
       <div className="flex-1 bg-[#E8E9E3] border border-[#E2E3DD]/60 rounded h-2 overflow-hidden">
         <div className="rounded-full h-full transition-[width] duration-300" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[11px] text-zinc-300 min-w-[64px] text-right font-mono">{fmt(value)}</span>
+      <span className="text-[11px] text-zinc-600 min-w-[64px] text-right font-mono">{fmt(value)}</span>
     </div>
   );
 }
@@ -225,7 +225,7 @@ function SourceCard({ source, accentColor }: { source: Source; accentColor: stri
           {source.cost}
         </span>
       </div>
-      <p className="text-xs text-zinc-400 mb-3.5 leading-relaxed font-medium">{source.desc}</p>
+      <p className="text-xs text-zinc-600 mb-3.5 leading-relaxed font-medium">{source.desc}</p>
       <div className="flex gap-1.5 flex-wrap mb-4">
         {source.tags.map(t => (
           <span key={t} className="bg-[#E8E9E3] text-zinc-500 text-[9px] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded border border-[#E2E3DD]">{t}</span>
@@ -242,6 +242,7 @@ function SourceCard({ source, accentColor }: { source: Source; accentColor: stri
 
 function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void }) {
   const [gramas, setGramas] = useState(80);
+  const [perdas, setPerdas] = useState(15);
   const [precoRolo, setPrecoRolo] = useState(110);
   const [horas, setHoras] = useState(4);
   const [energia, setEnergia] = useState(0.8);
@@ -251,7 +252,8 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
   const [taxa, setTaxa] = useState(12);
   const [margem, setMargem] = useState(200);
 
-  const cFilamento = (gramas / 1000) * precoRolo;
+  const cFilamento = ((gramas + perdas) / 1000) * precoRolo;
+  const cPerdas = (perdas / 1000) * precoRolo;
   const cEnergia = horas * energia;
   const cDep = horas * dep;
   const cTotal = cFilamento + cEnergia + acabamento + embalagem + cDep;
@@ -263,7 +265,8 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
   const qtd = lucro > 0 ? Math.ceil(meta / lucro) : null;
 
   const breakdown: [string, number][] = [
-    ["Filamento", cFilamento],
+    ["Filamento (peça)", (gramas / 1000) * precoRolo],
+    ["Perdas (suportes/brim)", cPerdas],
     ["Energia", cEnergia],
     ["Acabamento/pintura", acabamento],
     ["Embalagem + frete", embalagem],
@@ -279,7 +282,13 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
           label="Filamento usado (g)" 
           value={gramas} 
           onChange={setGramas} 
-          tooltip="Peso final estimado da peça em gramas (incluindo suportes e preenchimento)."
+          tooltip="Peso da peça pronta em gramas (sem contar perdas). Suportes e preenchimento já inclusos."
+        />
+        <NumInput 
+          label="Perdas / suportes (g)" 
+          value={perdas} 
+          onChange={setPerdas} 
+          tooltip="Gramas de filamento desperdiçado: suportes removidos, brim, skirt, purga e falhas. Acumula-se ao peso da peça."
         />
         <NumInput 
           label="Custo do rolo (R$/kg)" 
@@ -351,12 +360,12 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
       <div className="grid grid-cols-4 gap-3">
         <MetricCard label="Custo total" value={fmt(cTotal)} />
         <MetricCard label="Preço sugerido" value={fmt(precoFinal)} accent />
-        <MetricCard label="Lucro líquido" value={fmt(lucro)} colorClass="text-emerald-400" />
-        <MetricCard label="Margem real" value={`${margemReal}%`} colorClass="text-cyan-400" />
+        <MetricCard label="Lucro líquido" value={fmt(lucro)} colorClass="text-emerald-600" />
+        <MetricCard label="Margem real" value={`${margemReal}%`} colorClass="text-cyan-700" />
       </div>
 
       <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
-        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-4 font-bold flex items-center">
+        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-600 mb-4 font-bold flex items-center">
           <span>Divisão dos Custos / Cost Breakdown</span>
           <HelpTooltip text="Gráfico de distribuição que aponta para onde está indo o dinheiro investido na fabricação desta peça." />
         </div>
@@ -366,17 +375,17 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
       </div>
 
       <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
-        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-3 font-bold flex items-center">
+        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-600 mb-3 font-bold flex items-center">
           <span>Meta Mensal / Monthly Goal</span>
           <HelpTooltip text="Determine seu objetivo financeiro mensal para ver quantas réplicas ou bonecos precisa produzir e vender." />
         </div>
         <NumInput label="Renda desejada por mês (R$)" value={meta} onChange={setMeta} prefix="R$" />
         {qtd !== null ? (
-          <div className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <div className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-600">
             Você precisa vender <span className="text-2xl font-black text-[#632CE5] font-mono align-middle mx-1">{qtd}</span> peças/mês para bater a meta.
           </div>
         ) : (
-          <div className="mt-4 text-xs text-zinc-500">Ajuste a margem para calcular.</div>
+          <div className="mt-4 text-xs text-zinc-700">Ajuste a margem para calcular.</div>
         )}
       </div>
     </div>
@@ -386,6 +395,7 @@ function FdmCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void
 function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => void }) {
   const resinAccent = "#A855F7";
   const [ml, setMl] = useState(50);
+  const [perdas, setPerdas] = useState(10);
   const [precoResina, setPrecoResina] = useState(180);
   const [horas, setHoras] = useState(3);
   const [energia, setEnergia] = useState(0.5);
@@ -397,7 +407,8 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
   const [taxa, setTaxa] = useState(12);
   const [margem, setMargem] = useState(250);
 
-  const cResina = (ml / 1000) * precoResina;
+  const cResina = ((ml + perdas) / 1000) * precoResina;
+  const cPerdas = (perdas / 1000) * precoResina;
   const cEnergia = horas * energia;
   const cDep = horas * dep;
   const cTotal = cResina + cEnergia + lavagem + fep + acabamento + embalagem + cDep;
@@ -409,7 +420,8 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
   const qtd = lucro > 0 ? Math.ceil(meta / lucro) : null;
 
   const breakdown: [string, number][] = [
-    ["Resina", cResina],
+    ["Resina (peça)", (ml / 1000) * precoResina],
+    ["Perdas (excesso/falhas)", cPerdas],
     ["Energia (UV + curador)", cEnergia],
     ["Lavagem (IPA/álcool)", lavagem],
     ["Depreciação FEP", fep],
@@ -431,7 +443,13 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
           label="Resina usada (ml)" 
           value={ml} 
           onChange={setMl} 
-          tooltip="Volume total de resina líquida estimado para a peça, incluindo bicos e suportes necessários."
+          tooltip="Volume da peça pronta em ml (sem contar perdas). Suportes e bicos já inclusos."
+        />
+        <NumInput 
+          label="Perdas / excesso (ml)" 
+          value={perdas} 
+          onChange={setPerdas} 
+          tooltip="ml de resina desperdiçada: excesso no tanque, impressões falhadas, resina drenada dos suportes."
         />
         <NumInput 
           label="Custo da resina (R$/litro)" 
@@ -519,12 +537,12 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
       <div className="grid grid-cols-4 gap-3">
         <MetricCard label="Custo total" value={fmt(cTotal)} />
         <MetricCard label="Preço sugerido" value={fmt(precoFinal)} accent />
-        <MetricCard label="Lucro líquido" value={fmt(lucro)} colorClass="text-purple-400" />
+        <MetricCard label="Lucro líquido" value={fmt(lucro)} colorClass="text-purple-600" />
         <MetricCard label="Margem real" value={`${margemReal}%`} colorClass="text-cyan-400" />
       </div>
 
       <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
-        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-4 font-bold flex items-center">
+        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-600 mb-4 font-bold flex items-center">
           <span>Divisão dos Custos / Cost Breakdown</span>
           <HelpTooltip text="Divisão percentual dos custos para fabricação de miniaturas em resina líquida." />
         </div>
@@ -534,17 +552,17 @@ function ResinCalc({ meta, setMeta }: { meta: number; setMeta: (v: number) => vo
       </div>
 
       <div className="bg-white border border-[#E2E3DD] rounded-lg p-5">
-        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-400 mb-3 font-bold flex items-center">
+        <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-600 mb-3 font-bold flex items-center">
           <span>Meta Mensal / Monthly Goal</span>
           <HelpTooltip text="Alvo financeiro que deseja alcançar vendendo suas peças de alta fidelidade em resina." />
         </div>
         <NumInput label="Renda desejada por mês (R$)" value={meta} onChange={setMeta} prefix="R$" />
         {qtd !== null ? (
-          <div className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Você precisa vender <span className="text-2xl font-black text-purple-400 font-mono align-middle mx-1">{qtd}</span> peças/mês para bater a meta.
+          <div className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-600">
+            Você precisa vender <span className="text-2xl font-black text-purple-600 font-mono align-middle mx-1">{qtd}</span> peças/mês para bater a meta.
           </div>
         ) : (
-          <div className="mt-4 text-xs text-zinc-500">Ajuste a margem para calcular.</div>
+          <div className="mt-4 text-xs text-zinc-700">Ajuste a margem para calcular.</div>
         )}
       </div>
     </div>
@@ -565,14 +583,14 @@ function SourcesTab() {
     `px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-all ${
       active
         ? `border-transparent text-black font-black`
-        : "border-[#E2E3DD] text-zinc-500 hover:border-[#E8E9E3] hover:text-zinc-300"
+        : "border-[#E2E3DD] text-zinc-700 hover:border-[#E8E9E3] hover:text-zinc-500"
     }`;
 
   return (
     <div className="space-y-6">
       <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-5">
         <div>
-          <div className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 mb-2 font-bold flex items-center">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-zinc-700 mb-2 font-bold flex items-center">
             <span>Tipo de Impressora / Printer Type</span>
             <HelpTooltip text="Filtre sites de modelos 3D focados em deposição fundida (FDM) ou estereofotolitografia por resina líquida." />
           </div>
@@ -596,7 +614,7 @@ function SourcesTab() {
         </div>
 
         <div>
-          <div className="text-[9px] uppercase tracking-[0.2em] text-zinc-500 mb-2 font-bold flex items-center">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-zinc-700 mb-2 font-bold flex items-center">
             <span>Custo do Modelo / Licensing model</span>
             <HelpTooltip text="Filtre marketplaces por downloads gratuitos (Creative Commons/Uso Comercial) ou assinaturas premium." />
           </div>
@@ -621,7 +639,7 @@ function SourcesTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.length === 0 ? (
-          <div className="text-zinc-500 text-xs py-8 text-center col-span-2">Nenhuma fonte encontrada com esses filtros.</div>
+          <div className="text-zinc-700 text-xs py-8 text-center col-span-2">Nenhuma fonte encontrada com esses filtros.</div>
         ) : (
           filtered.map((s, i) => (
             <SourceCard
@@ -638,7 +656,7 @@ function SourcesTab() {
           <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           <div>
             <div className="text-xs font-bold text-amber-400 mb-1 uppercase tracking-wide">Sempre confirme antes de vender / Commercial Use Notice</div>
-            <div className="text-[11px] text-zinc-400 leading-relaxed font-medium">
+            <div className="text-[11px] text-zinc-600 leading-relaxed font-medium">
               Mesmo em plataformas seguras, verifique a licença de cada arquivo individualmente.
               Procure os termos <em>"commercial use allowed"</em>, <em>"for sale"</em> ou <em>"selling prints allowed"</em>.
               Em caso de dúvidas, contate o criador ou modelador original diretamente.
@@ -661,8 +679,8 @@ export default function PriceCalculator() {
           <h1 className="text-6xl font-black tracking-tighter leading-none uppercase">Price Calculator</h1>
         </div>
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-widest text-zinc-500 mb-1 font-bold">Meta Estimada / Target</div>
-          <div className="font-mono text-sm text-[#632CE5] font-black">{fmt(meta)} <span className="text-zinc-500 text-[10px]">/ mês</span></div>
+          <div className="text-[10px] uppercase tracking-widest text-zinc-700 mb-1 font-bold">Meta Estimada / Target</div>
+          <div className="font-mono text-sm text-[#632CE5] font-black">{fmt(meta)} <span className="text-zinc-600 text-[10px]">/ mês</span></div>
         </div>
       </header>
 
@@ -673,7 +691,7 @@ export default function PriceCalculator() {
               <TabsTrigger 
                 value="fdm" 
                 className={`flex-1 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] py-2 transition-all ${
-                  tab === "fdm" ? "bg-[#632CE5] text-white" : "text-zinc-500 hover:text-zinc-300"
+                  tab === "fdm" ? "bg-[#632CE5] text-white" : "text-zinc-700 hover:text-zinc-500"
                 }`}
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -682,7 +700,7 @@ export default function PriceCalculator() {
               <TabsTrigger 
                 value="resin" 
                 className={`flex-1 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] py-2 transition-all ${
-                  tab === "resin" ? "bg-[#A855F7] text-[#1A1C19]" : "text-zinc-500 hover:text-zinc-300"
+                  tab === "resin" ? "bg-[#A855F7] text-[#1A1C19]" : "text-zinc-700 hover:text-zinc-500"
                 }`}
               >
                 <Droplet className="w-3.5 h-3.5" />
@@ -691,7 +709,7 @@ export default function PriceCalculator() {
               <TabsTrigger 
                 value="sources" 
                 className={`flex-1 flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] py-2 transition-all ${
-                  tab === "sources" ? "bg-[#F9FAF4] text-[#212121]" : "text-zinc-500 hover:text-zinc-300"
+                  tab === "sources" ? "bg-[#F9FAF4] text-[#212121]" : "text-zinc-700 hover:text-zinc-500"
                 }`}
               >
                 Fontes de Modelos 3D
@@ -712,7 +730,7 @@ export default function PriceCalculator() {
       </div>
 
       <footer className="h-12 border-t border-[#E2E3DD] px-8 flex items-center justify-between bg-white shrink-0 font-sans">
-        <div className="flex gap-6 items-center text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
+        <div className="flex gap-6 items-center text-[9px] uppercase tracking-widest text-zinc-700 font-bold">
           <span>Engine: <span className="text-[#632CE5]">Cost-Based Pricing</span></span>
           <span>Sources: {SOURCES.length} Marketplaces</span>
         </div>

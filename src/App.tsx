@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle } from "lucide-react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { M2crLogo } from "@/components/M2crLogo";
 import Viewer3D from "./pages/Viewer3D";
@@ -34,6 +34,7 @@ const ScrewGenerator = lazy(() => import("./pages/ScrewGenerator"));
 const CanOpener = lazy(() => import("./pages/CanOpener"));
 const ClipMaker = lazy(() => import("./pages/ClipMaker"));
 const PuzzleGenerator = lazy(() => import("./pages/PuzzleGenerator"));
+const CakeTopperCreator = lazy(() => import("./pages/CakeTopperCreator"));
 
 const NAV_ITEMS = [
   { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
@@ -48,6 +49,7 @@ const NAV_ITEMS = [
   { to: "/name-sign", icon: Baseline, label: "Gerador de Placas", description: "Placas e Letreiros" },
   { to: "/fidget-clicker", icon: Gamepad2, label: "Clicker Maker", description: "Fidget Chaveiro 3D" },
   { to: "/clip-maker", icon: Paperclip, label: "Clip Maker", description: "Clipes Decorativos 3D" },
+  { to: "/cake-topper", icon: Cake, label: "Criador de Topo de Bolo", description: "Topper 3D Personalizado" },
   { to: "/puzzle-generator", icon: Puzzle, label: "Puzzle Generator", description: "Quebra-Cabeça Paramétrico" },
   { to: "/design-editor", icon: Palette, label: "Editor de Design", description: "Criação de Layouts" },
   { to: "/qr-generator", icon: QrCode, label: "QR Generator", description: "QR Code para Placas" },
@@ -209,6 +211,7 @@ export default function App() {
           <Route path="/screw-generator" element={<ScrewGenerator />} />
           <Route path="/can-opener" element={<CanOpener />} />
           <Route path="/clip-maker" element={<ClipMaker />} />
+          <Route path="/cake-topper" element={<CakeTopperCreator />} />
           <Route path="/puzzle-generator" element={<PuzzleGenerator />} />
         </Routes>
       </Layout>

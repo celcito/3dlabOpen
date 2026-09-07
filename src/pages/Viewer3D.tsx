@@ -367,16 +367,6 @@ export default function Viewer3D() {
     return groupId < neighborId ? 'female' : 'male';
   };
 
-  const getEffectiveJointTypeForPair = (groupId: number, neighborId: number): 'male' | 'female' => {
-    const manualPoint = connectorPoints.find((pt) => {
-      if (pt.groupId !== groupId) return false;
-      const pair = connectorPoints.find((p) => p.pairId === pt.pairId && p.id !== pt.id);
-      return pair && pair.groupId === neighborId;
-    });
-    if (manualPoint) return manualPoint.role;
-    return getEffectiveJointType(groupId, neighborId);
-  };
-
   const updateGroupColor = (id: number, color: string) => setGroups(prev => prev.map(g => g.id === id ? { ...g, color } : g));
   const updateGroupName = (id: number, name: string) => setGroups(prev => prev.map(g => g.id === id ? { ...g, name } : g));
 
@@ -469,6 +459,19 @@ export default function Viewer3D() {
       jointsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [previewSeparated, placementMode]);
+
+  // NOVO: resolve o papel efetivo priorizando o role marcado manualmente no
+  // ConnectorPoint (fluxo de 2 cliques macho/fêmea). Só cai na regra
+  // automática por grupo/ID se não houver um par manual para essa fronteira.
+  const getEffectiveJointTypeForPair = (groupId: number, neighborId: number): 'male' | 'female' => {
+    const manualPoint = connectorPoints.find((pt) => {
+      if (pt.groupId !== groupId) return false;
+      const pair = connectorPoints.find((p) => p.pairId === pt.pairId && p.id !== pt.id);
+      return pair && pair.groupId === neighborId;
+    });
+    if (manualPoint) return manualPoint.role;
+    return getEffectiveJointType(groupId, neighborId);
+  };
 
   // ATUALIZADO: groupJointRoles agora respeita marcação manual e usa adjacencyList
   const groupJointRoles = useMemo(() => {
@@ -1236,7 +1239,7 @@ export default function Viewer3D() {
            findNeighborGroups(groupId).forEach((neighborId) => {
              if (neighborId === 0) return;
              getPairJointSpecs(groupId, neighborId).forEach((spec) => {
-              const myType = getEffectiveJointTypeForPair(groupId, neighborId);
+                const myType = getEffectiveJointTypeForPair(groupId, neighborId);
                 const intoGroup = spec.normalFrom.clone().negate();
                 const connectorPosition = snapPointToGeometryBoundary(rawGeometry, spec.position);
                 const transformScale = spec.scale ?? 1;
@@ -1300,6 +1303,10 @@ export default function Viewer3D() {
     : jointSizes.reinforcementHeight < jointSizes.pegLength * 0.5
       ? "A saliência está mais curta que metade do pino. Verifique a profundidade do encaixe."
       : null;
+
+  const getGizmoOffsetGroupId = (joint: ConnectorPoint): number => {
+    return joint.groupId;
+  };
 
   const getGizmoObject = (): THREE.Object3D | null => {
     const ctrl: any = gizmoControlsRef.current;
@@ -1374,40 +1381,42 @@ export default function Viewer3D() {
                         const finalPosition = joint.position.clone().add(offset);
                         const quaternion = new THREE.Quaternion();
                         quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), joint.direction);
-                        const handleJointClick = (event: any) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedConnectorId(id); };
-                        const handleJointMove = (event: any) => { const id = joint.id || selectedConnectorId; if (id && event.buttons === 1) { const off = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveConnectorFromRay(id, event.ray, joint.groupId, off); } };
-                        return (
-                          <group key={`joint-${idx}`}>
-                            <mesh position={finalPosition} onPointerDown={handleJointClick} onPointerMove={handleJointMove}>
-                              <sphereGeometry args={[0.15, 6, 6]} />
-                              <meshBasicMaterial visible={false} />
+                        if (joint.type === 'peg') {
+                          const r = jointSizes.pegDiameter / 2;
+                          const l = jointSizes.pegLength;
+                          const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
+                          return (
+                               <mesh key={`peg-${idx}`} geometry={connectorGeometries.peg} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedConnectorId(id); }} onPointerMove={(event) => { const id = joint.id || selectedConnectorId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveConnectorFromRay(id, event.ray, joint.groupId, offset); } }}>
+                                <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedConnectorId ? 0.9 : 0.4} transparent opacity={joint.id === selectedConnectorId ? 1 : 0.85} />
                             </mesh>
-                            {joint.type === 'peg' ? (() => {
-                              const l = jointSizes.pegLength;
-                              const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
-                              return (
-                                <mesh geometry={connectorGeometries.peg} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={handleJointClick} onPointerMove={handleJointMove}>
-                                  <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedConnectorId ? 0.9 : 0.4} transparent opacity={joint.id === selectedConnectorId ? 1 : 0.85} />
-                                </mesh>
-                              );
-                            })() : (() => {
-                              const l = jointSizes.pegLength + jointSizes.fitTolerance;
-                              const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
-                              const reinforcement = joint.reinforcement!;
-                              const bossPos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(-(reinforcement.height - reinforcement.wall) / 2));
-                              return (
-                                <group scale={[joint.scale, joint.scale, joint.scale]}>
-                                  <mesh geometry={connectorGeometries.socketBoss} position={bossPos} quaternion={quaternion} onPointerDown={handleJointClick} onPointerMove={handleJointMove}>
-                                    <meshStandardMaterial color="#FF1744" transparent opacity={joint.id === selectedConnectorId ? 0.5 : 0.25} wireframe />
-                                  </mesh>
-                                  <mesh geometry={connectorGeometries.socket} position={pos} quaternion={quaternion} onPointerDown={handleJointClick} onPointerMove={handleJointMove}>
-                                    <meshBasicMaterial color={joint.color} wireframe transparent opacity={joint.id === selectedConnectorId ? 1 : 0.75} />
-                                  </mesh>
-                                </group>
-                              );
-                            })()}
-                          </group>
-                        );
+                          );
+                        } else if (joint.type === 'socket') {
+                          const r = jointSizes.pegDiameter / 2 + jointSizes.fitTolerance;
+                          const l = jointSizes.pegLength + jointSizes.fitTolerance;
+                          const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
+                          const reinforcement = joint.reinforcement!;
+                          const bossLength = reinforcement.height + reinforcement.wall;
+                          const bossPos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(-(reinforcement.height - reinforcement.wall) / 2));
+                          return (
+                             <group key={`socket-${idx}`} scale={[joint.scale, joint.scale, joint.scale]}>
+                               <mesh geometry={connectorGeometries.socketBoss} position={bossPos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedConnectorId(id); }} onPointerMove={(event) => { const id = joint.id || selectedConnectorId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveConnectorFromRay(id, event.ray, joint.groupId, offset); } }}>
+                                <meshStandardMaterial color="#FF1744" transparent opacity={joint.id === selectedConnectorId ? 0.5 : 0.25} wireframe />
+                              </mesh>
+                               <mesh geometry={connectorGeometries.socket} position={pos} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedConnectorId(id); }} onPointerMove={(event) => { const id = joint.id || selectedConnectorId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveConnectorFromRay(id, event.ray, joint.groupId, offset); } }}>
+                                <meshBasicMaterial color={joint.color} wireframe transparent opacity={joint.id === selectedConnectorId ? 1 : 0.75} />
+                              </mesh>
+                            </group>
+                          );
+                        } else {
+                          const r = jointSizes.magnetDiameter / 2;
+                          const l = jointSizes.magnetDepth;
+                          const pos = finalPosition.clone().add(joint.direction.clone().multiplyScalar(l / 2));
+                          return (
+                             <mesh key={`magnet-${idx}`} geometry={connectorGeometries.magnet} position={pos} scale={[joint.scale, joint.scale, joint.scale]} quaternion={quaternion} onPointerDown={(event) => { event.stopPropagation(); const id = selectPreviewJoint(joint); (event.target as any).setPointerCapture?.(event.pointerId); if (id) setSelectedConnectorId(id); }} onPointerMove={(event) => { const id = joint.id || selectedConnectorId; if (id && event.buttons === 1) { const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance); moveConnectorFromRay(id, event.ray, joint.groupId, offset); } }}>
+                              <meshStandardMaterial color={joint.color} emissive={joint.color} emissiveIntensity={joint.id === selectedConnectorId ? 1 : 0.5} transparent opacity={joint.id === selectedConnectorId ? 1 : 0.9} metalness={0.8} roughness={0.2} />
+                            </mesh>
+                          );
+                       }
                        })}
                       {booleanGeometries && jointGeometries.map((joint, idx) => {
                         const subGeometry = subGeometries.find(s => s.groupId === joint.groupId);

@@ -115,8 +115,8 @@ function fitGeometryToFootprint(geometry: THREE.BufferGeometry, footprint: TopFo
 
 function applyCustomizationToKeycap(keycapGeometry: THREE.BufferGeometry, artGeometry: THREE.BufferGeometry, mode: CustomizationMode) {
   const evaluator = new Evaluator();
-  const keycapBrush = new Brush(keycapGeometry);
-  const artBrush = new Brush(artGeometry);
+  const keycapBrush = new Brush(keycapGeometry.toNonIndexed());
+  const artBrush = new Brush(artGeometry.toNonIndexed());
   keycapBrush.updateMatrixWorld();
   artBrush.updateMatrixWorld();
   const result = evaluator.evaluate(keycapBrush, artBrush, mode === "emboss" ? ADDITION : SUBTRACTION);

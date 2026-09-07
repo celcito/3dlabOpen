@@ -28,6 +28,10 @@ function createFrustumGeometry(bottomW: number, bottomD: number, topW: number, t
     -hw0, 0, -hd0, hw0, 0, -hd0, hw0, 0, hd0, -hw0, 0, hd0,
     -hw1, height, -hd1, hw1, height, -hd1, hw1, height, hd1, -hw1, height, hd1,
   ]);
+  const uvs = new Float32Array([
+    0, 0, 1, 0, 1, 1, 0, 1,
+    0, 0, 1, 0, 1, 1, 0, 1,
+  ]);
   const indices = [
     0, 1, 2, 0, 2, 3,
     4, 6, 5, 4, 7, 6,
@@ -38,6 +42,7 @@ function createFrustumGeometry(bottomW: number, bottomD: number, topW: number, t
   ];
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   return geometry;
@@ -68,21 +73,21 @@ function createCrossPrismGeometry(armWidth: number, armLength: number, depth: nu
 export function generateKeycapBaseGeometry(config: KeycapBaseConfig): THREE.BufferGeometry {
   const { bottomWidth, bottomDepth, topWidth, topDepth, height, wallThickness, stemArmWidth, stemArmLength, stemDepth } = config;
   const evaluator = new Evaluator();
-  const outerBrush = new Brush(createFrustumGeometry(bottomWidth, bottomDepth, topWidth, topDepth, height));
+  const outerBrush = new Brush(createFrustumGeometry(bottomWidth, bottomDepth, topWidth, topDepth, height).toNonIndexed());
   const inner = createFrustumGeometry(
     bottomWidth - wallThickness * 2,
     bottomDepth - wallThickness * 2,
     Math.max(topWidth - wallThickness * 2, 1),
     Math.max(topDepth - wallThickness * 2, 1),
     height - wallThickness,
-  );
+  ).toNonIndexed();
   inner.translate(0, wallThickness, 0);
   const innerBrush = new Brush(inner);
   outerBrush.updateMatrixWorld();
   innerBrush.updateMatrixWorld();
   let result = evaluator.evaluate(outerBrush, innerBrush, SUBTRACTION);
 
-  const stem = createCrossPrismGeometry(stemArmWidth, stemArmLength, stemDepth + 0.5);
+  const stem = createCrossPrismGeometry(stemArmWidth, stemArmLength, stemDepth + 0.5).toNonIndexed();
   stem.translate(0, -0.5, 0);
   const resultBrush = new Brush(result.geometry);
   const stemBrush = new Brush(stem);

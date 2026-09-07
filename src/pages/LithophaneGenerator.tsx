@@ -1,12 +1,12 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
-import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle } from "lucide-react";
+import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle, Loader2 } from "lucide-react";
 import { useLithophaneGenerator, type ImagePixels } from "../hooks/useLithophaneGenerator";
 
 export default function LithophaneGenerator() {
   const generator = useLithophaneGenerator(createLithophaneGeometry);
-  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, geometry, handleImageUpload, handleExportSTL } = generator;
+  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, isImageLoading, geometry, handleImageUpload, handleExportSTL } = generator;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
@@ -32,9 +32,14 @@ export default function LithophaneGenerator() {
             01. Imagem
           </h3>
           <div className="space-y-2">
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E8E9E3] rounded-xl hover:bg-[#E8E9E3]/50 hover:border-[#E8E9E3] transition-colors cursor-pointer relative overflow-hidden group">
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-              {imageUrl ? (
+            <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors cursor-pointer relative overflow-hidden group ${isImageLoading ? "border-[#632CE5]/50 bg-[#632CE5]/5" : "border-[#E8E9E3] hover:bg-[#E8E9E3]/50 hover:border-[#E8E9E3]"}`}>
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isImageLoading} />
+              {isImageLoading ? (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-6 h-6 text-[#632CE5] animate-spin" />
+                  <span className="text-[9px] uppercase font-bold text-[#632CE5] tracking-widest">Processando...</span>
+                </div>
+              ) : imageUrl ? (
                 <>
                   <img src={imageUrl} alt="Upload" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-10 transition-opacity" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
