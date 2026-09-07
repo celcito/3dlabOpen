@@ -143,10 +143,10 @@ export default function FileConverter() {
                       </div>
                       
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-bold text-sm text-[#1A1C19] truncate">{f.file.name}</span>
+                        <span className="font-bold text-sm text-[#1A1C19] truncate">{getOutputFilename(f.file)}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] uppercase font-mono text-zinc-500 bg-[#F9FAF4] px-1.5 rounded">
-                            {f.inputFormat} → {outputFormat}
+                            {f.inputFormat} → {outputFormat.toUpperCase()}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-600">
                             {(f.file.size / (1024 * 1024)).toFixed(2)} MB
