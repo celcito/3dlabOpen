@@ -1,19 +1,17 @@
-import { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Grid, Center, PerspectiveCamera, ContactShadows } from "@react-three/drei";
+import { OrbitControls, Grid, Center, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
-import { useFace3DGenerator, useFaceMeshGeometry, type FaceConfig } from "../hooks/useFace3DGenerator";
+import { useFace3DGenerator } from "../hooks/useFace3DGenerator";
 import { 
-  UserCircle2, Download, Settings, Sliders, 
-  Trash2, Layers, Move, MousePointer2, 
-  Check, Info, Sparkles, Box, 
-  Maximize, Minimize, Activity, Cpu,
+  UserCircle2, Download, Sliders, 
+  Trash2, 
+  Check,
   Image as ImageIcon, Camera, RefreshCw
 } from "lucide-react";
 
 export default function Face3DGenerator() {
   const generator = useFace3DGenerator();
-  const { config, setConfig, image, setImage, heightData, isProcessing, successMsg, handleImageUpload } = generator;
+  const { config, setConfig, image, setImage, reliefGeometry, isProcessing, successMsg, handleImageUpload } = generator;
   const exportSTL = generator.handleExportSTL;
 
   return (
@@ -123,7 +121,7 @@ export default function Face3DGenerator() {
           <div className="pt-6">
             <button
                onClick={exportSTL}
-              disabled={!heightData}
+              disabled={!reliefGeometry}
               className="w-full bg-[#632CE5] text-[#212121] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] group disabled:opacity-50"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
@@ -151,12 +149,9 @@ export default function Face3DGenerator() {
               sectionSize={50} 
               position={[0, -0.1, 0]}
             />
-            <Center top>
-              {heightData && (
-                <FaceMesh 
-                  heightData={heightData} 
-                  config={config} 
-                />
+            <Center>
+              {reliefGeometry && (
+                <Face3DPreview reliefGeometry={reliefGeometry} config={config} />
               )}
             </Center>
             <ContactShadows position={[0, -0.1, 0]} opacity={0.4} scale={15} blur={1} far={10} />
@@ -191,33 +186,17 @@ export default function Face3DGenerator() {
   );
 }
 
-function FaceMesh({ heightData, config }: { heightData: Float32Array; config: FaceConfig }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  const res = config.resolution;
-  const size = config.size / 10;
-  const intensity = config.intensity / 10;
+function Face3DPreview({ reliefGeometry, config }: { reliefGeometry: THREE.BufferGeometry; config: { size: number; baseThickness: number } }) {
+  const s = config.size / 10;
   const base = config.baseThickness / 10;
-
-  useFaceMeshGeometry(meshRef, heightData, intensity, res);
-
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      {/* The actual relief mesh */}
-      <mesh ref={meshRef} castShadow receiveShadow>
-        <planeGeometry args={[size, size, res - 1, res - 1]} />
-        <meshStandardMaterial 
-          color="#ffffff" 
-          roughness={0.6} 
-          metalness={0.1}
-          flatShading={false}
-        />
+      <mesh geometry={reliefGeometry} castShadow receiveShadow>
+        <meshStandardMaterial color="#ffffff" roughness={0.7} side={THREE.DoubleSide} />
       </mesh>
-
-      {/* Base thickness */}
       <mesh position={[0, 0, -base / 2]}>
-        <boxGeometry args={[size, size, base]} />
-        <meshStandardMaterial color="#eeeeee" />
+        <boxGeometry args={[s, s, base]} />
+        <meshStandardMaterial color="#eeeeee" side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
