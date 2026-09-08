@@ -1313,18 +1313,34 @@ export default function Viewer3D() {
     return ctrl?.object ?? null;
   };
 
+  useEffect(() => {
+    const tc: any = gizmoControlsRef.current;
+    const oc = controlsRef.current;
+    if (!tc || !oc) return;
+    const onDrag = (e: { value: boolean }) => { oc.enabled = !e.value; };
+    tc.addEventListener('dragging-changed', onDrag);
+    return () => { tc.removeEventListener('dragging-changed', onDrag); oc.enabled = true; };
+  }, [selectedConnectorId]);
+
+  const getJointCenterOffset = (connector: { role: string; normal: THREE.Vector3; scale?: number }) => {
+    const s = connector.scale ?? 1;
+    const halfLen = connector.role === 'male' ? jointSizes.pegLength / 2 : (jointSizes.pegLength + jointSizes.fitTolerance) / 2;
+    return connector.normal.clone().multiplyScalar(halfLen * s);
+  };
+
   const handleGizmoChange = (event: any) => {
     const object = getGizmoObject();
     if (!object || !selectedConnector) return;
     const subGeometry = subGeometries.find((sub) => sub.groupId === selectedConnector.groupId);
     if (!subGeometry) return;
     const offset = new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance);
+    const centerOffset = getJointCenterOffset(selectedConnector);
     const normal = new THREE.Vector3(0, 1, 0).applyQuaternion(object.quaternion).normalize();
     const euler = new THREE.Euler().setFromQuaternion(object.quaternion, 'XYZ');
     const rotation = { x: euler.x, y: euler.y, z: euler.z };
     if (!selectedConnectorId) return;
     setConnectorPoints(prev => prev.map(j => j.id === selectedConnectorId
-      ? { ...j, position: object.position.clone().sub(offset), normal, rotation, scale: Math.max(0.1, object.scale.x) }
+      ? { ...j, position: object.position.clone().sub(offset).sub(centerOffset), normal, rotation, scale: Math.max(0.1, object.scale.x) }
       : j
     ));
   };
@@ -1434,13 +1450,15 @@ export default function Viewer3D() {
                       {selectedConnector && (() => {
                         const subGeometry = subGeometries.find((sub) => sub.groupId === selectedConnector.groupId);
                         const offset = subGeometry ? new THREE.Vector3(subGeometry.direction.x * separationDistance, subGeometry.direction.y * separationDistance, subGeometry.direction.z * separationDistance) : new THREE.Vector3();
-                        const gizmoPos = selectedConnector.position.clone().add(offset);
+                        const centerOffset = getJointCenterOffset(selectedConnector);
+                        const gizmoPos = selectedConnector.position.clone().add(offset).add(centerOffset);
                         const gizmoQuat = (selectedConnector.rotation.x !== 0 || selectedConnector.rotation.y !== 0 || selectedConnector.rotation.z !== 0)
                           ? new THREE.Quaternion().setFromEuler(new THREE.Euler(selectedConnector.rotation.x, selectedConnector.rotation.y, selectedConnector.rotation.z, 'XYZ'))
                           : new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), selectedConnector.normal);
                         const gizmoScale = selectedConnector.scale ?? 1;
                         return (
                           <TransformControls
+                            key={selectedConnectorId}
                             ref={gizmoControlsRef}
                             mode={transformMode}
                             position={gizmoPos}
