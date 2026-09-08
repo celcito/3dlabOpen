@@ -19,7 +19,7 @@ export interface VaseConfig {
 }
 
 export function useVaseGenerator(createGeometry: (config: VaseConfig) => THREE.BufferGeometry) {
-  const [config, setConfig] = useState<VaseConfig>({ height: 120, baseRadius: 30, midRadius: 45, topRadius: 25, midPosition: 0.5, twist: 45, sides: 32, waves: 0, waveIntensity: 2, baseThickness: 2, wallThickness: 2, baseColor: "#e0e0e0" });
+  const [config, setConfig] = useState<VaseConfig>({ height: 120, baseRadius: 30, midRadius: 45, topRadius: 25, midPosition: 0.5, twist: 45, sides: 32, waves: 0, waveIntensity: 2, baseThickness: 2, wallThickness: 2, baseColor: "#d0d0d0" });
   const [successMsg, setSuccessMsg] = useState("");
   const geometry = useMemo(() => createGeometry(config), [config, createGeometry]);
 

@@ -32,6 +32,7 @@ const PulleyGenerator = lazy(() => import("./pages/PulleyGenerator"));
 const BeltGenerator = lazy(() => import("./pages/BeltGenerator"));
 const ScrewGenerator = lazy(() => import("./pages/ScrewGenerator"));
 const CanOpener = lazy(() => import("./pages/CanOpener"));
+const FidgetMaker = lazy(() => import("./pages/FidgetMaker"));
 const ClipMaker = lazy(() => import("./pages/ClipMaker"));
 const PuzzleGenerator = lazy(() => import("./pages/PuzzleGenerator"));
 const CakeTopperCreator = lazy(() => import("./pages/CakeTopperCreator"));
@@ -71,6 +72,7 @@ const ENGINEERING_ITEMS = [
   { to: "/belt-generator", icon: WrapText, label: "Belt Generator", description: "Timing Belts (GT2, HTD)" },
   { to: "/screw-generator", icon: Nut, label: "Screw Generator", description: "Parametric Fasteners" },
   { to: "/can-opener", icon: ImagePlus, label: "Image Can Opener", description: "Imagem → Abridor de Latas 3D" },
+  { to: "/fidget-maker", icon: Layers, label: "Fidget Maker", description: "Camadas Aninhadas 3D" },
 ];
 
 function NavItem({ to, icon: Icon, label, description }: { to: string; icon: any; label: string; description: string }) {
@@ -210,6 +212,7 @@ export default function App() {
           <Route path="/belt-generator" element={<BeltGenerator />} />
           <Route path="/screw-generator" element={<ScrewGenerator />} />
           <Route path="/can-opener" element={<CanOpener />} />
+          <Route path="/fidget-maker" element={<FidgetMaker />} />
           <Route path="/clip-maker" element={<ClipMaker />} />
           <Route path="/cake-topper" element={<CakeTopperCreator />} />
           <Route path="/puzzle-generator" element={<PuzzleGenerator />} />

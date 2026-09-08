@@ -18,7 +18,7 @@ export function useFlexiModelCreator() {
     height: 15,
     segmentGap: 1.5,
     hingeGap: 0.4,
-    baseColor: "#00E5FF",
+    baseColor: "#d0d0d0",
     taper: 0.7,
     hingeSize: 4,
   });

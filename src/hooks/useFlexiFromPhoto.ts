@@ -14,7 +14,7 @@ export function useFlexiFromPhoto() {
     segments: 8,
     gap: 0.15,
     hingeSizeRatio: 0.5,
-    baseColor: "#00E5FF",
+    baseColor: "#d0d0d0",
   });
   const [sourceGeometry, setSourceGeometry] = useState<THREE.BufferGeometry | null>(null);
   const [segmentsPreview, setSegmentsPreview] = useState<SegmentData[]>([]);

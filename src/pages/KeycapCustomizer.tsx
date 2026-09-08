@@ -162,7 +162,7 @@ export default function KeycapCustomizer() {
             <pointLight position={[-50, -50, -50]} intensity={0.4} />
             <OrbitControls makeDefault />
             <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} position={[0, -0.1, 0]} />
-            <Center><mesh geometry={displayedGeometry} castShadow receiveShadow><meshStandardMaterial color="#632CE5" roughness={0.4} metalness={0.15} /></mesh></Center>
+            <Center><mesh geometry={displayedGeometry} castShadow receiveShadow>          <meshStandardMaterial color="#d0d0d0" roughness={0.4} metalness={0.15} /></mesh></Center>
           </Canvas>
         </div>
         <div className="absolute top-6 left-6 pointer-events-none">

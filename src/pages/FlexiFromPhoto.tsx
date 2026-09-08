@@ -321,7 +321,7 @@ function PreviewScene({
     return (
       <Center>
         <mesh geometry={sourceGeometry} castShadow receiveShadow>
-          <meshStandardMaterial color="#666" roughness={0.6} metalness={0.1} wireframe={false} />
+          <meshStandardMaterial color="#d0d0d0" roughness={0.6} metalness={0.1} wireframe={false} />
         </mesh>
       </Center>
     );
@@ -336,7 +336,7 @@ function PreviewScene({
         {segments.map((seg, idx) => (
           <mesh key={idx} geometry={seg.geometry} castShadow receiveShadow>
             <meshStandardMaterial
-              color={idx % 2 === 0 ? baseColor : "#ffffff"}
+              color="#d0d0d0"
               roughness={0.4}
               metalness={0.2}
             />

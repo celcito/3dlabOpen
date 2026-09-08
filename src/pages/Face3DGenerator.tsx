@@ -192,11 +192,11 @@ function Face3DPreview({ reliefGeometry, config }: { reliefGeometry: THREE.Buffe
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <mesh geometry={reliefGeometry} castShadow receiveShadow>
-        <meshStandardMaterial color="#ffffff" roughness={0.7} side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#d0d0d0" roughness={0.7} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0, 0, -base / 2]}>
         <boxGeometry args={[s, s, base]} />
-        <meshStandardMaterial color="#eeeeee" side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#d0d0d0" side={THREE.DoubleSide} />
       </mesh>
     </group>
   );

@@ -10,7 +10,7 @@ export interface DisplayGeometryRequest {
 
 // Keep unpainted geometry dark enough to remain legible on the light Viewer
 // workspace, matching the legacy Viewer3D base group color.
-const BASE_COLOR = new THREE.Color("#333333");
+const BASE_COLOR = new THREE.Color("#e0e0e0");
 
 /**
  * Builds a THREE.BufferGeometry from split state. When a region mask is

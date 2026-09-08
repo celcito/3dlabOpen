@@ -665,7 +665,7 @@ function PlaceholderPulley({ config, profileData }: { config: PulleyConfig, prof
       {geoms.map((g, i) => (
         <mesh key={i} castShadow receiveShadow geometry={g}>
           <meshStandardMaterial 
-            color="#eeeeee" 
+            color="#e0e0e0" 
             metalness={0.6}
             roughness={0.4}
           />

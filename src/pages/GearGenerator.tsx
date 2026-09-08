@@ -822,7 +822,7 @@ function PlaceholderGear({ config }: { config: GearConfig }) {
   return (
     <mesh castShadow receiveShadow geometry={geom}>
       <meshStandardMaterial 
-        color="#eeeeee" 
+        color="#e0e0e0" 
         metalness={0.8}
         roughness={0.2}
       />

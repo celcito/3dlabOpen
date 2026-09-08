@@ -21,7 +21,7 @@ import { useViewerExports } from "../hooks/viewer3d/useViewerExports";
 
 // Vibrant colors for print separation groups
 const GROUPS = [
-  { id: 0, name: "Base Principal (Cinza / Gray)", color: "#333333", border: "border-[#E8E9E3]" },
+  { id: 0, name: "Base Principal (Cinza / Gray)", color: "#e0e0e0", border: "border-[#E8E9E3]" },
   { id: 1, name: "Parte 1 (Ciano / Cyan)", color: "#632CE5", border: "border-[#632CE5]" },
   { id: 2, name: "Parte 2 (Vermelho / Red)", color: "#FF1744", border: "border-[#FF1744]" },
   { id: 3, name: "Parte 3 (Verde / Green)", color: "#00FF41", border: "border-[#00FF41]" },
