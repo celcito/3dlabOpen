@@ -373,35 +373,29 @@ export default function Split3MF() {
         <div data-testid="split3mf-viewport" className="workbench-viewport flex-1 min-w-0 min-h-0 relative bg-[#F3F4EE] h-full flex flex-col">
           <div className="workbench-viewport flex-1 w-full relative overflow-hidden bg-[#F3F4EE]">
           {/* Viewport header — anchors the 3D area as a clearly bounded viewport. */}
-          <div className="absolute top-6 left-6 z-20 px-3.5 py-2.5 bg-[#F9FAF4]/85 border border-[#E8E9E3] backdrop-blur-md rounded text-[10px] uppercase tracking-wider text-zinc-500 space-y-1.5 pointer-events-none select-none">
-            <div className="text-[#632CE5] font-bold text-[11px] mb-1">3D Navigation Guide</div>
+          <div className="absolute top-6 left-6 z-20 px-3.5 py-2.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)] space-y-1.5 pointer-events-none select-none">
+            <div className="text-[var(--workbench-accent)] font-bold text-[11px] mb-1">3D Navigation Guide</div>
             <div>Left Click + Drag: <span className="font-bold">{selectionMode === "click" ? "Select Connected Piece" : state.regions.length ? "Paint Model" : "Rotate Camera"}</span></div>
             <div>Right Click + Drag: <span className="font-bold">Rotate Camera</span></div>
             <div>Scroll Wheel: <span className="font-bold">Zoom In / Out</span></div>
             <div>Middle Click + Drag: <span className="font-bold">Pan Camera</span></div>
           </div>
-          {!state.geometry ? (
-            loading ? (
-              <LoadingOverlay message={`Processando ${fileName ?? "arquivo"}…`} />
-            ) : (
-              <EmptyState
-                title="Nenhum modelo carregado"
-                subtitle="Arraste um 3MF, GLB ou OBJ no painel Importar para começar."
-              />
-            )
-          ) : (
-            <Canvas
-              shadows
-              dpr={[1, 2]}
-              className="absolute inset-0"
-              camera={{ position: [4, 3, 4], fov: 45 }}
-              onCreated={({ camera, gl }) => {
-                camera.lookAt(0, 0, 0);
-                gl.setClearColor("#F3F4EE", 1);
-              }}
-              frameloop="always"
-            >
-              {platePreview && previewPieces.length > 0 ? (
+
+          <Canvas
+            shadows
+            dpr={[1, 2]}
+            className="absolute inset-0"
+            camera={{ position: [4, 3, 4], fov: 45 }}
+            onCreated={({ camera, gl }) => {
+              camera.lookAt(0, 0, 0);
+              gl.setClearColor("#F3F4EE", 1);
+            }}
+            frameloop="always"
+          >
+            <Grid infiniteGrid fadeDistance={100} cellColor="var(--workbench-line)" sectionColor="var(--outline-variant)" cellSize={10} sectionSize={50} />
+            {!state.geometry && <OrbitControls makeDefault />}
+            {state.geometry && (
+              platePreview && previewPieces.length > 0 ? (
                 <PlateScene
                   pieces={previewPieces}
                   is3mf={fileName?.toLowerCase().endsWith(".3mf") ?? false}
@@ -410,30 +404,32 @@ export default function Split3MF() {
                   connectorConfig={state.connectorConfig}
                 />
               ) : (
-              <SplitScene
-                key={`${sceneGeom.uuid}-${geometryEpoch}`}
-                geometry={sceneGeom}
-                regionMask={state.regionMask}
-                activeRegionColor={activeRegionColor(state)}
-                brushRadius={state.boundary.brushRadius}
-                brushEnabled={selectionMode === "click" || state.regions.length > 0}
-                selectMode={selectionMode === "click"}
-                onEdit={(e) => split.applyBoundaryBrush(e.kind, e.vertexIndex, brushRadiusHops)}
-                onEditComplete={() => {
-                  if (state.regionMask && countPainted(state.regionMask) > 0) setPlatePreview(true);
-                }}
-                onSelect={(vertexIndex) =>
-                  setPendingSelection((current) =>
-                    current.includes(vertexIndex)
-                      ? current.filter((index) => index !== vertexIndex)
-                      : [...current, vertexIndex]
-                  )
-                }
-                selectedVertices={pendingSelection}
-              />
-              )}
-            </Canvas>
-          )}
+                <SplitScene
+                  key={`${sceneGeom.uuid}-${geometryEpoch}`}
+                  geometry={sceneGeom}
+                  regionMask={state.regionMask}
+                  activeRegionColor={activeRegionColor(state)}
+                  brushRadius={state.boundary.brushRadius}
+                  brushEnabled={selectionMode === "click" || state.regions.length > 0}
+                  selectMode={selectionMode === "click"}
+                  onEdit={(e) => split.applyBoundaryBrush(e.kind, e.vertexIndex, brushRadiusHops)}
+                  onEditComplete={() => {
+                    if (state.regionMask && countPaintedOrEmpty(state.regionMask, state.regions.length) > 0) setPlatePreview(true);
+                  }}
+                  onSelect={(vertexIndex) =>
+                    setPendingSelection((current) =>
+                      current.includes(vertexIndex)
+                        ? current.filter((index) => index !== vertexIndex)
+                        : [...current, vertexIndex]
+                    )
+                  }
+                  selectedVertices={pendingSelection}
+                />
+              )
+            )}
+          </Canvas>
+
+          {loading && <LoadingOverlay message={`Processando ${fileName ?? "arquivo"}…`} />}
 
           {/* Loading overlay while geometry is being re-meshed (e.g. segmenting). */}
           {state.geometry && loading && <LoadingOverlay message="Segmentando modelo…" />}
@@ -516,10 +512,12 @@ function countPaintedOrEmpty(mask: Uint8Array | null, regionCount: number): numb
 
 function LoadingOverlay({ message }: { message: string }) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-[#1A1C19]/80 backdrop-blur-sm z-10">
-      <div className="flex items-center gap-3 bg-[#2A2C28] border border-[#3A3C38] rounded-xl px-5 py-3 shadow-md">
-        <Loader2 className="w-5 h-5 text-[#00C853] animate-spin" />
-        <span className="text-[12px] font-semibold text-[#E8E9E3]">{message}</span>
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--workbench-panel)]/80 backdrop-blur-sm transition-all animate-in fade-in duration-300">
+      <div className="flex flex-col items-center gap-6 p-10 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] rounded-lg shadow-2xl max-w-sm w-full text-center">
+        <div className="relative"><Loader2 className="w-12 h-12 text-[var(--workbench-accent)] animate-spin" /><div className="absolute inset-0 blur-xl bg-[var(--workbench-accent)]/20 animate-pulse"></div></div>
+        <div className="space-y-2"><h3 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--on-surface)]">Processando</h3><p className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest leading-relaxed">{message || "Aguarde..."}</p></div>
+        <div className="w-full h-1 bg-[var(--surface-container-high)] rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-[var(--workbench-accent)] to-[#00B8D4] animate-progress-indefinite"></div></div>
+        <p className="text-[8px] text-[var(--workbench-muted)] uppercase font-bold">Não feche a página.</p>
       </div>
     </div>
   );

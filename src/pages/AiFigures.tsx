@@ -321,7 +321,6 @@ export default function AiFigures() {
       {/* HEADER AREA */}
       <header className="p-8 flex justify-between items-end border-b border-[#E2E3DD] shrink-0 bg-white">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-[#632CE5] font-bold mb-2">VÉRTICE STUDIO TOOLS / v0.4.2</p>
           <h1 className="text-6xl font-black tracking-tighter leading-none uppercase">AI Figures</h1>
         </div>
         <div className="text-right">
