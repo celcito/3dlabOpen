@@ -451,7 +451,8 @@ export default function Viewer3D() {
     const extractedJoints = useViewerJoints({ modelGeometry, vertexGroups, adjacencyList, groups, jointType, jointSizes });
     const extractedPreview = useViewerSeparatedPreview({ previewSeparated, modelGeometry, vertexGroups, groups, jointType, jointSizes, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, getGroupName: extractedJoints.getGroupName, setPlacementMode: extractedJoints.setPlacementMode, showConnectors, booleanMode, booleanTolerance });
     const extractedExports = useViewerExports({ modelGeometry, setModelGeometry, vertexGroups, setVertexGroups, groups, fileName, jointType, jointSizes, capSelection, setIsProcessing, setProcessingMessage, setStats, setHistory, setGroupJointTypes: extractedJoints.setGroupJointTypes, setConnectorPoints: extractedJoints.setConnectorPoints, setPlacementMode: extractedJoints.setPlacementMode, getGroupName: extractedJoints.getGroupName, findNeighborGroups: extractedJoints.findNeighborGroups, getPairJointSpecs: extractedJoints.getPairJointSpecs, getEffectiveJointType: extractedJoints.getEffectiveJointType, jointConfigurationWarning: null, showConnectors });
-    void extractedJoints; void extractedPreview; void extractedExports;
+    const { exportAllAsThreeMF } = extractedExports;
+    void extractedJoints; void extractedPreview;
 
   // Auto-scroll para a seção de encaixes ao entrar no preview ou modo de colocação
   useEffect(() => {
@@ -2066,6 +2067,7 @@ export default function Viewer3D() {
                 )}
               </div>
               <button onClick={exportAllSeparatedParts} disabled={!modelGeometry || isExporting !== null} className="w-full bg-[var(--workbench-accent)] hover:bg-[var(--workbench-accent)] text-black font-black uppercase text-[11px] py-4 px-4 tracking-widest flex items-center justify-center gap-2 transition-all mb-4 shadow-[0_0_15px_rgba(124,58,237,0.2)] disabled:opacity-40"><Download className="w-4 h-4 text-black" /> Exportar Todas as Peças (.stl)</button>
+              <button onClick={exportAllAsThreeMF} disabled={!modelGeometry || isExporting !== null} className="w-full bg-[#00FF41] hover:bg-[#00CC33] text-black font-black uppercase text-[11px] py-4 px-4 tracking-widest flex items-center justify-center gap-2 transition-all mb-4 shadow-[0_0_15px_rgba(0,255,65,0.2)] disabled:opacity-40"><Save className="w-4 h-4 text-black" /> Exportar 3MF com Cores</button>
               <div className="space-y-2">
                 {groups.map(group => {
                   const countOfGroup = vertexGroups.filter(g => g === group.id).length;

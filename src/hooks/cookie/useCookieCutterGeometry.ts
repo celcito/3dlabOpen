@@ -68,7 +68,7 @@ export function createRibbonShapeFromPoints(points: THREE.Vector2[], thickness: 
   return shape;
 }
 
-export function useNormalizedCookieLayers<T extends CookieLayer>(layers: T[], size: number) {
+export function useNormalizedCookieLayers<T extends CookieLayer>(layers: T[], size: number, detailScale: number = 1.0) {
   return useMemo(() => {
     if (!layers.length) return [] as T[];
     const active = layers.filter(layer => layer.type !== "ignore");
@@ -81,11 +81,15 @@ export function useNormalizedCookieLayers<T extends CookieLayer>(layers: T[], si
     if (maxDimension <= 0) return layers;
     const center = new THREE.Vector2((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2);
     const scale = size / maxDimension;
-    return layers.map(layer => ({
-      ...layer,
-      points: layer.points.map(point => new THREE.Vector2().subVectors(point, center).multiplyScalar(scale).multiply(new THREE.Vector2(1, -1))),
-    }));
-  }, [layers, size]);
+    return layers.map(layer => {
+      let points = layer.points.map(point => new THREE.Vector2().subVectors(point, center).multiplyScalar(scale).multiply(new THREE.Vector2(1, -1)));
+      // Apply detailScale to stamp layers (relative to center)
+      if (layer.type === "stamp" && detailScale !== 1.0) {
+        points = points.map(point => point.clone().multiplyScalar(detailScale));
+      }
+      return { ...layer, points };
+    });
+  }, [layers, size, detailScale]);
 }
 
 export function useCookieOutline<T extends CookieLayer>(layers: T[]) {

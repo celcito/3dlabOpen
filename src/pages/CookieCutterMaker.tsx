@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
+import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { 
   Sparkles, Download, Upload, Sliders, HelpCircle, Eye, EyeOff, 
   RotateCcw, Info, Settings, LayoutGrid, Check, Play, Scissors,
-  Layers, Hammer, Palette, ArrowRight, Save, Trash2, Heart, RefreshCw, FileText, Folder
+  Layers, Hammer, Palette, ArrowRight, Save, Trash2, Heart, RefreshCw, FileText, Folder,
+  Type, Plus
 } from "lucide-react";
-import { useCookieCutterPage } from "../hooks/cookie/useCookieCutterPage";
+import { useCookieCutterPage, TextLayer } from "../hooks/cookie/useCookieCutterPage";
 
 // --- TYPES & INTERFACES ---
 interface SVGPathLayer {
@@ -35,7 +37,8 @@ interface MakerConfig {
   detailThickness: number;     // Width of detail lines (mm)
   addHandle: boolean;          // Add grip handle on stamp back
   handleHeight: number;        // Stamp handle depth
-  
+  detailScale: number;         // Scale factor for stamp details (inner circle, etc.)
+
   // Coloring / Painting Plate
   coloringBaseThickness: number; // Base plate height for coloring board
   coloringLineHeight: number;    // Outline height
@@ -251,19 +254,109 @@ const PRESETS: { id: string; name: string; icon: string; svg: string }[] = [
   <path id="details_smile" d="M 38 42 C 43 45 47 45 52 42" />
   <path id="details_spark" d="M 72 26 L 76 30 M 76 26 L 72 30" />
 </svg>`
+  },
+  {
+    id: "circle",
+    name: "Círculo",
+    icon: "⭕",
+    svg: `
+<svg viewBox="0 0 100 100">
+  <path id="outline" d="M 50 10 A 40 40 0 1 1 49.99 10 Z" />
+  <path id="details_inner" d="M 50 25 A 25 25 0 1 1 49.99 25 Z" />
+</svg>`
   }
 ];
+
+// --- TEXT ON STAMP COMPONENT ---
+function TextOnStamp({
+  textLayer,
+  materialColor,
+  showWireframe,
+  stampPlateThickness,
+  detailHeight,
+}: {
+  textLayer: TextLayer;
+  materialColor: string;
+  showWireframe: boolean;
+  stampPlateThickness: number;
+  detailHeight: number;
+}) {
+  const sc = 0.1; // Scale factor: 1 unit = 10mm
+  
+  const canvasTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const fontSize = 80;
+    canvas.width = Math.max(256, textLayer.text.length * fontSize * 0.7 + 40);
+    canvas.height = 128;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(textLayer.text, canvas.width / 2, canvas.height / 2);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    return tex;
+  }, [textLayer.text]);
+  
+  if (!canvasTexture) return null;
+  
+  // 3D box dimensions
+  const boxWidth = textLayer.text.length * textLayer.fontSize * 0.12 * textLayer.scale;
+  const boxHeight = textLayer.fontSize * 0.2 * textLayer.scale;
+  const boxDepth = detailHeight * sc; // Extrusion depth
+  
+  // Position: center is (0,0), textLayer.x/y are -1 to 1 relative to center
+  const positionX = textLayer.x * 3;
+  const positionY = textLayer.y * 3;
+  const positionZ = textLayer.z * 2; // Z movement
+  const rotationZ = (textLayer.rotation * Math.PI) / 180;
+  
+  return (
+    <group
+      position={[positionX, positionY, stampPlateThickness * sc + boxDepth / 2 + positionZ]}
+      rotation={[0, 0, rotationZ]}
+    >
+      {/* 3D box with text texture on front */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[boxWidth, boxHeight, boxDepth]} />
+        <meshStandardMaterial
+          color={materialColor}
+          roughness={0.2}
+          metalness={0.15}
+          wireframe={showWireframe}
+          emissive={materialColor}
+          emissiveIntensity={0.12}
+        />
+      </mesh>
+      {/* Text texture on front face */}
+      <mesh position={[0, 0, boxDepth / 2 + 0.001]}>
+        <planeGeometry args={[boxWidth, boxHeight]} />
+        <meshBasicMaterial
+          map={canvasTexture}
+          transparent={false}
+          side={THREE.FrontSide}
+        />
+      </mesh>
+    </group>
+  );
+}
 
 // --- 3D CANVAS SCENE COMPONENT ---
 function CookieCutterScene({
   config,
   layers,
+  textLayers,
   outlinePoints,
   detailRibbonShapes,
   miterBracePoints,
 }: {
   config: MakerConfig;
   layers: SVGPathLayer[];
+  textLayers: TextLayer[];
   outlinePoints: THREE.Vector2[];
   detailRibbonShapes: { shape: THREE.Shape; isClosed: boolean }[];
   miterBracePoints: THREE.Vector2[];
@@ -588,6 +681,18 @@ function CookieCutterScene({
                 />
               </mesh>
             ))}
+            
+            {/* Text layers on stamp */}
+            {textLayers.map((textLayer) => (
+              <TextOnStamp 
+                key={textLayer.id}
+                textLayer={textLayer}
+                materialColor={materialColor}
+                showWireframe={showWireframe}
+                stampPlateThickness={config.stampPlateThickness}
+                detailHeight={config.detailHeight}
+              />
+            ))}
           </group>
         </>
       )}
@@ -700,8 +805,9 @@ function CookieCutterScene({
 export default function CookieCutterMaker() {
   const {
     activePresetId, setActivePresetId, projectName, setProjectName, successMsg, triggerSuccess,
-    errorMsg, activeTab, setActiveTab, config, setConfig, layers, savedProjects, fileInputRef,
+    errorMsg, activeTab, setActiveTab, config, setConfig, layers, textLayers, savedProjects, fileInputRef,
     normalizedLayers, outlinePoints, detailRibbonShapes, handleSvgUpload, toggleLayerType,
+    addTextLayer, updateTextLayer, removeTextLayer,
     handleSaveToLibrary, handleDeleteProject, handleLoadProject, exportToSTL,
   } = useCookieCutterPage(PRESETS);
 
@@ -1027,6 +1133,7 @@ export default function CookieCutterMaker() {
                 <CookieCutterScene 
                   config={config} 
                   layers={normalizedLayers} 
+                  textLayers={textLayers}
                   outlinePoints={outlinePoints}
                   detailRibbonShapes={detailRibbonShapes}
                   miterBracePoints={[]}
@@ -1381,6 +1488,123 @@ export default function CookieCutterMaker() {
                 <span>Geometria do Carimbo (Massa)</span>
               </h3>
 
+              {/* TEXT LAYERS - Compact */}
+              <div className="space-y-2 bg-white border border-[#E2E3DD] rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Type className="w-3.5 h-3.5 text-[#632CE5]" />
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Texto</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    id="addTextInput"
+                    placeholder="Digite o texto..."
+                    className="flex-1 px-2 py-1.5 text-[11px] bg-zinc-50 border border-[#E2E3DD] rounded focus:outline-none focus:ring-1 focus:ring-[#632CE5]/50"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const input = e.target as HTMLInputElement;
+                        if (input.value.trim()) {
+                          addTextLayer(input.value.trim());
+                          input.value = "";
+                        }
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      const input = document.getElementById("addTextInput") as HTMLInputElement;
+                      if (input?.value.trim()) {
+                        addTextLayer(input.value.trim());
+                        input.value = "";
+                      }
+                    }}
+                    className="px-2.5 py-1.5 bg-[#632CE5] text-white text-[10px] font-bold rounded hover:bg-[#5224b5] transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {textLayers.length > 0 && (
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {textLayers.map((layer) => (
+                      <div key={layer.id} className="bg-zinc-50 border border-[#E2E3DD] rounded-lg p-2 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-zinc-600 truncate max-w-[120px]">
+                            "{layer.text}"
+                          </span>
+                          <button
+                            onClick={() => removeTextLayer(layer.id)}
+                            className="p-0.5 text-red-400 hover:text-red-600 rounded"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                          <div>
+                            <div className="flex justify-between text-[9px]">
+                              <span className="text-zinc-500">X</span>
+                              <span className="font-mono text-[#632CE5]">{layer.x.toFixed(2)}</span>
+                            </div>
+                            <input type="range" min="-0.8" max="0.8" step="0.05" value={layer.x}
+                              onChange={(e) => updateTextLayer(layer.id, { x: parseFloat(e.target.value) })}
+                              className="w-full accent-[#632CE5] cursor-pointer h-1" />
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-[9px]">
+                              <span className="text-zinc-500">Y</span>
+                              <span className="font-mono text-[#632CE5]">{layer.y.toFixed(2)}</span>
+                            </div>
+                            <input type="range" min="-0.8" max="0.8" step="0.05" value={layer.y}
+                              onChange={(e) => updateTextLayer(layer.id, { y: parseFloat(e.target.value) })}
+                              className="w-full accent-[#632CE5] cursor-pointer h-1" />
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-[9px]">
+                              <span className="text-zinc-500">Z (Altura)</span>
+                              <span className="font-mono text-[#632CE5]">{(layer.z || 0).toFixed(2)}</span>
+                            </div>
+                            <input type="range" min="-0.5" max="1.0" step="0.05" value={layer.z || 0}
+                              onChange={(e) => updateTextLayer(layer.id, { z: parseFloat(e.target.value) })}
+                              className="w-full accent-[#632CE5] cursor-pointer h-1" />
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-[9px]">
+                              <span className="text-zinc-500">Rotação</span>
+                              <span className="font-mono text-[#632CE5]">{layer.rotation}°</span>
+                            </div>
+                            <input type="range" min="-180" max="180" step="5" value={layer.rotation}
+                              onChange={(e) => updateTextLayer(layer.id, { rotation: parseInt(e.target.value) })}
+                              className="w-full accent-[#632CE5] cursor-pointer h-1" />
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-[9px]">
+                              <span className="text-zinc-500">Tamanho</span>
+                              <span className="font-mono text-[#632CE5]">{layer.scale.toFixed(1)}x</span>
+                            </div>
+                            <input type="range" min="0.5" max="2.0" step="0.1" value={layer.scale}
+                              onChange={(e) => updateTextLayer(layer.id, { scale: parseFloat(e.target.value) })}
+                              className="w-full accent-[#632CE5] cursor-pointer h-1" />
+                          </div>
+                          <div className="col-span-2">
+                            <div className="flex justify-between text-[9px]">
+                              <span className="text-zinc-500">Fonte</span>
+                              <span className="font-mono text-[#632CE5]">{layer.fontSize}mm</span>
+                            </div>
+                            <input type="range" min="6" max="30" step="1" value={layer.fontSize}
+                              onChange={(e) => updateTextLayer(layer.id, { fontSize: parseInt(e.target.value) })}
+                              className="w-full accent-[#632CE5] cursor-pointer h-1" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* SLIDER: STAMP PLATE THICKNESS */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-[11px]">
@@ -1414,6 +1638,24 @@ export default function CookieCutterMaker() {
                   className="w-full accent-[#632CE5] cursor-pointer"
                 />
                 <span className="block text-[9px] text-zinc-500 uppercase">Profundidade das linhas na massa de biscoito</span>
+              </div>
+
+              {/* SLIDER: INNER CIRCLE SCALE */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="font-bold text-zinc-400">Tamanho do Círculo Interior</span>
+                  <span className="font-mono text-[#632CE5] font-bold">{config.detailScale.toFixed(1)}x</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.3" 
+                  max="1.5" 
+                  step="0.1"
+                  value={config.detailScale}
+                  onChange={(e) => setConfig(prev => ({ ...prev, detailScale: parseFloat(e.target.value) }))}
+                  className="w-full accent-[#632CE5] cursor-pointer"
+                />
+                <span className="block text-[9px] text-zinc-500 uppercase">Escala do círculo interno (menor = mais pequeno)</span>
               </div>
 
               {/* SLIDER: DETAIL THICKNESS */}

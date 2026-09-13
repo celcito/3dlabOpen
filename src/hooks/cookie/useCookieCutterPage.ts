@@ -20,6 +20,17 @@ export interface SVGPathLayer {
   length: number;
 }
 
+export interface TextLayer {
+  id: string;
+  text: string;
+  x: number;        // Position X (-1 to 1, relative to center)
+  y: number;        // Position Y (-1 to 1, relative to center)
+  z: number;        // Position Z (height above stamp)
+  rotation: number; // Rotation in degrees
+  scale: number;    // Scale factor (0.5 to 2.0)
+  fontSize: number; // Font size in mm
+}
+
 export interface MakerConfig {
   size: number;
   cutterHeight: number;
@@ -32,6 +43,7 @@ export interface MakerConfig {
   detailThickness: number;
   addHandle: boolean;
   handleHeight: number;
+  detailScale: number;
   coloringBaseThickness: number;
   coloringLineHeight: number;
   coloringLineWidth: number;
@@ -55,7 +67,7 @@ export interface CookiePreset { id: string; name: string; icon: string; svg: str
 const defaultConfig: MakerConfig = {
   size: 75, cutterHeight: 14, wallThickness: 0.8, brimWidth: 4, brimHeight: 2,
   stampPlateThickness: 2, clearance: 1.2, detailHeight: 1.5, detailThickness: 1.2,
-  addHandle: true, handleHeight: 10, coloringBaseThickness: 3, coloringLineHeight: 1.6,
+  addHandle: true, handleHeight: 10, detailScale: 1.0, coloringBaseThickness: 3, coloringLineHeight: 1.6,
   coloringLineWidth: 1.2, materialColor: "#e0e0e0", viewMode: "cutter_stamp",
   explodedView: 0.25, showWireframe: false,
 };
@@ -68,8 +80,36 @@ export function useCookieCutterPage(presets: CookiePreset[]) {
   const [activeTab, setActiveTab] = useState<"geral" | "cutter" | "stamp" | "coloring" | "biblioteca">("geral");
   const [config, setConfig] = useState<MakerConfig>(defaultConfig);
   const [layers, setLayers] = useState<SVGPathLayer[]>([]);
+  const [textLayers, setTextLayers] = useState<TextLayer[]>([]);
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Text layer management
+  const addTextLayer = (text: string) => {
+    const newLayer: TextLayer = {
+      id: crypto.randomUUID(),
+      text,
+      x: 0,
+      y: 0,
+      z: 0,
+      rotation: 0,
+      scale: 1.0,
+      fontSize: 14,
+    };
+    setTextLayers(prev => [...prev, newLayer]);
+    triggerSuccess("Texto adicionado ao carimbo!");
+  };
+
+  const updateTextLayer = (id: string, updates: Partial<TextLayer>) => {
+    setTextLayers(prev => prev.map(layer => 
+      layer.id === id ? { ...layer, ...updates } : layer
+    ));
+  };
+
+  const removeTextLayer = (id: string) => {
+    setTextLayers(prev => prev.filter(layer => layer.id !== id));
+    triggerSuccess("Texto removido!");
+  };
 
   const parseSVGContent = (svgText: string) => {
     try {
@@ -123,7 +163,7 @@ export function useCookieCutterPage(presets: CookiePreset[]) {
     } catch (error) {}
   }, []);
 
-  const normalizedLayers = useNormalizedCookieLayers(layers, config.size);
+  const normalizedLayers = useNormalizedCookieLayers(layers, config.size, config.detailScale);
   const outlinePoints = useCookieOutline(normalizedLayers);
   const detailRibbonShapes = useMemo(() => normalizedLayers
     .filter(layer => layer.type === "stamp")
@@ -289,8 +329,9 @@ export function useCookieCutterPage(presets: CookiePreset[]) {
 
   return {
     activePresetId, setActivePresetId, projectName, setProjectName, successMsg, triggerSuccess,
-    errorMsg, activeTab, setActiveTab, config, setConfig, layers, savedProjects, fileInputRef,
+    errorMsg, activeTab, setActiveTab, config, setConfig, layers, textLayers, savedProjects, fileInputRef,
     normalizedLayers, outlinePoints, detailRibbonShapes, handleSvgUpload, toggleLayerType,
+    addTextLayer, updateTextLayer, removeTextLayer,
     handleSaveToLibrary, handleDeleteProject, handleLoadProject, exportToSTL,
   };
 }

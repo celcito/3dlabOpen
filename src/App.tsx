@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake } from "lucide-react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, Type } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { M2crLogo } from "@/components/M2crLogo";
 import Viewer3D from "./pages/Viewer3D";
+import Dashboard from "./pages/Dashboard";
 
 const PaintMixer = lazy(() => import("./pages/PaintMixer"));
 const FilamentPainter = lazy(() => import("./pages/FilamentPainter"));
@@ -36,10 +37,14 @@ const FidgetMaker = lazy(() => import("./pages/FidgetMaker"));
 const ClipMaker = lazy(() => import("./pages/ClipMaker"));
 const PuzzleGenerator = lazy(() => import("./pages/PuzzleGenerator"));
 const CakeTopperCreator = lazy(() => import("./pages/CakeTopperCreator"));
+const PencilTopperCreator = lazy(() => import("./pages/PencilTopperCreator"));
+const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
 
 const NAV_ITEMS = [
   { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
   { to: "/viewer3d", icon: BoxSelect, label: "3D Slicer", description: "3D Viewer & Slicer" },
+  { to: "/pencil-topper", icon: Pencil, label: "Ponteira de Lápis", description: "Clips 2 Cores p/ Lápis/Caneta" },
+  { to: "/letra-caixa", icon: Type, label: "Letra Caixa 3D", description: "3 Camadas Multicolor" },
   { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
   { to: "/image-to-3d", icon: Image, label: "Image to 3D", description: "Image to 3D Model" },
   { to: "/vase-generator", icon: Flower, label: "Vase Maker", description: "Vasos Paramétricos" },
@@ -183,10 +188,12 @@ export default function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
+          <Route path="/" element={<Dashboard />} />
           <Route path="/split-3mf" element={<Split3MF />} />
           <Route path="/keycap-customizer" element={<KeycapCustomizer />} />
-          <Route path="/" element={<Navigate to="/split-3mf" replace />} />
           <Route path="/viewer3d" element={<Viewer3D />} />
+          <Route path="/pencil-topper" element={<PencilTopperCreator />} />
+          <Route path="/letra-caixa" element={<LetterBoxCreator />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />
           <Route path="/image-to-3d" element={<ImageTo3D />} />
           <Route path="/vase-generator" element={<VaseGenerator />} />

@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { addPeg, addSocket, addReinforcedSocket, capBoundaryHoles } from "../../../lib/csg";
+import { ThreeMFExporter } from "../../lib/ThreeMFExporter";
 
 const belongsToGroup = (a: number, b: number, c: number, group: number) => group === 0 ? a === 0 && b === 0 && c === 0 : [a, b, c].filter((value) => value === group).length >= 2;
 
@@ -54,5 +55,42 @@ export function useViewerExports({ modelGeometry, setModelGeometry, vertexGroups
     } finally { setIsExporting(null); setIsProcessing(false); }
   };
   const exportAllSeparatedParts = async () => { if (!modelGeometry || isExporting !== null) return; for (const group of groups) if (group.id === 0 || vertexGroups.some((value) => value === group.id)) await exportSeparatedPart(group.id); };
-  return { isExporting, loadingCap, isCapped, isDownloadingCapped, capHollowVase, downloadCappedModel, exportSeparatedPart, exportAllSeparatedParts };
+
+  const exportAllAsThreeMF = async () => {
+    if (!modelGeometry) return;
+    setIsExporting(0);
+    setIsProcessing(true);
+    setProcessingMessage("Exportando 3MF com cores...");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      const hasPaint = vertexGroups.some((v) => v !== 0);
+      if (hasPaint) {
+        const exporter = new ThreeMFExporter();
+        const blob = await exporter.parse(modelGeometry, vertexGroups, groups);
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName.replace(/\.[a-zA-Z0-9]+$/, "")}_colorido.3mf`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      } else {
+        const singleGroups = [{ id: 0, color: "#e0e0e0", name: "Model" }];
+        const allZero = new Uint8Array(vertexGroups.length);
+        const exporter = new ThreeMFExporter();
+        const blob = await exporter.parse(modelGeometry, allZero, singleGroups);
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName.replace(/\.[a-zA-Z0-9]+$/, "")}.3mf`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      }
+    } catch (err) {
+      console.error("3MF export error:", err);
+      alert("Erro ao exportar 3MF.");
+    } finally {
+      setIsExporting(null);
+      setIsProcessing(false);
+    }
+  };
+
+  return { isExporting, loadingCap, isCapped, isDownloadingCapped, capHollowVase, downloadCappedModel, exportSeparatedPart, exportAllSeparatedParts, exportAllAsThreeMF };
 }
