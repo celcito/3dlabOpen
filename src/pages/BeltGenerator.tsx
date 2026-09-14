@@ -186,16 +186,16 @@ if (shape == "straight") {
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
-      <div className="w-full md:w-[400px] bg-[#F9FAF4] border-r border-[#E2E3DD] flex flex-col">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-viewport)] border-r border-[var(--surface-container-high)] flex flex-col">
         <header className="p-6 pb-4 shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
               <Settings className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Belt Gen</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">Belt Gen</h1>
           </div>
-          <p className="text-[10px] text-[#687064] font-bold tracking-widest uppercase leading-relaxed">
+          <p className="text-[10px] text-[var(--on-surface-variant)] font-bold tracking-widest uppercase leading-relaxed">
             Parametric timing belts. GT2, HTD, MXL, and more.
           </p>
         </header>
@@ -205,7 +205,7 @@ if (shape == "straight") {
             <button
               onClick={() => setActiveTab('info')}
               className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                activeTab === 'info' ? "bg-[#E2E3DD] text-[#1A1C19] shadow" : "text-[#687064] hover:text-[#1A1C19]"
+                activeTab === 'info' ? "bg-[var(--surface-container-high)] text-[var(--workbench-text)] shadow" : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
             >
               Info
@@ -213,7 +213,7 @@ if (shape == "straight") {
             <button
               onClick={() => setActiveTab('settings')}
               className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                activeTab === 'settings' ? "bg-[#E2E3DD] text-[#1A1C19] shadow" : "text-[#687064] hover:text-[#1A1C19]"
+                activeTab === 'settings' ? "bg-[var(--surface-container-high)] text-[var(--workbench-text)] shadow" : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
             >
               Config
@@ -221,7 +221,7 @@ if (shape == "straight") {
             <button
               onClick={() => setActiveTab('materials')}
               className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                activeTab === 'materials' ? "bg-[#E2E3DD] text-[#1A1C19] shadow" : "text-[#687064] hover:text-[#1A1C19]"
+                activeTab === 'materials' ? "bg-[var(--surface-container-high)] text-[var(--workbench-text)] shadow" : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
             >
               Print
@@ -233,59 +233,59 @@ if (shape == "straight") {
           {activeTab === 'info' ? (
             <section className="space-y-6 pb-10">
               <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Play className="w-3.5 h-3.5 text-[#632CE5]" />
                   Quick Start
                 </h3>
                 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD]">
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-2">1. Select a Belt Type</h4>
-                  <p className="text-[10px] text-[#494455] leading-relaxed">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">1. Select a Belt Type</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     Choose from a variety of timing belt profiles, including MXL, XL, GT2, HTD, and T-series. Adjust key parameters like number of teeth, width, and tooth placement.
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD]">
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-2">2. Customize Your Belt</h4>
-                  <p className="text-[10px] text-[#494455] leading-relaxed mb-2">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">2. Customize Your Belt</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed mb-2">
                     Each belt type comes with flexible options:
                   </p>
-                  <ul className="text-[10px] text-[#687064] space-y-1 ml-4 list-disc marker:text-[#632CE5]">
-                    <li><strong className="text-[#1A1C19]">Belt Shape:</strong> Choose between loop (closed) or straight (open).</li>
-                    <li><strong className="text-[#1A1C19]">Pitch & Backing:</strong> Override standard values to customize tooth spacing and backing thickness.</li>
-                    <li><strong className="text-[#1A1C19]">Teeth Config:</strong> Select if teeth should be on the inside, outside, or both sides.</li>
+                  <ul className="text-[10px] text-[var(--on-surface-variant)] space-y-1 ml-4 list-disc marker:text-[#632CE5]">
+                    <li><strong className="text-[var(--workbench-text)]">Belt Shape:</strong> Choose between loop (closed) or straight (open).</li>
+                    <li><strong className="text-[var(--workbench-text)]">Pitch & Backing:</strong> Override standard values to customize tooth spacing and backing thickness.</li>
+                    <li><strong className="text-[var(--workbench-text)]">Teeth Config:</strong> Select if teeth should be on the inside, outside, or both sides.</li>
                   </ul>
-                  <p className="text-[10px] text-[#687064] leading-relaxed mt-2 border-t border-[#E2E3DD] pt-2">
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed mt-2 border-t border-[var(--surface-container-high)] pt-2">
                     Standard values follow industry specs, but custom overrides allow for unique designs or make them easier to print.
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD]">
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-2">3. Render and Export</h4>
-                  <p className="text-[10px] text-[#494455] leading-relaxed">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">3. Render and Export</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     Generate the belt and export it for slicing. It is recommended to print with TPU for flexibility and durability. Use the recommended print profile settings.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-[#632CE5]" />
                   Features
                 </h3>
                 
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="bg-[#F3F4EE] p-3 rounded-lg border border-[#E2E3DD]/50">
-                    <h5 className="text-[10px] font-bold text-[#1A1C19] mb-1">Multiple Belt Types</h5>
-                    <p className="text-[9px] text-[#687064]">Supports a wide range of profiles: GT2, HTD, T-series, XL, etc.</p>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Multiple Belt Types</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">Supports a wide range of profiles: GT2, HTD, T-series, XL, etc.</p>
                   </div>
-                  <div className="bg-[#F3F4EE] p-3 rounded-lg border border-[#E2E3DD]/50">
-                    <h5 className="text-[10px] font-bold text-[#1A1C19] mb-1">Customizable Geometry</h5>
-                    <p className="text-[9px] text-[#687064]">Fine-tune width, pitch, backing thickness, and teeth placement.</p>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Customizable Geometry</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">Fine-tune width, pitch, backing thickness, and teeth placement.</p>
                   </div>
-                  <div className="bg-[#F3F4EE] p-3 rounded-lg border border-[#E2E3DD]/50">
-                    <h5 className="text-[10px] font-bold text-[#1A1C19] mb-1">Precision Modeling</h5>
-                    <p className="text-[9px] text-[#687064]">Built to match real-world profiles while maintaining clean geometry.</p>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Precision Modeling</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">Built to match real-world profiles while maintaining clean geometry.</p>
                   </div>
                 </div>
               </div>
@@ -293,7 +293,7 @@ if (shape == "straight") {
           ) : activeTab === 'settings' ? (
             <section className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Settings2 className="w-3.5 h-3.5 text-[#632CE5]" />
                   01. Perfil da Correia
                 </h3>
@@ -306,7 +306,7 @@ if (shape == "straight") {
                       className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                         config.profile === t
                           ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                          : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                          : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                       }`}
                     >
                       {t}
@@ -315,8 +315,8 @@ if (shape == "straight") {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
                   02. Formato e Dentes
                 </h3>
@@ -332,7 +332,7 @@ if (shape == "straight") {
                       className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                         config.shape === t.id
                           ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                          : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                          : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                       }`}
                     >
                       {t.label}
@@ -341,7 +341,7 @@ if (shape == "straight") {
                 </div>
 
                 <div className="space-y-3 mt-4">
-                  <label className="text-[9px] uppercase font-bold text-[#494455] block">Posição dos Dentes</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Posição dos Dentes</label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { id: 'inside', label: 'Interno' },
@@ -354,7 +354,7 @@ if (shape == "straight") {
                         className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                           config.tooth_placement === t.id
                             ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         {t.label}
@@ -365,76 +365,76 @@ if (shape == "straight") {
 
                 <div className="space-y-3 mt-4">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Qtd Dentes (Teeth)</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Qtd Dentes (Teeth)</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.teeth}</span>
                   </div>
                   <input 
                     type="range" min="10" max="250" step="1" 
                     value={config.teeth}
                     onChange={(e) => setConfig({...config, teeth: parseInt(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Largura (Width)</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Largura (Width)</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.width}mm</span>
                   </div>
                   <input 
                     type="range" min="2" max="50" step="0.5" 
                     value={config.width}
                     onChange={(e) => setConfig({...config, width: parseFloat(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
                   03. Custom Overrides
                 </h3>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Pitch Override (0=Auto)</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Pitch Override (0=Auto)</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.pitch_override}</span>
                   </div>
                   <input 
                     type="range" min="0" max="20" step="0.1" 
                     value={config.pitch_override}
                     onChange={(e) => setConfig({...config, pitch_override: parseFloat(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Backing Override (0=Auto)</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Backing Override (0=Auto)</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.backing_thickness_override}</span>
                   </div>
                   <input 
                     type="range" min="0" max="5" step="0.1" 
                     value={config.backing_thickness_override}
                     onChange={(e) => setConfig({...config, backing_thickness_override: parseFloat(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#E2E3DD] pb-10">
+              <div className="pt-4 border-t border-[var(--surface-container-high)] pb-10">
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={handleExportSTL}
-                    className="w-full bg-[#632CE5] text-[#1A1C19] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group"
+                    className="w-full bg-[#632CE5] text-[var(--workbench-text)] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group"
                   >
                     <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                     Download Preview STL
                   </button>
                   <button
                     onClick={handleDownloadScad}
-                    className="w-full bg-[#F3F4EE] text-[#1A1C19] py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[#CAC3D8] transition-all group"
+                    className="w-full bg-[var(--surface-container-low)] text-[var(--workbench-text)] py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[var(--outline-variant)] transition-all group"
                   >
                     <Code className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                     Download OpenSCAD (.scad)
@@ -445,15 +445,15 @@ if (shape == "straight") {
           ) : (
             <section className="space-y-6 pb-10">
               <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
                   Recomendações de Impressão
                 </h3>
                 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD] relative overflow-hidden">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)] relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 blur-2xl rounded-full" />
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-3">TPU (Altamente Recomendado)</h4>
-                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[10px] text-[#494455] font-mono mb-3">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-3">TPU (Altamente Recomendado)</h4>
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[10px] text-[var(--on-surface-variant)] font-mono mb-3">
                     <div>Nozzle: <span className="text-[#632CE5]">220-230°C</span></div>
                     <div>Bed: <span className="text-[#632CE5]">40-50°C</span></div>
                     <div>Layer: <span className="text-[#632CE5]">0.12 - 0.16mm</span></div>
@@ -461,15 +461,15 @@ if (shape == "straight") {
                     <div>Speed: <span className="text-[#632CE5]">Max 30mm/s</span></div>
                     <div>Walls: <span className="text-[#632CE5]">All walls (100%)</span></div>
                   </div>
-                  <p className="text-[10px] text-[#687064] leading-relaxed border-t border-[#E2E3DD]/50 pt-2">
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed border-t border-[var(--surface-container-high)]/50 pt-2">
                     TPU is required for functional belts to provide necessary flexibility and grip. Print very slowly and avoid retractions. Ensure your TPU is dry for the best dimensional accuracy.
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD] relative overflow-hidden">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)] relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 blur-2xl rounded-full" />
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-3">PLA / PETG (Apenas Prototipagem)</h4>
-                  <p className="text-[10px] text-[#687064] leading-relaxed">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-3">PLA / PETG (Apenas Prototipagem)</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     While rigid materials can be used for fit-testing pulleys, they will quickly break or slip if used in an actual drive system. Use exclusively for static test-fits.
                   </p>
                 </div>
@@ -487,11 +487,11 @@ if (shape == "straight") {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col h-full bg-[#F1F3ED] relative">
-        <div className={`${showPreview ? "h-2/5 md:h-1/3" : "flex-1"} border-b border-[#E2E3DD] bg-white relative flex flex-col`}>
+      <div className="flex-1 flex flex-col h-full bg-[var(--workbench-viewport)] relative">
+        <div className={`${showPreview ? "h-2/5 md:h-1/3" : "flex-1"} border-b border-[var(--surface-container-high)] bg-white relative flex flex-col`}>
           <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
             <Code className="w-4 h-4 text-[#632CE5]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#494455]">OpenSCAD Code</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">OpenSCAD Code</span>
           </div>
           <div className="absolute top-4 right-6 z-10 flex items-center gap-2">
             <button
@@ -499,7 +499,7 @@ if (shape == "straight") {
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-black uppercase tracking-widest text-[10px] transition-all ${
                 copied
                   ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                  : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                  : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
               }`}
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -509,7 +509,7 @@ if (shape == "straight") {
               onClick={() => setShowPreview(!showPreview)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-black uppercase tracking-widest text-[10px] transition-all ${
                 showPreview
-                  ? "bg-white/80 backdrop-blur-md border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                  ? "bg-white/80 backdrop-blur-md border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                   : "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
               }`}
             >
@@ -518,7 +518,7 @@ if (shape == "straight") {
             </button>
           </div>
           <div className="flex-1 overflow-auto p-6 pt-12 custom-scrollbar">
-            <pre className="text-[11px] font-mono text-[#1A1C19] leading-relaxed">
+            <pre className="text-[11px] font-mono text-[var(--workbench-text)] leading-relaxed">
               {generateScad()}
             </pre>
           </div>
@@ -528,7 +528,7 @@ if (shape == "straight") {
           <div className="flex-1 relative">
             <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
               <Play className="w-4 h-4 text-[#632CE5]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#494455]">Visualização Simbólica</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">Visualização Simbólica</span>
             </div>
             <Canvas shadows camera={{ position: [0, 40, 60], fov: 45 }}>
               <color attach="background" args={["#F1F3ED"]} />

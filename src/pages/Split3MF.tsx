@@ -210,7 +210,7 @@ export default function Split3MF() {
           <MousePointer2 className="h-3.5 w-3.5" /> Clique
         </button>
       </div>
-      <div className="rounded-lg border border-[#D8D0F0] bg-[#F7F4FF] p-3 text-[11px] text-[#494455]">
+      <div className="rounded-lg border border-[#D8D0F0] bg-[#F7F4FF] p-3 text-[11px] text-[var(--on-surface-variant)]">
         <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#632CE5]">Como separar</div>
         <ol className="space-y-1.5">
           <li><b>1.</b> Crie uma região para cada peça.</li>
@@ -244,10 +244,10 @@ export default function Split3MF() {
         </div>
       )}
       <div>
-        <div className="text-[10px] uppercase tracking-wider text-[#7A7487] font-bold mb-2">Região ativa</div>
+        <div className="text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)] font-bold mb-2">Região ativa</div>
         <div className="flex flex-wrap gap-1.5">
           {state.regions.length === 0 && (
-            <span className="text-[11px] text-[#7A7487] italic">Nenhuma região pintada ainda</span>
+            <span className="text-[11px] text-[var(--on-surface-variant)] italic">Nenhuma região pintada ainda</span>
           )}
           {state.regions.map((r) => (
             <button
@@ -255,8 +255,8 @@ export default function Split3MF() {
               onClick={() => split.setBoundary({ activeRegionId: r.id })}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
                 state.boundary.activeRegionId === r.id
-                  ? "border-[#632CE5] bg-[#632CE5]/10 text-[#1A1C19]"
-                  : "border-[#E8E9E3] bg-white text-[#494455]"
+                  ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]"
+                  : "border-[var(--surface-container-high)] bg-white text-[var(--on-surface-variant)]"
               }`}
             >
               <span className="inline-block w-2 h-2 rounded-full mr-1.5 align-middle" style={{ background: r.color }} />
@@ -274,18 +274,18 @@ export default function Split3MF() {
         )}
       </div>
 
-      <div className="bg-[#F2F0F5] rounded-lg p-3 text-[11px] text-[#494455] space-y-1">
-        {selectionMode === "click" && <p><b className="text-[#1A1C19]">Clique esquerdo</b> — selecionar a peça conectada inteira</p>}
-        {selectionMode === "paint" && <p><b className="text-[#1A1C19]">Esquerda (arrastar)</b> — pintar a região ativa</p>}
-        <p><b className="text-[#1A1C19]">Direita (arrastar)</b> — apagar pintura da fronteira</p>
-        <p><b className="text-[#1A1C19]">Botão direito + arrastar</b> — girar a câmera</p>
+      <div className="bg-[#F2F0F5] rounded-lg p-3 text-[11px] text-[var(--on-surface-variant)] space-y-1">
+        {selectionMode === "click" && <p><b className="text-[var(--workbench-text)]">Clique esquerdo</b> — selecionar a peça conectada inteira</p>}
+        {selectionMode === "paint" && <p><b className="text-[var(--workbench-text)]">Esquerda (arrastar)</b> — pintar a região ativa</p>}
+        <p><b className="text-[var(--workbench-text)]">Direita (arrastar)</b> — apagar pintura da fronteira</p>
+        <p><b className="text-[var(--workbench-text)]">Botão direito + arrastar</b> — girar a câmera</p>
         <p>Roda do mouse — zoom. Botão do meio — mover.</p>
       </div>
 
       <div className="space-y-1">
         <div className="flex justify-between items-center">
-          <span className="text-[10px] uppercase tracking-wider text-[#7A7487] font-bold">Raio do pincel</span>
-          <span className="font-mono text-[11px] text-[#1A1C19]">{state.boundary.brushRadius} mm</span>
+          <span className="text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)] font-bold">Raio do pincel</span>
+          <span className="font-mono text-[11px] text-[var(--workbench-text)]">{state.boundary.brushRadius} mm</span>
         </div>
         <input
           type="range"
@@ -300,8 +300,8 @@ export default function Split3MF() {
 
       <div className="space-y-1">
         <div className="flex justify-between items-center">
-          <span className="text-[10px] uppercase tracking-wider text-[#7A7487] font-bold">Suavização</span>
-          <span className="font-mono text-[11px] text-[#1A1C19]">{state.boundary.smoothness}%</span>
+          <span className="text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)] font-bold">Suavização</span>
+          <span className="font-mono text-[11px] text-[var(--workbench-text)]">{state.boundary.smoothness}%</span>
         </div>
         <input
           type="range"
@@ -325,7 +325,7 @@ export default function Split3MF() {
         <button
           onClick={split.undo}
           disabled={!split.canUndo}
-          className="flex-1 py-1.5 rounded-lg border border-[#CAC3D8] text-[#494455] text-[11px] font-bold hover:bg-[#F2F0F5] disabled:opacity-40"
+          className="flex-1 py-1.5 rounded-lg border border-[var(--outline-variant)] text-[var(--on-surface-variant)] text-[11px] font-bold hover:bg-[#F2F0F5] disabled:opacity-40"
         >
           Desfazer
         </button>
@@ -351,27 +351,8 @@ export default function Split3MF() {
       )}
 
       <div className="flex flex-1 min-h-0">
-        <SplitPanel
-          fileName={fileName}
-          onFile={handleFile}
-          loading={loading}
-          error={error}
-          errorTone={errorTone}
-          onDismissError={() => setError(null)}
-          hasRegionMask={!!state.regionMask}
-          brushInstructions={brushControls}
-          cap={<CapMethodPicker capConfig={state.capConfig} onChange={split.setCapConfig} />}
-          connector={
-            <ConnectorPicker connectorConfig={state.connectorConfig} onChange={split.setConnectorConfig} />
-          }
-          exportBar={
-            <SplitExportBar disabled={!state.geometry || exporting} onExport={handleExport} />
-          }
-          openBoundaryKey={geometryEpoch}
-        />
-
-        <div data-testid="split3mf-viewport" className="workbench-viewport flex-1 min-w-0 min-h-0 relative bg-[#F3F4EE] h-full flex flex-col">
-          <div className="workbench-viewport flex-1 w-full relative overflow-hidden bg-[#F3F4EE]">
+        <div data-testid="split3mf-viewport" className="workbench-viewport flex-1 min-w-0 min-h-0 relative bg-[var(--surface-container-low)] h-full flex flex-col">
+          <div className="workbench-viewport flex-1 w-full relative overflow-hidden bg-[var(--surface-container-low)]">
           {/* Viewport header — anchors the 3D area as a clearly bounded viewport. */}
           <div className="absolute top-6 left-6 z-20 px-3.5 py-2.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)] space-y-1.5 pointer-events-none select-none">
             <div className="text-[var(--workbench-accent)] font-bold text-[11px] mb-1">3D Navigation Guide</div>
@@ -491,6 +472,25 @@ export default function Split3MF() {
           )}
           </div>
         </div>
+
+        <SplitPanel
+          fileName={fileName}
+          onFile={handleFile}
+          loading={loading}
+          error={error}
+          errorTone={errorTone}
+          onDismissError={() => setError(null)}
+          hasRegionMask={!!state.regionMask}
+          brushInstructions={brushControls}
+          cap={<CapMethodPicker capConfig={state.capConfig} onChange={split.setCapConfig} />}
+          connector={
+            <ConnectorPicker connectorConfig={state.connectorConfig} onChange={split.setConnectorConfig} />
+          }
+          exportBar={
+            <SplitExportBar disabled={!state.geometry || exporting} onExport={handleExport} />
+          }
+          openBoundaryKey={geometryEpoch}
+        />
       </div>
     </div>
   );

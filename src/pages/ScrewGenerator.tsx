@@ -104,16 +104,16 @@ export default function ScrewGenerator() {
   const sizes = config.system === 'metric' ? getSizeLabels('metric') : getSizeLabels('uts');
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
-      <div className="w-full md:w-[400px] bg-[#F9FAF4] border-r border-[#E2E3DD] flex flex-col">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-viewport)] border-r border-[var(--surface-container-high)] flex flex-col">
         <header className="p-6 pb-4 shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
               <Settings className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Screw Gen</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">Screw Gen</h1>
           </div>
-          <p className="text-[10px] text-[#687064] font-bold tracking-widest uppercase leading-relaxed">
+          <p className="text-[10px] text-[var(--on-surface-variant)] font-bold tracking-widest uppercase leading-relaxed">
             Parametric ISO/DIN & UTS Fasteners
           </p>
         </header>
@@ -123,7 +123,7 @@ export default function ScrewGenerator() {
             <button
               onClick={() => setActiveTab('info')}
               className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all \${
-                activeTab === 'info' ? "bg-[#E2E3DD] text-[#1A1C19] shadow" : "text-[#687064] hover:text-[#1A1C19]"
+                activeTab === 'info' ? "bg-[var(--surface-container-high)] text-[var(--workbench-text)] shadow" : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
             >
               Info
@@ -131,7 +131,7 @@ export default function ScrewGenerator() {
             <button
               onClick={() => setActiveTab('settings')}
               className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all \${
-                activeTab === 'settings' ? "bg-[#E2E3DD] text-[#1A1C19] shadow" : "text-[#687064] hover:text-[#1A1C19]"
+                activeTab === 'settings' ? "bg-[var(--surface-container-high)] text-[var(--workbench-text)] shadow" : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
             >
               Config
@@ -139,7 +139,7 @@ export default function ScrewGenerator() {
             <button
               onClick={() => setActiveTab('materials')}
               className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all \${
-                activeTab === 'materials' ? "bg-[#E2E3DD] text-[#1A1C19] shadow" : "text-[#687064] hover:text-[#1A1C19]"
+                activeTab === 'materials' ? "bg-[var(--surface-container-high)] text-[var(--workbench-text)] shadow" : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
             >
               Print
@@ -151,52 +151,52 @@ export default function ScrewGenerator() {
           {activeTab === 'info' ? (
             <section className="space-y-6 pb-10">
               <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Play className="w-3.5 h-3.5 text-[#632CE5]" />
                   Quick Start
                 </h3>
                 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD]">
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-2">1. Select a Fastener Type</h4>
-                  <p className="text-[10px] text-[#494455] leading-relaxed">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">1. Select a Fastener Type</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     Choose between screws, nuts, or washers. Adjust general parameters like diameter, thread type, and length.
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD]">
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-2">2. Customize Your Fastener</h4>
-                  <ul className="text-[10px] text-[#687064] space-y-1 ml-4 list-disc marker:text-[#632CE5] mb-2">
-                    <li><strong className="text-[#1A1C19]">Screws:</strong> Length, head type (Hex, Pan, Socket, etc.), drive type.</li>
-                    <li><strong className="text-[#1A1C19]">Nuts:</strong> Hex or square, custom thickness, and clearance.</li>
-                    <li><strong className="text-[#1A1C19]">Washers:</strong> Standard (ISO 7089) or large (ISO 7093) sizes.</li>
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">2. Customize Your Fastener</h4>
+                  <ul className="text-[10px] text-[var(--on-surface-variant)] space-y-1 ml-4 list-disc marker:text-[#632CE5] mb-2">
+                    <li><strong className="text-[var(--workbench-text)]">Screws:</strong> Length, head type (Hex, Pan, Socket, etc.), drive type.</li>
+                    <li><strong className="text-[var(--workbench-text)]">Nuts:</strong> Hex or square, custom thickness, and clearance.</li>
+                    <li><strong className="text-[var(--workbench-text)]">Washers:</strong> Standard (ISO 7089) or large (ISO 7093) sizes.</li>
                   </ul>
-                  <p className="text-[10px] text-[#687064] leading-relaxed border-t border-[#E2E3DD] pt-2">
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed border-t border-[var(--surface-container-high)] pt-2">
                     Not all combinations (e.g., a 'slot' drive on a 'hex' head) are supported by known specifications.
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD]">
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-2">3. Render and Export</h4>
-                  <p className="text-[10px] text-[#494455] leading-relaxed">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">3. Render and Export</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     Generate your fastener at the desired resolution and export it for slicing. For small screws, use a (extra) fine layer height.
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-[#632CE5]" />
                   Features
                 </h3>
                 
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="bg-[#F3F4EE] p-3 rounded-lg border border-[#E2E3DD]/50">
-                    <h5 className="text-[10px] font-bold text-[#1A1C19] mb-1">Multiple Fastener Types</h5>
-                    <p className="text-[9px] text-[#687064]">ISO/DIN/UTS screws, nuts, and washers.</p>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Multiple Fastener Types</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">ISO/DIN/UTS screws, nuts, and washers.</p>
                   </div>
-                  <div className="bg-[#F3F4EE] p-3 rounded-lg border border-[#E2E3DD]/50">
-                    <h5 className="text-[10px] font-bold text-[#1A1C19] mb-1">Precision Modeling</h5>
-                    <p className="text-[9px] text-[#687064]">Follows ISO 4017 (DIN 933), ISO 4032, ISO 7089/7093.</p>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Precision Modeling</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">Follows ISO 4017 (DIN 933), ISO 4032, ISO 7089/7093.</p>
                   </div>
                 </div>
               </div>
@@ -204,7 +204,7 @@ export default function ScrewGenerator() {
           ) : activeTab === 'settings' ? (
             <section className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Settings2 className="w-3.5 h-3.5 text-[#632CE5]" />
                   01. Fastener Type
                 </h3>
@@ -217,7 +217,7 @@ export default function ScrewGenerator() {
                       className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all \${
                         config.type === t
                           ? "bg-orange-500/10 border-orange-500/50 text-[#632CE5]"
-                          : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                          : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                       }`}
                     >
                       {t}
@@ -226,8 +226,8 @@ export default function ScrewGenerator() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
                   02. System & Size
                 </h3>
@@ -247,7 +247,7 @@ export default function ScrewGenerator() {
                       className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all \${
                         config.system === t.id
                           ? "bg-orange-500/10 border-orange-500/50 text-[#632CE5]"
-                          : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                          : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                       }`}
                     >
                       {t.label}
@@ -256,11 +256,11 @@ export default function ScrewGenerator() {
                 </div>
 
                 <div className="space-y-3 mt-4">
-                  <label className="text-[9px] uppercase font-bold text-[#494455] block">Select Size</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Select Size</label>
                   <select 
                     value={config.size}
                     onChange={(e) => setConfig({...config, size: e.target.value})}
-                    className="w-full bg-white border border-[#E2E3DD] rounded-lg p-2 text-[11px] text-[#1A1C19] outline-none focus:border-[#632CE5]"
+                    className="w-full bg-white border border-[var(--surface-container-high)] rounded-lg p-2 text-[11px] text-[var(--workbench-text)] outline-none focus:border-[#632CE5]"
                   >
                     {sizes.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -268,31 +268,31 @@ export default function ScrewGenerator() {
               </div>
 
               {config.type === 'screw' && (
-                <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                    <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                    <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                     <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
                     03. Screw Settings
                     </h3>
                     
                     <div className="space-y-3">
                         <div className="flex justify-between">
-                            <label className="text-[9px] uppercase font-bold text-[#494455]">Length (L)</label>
+                            <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Length (L)</label>
                             <span className="text-[10px] font-mono text-[#632CE5]">{config.length}mm</span>
                         </div>
                         <input 
                             type="range" min="5" max="150" step="1" 
                             value={config.length}
                             onChange={(e) => setConfig({...config, length: parseInt(e.target.value)})}
-                            className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                            className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                         />
                     </div>
 
                     <div className="space-y-3">
-                        <label className="text-[9px] uppercase font-bold text-[#494455] block">Head Type</label>
+                        <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Head Type</label>
                         <select 
                             value={config.headType}
                             onChange={(e) => setConfig({...config, headType: e.target.value as any})}
-                            className="w-full bg-white border border-[#E2E3DD] rounded-lg p-2 text-[11px] text-[#1A1C19] outline-none focus:border-[#632CE5]"
+                            className="w-full bg-white border border-[var(--surface-container-high)] rounded-lg p-2 text-[11px] text-[var(--workbench-text)] outline-none focus:border-[#632CE5]"
                         >
                             <option value="hex">Hex</option>
                             <option value="pan">Pan</option>
@@ -304,11 +304,11 @@ export default function ScrewGenerator() {
                     </div>
 
                     <div className="space-y-3">
-                        <label className="text-[9px] uppercase font-bold text-[#494455] block">Drive Type</label>
+                        <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Drive Type</label>
                         <select 
                             value={config.driveType}
                             onChange={(e) => setConfig({...config, driveType: e.target.value as any})}
-                            className="w-full bg-white border border-[#E2E3DD] rounded-lg p-2 text-[11px] text-[#1A1C19] outline-none focus:border-[#632CE5]"
+                            className="w-full bg-white border border-[var(--surface-container-high)] rounded-lg p-2 text-[11px] text-[var(--workbench-text)] outline-none focus:border-[#632CE5]"
                         >
                             <option value="none">None</option>
                             <option value="phillips">Phillips</option>
@@ -319,45 +319,45 @@ export default function ScrewGenerator() {
                     </div>
 
                     <div className="flex items-center justify-between pt-2">
-                        <label className="text-[10px] font-bold text-[#494455]">Full Thread</label>
+                        <label className="text-[10px] font-bold text-[var(--on-surface-variant)]">Full Thread</label>
                         <input 
                             type="checkbox" 
                             checked={config.fullThread}
                             onChange={(e) => setConfig({...config, fullThread: e.target.checked})}
-                            className="accent-[#632CE5] w-4 h-4 rounded bg-[#F3F4EE] border-[#E2E3DD]"
+                            className="accent-[#632CE5] w-4 h-4 rounded bg-[var(--surface-container-low)] border-[var(--surface-container-high)]"
                         />
                     </div>
 
                     {!config.fullThread && (
                         <div className="space-y-3">
                             <div className="flex justify-between">
-                                <label className="text-[9px] uppercase font-bold text-[#494455]">Thread Length</label>
+                                <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Thread Length</label>
                                 <span className="text-[10px] font-mono text-[#632CE5]">{config.threadLength}mm</span>
                             </div>
                             <input 
                                 type="range" min="1" max={config.length} step="1" 
                                 value={config.threadLength}
                                 onChange={(e) => setConfig({...config, threadLength: parseInt(e.target.value)})}
-                                className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                                className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                             />
                         </div>
                     )}
 
                     <div className="flex items-center justify-between pt-2">
-                        <label className="text-[10px] font-bold text-[#494455]">Split Screw (Flat Printing)</label>
+                        <label className="text-[10px] font-bold text-[var(--on-surface-variant)]">Split Screw (Flat Printing)</label>
                         <input 
                             type="checkbox" 
                             checked={config.splitScrew}
                             onChange={(e) => setConfig({...config, splitScrew: e.target.checked})}
-                            className="accent-[#632CE5] w-4 h-4 rounded bg-[#F3F4EE] border-[#E2E3DD]"
+                            className="accent-[#632CE5] w-4 h-4 rounded bg-[var(--surface-container-low)] border-[var(--surface-container-high)]"
                         />
                     </div>
                 </div>
               )}
 
               {config.type === 'nut' && (
-                <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                    <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                    <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                     <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
                     03. Nut Settings
                     </h3>
@@ -373,7 +373,7 @@ export default function ScrewGenerator() {
                         className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all \${
                             config.nutShape === t.id
                             ? "bg-orange-500/10 border-orange-500/50 text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                         >
                         {t.label}
@@ -383,45 +383,45 @@ export default function ScrewGenerator() {
 
                     <div className="space-y-3 pt-2">
                         <div className="flex justify-between">
-                            <label className="text-[9px] uppercase font-bold text-[#494455]">Thickness Override (0=Auto)</label>
+                            <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Thickness Override (0=Auto)</label>
                             <span className="text-[10px] font-mono text-[#632CE5]">{config.nutThicknessOverride}</span>
                         </div>
                         <input 
                             type="range" min="0" max="20" step="0.5" 
                             value={config.nutThicknessOverride}
                             onChange={(e) => setConfig({...config, nutThicknessOverride: parseFloat(e.target.value)})}
-                            className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                            className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                         />
                     </div>
 
                     <div className="space-y-3">
                         <div className="flex justify-between">
-                            <label className="text-[9px] uppercase font-bold text-[#494455]">Clearance</label>
+                            <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Clearance</label>
                             <span className="text-[10px] font-mono text-[#632CE5]">{config.clearance}</span>
                         </div>
                         <input 
                             type="range" min="-0.5" max="1" step="0.05" 
                             value={config.clearance}
                             onChange={(e) => setConfig({...config, clearance: parseFloat(e.target.value)})}
-                            className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                            className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                         />
                     </div>
 
                     <div className="flex items-center justify-between pt-2">
-                        <label className="text-[10px] font-bold text-[#494455]">Bevel Nut</label>
+                        <label className="text-[10px] font-bold text-[var(--on-surface-variant)]">Bevel Nut</label>
                         <input 
                             type="checkbox" 
                             checked={config.bevelNut}
                             onChange={(e) => setConfig({...config, bevelNut: e.target.checked})}
-                            className="accent-[#632CE5] w-4 h-4 rounded bg-[#F3F4EE] border-[#E2E3DD]"
+                            className="accent-[#632CE5] w-4 h-4 rounded bg-[var(--surface-container-low)] border-[var(--surface-container-high)]"
                         />
                     </div>
                 </div>
               )}
 
               {config.type === 'washer' && (
-                <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                    <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                    <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                     <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
                     03. Washer Settings
                     </h3>
@@ -438,7 +438,7 @@ export default function ScrewGenerator() {
                         className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all \${
                             config.washerType === t.id
                             ? "bg-orange-500/10 border-orange-500/50 text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                         >
                         {t.label}
@@ -447,19 +447,19 @@ export default function ScrewGenerator() {
                     </div>
 
                     <div className="flex items-center justify-between pt-2">
-                        <label className="text-[10px] font-bold text-[#494455]">Chamfer</label>
+                        <label className="text-[10px] font-bold text-[var(--on-surface-variant)]">Chamfer</label>
                         <input 
                             type="checkbox" 
                             checked={config.washerChamfer}
                             onChange={(e) => setConfig({...config, washerChamfer: e.target.checked})}
-                            className="accent-[#632CE5] w-4 h-4 rounded bg-[#F3F4EE] border-[#E2E3DD]"
+                            className="accent-[#632CE5] w-4 h-4 rounded bg-[var(--surface-container-low)] border-[var(--surface-container-high)]"
                         />
                     </div>
                 </div>
               )}
 
-              <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
                   04. Quality
                 </h3>
@@ -474,7 +474,7 @@ export default function ScrewGenerator() {
                       className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                         config.quality === t.id
                           ? "bg-orange-500/10 border-orange-500/50 text-[#632CE5]"
-                          : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                          : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                       }`}
                     >
                       {t.label}
@@ -483,7 +483,7 @@ export default function ScrewGenerator() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[#E2E3DD] pb-10">
+              <div className="pt-4 border-t border-[var(--surface-container-high)] pb-10">
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={handleExportSTL}
@@ -494,7 +494,7 @@ export default function ScrewGenerator() {
                   </button>
                   <button
                     onClick={handleDownloadScad}
-                    className="w-full bg-[#F3F4EE] text-[#1A1C19] py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[#CAC3D8] transition-all group"
+                    className="w-full bg-[var(--surface-container-low)] text-[var(--workbench-text)] py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[var(--outline-variant)] transition-all group"
                   >
                     <Code className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                     Download OpenSCAD (.scad)
@@ -505,28 +505,28 @@ export default function ScrewGenerator() {
           ) : (
             <section className="space-y-6 pb-10">
               <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
                   Print Recommendations
                 </h3>
                 
-                <div className="bg-white p-4 rounded-xl border border-[#E2E3DD] relative overflow-hidden">
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)] relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 blur-2xl rounded-full" />
-                  <h4 className="text-[12px] font-black text-[#1A1C19] mb-3">Material Settings</h4>
-                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[10px] text-[#494455] font-mono mb-3">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-3">Material Settings</h4>
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[10px] text-[var(--on-surface-variant)] font-mono mb-3">
                     <div>Layer Height: <span className="text-[#632CE5]">0.08 - 0.12mm</span></div>
                     <div>Infill: <span className="text-[#632CE5]">100% (Solid)</span></div>
                     <div>Perimeters: <span className="text-[#632CE5]">Min 4</span></div>
                     <div>Material: <span className="text-[#632CE5]">PETG, ABS, PC</span></div>
                   </div>
-                  <p className="text-[10px] text-[#687064] leading-relaxed border-t border-[#E2E3DD]/50 pt-2">
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed border-t border-[var(--surface-container-high)]/50 pt-2">
                     For threaded functional parts, high strength materials like PETG or ABS are recommended. A very fine layer height (0.08mm) is crucial for small threads to engage properly.
                   </p>
                 </div>
 
                 <div className="bg-[#632CE5]/10 border border-[#632CE5]/20 p-4 rounded-xl flex gap-3 items-start">
                   <Settings className="w-4 h-4 text-[#632CE5] shrink-0 mt-0.5" />
-                  <div className="text-[10px] text-[#494455] leading-relaxed">
+                  <div className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     <strong className="text-[#632CE5] block mb-1">Clearance Tip</strong>
                     If your printed nuts are too tight, increase the clearance setting (e.g. 0.15mm or 0.2mm). All printers differ slightly in their dimensional accuracy.
                   </div>
@@ -537,21 +537,21 @@ export default function ScrewGenerator() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col h-full bg-[#F1F3ED] relative">
-        <div className="h-2/5 md:h-1/3 border-b border-[#E2E3DD] bg-white relative flex flex-col">
+      <div className="flex-1 flex flex-col h-full bg-[var(--workbench-viewport)] relative">
+        <div className="h-2/5 md:h-1/3 border-b border-[var(--surface-container-high)] bg-white relative flex flex-col">
           <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
             <Code className="w-4 h-4 text-[#632CE5]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#494455]">OpenSCAD Code</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">OpenSCAD Code</span>
           </div>
           <button
             onClick={handleCopyScad}
-            className="absolute top-4 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E2E3DD] bg-white text-[#494455] hover:text-[#632CE5] hover:border-[#632CE5]/40 text-[10px] font-bold uppercase tracking-wider transition-all"
+            className="absolute top-4 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--surface-container-high)] bg-white text-[var(--on-surface-variant)] hover:text-[#632CE5] hover:border-[#632CE5]/40 text-[10px] font-bold uppercase tracking-wider transition-all"
           >
             <Copy className="w-3.5 h-3.5" />
             Copy
           </button>
           <div className="flex-1 overflow-auto p-6 pt-12 custom-scrollbar">
-            <pre className="text-[11px] font-mono text-[#1A1C19] leading-relaxed">
+            <pre className="text-[11px] font-mono text-[var(--workbench-text)] leading-relaxed">
               {scadCode}
             </pre>
           </div>
@@ -560,7 +560,7 @@ export default function ScrewGenerator() {
         <div className="flex-1 relative">
           <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
             <Play className="w-4 h-4 text-[#632CE5]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#494455]">Preview 3D Real</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">Preview 3D Real</span>
           </div>
           <Canvas shadows camera={{ position: [0, 40, 60], fov: 45 }}>
             <color attach="background" args={["#F1F3ED"]} />

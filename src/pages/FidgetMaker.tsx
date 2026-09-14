@@ -504,16 +504,16 @@ export default function FidgetMaker() {
   const ut = (key: keyof TwistConfig, val: number) => setTwistCfg(c => ({ ...c, [key]: val }));
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* SIDEBAR */}
-      <div className="w-full md:w-[380px] bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-6 scrollbar-hide">
+      <div className="w-full md:w-[380px] bg-[var(--workbench-viewport)] border-r border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-6 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
               <Layers className="w-6 h-6 text-[#632CE5]" />
             </div>
             <div>
-              <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Fidget Maker</h1>
+              <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">Fidget Maker</h1>
               <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
                 {mode === "layers" ? "Camadas aninhadas com offset fixo" : mode === "twist" ? "Bola articulada com corte helicoidal" : "Cubo articulado com corte helicoidal"}
               </p>
@@ -522,10 +522,10 @@ export default function FidgetMaker() {
         </header>
 
         {/* MODE SELECTOR */}
-        <div className="flex bg-[#E8E9E3] rounded-lg p-1">
+        <div className="flex bg-[var(--surface-container-high)] rounded-lg p-1">
           {([["layers", "Camadas"], ["twist", "Twist Ball"], ["twistCube", "Twist Cube"]] as const).map(([m, label]) => (
             <button key={m} onClick={() => setMode(m as typeof mode)}
-              className={`flex-1 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${mode === m ? "bg-white text-[#1A1C19] shadow-sm" : "text-zinc-500 hover:text-[#1A1C19]"}`}>
+              className={`flex-1 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${mode === m ? "bg-white text-[var(--workbench-text)] shadow-sm" : "text-zinc-500 hover:text-[var(--workbench-text)]"}`}>
               {label}
             </button>
           ))}
@@ -534,10 +534,10 @@ export default function FidgetMaker() {
         {mode === "layers" ? (
           <>
             {/* TABS */}
-            <div className="flex bg-[#E8E9E3] rounded-lg p-1">
+            <div className="flex bg-[var(--surface-container-high)] rounded-lg p-1">
               {(["shape", "config"] as const).map(t => (
                 <button key={t} onClick={() => setTab(t)}
-                  className={`flex-1 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${tab === t ? "bg-white text-[#1A1C19] shadow-sm" : "text-zinc-500 hover:text-[#1A1C19]"}`}>
+                  className={`flex-1 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${tab === t ? "bg-white text-[var(--workbench-text)] shadow-sm" : "text-zinc-500 hover:text-[var(--workbench-text)]"}`}>
                   {t === "shape" ? "Forma" : "Config"}
                 </button>
               ))}
@@ -554,7 +554,7 @@ export default function FidgetMaker() {
                   <div className="grid grid-cols-4 gap-2">
                     {PRESETS.map(p => (
                       <button key={p.id} onClick={() => { setActivePreset(p.id); setUploadedSvg(null); }}
-                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${activePreset === p.id && !uploadedSvg ? "border-[#632CE5] bg-[#632CE5]/10 shadow-md" : "border-[#E8E9E3] bg-white hover:border-[#632CE5]/30"}`}>
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${activePreset === p.id && !uploadedSvg ? "border-[#632CE5] bg-[#632CE5]/10 shadow-md" : "border-[var(--surface-container-high)] bg-white hover:border-[#632CE5]/30"}`}>
                         <span className="text-xl">{p.icon}</span>
                         <span className="text-[8px] font-bold uppercase text-zinc-600">{p.name}</span>
                       </button>
@@ -570,7 +570,7 @@ export default function FidgetMaker() {
                   </h3>
                   <input ref={fileRef} type="file" accept=".svg" onChange={handleSvgUpload} className="hidden" />
                   <button onClick={() => fileRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-[#E8E9E3] rounded-xl hover:border-[#632CE5]/40 hover:bg-[#632CE5]/5 transition-all">
+                    className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-[var(--surface-container-high)] rounded-xl hover:border-[#632CE5]/40 hover:bg-[#632CE5]/5 transition-all">
                     <Upload className="w-4 h-4 text-zinc-500" />
                     <span className="text-[10px] font-bold uppercase text-zinc-500">
                       {uploadedSvg ? "SVG Carregado ✓" : "Carregar SVG"}
@@ -585,7 +585,7 @@ export default function FidgetMaker() {
                 </div>
 
                 {/* PREVIEW */}
-                <div className="bg-white rounded-xl border border-[#E8E9E3] p-4">
+                <div className="bg-white rounded-xl border border-[var(--surface-container-high)] p-4">
                   <div className="text-[9px] font-bold uppercase text-zinc-400 mb-2">Preview da Forma</div>
                   <div className="w-full h-32 flex items-center justify-center">
                     <div className="[&>svg]:w-full [&>svg]:h-full [&>svg]:block"
@@ -606,12 +606,12 @@ export default function FidgetMaker() {
                       <label className="text-[9px] uppercase font-bold text-zinc-600">Qtd. Camadas</label>
                       <div className="flex items-center gap-2">
                         <button onClick={() => u("numLayers", Math.max(1, cfg.numLayers - 1))}
-                          className="w-6 h-6 rounded bg-[#E8E9E3] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
+                          className="w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
                           <Minus className="w-3 h-3" />
                         </button>
                         <span className="text-[11px] font-mono text-[#632CE5] w-6 text-center">{cfg.numLayers}</span>
                         <button onClick={() => u("numLayers", Math.min(10, cfg.numLayers + 1))}
-                          className="w-6 h-6 rounded bg-[#E8E9E3] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
+                          className="w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>
@@ -647,7 +647,7 @@ export default function FidgetMaker() {
                   </h3>
                   <div className="space-y-3">
                     <button onClick={() => setCfg(c => ({ ...c, keyringHole: !c.keyringHole }))}
-                      className={`w-full flex items-center justify-center gap-2 py-3 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${cfg.keyringHole ? "bg-[#632CE5] text-white border-[#632CE5]" : "bg-[#E8E9E3] text-zinc-500 border-[#E8E9E3]"}`}>
+                      className={`w-full flex items-center justify-center gap-2 py-3 border rounded text-[9px] font-black uppercase tracking-widest transition-all ${cfg.keyringHole ? "bg-[#632CE5] text-white border-[#632CE5]" : "bg-[var(--surface-container-high)] text-zinc-500 border-[var(--surface-container-high)]"}`}>
                       <Circle className="w-3.5 h-3.5" />
                       Furo do Chaveiro (Maior Camada)
                     </button>
@@ -685,12 +685,12 @@ export default function FidgetMaker() {
                   <label className="text-[9px] uppercase font-bold text-zinc-600">Qtd. Gomos</label>
                   <div className="flex items-center gap-2">
                     <button onClick={() => ut("numSegments", Math.max(2, twistCfg.numSegments - 1))}
-                      className="w-6 h-6 rounded bg-[#E8E9E3] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
+                      className="w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
                       <Minus className="w-3 h-3" />
                     </button>
                     <span className="text-[11px] font-mono text-[#632CE5] w-6 text-center">{twistCfg.numSegments}</span>
                     <button onClick={() => ut("numSegments", Math.min(16, twistCfg.numSegments + 1))}
-                      className="w-6 h-6 rounded bg-[#E8E9E3] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
+                      className="w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
@@ -742,12 +742,12 @@ export default function FidgetMaker() {
                   <label className="text-[9px] uppercase font-bold text-zinc-600">Qtd. Gomos</label>
                   <div className="flex items-center gap-2">
                     <button onClick={() => ut("numSegments", Math.max(2, twistCfg.numSegments - 1))}
-                      className="w-6 h-6 rounded bg-[#E8E9E3] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
+                      className="w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
                       <Minus className="w-3 h-3" />
                     </button>
                     <span className="text-[11px] font-mono text-[#632CE5] w-6 text-center">{twistCfg.numSegments}</span>
                     <button onClick={() => ut("numSegments", Math.min(16, twistCfg.numSegments + 1))}
-                      className="w-6 h-6 rounded bg-[#E8E9E3] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
+                      className="w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center hover:bg-[#632CE5]/20 transition-colors">
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
@@ -777,7 +777,7 @@ export default function FidgetMaker() {
         ) : null}
 
         {/* EXPORT (shared) */}
-        <div className="pt-4 border-t border-[#E2E3DD] space-y-3">
+        <div className="pt-4 border-t border-[var(--surface-container-high)] space-y-3">
           <button onClick={handleExportSTL} disabled={!geometry}
             className="w-full bg-[#632CE5] text-white py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] disabled:opacity-40">
             <Download className="w-4 h-4" /> Exportar STL
@@ -817,8 +817,8 @@ export default function FidgetMaker() {
 
         {/* HUD */}
         <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-4 rounded-xl space-y-1">
-            <div className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">Preview 3D</div>
+          <div className="bg-white/80 backdrop-blur-md border border-[var(--surface-container-high)] p-4 rounded-xl space-y-1">
+            <div className="text-[10px] font-black text-[var(--workbench-text)] uppercase tracking-widest">Preview 3D</div>
             <div className="text-[13px] font-black text-[#632CE5] uppercase tracking-tighter">
               {mode === "layers"
                 ? `${cfg.numLayers} camadas • ${cfg.wallThickness}mm parede`
@@ -852,7 +852,7 @@ function SliderRow({ label, value, unit, min, max, step, onChange }: {
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer" />
+        className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
     </div>
   );
 }

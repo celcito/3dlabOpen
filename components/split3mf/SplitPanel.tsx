@@ -52,7 +52,7 @@ export function SplitPanel({
   }, [openBoundaryKey]);
 
   return (
-    <div className="w-[250px] shrink-0 border-r border-[#CAC3D8] bg-[#FFFFFF] flex flex-col">
+    <div className="w-[250px] shrink-0 border-l border-[var(--surface-container-high)] bg-[var(--workbench-panel)] flex flex-col">
       <div className="px-4 pt-4 pb-2">
         <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.1em] text-[#1A1C19]">
           Split 3MF

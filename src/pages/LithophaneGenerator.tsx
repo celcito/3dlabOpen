@@ -9,144 +9,14 @@ export default function LithophaneGenerator() {
   const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, isImageLoading, geometry, handleImageUpload, handleExportSTL } = generator;
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
-      {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
-        <header>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-[#632CE5]/20 flex items-center justify-center border border-[#632CE5]/30">
-              <ImageIcon className="w-4 h-4 text-[#632CE5]" />
-            </div>
-            <h1 className="text-[13px] font-black uppercase tracking-widest text-[#1A1C19]">
-              Lithophane<br/><span className="text-[#632CE5]">Generator</span>
-            </h1>
-          </div>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-            Transforme fotos em painéis 3D
-          </p>
-        </header>
-
-        <section className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-            <Upload className="w-3.5 h-3.5 text-[#632CE5]" />
-            01. Imagem
-          </h3>
-          <div className="space-y-2">
-            <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors cursor-pointer relative overflow-hidden group ${isImageLoading ? "border-[#632CE5]/50 bg-[#632CE5]/5" : "border-[#E8E9E3] hover:bg-[#E8E9E3]/50 hover:border-[#E8E9E3]"}`}>
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isImageLoading} />
-              {isImageLoading ? (
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="w-6 h-6 text-[#632CE5] animate-spin" />
-                  <span className="text-[9px] uppercase font-bold text-[#632CE5] tracking-widest">Processando...</span>
-                </div>
-              ) : imageUrl ? (
-                <>
-                  <img src={imageUrl} alt="Upload" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-10 transition-opacity" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
-                    <ImageIcon className="w-6 h-6 text-[#1A1C19]" />
-                    <span className="text-[9px] uppercase font-bold text-[#1A1C19] tracking-widest">Trocar Imagem</span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <Upload className="w-6 h-6 text-zinc-600" />
-                  <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-widest">Upload JPG/PNG</span>
-                </div>
-              )}
-            </label>
-          </div>
-        </section>
-
-        <section className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-            <Box className="w-3.5 h-3.5 text-[#632CE5]" />
-            02. Formato
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <button 
-              onClick={() => setShape("flat")}
-              className={`py-3 rounded-lg border ${shape === "flat" ? "border-[#632CE5] bg-[#632CE5]/10 text-[#212121]" : "border-[#E8E9E3] bg-[#E8E9E3] text-zinc-500"} transition-all flex flex-col items-center gap-2`}
-            >
-              <Box className="w-5 h-5" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Plano</span>
-            </button>
-            <button 
-              onClick={() => setShape("curved")}
-              className={`py-3 rounded-lg border ${shape === "curved" ? "border-[#632CE5] bg-[#632CE5]/10 text-[#212121]" : "border-[#E8E9E3] bg-[#E8E9E3] text-zinc-500"} transition-all flex flex-col items-center gap-2`}
-            >
-              <Cylinder className="w-5 h-5" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Curvo</span>
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <label className="text-[9px] uppercase font-bold text-zinc-600">Largura Máx.</label>
-              <span className="text-[10px] font-mono text-[#632CE5]">{width}mm</span>
-            </div>
-            <input type="range" min="50" max="250" value={width} onChange={(e) => setWidth(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer" />
-          </div>
-          
-          {shape === "curved" && (
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Ângulo da Curva</label>
-                <span className="text-[10px] font-mono text-[#632CE5]">{curveAngle}°</span>
-              </div>
-              <input type="range" min="60" max="360" value={curveAngle} onChange={(e) => setCurveAngle(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer" />
-            </div>
-          )}
-        </section>
-
-        <section className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-            <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
-            03. Espessura (Z)
-          </h3>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura Mín. (Branco)</label>
-              <span className="text-[10px] font-mono text-[#632CE5]">{minThick.toFixed(1)}mm</span>
-            </div>
-            <input type="range" min="0.4" max="1.6" step="0.1" value={minThick} onChange={(e) => setMinThick(parseFloat(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer" />
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura Máx. (Preto)</label>
-              <span className="text-[10px] font-mono text-[#632CE5]">{maxThick.toFixed(1)}mm</span>
-            </div>
-            <input type="range" min="1.0" max="5.0" step="0.1" value={maxThick} onChange={(e) => setMaxThick(parseFloat(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer" />
-          </div>
-        </section>
-
-        <section className="pt-6 border-t border-[#E2E3DD]">
-          <button 
-            onClick={handleExportSTL}
-            disabled={!imagePixels || isLoading}
-            className="w-full bg-gradient-to-r from-[#632CE5] to-blue-600 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(124,58,237,0.2)]"
-          >
-            {isLoading ? (
-              <span className="animate-pulse">Processando...</span>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Download STL
-              </>
-            )}
-          </button>
-        </section>
-      </div>
-
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* VIEWPORT */}
       <div className="flex-1 relative flex flex-col">
         <div className="absolute top-6 left-6 z-10 pointer-events-none">
-          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-5 rounded-xl space-y-3 w-64 shadow-2xl">
+          <div className="bg-white/80 backdrop-blur-md border border-[var(--surface-container-high)] p-5 rounded-xl space-y-3 w-64 shadow-2xl">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-[#632CE5]" />
-              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">Dicas de Impressão</span>
+              <span className="text-[10px] font-black text-[var(--workbench-text)] uppercase tracking-widest">Dicas de Impressão</span>
             </div>
             <div className="text-[10px] font-mono text-zinc-400 space-y-1">
               <p>• Use 100% Infill</p>
@@ -180,6 +50,136 @@ export default function LithophaneGenerator() {
             </Center>
           </Canvas>
         </div>
+      </div>
+
+      {/* SIDEBAR */}
+      <div className="w-full md:w-80 bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+        <header>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-[#632CE5]/20 flex items-center justify-center border border-[#632CE5]/30">
+              <ImageIcon className="w-4 h-4 text-[#632CE5]" />
+            </div>
+            <h1 className="text-[13px] font-black uppercase tracking-widest text-[var(--workbench-text)]">
+              Lithophane<br/><span className="text-[#632CE5]">Generator</span>
+            </h1>
+          </div>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+            Transforme fotos em painéis 3D
+          </p>
+        </header>
+
+        <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+            <Upload className="w-3.5 h-3.5 text-[#632CE5]" />
+            01. Imagem
+          </h3>
+          <div className="space-y-2">
+            <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors cursor-pointer relative overflow-hidden group ${isImageLoading ? "border-[#632CE5]/50 bg-[#632CE5]/5" : "border-[var(--surface-container-high)] hover:bg-[var(--surface-container-high)]/50 hover:border-[var(--surface-container-high)]"}`}>
+              <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isImageLoading} />
+              {isImageLoading ? (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-6 h-6 text-[#632CE5] animate-spin" />
+                  <span className="text-[9px] uppercase font-bold text-[#632CE5] tracking-widest">Processando...</span>
+                </div>
+              ) : imageUrl ? (
+                <>
+                  <img src={imageUrl} alt="Upload" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-10 transition-opacity" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
+                    <ImageIcon className="w-6 h-6 text-[var(--workbench-text)]" />
+                    <span className="text-[9px] uppercase font-bold text-[var(--workbench-text)] tracking-widest">Trocar Imagem</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Upload className="w-6 h-6 text-zinc-600" />
+                  <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-widest">Upload JPG/PNG</span>
+                </div>
+              )}
+            </label>
+          </div>
+        </section>
+
+        <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+            <Box className="w-3.5 h-3.5 text-[#632CE5]" />
+            02. Formato
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <button 
+              onClick={() => setShape("flat")}
+              className={`py-3 rounded-lg border ${shape === "flat" ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"} transition-all flex flex-col items-center gap-2`}
+            >
+              <Box className="w-5 h-5" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Plano</span>
+            </button>
+            <button 
+              onClick={() => setShape("curved")}
+              className={`py-3 rounded-lg border ${shape === "curved" ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"} transition-all flex flex-col items-center gap-2`}
+            >
+              <Cylinder className="w-5 h-5" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Curvo</span>
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <label className="text-[9px] uppercase font-bold text-zinc-600">Largura Máx.</label>
+              <span className="text-[10px] font-mono text-[#632CE5]">{width}mm</span>
+            </div>
+            <input type="range" min="50" max="250" value={width} onChange={(e) => setWidth(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+          </div>
+          
+          {shape === "curved" && (
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Ângulo da Curva</label>
+                <span className="text-[10px] font-mono text-[#632CE5]">{curveAngle}°</span>
+              </div>
+              <input type="range" min="60" max="360" value={curveAngle} onChange={(e) => setCurveAngle(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+            </div>
+          )}
+        </section>
+
+        <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+            <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
+            03. Espessura (Z)
+          </h3>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura Mín. (Branco)</label>
+              <span className="text-[10px] font-mono text-[#632CE5]">{minThick.toFixed(1)}mm</span>
+            </div>
+            <input type="range" min="0.4" max="1.6" step="0.1" value={minThick} onChange={(e) => setMinThick(parseFloat(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <label className="text-[9px] uppercase font-bold text-zinc-600">Espessura Máx. (Preto)</label>
+              <span className="text-[10px] font-mono text-[#632CE5]">{maxThick.toFixed(1)}mm</span>
+            </div>
+            <input type="range" min="1.0" max="5.0" step="0.1" value={maxThick} onChange={(e) => setMaxThick(parseFloat(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+          </div>
+        </section>
+
+        <section className="pt-6 border-t border-[var(--surface-container-high)]">
+          <button 
+            onClick={handleExportSTL}
+            disabled={!imagePixels || isLoading}
+            className="w-full bg-gradient-to-r from-[#632CE5] to-blue-600 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+          >
+            {isLoading ? (
+              <span className="animate-pulse">Processando...</span>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download STL
+              </>
+            )}
+          </button>
+        </section>
       </div>
     </div>
   );

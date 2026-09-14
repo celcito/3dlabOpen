@@ -9,179 +9,15 @@ export default function FilamentPainter() {
   const { layers, width, setWidth, height, setHeight, maxZ, setMaxZ, baseThickness, setBaseThickness, imageUrl, imagePixels, successMsg, handleImageUpload, addLayer, removeLayer, updateLayer, handleExportOBJ } = useFilamentPainter(createLithophaneGeometryWithColors);
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
-      {/* SIDEBAR */}
-      <div className="w-full md:w-[400px] bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
-        <header>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#632CE5] to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.3)]">
-              <Brush className="w-5 h-5 text-black" />
-            </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Filament Painter</h1>
-          </div>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Hueforge-style Multicolor 3D Prints</p>
-        </header>
-
-        <section className="space-y-6">
-          {/* IMAGE UPLOAD */}
-          <div className="space-y-4">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <ImageIcon className="w-3.5 h-3.5 text-[#632CE5]" />
-              01. Imagem Base
-            </h3>
-            
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-[#E8E9E3] border-dashed rounded-xl cursor-pointer bg-white hover:bg-[#E8E9E3] hover:border-[#632CE5]/50 transition-all overflow-hidden relative group">
-              {imageUrl ? (
-                <>
-                  <img src={imageUrl} alt="Base" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-20 transition-opacity" />
-                  <div className="relative z-10 flex flex-col items-center">
-                    <Check className="w-6 h-6 text-[#632CE5] mb-2" />
-                    <span className="text-[10px] font-bold text-[#1A1C19] uppercase tracking-widest">Imagem Carregada</span>
-                    <span className="text-[9px] text-zinc-500 mt-1">Clique para trocar</span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-6 h-6 text-zinc-500 mb-2 group-hover:text-[#632CE5] transition-colors" />
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Upload Imagem</p>
-                </div>
-              )}
-              <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handleImageUpload} />
-            </label>
-          </div>
-
-          {/* DIMENSIONS */}
-          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
-              02. Dimensões Físicas
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Largura (mm)</label>
-                <input 
-                  type="number" value={width}
-                  onChange={(e) => {
-                    const w = parseInt(e.target.value) || 0;
-                    setWidth(w);
-                    if (imagePixels) setHeight(Math.round(w * (imagePixels.h / imagePixels.w)));
-                  }}
-                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold text-center focus:border-[#632CE5] outline-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Altura (mm)</label>
-                <input 
-                  type="number" value={height}
-                  onChange={(e) => {
-                    const h = parseInt(e.target.value) || 0;
-                    setHeight(h);
-                    if (imagePixels) setWidth(Math.round(h * (imagePixels.w / imagePixels.h)));
-                  }}
-                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold text-center focus:border-[#632CE5] outline-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Max Z (mm)</label>
-                <input 
-                  type="number" step="0.1" value={maxZ}
-                  onChange={(e) => setMaxZ(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold text-center focus:border-[#632CE5] outline-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Base Z (mm)</label>
-                <input 
-                  type="number" step="0.1" value={baseThickness}
-                  onChange={(e) => setBaseThickness(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-white border border-[#E8E9E3] p-2 rounded text-[10px] text-[#212121] font-bold text-center focus:border-[#632CE5] outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* LAYERS */}
-          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-                <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
-                03. Filamentos & Trocas
-              </h3>
-              <button 
-                onClick={addLayer}
-                className="w-6 h-6 rounded bg-white hover:bg-[#E8E9E3] flex items-center justify-center text-zinc-400 hover:text-[#212121] transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <div className="space-y-2">
-              {layers.map((layer, idx) => (
-                <div key={layer.id} className="flex items-center gap-2 bg-white border border-[#E8E9E3] p-2 rounded-lg relative overflow-hidden group">
-                  <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: layer.color }} />
-                  
-                  <div className="flex-1 flex items-center gap-3 pl-2">
-                    <input 
-                      type="color" 
-                      value={layer.color}
-                      onChange={(e) => updateLayer(layer.id, { color: e.target.value })}
-                      className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
-                    />
-                    
-                    <div className="flex-1 space-y-1">
-                      <input 
-                        type="text" 
-                        value={layer.filamentName}
-                        onChange={(e) => updateLayer(layer.id, { filamentName: e.target.value })}
-                        className="w-full bg-transparent text-[10px] text-[#1A1C19] font-bold uppercase tracking-widest outline-none"
-                      />
-                      <div className="flex items-center gap-1 text-[9px] text-zinc-500 font-mono">
-                        <span>Z:</span>
-                        <input 
-                          type="number" step="0.1" 
-                          value={layer.zHeight}
-                          onChange={(e) => updateLayer(layer.id, { zHeight: parseFloat(e.target.value) || 0 })}
-                          className="w-12 bg-transparent text-[#632CE5] outline-none"
-                        />
-                        <span>mm</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => removeLayer(layer.id)}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-zinc-600 hover:text-red-500 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* EXPORT */}
-          <div className="pt-6">
-            <button
-              onClick={handleExportOBJ}
-              disabled={!imagePixels}
-              className="w-full bg-gradient-to-r from-[#632CE5] to-blue-600 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(124,58,237,0.2)]"
-            >
-              <Download className="w-4 h-4" />
-              Download OBJ
-            </button>
-          </div>
-        </section>
-      </div>
-
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* MAIN VIEWPORT */}
       <div className="flex-1 relative flex flex-col">
         {/* INSTRUCTIONS OVERLAY */}
         <div className="absolute top-6 left-6 z-10 pointer-events-none">
-          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-5 rounded-xl space-y-3 w-64 shadow-2xl">
+          <div className="bg-white/80 backdrop-blur-md border border-[var(--surface-container-high)] p-5 rounded-xl space-y-3 w-64 shadow-2xl">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-[#632CE5]" />
-              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">Instruções Slicer</span>
+              <span className="text-[10px] font-black text-[var(--workbench-text)] uppercase tracking-widest">Instruções Slicer</span>
             </div>
             
             <div className="space-y-2">
@@ -191,7 +27,7 @@ export default function FilamentPainter() {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
                     <span className="text-zinc-400">{i === 0 ? "Começar com" : "Trocar para"}</span>
                   </div>
-                  <span className="text-[#1A1C19] font-bold">{i === 0 ? "Base" : `Z = ${l.zHeight.toFixed(2)}mm`}</span>
+                  <span className="text-[var(--workbench-text)] font-bold">{i === 0 ? "Base" : `Z = ${l.zHeight.toFixed(2)}mm`}</span>
                 </div>
               ))}
             </div>
@@ -248,6 +84,170 @@ export default function FilamentPainter() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* SIDEBAR */}
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+        <header>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#632CE5] to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.3)]">
+              <Brush className="w-5 h-5 text-black" />
+            </div>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">Filament Painter</h1>
+          </div>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Hueforge-style Multicolor 3D Prints</p>
+        </header>
+
+        <section className="space-y-6">
+          {/* IMAGE UPLOAD */}
+          <div className="space-y-4">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+              <ImageIcon className="w-3.5 h-3.5 text-[#632CE5]" />
+              01. Imagem Base
+            </h3>
+            
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-[var(--surface-container-high)] border-dashed rounded-xl cursor-pointer bg-white hover:bg-[var(--surface-container-high)] hover:border-[#632CE5]/50 transition-all overflow-hidden relative group">
+              {imageUrl ? (
+                <>
+                  <img src={imageUrl} alt="Base" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-20 transition-opacity" />
+                  <div className="relative z-10 flex flex-col items-center">
+                    <Check className="w-6 h-6 text-[#632CE5] mb-2" />
+                    <span className="text-[10px] font-bold text-[var(--workbench-text)] uppercase tracking-widest">Imagem Carregada</span>
+                    <span className="text-[9px] text-zinc-500 mt-1">Clique para trocar</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-6 h-6 text-zinc-500 mb-2 group-hover:text-[#632CE5] transition-colors" />
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Upload Imagem</p>
+                </div>
+              )}
+              <input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handleImageUpload} />
+            </label>
+          </div>
+
+          {/* DIMENSIONS */}
+          <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
+              02. Dimensões Físicas
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Largura (mm)</label>
+                <input 
+                  type="number" value={width}
+                  onChange={(e) => {
+                    const w = parseInt(e.target.value) || 0;
+                    setWidth(w);
+                    if (imagePixels) setHeight(Math.round(w * (imagePixels.h / imagePixels.w)));
+                  }}
+                  className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold text-center focus:border-[#632CE5] outline-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Altura (mm)</label>
+                <input 
+                  type="number" value={height}
+                  onChange={(e) => {
+                    const h = parseInt(e.target.value) || 0;
+                    setHeight(h);
+                    if (imagePixels) setWidth(Math.round(h * (imagePixels.w / imagePixels.h)));
+                  }}
+                  className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold text-center focus:border-[#632CE5] outline-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Max Z (mm)</label>
+                <input 
+                  type="number" step="0.1" value={maxZ}
+                  onChange={(e) => setMaxZ(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold text-center focus:border-[#632CE5] outline-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Base Z (mm)</label>
+                <input 
+                  type="number" step="0.1" value={baseThickness}
+                  onChange={(e) => setBaseThickness(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold text-center focus:border-[#632CE5] outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* LAYERS */}
+          <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
+                03. Filamentos & Trocas
+              </h3>
+              <button 
+                onClick={addLayer}
+                className="w-6 h-6 rounded bg-white hover:bg-[var(--surface-container-high)] flex items-center justify-center text-zinc-400 hover:text-[var(--workbench-text)] transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              {layers.map((layer, idx) => (
+                <div key={layer.id} className="flex items-center gap-2 bg-white border border-[var(--surface-container-high)] p-2 rounded-lg relative overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: layer.color }} />
+                  
+                  <div className="flex-1 flex items-center gap-3 pl-2">
+                    <input 
+                      type="color" 
+                      value={layer.color}
+                      onChange={(e) => updateLayer(layer.id, { color: e.target.value })}
+                      className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+                    />
+                    
+                    <div className="flex-1 space-y-1">
+                      <input 
+                        type="text" 
+                        value={layer.filamentName}
+                        onChange={(e) => updateLayer(layer.id, { filamentName: e.target.value })}
+                        className="w-full bg-transparent text-[10px] text-[var(--workbench-text)] font-bold uppercase tracking-widest outline-none"
+                      />
+                      <div className="flex items-center gap-1 text-[9px] text-zinc-500 font-mono">
+                        <span>Z:</span>
+                        <input 
+                          type="number" step="0.1" 
+                          value={layer.zHeight}
+                          onChange={(e) => updateLayer(layer.id, { zHeight: parseFloat(e.target.value) || 0 })}
+                          className="w-12 bg-transparent text-[#632CE5] outline-none"
+                        />
+                        <span>mm</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => removeLayer(layer.id)}
+                    className="opacity-0 group-hover:opacity-100 p-2 text-zinc-600 hover:text-red-500 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* EXPORT */}
+          <div className="pt-6">
+            <button
+              onClick={handleExportOBJ}
+              disabled={!imagePixels}
+              className="w-full bg-gradient-to-r from-[#632CE5] to-blue-600 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+            >
+              <Download className="w-4 h-4" />
+              Download OBJ
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );

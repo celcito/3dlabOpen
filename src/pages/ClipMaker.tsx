@@ -1992,21 +1992,21 @@ export default function ClipMaker() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#F9FAF4] text-[#1A1C19] font-sans overflow-hidden">
+    <div className="flex flex-col h-full bg-[var(--workbench-viewport)] text-[var(--workbench-text)] font-sans overflow-hidden">
       {/* HEADER BAR */}
-      <header className="h-14 border-b border-[#E2E3DD] bg-white px-6 flex items-center justify-between shrink-0">
+      <header className="h-14 border-b border-[var(--surface-container-high)] bg-white px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-[#632CE5]/10 border border-[#632CE5]/40 flex items-center justify-center text-[#632CE5]">
             <Paperclip className="w-4 h-4" />
           </div>
           <div>
-            <h1 className="text-xs font-black uppercase tracking-wider text-[#1A1C19] flex items-center gap-2">
+            <h1 className="text-xs font-black uppercase tracking-wider text-[var(--workbench-text)] flex items-center gap-2">
               Gerador de Clipes Decorativos 3D
               <span className="bg-[#632CE5]/10 text-[#632CE5] border border-[#632CE5]/30 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
                 PRINT-READY STL
               </span>
             </h1>
-            <p className="text-[10px] text-[#687064] font-mono">
+            <p className="text-[10px] text-[var(--on-surface-variant)] font-mono">
               Clipes para papel, planners e cadernos com topos florais, line art e fotos personalizadas
             </p>
           </div>
@@ -2020,7 +2020,7 @@ export default function ClipMaker() {
             className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 cursor-pointer ${
               isGalleryOpen 
                 ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5] shadow-sm shadow-[#632CE5]/20" 
-                : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19]"
+                : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
             }`}
             title="Abrir/fechar painel lateral com grade de miniaturas line art"
           >
@@ -2036,7 +2036,7 @@ export default function ClipMaker() {
             className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 cursor-pointer ${
               config.showPaper 
                 ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5]" 
-                : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19]"
+                : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
             }`}
             title="Simula o clipe preso a uma folha de caderno real"
           >
@@ -2049,7 +2049,7 @@ export default function ClipMaker() {
             className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 cursor-pointer ${
               config.batchGrid5x 
                 ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5]" 
-                : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19]"
+                : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
             }`}
             title="Organiza 5 clipes alinhados na mesa para produção rápida"
           >
@@ -2057,7 +2057,7 @@ export default function ClipMaker() {
             {config.batchGrid5x ? "Modo 1x Unidade" : "Kit 5x Produção"}
           </button>
 
-          <div className="h-4 w-[1px] bg-[#E8E9E3] mx-1" />
+          <div className="h-4 w-[1px] bg-[var(--surface-container-high)] mx-1" />
 
           <button
             onClick={() => handleExportSTL(config.batchGrid5x)}
@@ -2086,9 +2086,9 @@ export default function ClipMaker() {
       {/* WORKSPACE BODY: 3 COLUMNS */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT CONTROLS PANEL */}
-        <div className="w-[380px] lg:w-[400px] bg-white border-r border-[#E2E3DD] flex flex-col shrink-0 overflow-hidden">
+        <div className="w-[380px] lg:w-[400px] bg-white border-r border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden">
           {/* TABS NAVIGATION */}
-          <div className="flex border-b border-[#E2E3DD] bg-[#F9FAF4] p-1 gap-1 shrink-0">
+          <div className="flex border-b border-[var(--surface-container-high)] bg-[var(--workbench-viewport)] p-1 gap-1 shrink-0">
             {[
               { id: "preset", label: "Modelos", icon: Wand2 },
               { id: "clip", label: "Corpo do Clipe", icon: Paperclip },
@@ -2104,7 +2104,7 @@ export default function ClipMaker() {
                   className={`flex-1 py-2 px-1 text-[10px] font-black uppercase tracking-wider rounded flex flex-col items-center gap-1 transition-all cursor-pointer ${
                     isActive 
                       ? "bg-[#632CE5]/10 text-[#632CE5] border border-[#632CE5]/30" 
-                      : "text-[#687064] hover:text-[#494455] hover:bg-[#F3F4EE]/50"
+                      : "text-[var(--on-surface-variant)] hover:text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)]/50"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -2122,7 +2122,7 @@ export default function ClipMaker() {
                 {/* CATEGORY SELECTOR */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-[10px] uppercase font-mono font-bold text-[#687064]">
+                    <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)]">
                       1. Categoria de Desenhos
                     </label>
                     <button
@@ -2151,7 +2151,7 @@ export default function ClipMaker() {
                         className={`py-2 px-1 rounded text-[9px] font-bold flex flex-col items-center gap-1 border transition-all cursor-pointer ${
                           activeCategory === cat.id
                             ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         <span className="text-sm">{cat.icon}</span>
@@ -2164,10 +2164,10 @@ export default function ClipMaker() {
                 {/* PRESET CARDS WITH SVG VECTOR THUMBNAILS */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-[10px] uppercase font-mono font-bold text-[#687064]">
+                    <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)]">
                       2. Escolha o Topo Decorativo
                     </label>
-                    <span className="text-[9px] font-mono text-[#687064]">
+                    <span className="text-[9px] font-mono text-[var(--on-surface-variant)]">
                       {PRESETS.filter(p => p.category === activeCategory).length} opções
                     </span>
                   </div>
@@ -2182,11 +2182,11 @@ export default function ClipMaker() {
                           className={`p-2.5 rounded-lg border text-left cursor-pointer transition-all flex flex-col justify-between relative overflow-hidden group ${
                             isSelected
                               ? "bg-[#632CE5]/10 border-[#632CE5] shadow-sm shadow-[#632CE5]/10"
-                              : "bg-[#F3F4EE] border-[#E2E3DD] hover:border-[#CAC3D8] hover:bg-[#F3F4EE]"
+                              : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] hover:border-[var(--outline-variant)] hover:bg-[var(--surface-container-low)]"
                           }`}
                         >
                           {/* MINIATURE SVG PREVIEW */}
-                          <div className="w-full h-16 bg-[#F9FAF4] rounded border border-[#E2E3DD] mb-2 flex items-center justify-center p-1.5 relative overflow-hidden group-hover:border-[#632CE5]/40 transition-colors">
+                          <div className="w-full h-16 bg-[var(--workbench-viewport)] rounded border border-[var(--surface-container-high)] mb-2 flex items-center justify-center p-1.5 relative overflow-hidden group-hover:border-[#632CE5]/40 transition-colors">
                             <div 
                               className="w-12 h-12 text-[#632CE5] flex items-center justify-center pointer-events-none transition-transform group-hover:scale-110"
                               dangerouslySetInnerHTML={{ __html: preset.svg }}
@@ -2205,10 +2205,10 @@ export default function ClipMaker() {
                           </div>
 
                           <div>
-                            <h4 className={`text-[11px] font-black uppercase tracking-tight truncate ${isSelected ? "text-[#632CE5]" : "text-[#1A1C19]"}`}>
+                            <h4 className={`text-[11px] font-black uppercase tracking-tight truncate ${isSelected ? "text-[#632CE5]" : "text-[var(--workbench-text)]"}`}>
                               {preset.name}
                             </h4>
-                            <p className="text-[8px] text-[#687064] mt-0.5 line-clamp-1">
+                            <p className="text-[8px] text-[var(--on-surface-variant)] mt-0.5 line-clamp-1">
                               {preset.description}
                             </p>
                           </div>
@@ -2224,7 +2224,7 @@ export default function ClipMaker() {
 
                 {/* UPLOAD CUSTOM IMAGE / LOGO */}
                 <div className="pt-2">
-                  <label className="text-[10px] uppercase font-mono font-bold text-[#687064] mb-2 block">
+                  <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-2 block">
                     3. Ou Carregue Seu Próprio Desenho / Logo
                   </label>
 
@@ -2241,10 +2241,10 @@ export default function ClipMaker() {
                     className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
                       customSvgString 
                         ? "border-[#632CE5] bg-[#632CE5]/5" 
-                        : "border-[#E2E3DD] hover:border-[#CAC3D8] bg-[#F3F4EE]"
+                        : "border-[var(--surface-container-high)] hover:border-[var(--outline-variant)] bg-[var(--surface-container-low)]"
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-[#E8E9E3] flex items-center justify-center text-[#632CE5]">
+                    <div className="w-10 h-10 rounded-full bg-[var(--surface-container-high)] flex items-center justify-center text-[#632CE5]">
                       {isTracing ? (
                         <RefreshCw className="w-5 h-5 animate-spin text-[#632CE5]" />
                       ) : (
@@ -2253,10 +2253,10 @@ export default function ClipMaker() {
                     </div>
 
                     <div>
-                      <span className="text-xs font-bold text-[#1A1C19] block">
+                      <span className="text-xs font-bold text-[var(--workbench-text)] block">
                         {customImageName ? customImageName : "Enviar SVG, PNG ou Foto"}
                       </span>
-                      <span className="text-[9px] font-mono text-[#687064] block mt-0.5">
+                      <span className="text-[9px] font-mono text-[var(--on-surface-variant)] block mt-0.5">
                         {isTracing ? "Vetorizando contorno em tempo real..." : "Vetorização automática e instantânea em relevo 3D"}
                       </span>
                     </div>
@@ -2276,7 +2276,7 @@ export default function ClipMaker() {
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
                       showSvgEditor
                         ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                        : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                        : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -2289,7 +2289,7 @@ export default function ClipMaker() {
                   {showSvgEditor && (
                     <div className="mt-2 space-y-2 animate-in fade-in duration-150">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-mono text-[#687064]">
+                        <span className="text-[9px] font-mono text-[var(--on-surface-variant)]">
                           {customSvgString ? "SVG editado (personalizado)" : "SVG do preset — editando cria cópia"}
                         </span>
                         <button
@@ -2306,10 +2306,10 @@ export default function ClipMaker() {
                         value={customSvgString || currentSvg}
                         onChange={(e) => setCustomSvgString(e.target.value)}
                         spellCheck={false}
-                        className="w-full h-48 p-3 rounded-lg border border-[#E2E3DD] bg-[#1A1C19] text-[#A1FC76] font-mono text-[10px] leading-relaxed resize-y focus:outline-none focus:border-[#632CE5] focus:ring-1 focus:ring-[#632CE5]/30 transition-all"
+                        className="w-full h-48 p-3 rounded-lg border border-[var(--surface-container-high)] bg-[#1A1C19] text-[#A1FC76] font-mono text-[10px] leading-relaxed resize-y focus:outline-none focus:border-[#632CE5] focus:ring-1 focus:ring-[#632CE5]/30 transition-all"
                         placeholder="<svg viewBox='0 0 100 100'>...</svg>"
                       />
-                      <p className="text-[8px] text-[#687064] font-mono">
+                      <p className="text-[8px] text-[var(--on-surface-variant)] font-mono">
                         Edite o SVG acima — a pré-visualização 3D atualiza em tempo real
                       </p>
                     </div>
@@ -2324,7 +2324,7 @@ export default function ClipMaker() {
               <div className="space-y-5 animate-in fade-in duration-200">
                 {/* SIZE CATEGORY SELECTOR */}
                 <div>
-                  <label className="text-[10px] uppercase font-mono font-bold text-[#687064] mb-2 block">
+                  <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-2 block">
                     Tamanho Padrão
                   </label>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -2344,11 +2344,11 @@ export default function ClipMaker() {
                         className={`p-2 rounded text-center border transition-all ${
                           config.sizeCategory === size.id
                             ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         <div className="text-[10px] font-black uppercase">{size.label}</div>
-                        <div className="text-[8px] font-mono text-[#687064]">{size.desc}</div>
+                        <div className="text-[8px] font-mono text-[var(--on-surface-variant)]">{size.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -2356,7 +2356,7 @@ export default function ClipMaker() {
 
                 {/* CLIP BODY STYLE */}
                 <div>
-                  <label className="text-[10px] uppercase font-mono font-bold text-[#687064] mb-2 block">
+                  <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-2 block">
                     Modelo do Clipe (Entrada 100% Aberta)
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -2372,21 +2372,21 @@ export default function ClipMaker() {
                         className={`p-2.5 rounded-lg border text-left transition-all ${
                           config.bodyStyle === st.id
                             ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         <div className="flex items-center gap-1.5">
                           <span>{st.icon}</span>
                           <div className="text-[10px] font-black uppercase tracking-tight">{st.label}</div>
                         </div>
-                        <div className="text-[8px] text-[#687064] mt-1 leading-tight">{st.desc}</div>
+                        <div className="text-[8px] text-[var(--on-surface-variant)] mt-1 leading-tight">{st.desc}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* --- SEÇÃO DO CABINHO / HASTE DE ELEVAÇÃO --- */}
-                <div className="p-3.5 rounded-xl bg-[#F3F4EE] border border-[#632CE5]/30 space-y-3.5 shadow-sm">
+                <div className="p-3.5 rounded-xl bg-[var(--surface-container-low)] border border-[#632CE5]/30 space-y-3.5 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🌿</span>
@@ -2394,7 +2394,7 @@ export default function ClipMaker() {
                         <h4 className="text-xs font-black uppercase text-[#632CE5] tracking-tight">
                           Cabinho / Haste de Elevação
                         </h4>
-                        <p className="text-[9px] text-[#494455]">
+                        <p className="text-[9px] text-[var(--on-surface-variant)]">
                           Separa o desenho do clipe para não atrapalhar o encaixe em papéis
                         </p>
                       </div>
@@ -2406,7 +2406,7 @@ export default function ClipMaker() {
 
                   {/* STEM STYLE SELECTOR */}
                   <div>
-                    <label className="text-[9px] uppercase font-mono font-bold text-[#687064] mb-1.5 block">
+                    <label className="text-[9px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-1.5 block">
                       Modelo do Cabinho
                     </label>
                     <div className="grid grid-cols-3 gap-1.5">
@@ -2427,7 +2427,7 @@ export default function ClipMaker() {
                           className={`p-1.5 rounded-lg border text-left flex items-center gap-1.5 transition-all ${
                             config.stemStyle === item.id
                               ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                              : "bg-white border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                              : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                           }`}
                         >
                           <span className="text-xs">{item.icon}</span>
@@ -2440,7 +2440,7 @@ export default function ClipMaker() {
                   {/* STEM HEIGHT SLIDER & QUICK PILLS */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Comprimento do Cabinho</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Comprimento do Cabinho</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.stemHeight || 0} mm</span>
                     </div>
 
@@ -2462,7 +2462,7 @@ export default function ClipMaker() {
                           className={`flex-1 py-1 text-[8px] font-mono font-bold rounded border transition-all ${
                             config.stemHeight === pill.h
                               ? "bg-[#632CE5] text-white border-[#632CE5]"
-                              : "bg-white border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19]"
+                              : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                           }`}
                         >
                           {pill.label}
@@ -2477,17 +2477,17 @@ export default function ClipMaker() {
                       step="1"
                       value={config.stemHeight || 0}
                       onChange={e => setConfig(prev => ({ ...prev, stemHeight: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* ARREDONDAMENTO DO ENCONTRO / CÁLICE FLORAL */}
-                  <div className="pt-2 border-t border-[#E2E3DD] space-y-1.5">
+                  <div className="pt-2 border-t border-[var(--surface-container-high)] space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Arredondamento do Encontro (Cálice Floral)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Arredondamento do Encontro (Cálice Floral)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.stemCalyxWidth || 6.5} mm</span>
                     </div>
-                    <p className="text-[8px] text-[#687064] font-mono">
+                    <p className="text-[8px] text-[var(--on-surface-variant)] font-mono">
                       Suaviza a transição entre o clipe e a decoração com curvas orgânicas abauladas
                     </p>
                     <input
@@ -2497,19 +2497,19 @@ export default function ClipMaker() {
                       step="0.5"
                       value={config.stemCalyxWidth || 6.5}
                       onChange={e => setConfig(prev => ({ ...prev, stemCalyxWidth: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* LEAF CONTROLS (IF BOTANICAL OR LEAVES ENABLED) */}
                   {(config.stemStyle === "botanical_leaves" || config.stemLeaves) && (
-                    <div className="pt-1 border-t border-[#E2E3DD] space-y-2">
+                    <div className="pt-1 border-t border-[var(--surface-container-high)] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] uppercase font-mono font-bold text-[#494455]">Folhas Decorativas no Cabinho</span>
+                        <span className="text-[9px] uppercase font-mono font-bold text-[var(--on-surface-variant)]">Folhas Decorativas no Cabinho</span>
                         <button
                           onClick={() => setConfig(prev => ({ ...prev, stemLeaves: !prev.stemLeaves }))}
                           className={`px-2 py-0.5 text-[8px] font-bold rounded uppercase ${
-                            config.stemLeaves ? "bg-[#632CE5]/10 text-[#632CE5] border border-[#632CE5]/40" : "bg-[#E8E9E3] text-[#687064]"
+                            config.stemLeaves ? "bg-[#632CE5]/10 text-[#632CE5] border border-[#632CE5]/40" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]"
                           }`}
                         >
                           {config.stemLeaves ? "Ativadas" : "Desativadas"}
@@ -2518,7 +2518,7 @@ export default function ClipMaker() {
 
                       {config.stemLeaves && (
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[9px] font-mono text-[#494455]">
+                          <div className="flex justify-between text-[9px] font-mono text-[var(--on-surface-variant)]">
                             <span>Tamanho das Folhinhas</span>
                             <span className="text-[#632CE5] font-bold">{config.stemLeafSize || 6.0} mm</span>
                           </div>
@@ -2529,7 +2529,7 @@ export default function ClipMaker() {
                             step="0.5"
                             value={config.stemLeafSize || 6.0}
                             onChange={e => setConfig(prev => ({ ...prev, stemLeafSize: Number(e.target.value) }))}
-                            className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                            className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                           />
                         </div>
                       )}
@@ -2539,7 +2539,7 @@ export default function ClipMaker() {
                   {/* CLEARANCE BENEFIT BADGE */}
                   <div className="p-2 rounded-lg bg-[#E8DEFF]/50 border border-[#632CE5]/20 flex items-start gap-2">
                     <span className="text-[#632CE5] text-xs mt-0.5">✓</span>
-                    <p className="text-[9px] text-[#494455] leading-tight">
+                    <p className="text-[9px] text-[var(--on-surface-variant)] leading-tight">
                       <strong>Encaixe Livre:</strong> Com {config.stemHeight || 0}mm de elevação, o clipe abraça até {(config.stemHeight || 0) > 8 ? '20 a 30' : (config.stemHeight || 0) > 4 ? '10 a 15' : '3 a 5'} folhas sem encavalar ou amassar as bordas das páginas.
                     </p>
                   </div>
@@ -2550,7 +2550,7 @@ export default function ClipMaker() {
                   {/* Comprimento */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Comprimento do Clipe (L)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Comprimento do Clipe (L)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.clipLength} mm</span>
                     </div>
                     <input
@@ -2560,14 +2560,14 @@ export default function ClipMaker() {
                       step="1"
                       value={config.clipLength}
                       onChange={e => setConfig(prev => ({ ...prev, clipLength: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Largura */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Largura do Clipe (W)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Largura do Clipe (W)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.clipWidth} mm</span>
                     </div>
                     <input
@@ -2577,14 +2577,14 @@ export default function ClipMaker() {
                       step="0.5"
                       value={config.clipWidth}
                       onChange={e => setConfig(prev => ({ ...prev, clipWidth: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Espessura do Arame */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Espessura do Filamento (Arame)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Espessura do Filamento (Arame)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.wireThickness} mm</span>
                     </div>
                     <input
@@ -2594,17 +2594,17 @@ export default function ClipMaker() {
                       step="0.1"
                       value={config.wireThickness}
                       onChange={e => setConfig(prev => ({ ...prev, wireThickness: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Fenda / Folga de Entrada do Papel (Loop Gap) */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Abertura da Fenda de Entrada (Folga)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Abertura da Fenda de Entrada (Folga)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.loopGap || 2.2} mm</span>
                     </div>
-                    <p className="text-[8px] text-[#687064] font-mono">
+                    <p className="text-[8px] text-[var(--on-surface-variant)] font-mono">
                       Espaço livre entre as voltas para o papel entrar suavemente sem prender
                     </p>
                     <input
@@ -2614,14 +2614,14 @@ export default function ClipMaker() {
                       step="0.1"
                       value={config.loopGap || 2.2}
                       onChange={e => setConfig(prev => ({ ...prev, loopGap: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Altura Z / Profundidade */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Altura da Extrusão (Z)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Altura da Extrusão (Z)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.wireDepth} mm</span>
                     </div>
                     <input
@@ -2631,7 +2631,7 @@ export default function ClipMaker() {
                       step="0.1"
                       value={config.wireDepth}
                       onChange={e => setConfig(prev => ({ ...prev, wireDepth: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
                 </div>
@@ -2643,7 +2643,7 @@ export default function ClipMaker() {
               <div className="space-y-5 animate-in fade-in duration-200">
                 {/* TOP STYLE */}
                 <div>
-                  <label className="text-[10px] uppercase font-mono font-bold text-[#687064] mb-2 block">
+                  <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-2 block">
                     Modo de Extrusão 3D do Topo
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -2658,11 +2658,11 @@ export default function ClipMaker() {
                         className={`p-2.5 rounded-lg border text-left transition-all ${
                           config.topStyle === st.id
                             ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         <div className="text-[10px] font-black uppercase tracking-tight">{st.label}</div>
-                        <div className="text-[8px] text-[#687064] mt-1 leading-tight">{st.desc}</div>
+                        <div className="text-[8px] text-[var(--on-surface-variant)] mt-1 leading-tight">{st.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -2673,7 +2673,7 @@ export default function ClipMaker() {
                   {/* Diâmetro do Topo */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Diâmetro / Tamanho do Topo</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Diâmetro / Tamanho do Topo</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.topDiameter} mm</span>
                     </div>
                     <input
@@ -2683,14 +2683,14 @@ export default function ClipMaker() {
                       step="1"
                       value={config.topDiameter}
                       onChange={e => setConfig(prev => ({ ...prev, topDiameter: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Espessura das Linhas do Desenho */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Espessura do Traço (Line Width)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Espessura do Traço (Line Width)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.topLineWidth} mm</span>
                     </div>
                     <input
@@ -2700,14 +2700,14 @@ export default function ClipMaker() {
                       step="0.1"
                       value={config.topLineWidth}
                       onChange={e => setConfig(prev => ({ ...prev, topLineWidth: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Altura de Extrusão do Topo */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Altura do Relevo (Z)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Altura do Relevo (Z)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.topHeight} mm</span>
                     </div>
                     <input
@@ -2717,14 +2717,14 @@ export default function ClipMaker() {
                       step="0.1"
                       value={config.topHeight}
                       onChange={e => setConfig(prev => ({ ...prev, topHeight: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Sobreposição / Solda com a Haste */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Fusão com o Clipe (Overlap)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Fusão com o Clipe (Overlap)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.topOverlap} mm</span>
                     </div>
                     <input
@@ -2734,7 +2734,7 @@ export default function ClipMaker() {
                       step="0.5"
                       value={config.topOverlap}
                       onChange={e => setConfig(prev => ({ ...prev, topOverlap: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
@@ -2746,7 +2746,7 @@ export default function ClipMaker() {
                       </span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.stemHeight || 0} mm</span>
                     </div>
-                    <p className="text-[8px] text-[#494455] leading-tight">
+                    <p className="text-[8px] text-[var(--on-surface-variant)] leading-tight">
                       Eleva o desenho do topo para não bloquear as folhas de papel
                     </p>
                     <input
@@ -2756,18 +2756,18 @@ export default function ClipMaker() {
                       step="1"
                       value={config.stemHeight || 0}
                       onChange={e => setConfig(prev => ({ ...prev, stemHeight: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Ângulo de Rotação do Topo */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Inclinação / Rotação do Topo</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Inclinação / Rotação do Topo</span>
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => setConfig(prev => ({ ...prev, topAngle: 0 }))}
-                          className="text-[9px] font-mono text-[#687064] hover:text-[#1A1C19] px-1 bg-[#E8E9E3] rounded"
+                          className="text-[9px] font-mono text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] px-1 bg-[var(--surface-container-high)] rounded"
                         >
                           Reset 0°
                         </button>
@@ -2781,14 +2781,14 @@ export default function ClipMaker() {
                       step="5"
                       value={config.topAngle}
                       onChange={e => setConfig(prev => ({ ...prev, topAngle: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Deslocamento Lateral X */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <span className="font-mono text-[#494455] text-[10px] uppercase font-bold">Posição Lateral (X)</span>
+                      <span className="font-mono text-[var(--on-surface-variant)] text-[10px] uppercase font-bold">Posição Lateral (X)</span>
                       <span className="font-mono text-[#632CE5] font-bold text-[10px]">{config.topOffsetX} mm</span>
                     </div>
                     <input
@@ -2798,19 +2798,19 @@ export default function ClipMaker() {
                       step="0.5"
                       value={config.topOffsetX}
                       onChange={e => setConfig(prev => ({ ...prev, topOffsetX: Number(e.target.value) }))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E8E9E3] rounded cursor-pointer"
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded cursor-pointer"
                     />
                   </div>
 
                   {/* Chanfro Suave (Bevel) */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-[#F3F4EE] border border-[#E2E3DD] mt-2">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-container-low)] border border-[var(--surface-container-high)] mt-2">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#1A1C19] block">Chanfro Suave (Bevel)</span>
-                      <span className="text-[8px] text-[#687064] block font-mono">Bordas arredondadas que facilitam a passagem em papéis</span>
+                      <span className="text-[10px] uppercase font-bold text-[var(--workbench-text)] block">Chanfro Suave (Bevel)</span>
+                      <span className="text-[8px] text-[var(--on-surface-variant)] block font-mono">Bordas arredondadas que facilitam a passagem em papéis</span>
                     </div>
                     <button
                       onClick={() => setConfig(prev => ({ ...prev, topBevel: !prev.topBevel }))}
-                      className={`w-9 h-5 rounded-full transition-colors relative ${config.topBevel ? 'bg-[#632CE5]' : 'bg-[#CAC3D8]'}`}
+                      className={`w-9 h-5 rounded-full transition-colors relative ${config.topBevel ? 'bg-[#632CE5]' : 'bg-[var(--outline-variant)]'}`}
                     >
                       <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${config.topBevel ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
                     </button>
@@ -2824,7 +2824,7 @@ export default function ClipMaker() {
               <div className="space-y-5 animate-in fade-in duration-200">
                 {/* 8 OFFICIAL PRODUCTION COLORS */}
                 <div>
-                  <label className="text-[10px] uppercase font-mono font-bold text-[#687064] mb-2 block">
+                  <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-2 block">
                     Paleta Oficial de Filamentos
                   </label>
                   <div className="grid grid-cols-5 gap-2">
@@ -2835,14 +2835,14 @@ export default function ClipMaker() {
                           key={color.hex}
                           onClick={() => setConfig(prev => ({ ...prev, clipColor: color.hex }))}
                           className={`p-2 rounded-lg border text-center flex flex-col items-center gap-1.5 transition-all ${
-                            isSelected ? "border-white scale-105 shadow-md shadow-white/10" : "border-[#E2E3DD] hover:border-[#CAC3D8] bg-[#F3F4EE]"
+                            isSelected ? "border-white scale-105 shadow-md shadow-white/10" : "border-[var(--surface-container-high)] hover:border-[var(--outline-variant)] bg-[var(--surface-container-low)]"
                           }`}
                         >
                           <div 
                             className="w-6 h-6 rounded-full border border-black/30 shadow-inner" 
                             style={{ backgroundColor: color.hex }}
                           />
-                          <span className="text-[8px] font-bold text-[#494455] truncate w-full text-center">
+                          <span className="text-[8px] font-bold text-[var(--on-surface-variant)] truncate w-full text-center">
                             {color.name.split(' ')[0]}
                           </span>
                         </button>
@@ -2853,7 +2853,7 @@ export default function ClipMaker() {
 
                 {/* MATERIAL FINISH */}
                 <div>
-                  <label className="text-[10px] uppercase font-mono font-bold text-[#687064] mb-2 block">
+                  <label className="text-[10px] uppercase font-mono font-bold text-[var(--on-surface-variant)] mb-2 block">
                     Acabamento de Superfície
                   </label>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -2869,34 +2869,34 @@ export default function ClipMaker() {
                         className={`p-2 rounded text-center border transition-all ${
                           config.finish === fin.id
                             ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5]"
-                            : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                            : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         <div className="text-[10px] font-black uppercase">{fin.label}</div>
-                        <div className="text-[8px] font-mono text-[#687064]">{fin.desc}</div>
+                        <div className="text-[8px] font-mono text-[var(--on-surface-variant)]">{fin.desc}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* BICOLOR TOGGLE (MULTI-MATERIAL) */}
-                <div className="p-3 rounded-lg bg-[#F3F4EE] border border-[#E2E3DD] space-y-3">
+                <div className="p-3 rounded-lg bg-[var(--surface-container-low)] border border-[var(--surface-container-high)] space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-[#1A1C19] block">Impressão Bicolor (Troca de Cor)</span>
-                      <span className="text-[8px] text-[#687064] block font-mono">Permite corpo em uma cor e topo decorativo em outra</span>
+                      <span className="text-[10px] uppercase font-bold text-[var(--workbench-text)] block">Impressão Bicolor (Troca de Cor)</span>
+                      <span className="text-[8px] text-[var(--on-surface-variant)] block font-mono">Permite corpo em uma cor e topo decorativo em outra</span>
                     </div>
                     <button
                       onClick={() => setConfig(prev => ({ ...prev, isBicolor: !prev.isBicolor }))}
-                      className={`w-9 h-5 rounded-full transition-colors relative ${config.isBicolor ? 'bg-[#632CE5]' : 'bg-[#CAC3D8]'}`}
+                      className={`w-9 h-5 rounded-full transition-colors relative ${config.isBicolor ? 'bg-[#632CE5]' : 'bg-[var(--outline-variant)]'}`}
                     >
                       <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${config.isBicolor ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
                     </button>
                   </div>
 
                   {config.isBicolor && (
-                    <div className="pt-2 border-t border-[#E2E3DD]">
-                      <label className="text-[9px] font-mono uppercase text-[#494455] mb-1.5 block">Cor do Topo Decorativo</label>
+                    <div className="pt-2 border-t border-[var(--surface-container-high)]">
+                      <label className="text-[9px] font-mono uppercase text-[var(--on-surface-variant)] mb-1.5 block">Cor do Topo Decorativo</label>
                       <div className="flex gap-1.5 overflow-x-auto pb-1">
                         {CLIP_COLORS.map(color => (
                           <button
@@ -2916,18 +2916,18 @@ export default function ClipMaker() {
           </div>
 
           {/* BOTTOM QUICK STATS & EXPORT CARD */}
-          <div className="p-4 border-t border-[#E2E3DD] bg-white space-y-3 shrink-0">
+          <div className="p-4 border-t border-[var(--surface-container-high)] bg-white space-y-3 shrink-0">
             <div className="grid grid-cols-3 gap-2 text-center font-mono">
-              <div className="bg-[#F3F4EE] p-2 rounded border border-[#E2E3DD]">
-                <span className="text-[8px] text-[#687064] block uppercase">Comprimento</span>
-                <span className="text-xs font-black text-[#1A1C19]">{config.clipLength} mm</span>
+              <div className="bg-[var(--surface-container-low)] p-2 rounded border border-[var(--surface-container-high)]">
+                <span className="text-[8px] text-[var(--on-surface-variant)] block uppercase">Comprimento</span>
+                <span className="text-xs font-black text-[var(--workbench-text)]">{config.clipLength} mm</span>
               </div>
-              <div className="bg-[#F3F4EE] p-2 rounded border border-[#E2E3DD]">
-                <span className="text-[8px] text-[#687064] block uppercase">Largura Topo</span>
-                <span className="text-xs font-black text-[#1A1C19]">{config.topDiameter} mm</span>
+              <div className="bg-[var(--surface-container-low)] p-2 rounded border border-[var(--surface-container-high)]">
+                <span className="text-[8px] text-[var(--on-surface-variant)] block uppercase">Largura Topo</span>
+                <span className="text-xs font-black text-[var(--workbench-text)]">{config.topDiameter} mm</span>
               </div>
-              <div className="bg-[#F3F4EE] p-2 rounded border border-[#E2E3DD]">
-                <span className="text-[8px] text-[#687064] block uppercase">Tempo Aprox.</span>
+              <div className="bg-[var(--surface-container-low)] p-2 rounded border border-[var(--surface-container-high)]">
+                <span className="text-[8px] text-[var(--on-surface-variant)] block uppercase">Tempo Aprox.</span>
                 <span className="text-xs font-black text-[#632CE5]">~12 min</span>
               </div>
             </div>
@@ -2935,7 +2935,7 @@ export default function ClipMaker() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleExportSTL(false)}
-                className="flex-1 py-2.5 bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#1A1C19] font-bold text-xs uppercase tracking-wider rounded border border-[#CAC3D8] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                className="flex-1 py-2.5 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--workbench-text)] font-bold text-xs uppercase tracking-wider rounded border border-[var(--outline-variant)] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 STL 1x (Unidade)
@@ -2987,7 +2987,7 @@ export default function ClipMaker() {
             {!isGalleryOpen && (
               <button
                 onClick={() => setIsGalleryOpen(true)}
-                className="px-3 py-2 bg-white hover:bg-[#F3F4EE] border border-[#632CE5]/50 text-[#632CE5] rounded-lg shadow-xl backdrop-blur-md flex items-center gap-2 text-xs font-bold transition-all cursor-pointer group hover:scale-105"
+                className="px-3 py-2 bg-white hover:bg-[var(--surface-container-low)] border border-[#632CE5]/50 text-[#632CE5] rounded-lg shadow-xl backdrop-blur-md flex items-center gap-2 text-xs font-bold transition-all cursor-pointer group hover:scale-105"
                 title="Expandir painel lateral de miniaturas"
               >
                 <LayoutGrid className="w-4 h-4 text-[#632CE5] group-hover:rotate-12 transition-transform" />
@@ -3001,7 +3001,7 @@ export default function ClipMaker() {
               className={`p-2 rounded-lg border backdrop-blur-md transition-all cursor-pointer ${
                 config.showWireframe 
                   ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]" 
-                  : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19]"
+                  : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
               }`}
               title="Alternar modo aramado / malha 3D"
             >
@@ -3011,7 +3011,7 @@ export default function ClipMaker() {
 
           {/* FLOATING CONTROLS INFO FOOTER */}
           <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between pointer-events-none">
-            <div className="bg-white/90 backdrop-blur-md shadow-lg border border-[#E2E3DD] px-3 py-1.5 rounded-lg flex items-center gap-3 text-[10px] font-mono text-[#494455] pointer-events-auto">
+            <div className="bg-white/90 backdrop-blur-md shadow-lg border border-[var(--surface-container-high)] px-3 py-1.5 rounded-lg flex items-center gap-3 text-[10px] font-mono text-[var(--on-surface-variant)] pointer-events-auto">
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
                 Preview 3D em Tempo Real
@@ -3024,29 +3024,29 @@ export default function ClipMaker() {
               <span>Botão Direito: Pan</span>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-md shadow-lg border border-[#E2E3DD] px-3 py-1.5 rounded-lg text-[10px] font-mono text-[#494455] pointer-events-auto">
-              Modelo: <strong className="text-[#1A1C19]">{activePresetId || 'Personalizado'}</strong> ({config.sizeCategory})
+            <div className="bg-white/90 backdrop-blur-md shadow-lg border border-[var(--surface-container-high)] px-3 py-1.5 rounded-lg text-[10px] font-mono text-[var(--on-surface-variant)] pointer-events-auto">
+              Modelo: <strong className="text-[var(--workbench-text)]">{activePresetId || 'Personalizado'}</strong> ({config.sizeCategory})
             </div>
           </div>
         </div>
 
         {/* --- RIGHT LATERAL PANEL: GRADE DE MINIATURAS LINE ART --- */}
         {isGalleryOpen && (
-          <aside className="w-[360px] xl:w-[410px] bg-white border-l border-[#E2E3DD] flex flex-col shrink-0 overflow-hidden shadow-2xl animate-in slide-in-from-right-4 duration-200 z-20">
+          <aside className="w-[360px] xl:w-[410px] bg-white border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden shadow-2xl animate-in slide-in-from-right-4 duration-200 z-20">
             {/* PANEL HEADER */}
-            <div className="p-3.5 border-b border-[#E2E3DD] bg-white flex items-center justify-between shrink-0">
+            <div className="p-3.5 border-b border-[var(--surface-container-high)] bg-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded bg-[#632CE5]/10 border border-[#632CE5]/30 flex items-center justify-center text-[#632CE5]">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-[#1A1C19] flex items-center gap-2">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[var(--workbench-text)] flex items-center gap-2">
                     Galeria Line Art
                     <span className="bg-[#632CE5]/10 text-[#632CE5] text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
                       {filteredGalleryPresets.length} modelos
                     </span>
                   </h3>
-                  <p className="text-[9px] text-[#687064]">
+                  <p className="text-[9px] text-[var(--on-surface-variant)]">
                     Flores, corações e formas geométricas
                   </p>
                 </div>
@@ -3058,14 +3058,14 @@ export default function ClipMaker() {
                     setGalleryCategory("all");
                     setGallerySearch("");
                   }}
-                  className="p-1.5 text-[#687064] hover:text-[#494455] hover:bg-[#F3F4EE] rounded text-[10px] transition-colors cursor-pointer"
+                  className="p-1.5 text-[var(--on-surface-variant)] hover:text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] rounded text-[10px] transition-colors cursor-pointer"
                   title="Limpar filtros"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setIsGalleryOpen(false)}
-                  className="p-1.5 text-[#687064] hover:text-[#1A1C19] hover:bg-[#E8E9E3] rounded transition-colors cursor-pointer"
+                  className="p-1.5 text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)] rounded transition-colors cursor-pointer"
                   title="Minimizar painel lateral"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -3074,20 +3074,20 @@ export default function ClipMaker() {
             </div>
 
             {/* LIVE SEARCH BAR */}
-            <div className="p-3 border-b border-[#E2E3DD] bg-white shrink-0">
+            <div className="p-3 border-b border-[var(--surface-container-high)] bg-white shrink-0">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#687064]" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)]" />
                 <input
                   type="text"
                   placeholder="Buscar rosa, coração, diamante, estrela..."
                   value={gallerySearch}
                   onChange={e => setGallerySearch(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2 bg-white border border-[#E2E3DD] focus:border-[#632CE5] rounded-md text-xs text-[#1A1C19] placeholder-[#687064] outline-none transition-colors"
+                  className="w-full pl-8 pr-8 py-2 bg-white border border-[var(--surface-container-high)] focus:border-[#632CE5] rounded-md text-xs text-[var(--workbench-text)] placeholder-[#687064] outline-none transition-colors"
                 />
                 {gallerySearch && (
                   <button
                     onClick={() => setGallerySearch("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#687064] hover:text-[#1A1C19]"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -3096,7 +3096,7 @@ export default function ClipMaker() {
             </div>
 
             {/* CATEGORY FILTER PILLS */}
-            <div className="px-3 py-2 border-b border-[#E2E3DD] bg-[#F9FAF4] flex items-center gap-1 overflow-x-auto scrollbar-none shrink-0">
+            <div className="px-3 py-2 border-b border-[var(--surface-container-high)] bg-[var(--workbench-viewport)] flex items-center gap-1 overflow-x-auto scrollbar-none shrink-0">
               {[
                 { id: "all", label: "Todos", count: PRESETS.length },
                 { id: "floral", label: "🌸 Flores", count: PRESETS.filter(p => p.category === "floral").length },
@@ -3114,11 +3114,11 @@ export default function ClipMaker() {
                     className={`px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap border transition-all cursor-pointer flex items-center gap-1.5 ${
                       isActive
                         ? "bg-[#632CE5] text-white border-[#632CE5] font-black shadow-sm shadow-[#632CE5]/20"
-                        : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19] hover:bg-[#E8E9E3]"
+                        : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]"
                     }`}
                   >
                     <span>{cat.label}</span>
-                    <span className={`text-[8px] px-1 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#E8E9E3] text-[#494455]'}`}>
+                    <span className={`text-[8px] px-1 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]'}`}>
                       {cat.count}
                     </span>
                   </button>
@@ -3130,15 +3130,15 @@ export default function ClipMaker() {
             <div className="flex-1 overflow-y-auto p-3.5 space-y-3 scrollbar-thin scrollbar-thumb-zinc-800">
               {filteredGalleryPresets.length === 0 ? (
                 <div className="text-center py-12 px-4 space-y-3">
-                  <Shapes className="w-8 h-8 text-[#7A7487] mx-auto" />
-                  <p className="text-xs text-[#494455] font-bold">Nenhum desenho encontrado</p>
-                  <p className="text-[10px] text-[#7A7487]">Tente buscar por outro termo ou limpe os filtros de categoria.</p>
+                  <Shapes className="w-8 h-8 text-[var(--on-surface-variant)] mx-auto" />
+                  <p className="text-xs text-[var(--on-surface-variant)] font-bold">Nenhum desenho encontrado</p>
+                  <p className="text-[10px] text-[var(--on-surface-variant)]">Tente buscar por outro termo ou limpe os filtros de categoria.</p>
                   <button
                     onClick={() => {
                       setGalleryCategory("all");
                       setGallerySearch("");
                     }}
-                    className="px-3 py-1.5 bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#632CE5] text-xs font-bold rounded border border-[#CAC3D8] cursor-pointer"
+                    className="px-3 py-1.5 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[#632CE5] text-xs font-bold rounded border border-[var(--outline-variant)] cursor-pointer"
                   >
                     Ver Todos os Modelos
                   </button>
@@ -3154,11 +3154,11 @@ export default function ClipMaker() {
                         className={`p-2 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between relative overflow-hidden group ${
                           isSelected
                             ? "bg-[#632CE5]/10 border-[#632CE5] ring-2 ring-[#632CE5]/40 shadow-lg shadow-[#632CE5]/15"
-                            : "bg-white border-[#E2E3DD] hover:border-[#CAC3D8] hover:bg-[#F3F4EE] hover:scale-[1.02]"
+                            : "bg-white border-[var(--surface-container-high)] hover:border-[var(--outline-variant)] hover:bg-[var(--surface-container-low)] hover:scale-[1.02]"
                         }`}
                       >
                         {/* THUMBNAIL VECTOR DISPLAY */}
-                        <div className="w-full h-24 bg-[#F3F4EE] rounded-lg border border-[#E2E3DD] mb-2 flex items-center justify-center p-2 relative overflow-hidden group-hover:border-[#632CE5]/50 transition-colors">
+                        <div className="w-full h-24 bg-[var(--surface-container-low)] rounded-lg border border-[var(--surface-container-high)] mb-2 flex items-center justify-center p-2 relative overflow-hidden group-hover:border-[#632CE5]/50 transition-colors">
                           <div
                             className="w-16 h-16 text-[#632CE5] flex items-center justify-center pointer-events-none transition-transform duration-300 group-hover:scale-115 drop-shadow-[0_0_8px_rgba(99,44,229,0.35)]"
                             dangerouslySetInnerHTML={{ __html: preset.svg }}
@@ -3189,12 +3189,12 @@ export default function ClipMaker() {
 
                         {/* NAME AND DETAILS */}
                         <div className="px-0.5 pb-0.5">
-                          <h4 className={`text-[11px] font-black uppercase tracking-tight truncate leading-tight ${isSelected ? "text-[#632CE5]" : "text-[#1A1C19]"}`}>
+                          <h4 className={`text-[11px] font-black uppercase tracking-tight truncate leading-tight ${isSelected ? "text-[#632CE5]" : "text-[var(--workbench-text)]"}`}>
                             {preset.name}
                           </h4>
-                          <div className="flex items-center justify-between mt-1 text-[8px] font-mono text-[#687064]">
+                          <div className="flex items-center justify-between mt-1 text-[8px] font-mono text-[var(--on-surface-variant)]">
                             <span className="capitalize">{preset.category}</span>
-                            <span className="text-[#494455]">
+                            <span className="text-[var(--on-surface-variant)]">
                               {preset.defaultTopStyle === "line_art" ? "Line Art" : preset.defaultTopStyle === "solid_embossed" ? "Sólido" : "Medalhão"}
                             </span>
                   </div>
@@ -3207,9 +3207,9 @@ export default function ClipMaker() {
             </div>
 
             {/* PANEL FOOTER: QUICK STYLE SWITCHER */}
-            <div className="p-3 border-t border-[#E2E3DD] bg-white space-y-2 shrink-0">
+            <div className="p-3 border-t border-[var(--surface-container-high)] bg-white space-y-2 shrink-0">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-mono uppercase text-[#494455] font-bold">Modo 3D do Topo</span>
+                <span className="text-[9px] font-mono uppercase text-[var(--on-surface-variant)] font-bold">Modo 3D do Topo</span>
                 <button
                   onClick={() => setActiveTab("top")}
                   className="text-[9px] font-mono text-[#632CE5] hover:underline flex items-center gap-0.5 cursor-pointer"
@@ -3230,7 +3230,7 @@ export default function ClipMaker() {
                     className={`py-1.5 px-1 rounded text-[9px] font-bold text-center border transition-all cursor-pointer ${
                       config.topStyle === st.id
                         ? "bg-[#632CE5]/20 border-[#632CE5] text-[#632CE5]"
-                        : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:text-[#1A1C19]"
+                        : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                     }`}
                   >
                     {st.label}

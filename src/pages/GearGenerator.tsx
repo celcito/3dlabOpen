@@ -254,24 +254,24 @@ difference() {
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* SIDEBAR */}
-      <div className="w-full md:w-[400px] bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-viewport)] border-r border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
               <Settings className="w-6 h-6 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">BOSL2 Gear Gen</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">BOSL2 Gear Gen</h1>
           </div>
-          <p className="text-[10px] text-[#687064] font-bold tracking-widest uppercase leading-relaxed">
+          <p className="text-[10px] text-[var(--on-surface-variant)] font-bold tracking-widest uppercase leading-relaxed">
             Fully parametric spur, ring, crown, bevel, worm gears, and gear racks.
           </p>
         </header>
 
         <section className="space-y-6">
           <div className="space-y-4">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
               <Settings2 className="w-3.5 h-3.5 text-[#632CE5]" />
               01. Tipo de Engrenagem
             </h3>
@@ -292,7 +292,7 @@ difference() {
                   className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                     config.type === t.id
                       ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                      : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                      : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                   }`}
                 >
                   {t.label}
@@ -301,15 +301,15 @@ difference() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+          <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
               <AlignJustify className="w-3.5 h-3.5 text-[#632CE5]" />
               02. Parâmetros Base
             </h3>
             
             <div className="space-y-3">
               <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-[#494455]">Tipo de Passo</label>
+                <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Tipo de Passo</label>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -317,7 +317,7 @@ difference() {
                   className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                     config.pitch_type === 'module'
                       ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                      : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                      : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                   }`}
                 >
                   Módulo
@@ -327,7 +327,7 @@ difference() {
                   className={`py-2 px-3 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all ${
                     config.pitch_type === 'circular'
                       ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                      : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                      : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                   }`}
                 >
                   Passo Circular
@@ -337,7 +337,7 @@ difference() {
 
             <div className="space-y-3 pt-2">
               <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-[#494455]">
+                <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">
                   {config.pitch_type === 'module' ? 'Valor do Módulo' : 'Passo Circular'}
                 </label>
                 <span className="text-[10px] font-mono text-[#632CE5]">{config.pitch_value}</span>
@@ -346,54 +346,54 @@ difference() {
                 type="range" min="0.5" max="20" step="0.5" 
                 value={config.pitch_value}
                 onChange={(e) => setConfig({...config, pitch_value: parseFloat(e.target.value)})}
-                className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             {config.type !== 'worm' && config.type !== 'rack' && (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <label className="text-[9px] uppercase font-bold text-[#494455]">Dentes (teeth)</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Dentes (teeth)</label>
                   <span className="text-[10px] font-mono text-[#632CE5]">{config.teeth}</span>
                 </div>
                 <input 
                   type="range" min="6" max="100" step="1" 
                   value={config.teeth}
                   onChange={(e) => setConfig({...config, teeth: parseInt(e.target.value)})}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                 />
               </div>
             )}
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-[#494455]">Espessura (thickness)</label>
+                <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Espessura (thickness)</label>
                 <span className="text-[10px] font-mono text-[#632CE5]">{config.thickness}</span>
               </div>
               <input 
                 type="range" min="2" max="100" step="1" 
                 value={config.thickness}
                 onChange={(e) => setConfig({...config, thickness: parseInt(e.target.value)})}
-                className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-[#494455]">Ângulo de Pressão</label>
+                <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Ângulo de Pressão</label>
                 <span className="text-[10px] font-mono text-[#632CE5]">{config.pressure_angle}°</span>
               </div>
               <input 
                 type="range" min="10" max="45" step="1" 
                 value={config.pressure_angle}
                 onChange={(e) => setConfig({...config, pressure_angle: parseFloat(e.target.value)})}
-                className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+          <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
               <Type className="w-3.5 h-3.5 text-[#632CE5]" />
               03. Específicos do Tipo
             </h3>
@@ -401,16 +401,16 @@ difference() {
             {(config.type === 'spur' || config.type === 'ring' || config.type === 'rack') && (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <label className="text-[9px] uppercase font-bold text-[#494455]">Ângulo Helicoidal</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Ângulo Helicoidal</label>
                   <span className="text-[10px] font-mono text-[#632CE5]">{config.helical}°</span>
                 </div>
                 <input 
                   type="range" min="-45" max="45" step="1" 
                   value={config.helical}
                   onChange={(e) => setConfig({...config, helical: parseInt(e.target.value)})}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                 />
-                <p className="text-[8px] text-[#687064] uppercase">Valores positivos/negativos para roscas dir/esq.</p>
+                <p className="text-[8px] text-[var(--on-surface-variant)] uppercase">Valores positivos/negativos para roscas dir/esq.</p>
               </div>
             )}
 
@@ -418,26 +418,26 @@ difference() {
               <>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Qtd Dentes Rack</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Qtd Dentes Rack</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.rack_teeth}</span>
                   </div>
                   <input 
                     type="range" min="5" max="100" step="1" 
                     value={config.rack_teeth}
                     onChange={(e) => setConfig({...config, rack_teeth: parseInt(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Altura da Base</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Altura da Base</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.rack_height}</span>
                   </div>
                   <input 
                     type="range" min="2" max="50" step="1" 
                     value={config.rack_height}
                     onChange={(e) => setConfig({...config, rack_height: parseInt(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
               </>
@@ -447,14 +447,14 @@ difference() {
               <>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Dentes da Eng. Mate</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Dentes da Eng. Mate</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.mate_teeth}</span>
                   </div>
                   <input 
                     type="range" min="6" max="100" step="1" 
                     value={config.mate_teeth}
                     onChange={(e) => setConfig({...config, mate_teeth: parseInt(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
               </>
@@ -464,18 +464,18 @@ difference() {
               <>
                 <div className="space-y-3 pt-2">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Ângulo Espiral (Spiral)</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Ângulo Espiral (Spiral)</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.spiral}°</span>
                   </div>
-                  <input type="range" min="0" max="45" step="1" value={config.spiral} onChange={(e) => setConfig({...config, spiral: parseInt(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                  <input type="range" min="0" max="45" step="1" value={config.spiral} onChange={(e) => setConfig({...config, spiral: parseInt(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Raio do Cortador (Cutter R)</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Raio do Cortador (Cutter R)</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.cutter_radius}</span>
                   </div>
-                  <input type="range" min="0" max="100" step="1" value={config.cutter_radius} onChange={(e) => setConfig({...config, cutter_radius: parseInt(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                  <p className="text-[8px] text-[#687064] uppercase">Use spiral=0 e cutter_radius=0 para dentes retos.</p>
+                  <input type="range" min="0" max="100" step="1" value={config.cutter_radius} onChange={(e) => setConfig({...config, cutter_radius: parseInt(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
+                  <p className="text-[8px] text-[var(--on-surface-variant)] uppercase">Use spiral=0 e cutter_radius=0 para dentes retos.</p>
                 </div>
               </>
             )}
@@ -484,26 +484,26 @@ difference() {
               <>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Worm Starts</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Worm Starts</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.worm_starts}</span>
                   </div>
                   <input 
                     type="range" min="1" max="10" step="1" 
                     value={config.worm_starts}
                     onChange={(e) => setConfig({...config, worm_starts: parseInt(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[#494455]">Diâmetro do Worm</label>
+                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Diâmetro do Worm</label>
                     <span className="text-[10px] font-mono text-[#632CE5]">{config.worm_diam}</span>
                   </div>
                   <input 
                     type="range" min="5" max="100" step="1" 
                     value={config.worm_diam}
                     onChange={(e) => setConfig({...config, worm_diam: parseInt(e.target.value)})}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
               </>
@@ -512,40 +512,40 @@ difference() {
             {config.type === 'worm' && (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <label className="text-[9px] uppercase font-bold text-[#494455]">Comprimento do Worm</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Comprimento do Worm</label>
                   <span className="text-[10px] font-mono text-[#632CE5]">{config.worm_length}</span>
                 </div>
                 <input 
                   type="range" min="10" max="200" step="1" 
                   value={config.worm_length}
                   onChange={(e) => setConfig({...config, worm_length: parseInt(e.target.value)})}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                 />
               </div>
             )}
           </div>
 
           {(config.type !== 'rack' && config.type !== 'ring') && (
-            <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-              <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+            <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+              <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                 <Circle className="w-3.5 h-3.5 text-[#632CE5]" />
                 Furo (Bore)
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <label className="text-[9px] uppercase font-bold text-[#494455]">Diâmetro do Furo</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Diâmetro do Furo</label>
                   <span className="text-[10px] font-mono text-[#632CE5]">{config.hole_d}</span>
                 </div>
-                <input type="range" min="0" max="50" step="0.5" value={config.hole_d} onChange={(e) => setConfig({...config, hole_d: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                <input type="range" min="0" max="50" step="0.5" value={config.hole_d} onChange={(e) => setConfig({...config, hole_d: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
               </div>
               
               {config.hole_d > 0 && (
                 <div className="space-y-3">
-                  <label className="text-[9px] uppercase font-bold text-[#494455] block">Tipo de Furo</label>
+                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Tipo de Furo</label>
                   <select 
                     value={config.bore_type} 
                     onChange={(e) => setConfig({...config, bore_type: e.target.value as BoreType})}
-                    className="w-full bg-white border border-[#E2E3DD] rounded-lg p-2 text-xs text-[#1A1C19]"
+                    className="w-full bg-white border border-[var(--surface-container-high)] rounded-lg p-2 text-xs text-[var(--workbench-text)]"
                   >
                     <option value="round">Redondo (Round)</option>
                     <option value="D">Perfil D (D-Shaft)</option>
@@ -558,15 +558,15 @@ difference() {
           )}
 
           {config.type === 'spur' && (
-            <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
+            <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
               <div className="flex items-center justify-between">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[#494455] font-black flex items-center gap-2">
+                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
                   Hub / Eixo
                 </h3>
                 <button 
                   onClick={() => setConfig({...config, hub_enabled: !config.hub_enabled})}
-                  className={`w-8 h-4 rounded-full transition-colors relative ${config.hub_enabled ? 'bg-[#632CE5]' : 'bg-[#CAC3D8]'}`}
+                  className={`w-8 h-4 rounded-full transition-colors relative ${config.hub_enabled ? 'bg-[#632CE5]' : 'bg-[var(--outline-variant)]'}`}
                 >
                   <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${config.hub_enabled ? 'left-4.5 translate-x-full' : 'left-0.5'}`} />
                 </button>
@@ -575,24 +575,24 @@ difference() {
                 <>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <label className="text-[9px] uppercase font-bold text-[#494455]">Diâmetro do Hub</label>
+                      <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Diâmetro do Hub</label>
                       <span className="text-[10px] font-mono text-[#632CE5]">{config.hub_d}</span>
                     </div>
-                    <input type="range" min="5" max="100" step="1" value={config.hub_d} onChange={(e) => setConfig({...config, hub_d: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    <input type="range" min="5" max="100" step="1" value={config.hub_d} onChange={(e) => setConfig({...config, hub_d: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <label className="text-[9px] uppercase font-bold text-[#494455]">Comprimento do Hub</label>
+                      <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Comprimento do Hub</label>
                       <span className="text-[10px] font-mono text-[#632CE5]">{config.hub_l}</span>
                     </div>
-                    <input type="range" min="1" max="50" step="1" value={config.hub_l} onChange={(e) => setConfig({...config, hub_l: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    <input type="range" min="1" max="50" step="1" value={config.hub_l} onChange={(e) => setConfig({...config, hub_l: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <label className="text-[9px] uppercase font-bold text-[#494455]">Parafuso de Fixação (Set Screw)</label>
+                      <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Parafuso de Fixação (Set Screw)</label>
                       <span className="text-[10px] font-mono text-[#632CE5]">{config.set_screw_d}mm</span>
                     </div>
-                    <input type="range" min="0" max="10" step="0.5" value={config.set_screw_d} onChange={(e) => setConfig({...config, set_screw_d: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    <input type="range" min="0" max="10" step="0.5" value={config.set_screw_d} onChange={(e) => setConfig({...config, set_screw_d: parseFloat(e.target.value)})} className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </div>
                 </>
               )}
@@ -603,19 +603,19 @@ difference() {
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleExportSTL}
-                className="w-full bg-[#632CE5] text-[#1A1C19] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group"
+                className="w-full bg-[#632CE5] text-[var(--workbench-text)] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group"
               >
                 <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                 Download Preview STL
               </button>
               <button
                 onClick={handleDownloadScad}
-                className="w-full bg-[#F3F4EE] text-[#1A1C19] py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[#CAC3D8] transition-all group"
+                className="w-full bg-[var(--surface-container-low)] text-[var(--workbench-text)] py-3 rounded-xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[var(--outline-variant)] transition-all group"
               >
                 <Code className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                 Download OpenSCAD (.scad)
               </button>
-              <p className="text-[9px] text-[#687064] text-center uppercase tracking-wider px-2">
+              <p className="text-[9px] text-[var(--on-surface-variant)] text-center uppercase tracking-wider px-2">
                 O STL gerado é uma versão simplificada de preview. Para engenharia de precisão, utilize o arquivo .scad no OpenSCAD.
               </p>
             </div>
@@ -624,11 +624,11 @@ difference() {
       </div>
 
       {/* CODE & 3D PREVIEW AREA */}
-      <div className="flex-1 flex flex-col h-full bg-[#F1F3ED] relative">
-        <div className={`${showPreview ? "h-2/5 md:h-1/2" : "flex-1"} border-b border-[#E2E3DD] bg-white relative flex flex-col`}>
+      <div className="flex-1 flex flex-col h-full bg-[var(--workbench-viewport)] relative">
+        <div className={`${showPreview ? "h-2/5 md:h-1/2" : "flex-1"} border-b border-[var(--surface-container-high)] bg-white relative flex flex-col`}>
           <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
             <Code className="w-4 h-4 text-[#632CE5]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#494455]">OpenSCAD BOSL2 Code</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">OpenSCAD BOSL2 Code</span>
           </div>
           <div className="absolute top-4 right-6 z-10 flex items-center gap-2">
             <button
@@ -636,7 +636,7 @@ difference() {
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-black uppercase tracking-widest text-[10px] transition-all ${
                 copied
                   ? "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
-                  : "bg-[#F3F4EE] border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                  : "bg-[var(--surface-container-low)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
               }`}
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -646,7 +646,7 @@ difference() {
               onClick={() => setShowPreview(!showPreview)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-black uppercase tracking-widest text-[10px] transition-all ${
                 showPreview
-                  ? "bg-white/80 backdrop-blur-md border-[#E2E3DD] text-[#494455] hover:bg-[#E8E9E3]"
+                  ? "bg-white/80 backdrop-blur-md border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)]"
                   : "bg-[#632CE5]/10 border-[#632CE5]/50 text-[#632CE5]"
               }`}
             >
@@ -655,7 +655,7 @@ difference() {
             </button>
           </div>
           <div className="flex-1 overflow-auto p-6 pt-12 custom-scrollbar">
-            <pre className="text-[11px] font-mono text-[#1A1C19] leading-relaxed">
+            <pre className="text-[11px] font-mono text-[var(--workbench-text)] leading-relaxed">
               {generateScad()}
             </pre>
           </div>
@@ -665,7 +665,7 @@ difference() {
           <div className="flex-1 relative">
             <div className="absolute top-4 left-6 z-10 flex items-center gap-2">
               <Play className="w-4 h-4 text-[#632CE5]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#494455]">Visualização Simbólica</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">Visualização Simbólica</span>
             </div>
             <Canvas shadows camera={{ position: [40, 40, 40], fov: 45 }}>
               <color attach="background" args={["#F1F3ED"]} />

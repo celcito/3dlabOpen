@@ -528,20 +528,20 @@ export default function CakeTopperCreator() {
   }, [uploadSvgFile]);
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* LEFT SIDEBAR - Tools */}
-      <div className="w-full md:w-72 bg-[#FFFFFF] border-r border-[#E2E3DD] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
+      <div className="w-full md:w-72 bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
         {/* Header */}
-        <div className="p-4 border-b border-[#E2E3DD]">
+        <div className="p-4 border-b border-[var(--surface-container-high)]">
           <div className="flex items-center gap-2 mb-1">
             <Cake className="w-5 h-5 text-[#632CE5]" />
-            <h1 className="text-sm font-black uppercase tracking-tighter text-[#1A1C19]">Topo de Bolo 3D</h1>
+            <h1 className="text-sm font-black uppercase tracking-tighter text-[var(--workbench-text)]">Topo de Bolo 3D</h1>
           </div>
           <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">Crie toppers personalizados</p>
         </div>
 
         {/* Tool Tabs */}
-        <div className="flex border-b border-[#E2E3DD]">
+        <div className="flex border-b border-[var(--surface-container-high)]">
           {([
             { id: "texto" as const, icon: Type, label: "Texto" },
             { id: "numeros" as const, icon: Hash, label: "Números" },
@@ -577,7 +577,7 @@ export default function CakeTopperCreator() {
                   type="text"
                   value={config.text}
                   onChange={(e) => updateConfig({ text: e.target.value })}
-                  className="w-full bg-[#F9FAF4] border border-[#E2E3DD] p-2.5 rounded-lg text-sm text-[#1A1C19] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
+                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
                   placeholder="DIGITE SEU TEXTO..."
                 />
               </div>
@@ -587,7 +587,7 @@ export default function CakeTopperCreator() {
                   type="text"
                   value={config.subtitle}
                   onChange={(e) => updateConfig({ subtitle: e.target.value })}
-                  className="w-full bg-[#F9FAF4] border border-[#E2E3DD] p-2.5 rounded-lg text-sm text-[#1A1C19] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
+                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
                   placeholder="Ex: Nome, Data..."
                 />
               </div>
@@ -596,7 +596,7 @@ export default function CakeTopperCreator() {
                 <select
                   value={config.fontFamily}
                   onChange={(e) => updateConfig({ fontFamily: e.target.value })}
-                  className="w-full bg-[#F9FAF4] border border-[#E2E3DD] p-2 rounded text-[10px] text-[#1A1C19] font-bold"
+                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold"
                 >
                   {TOPPER_FONTS.map((f) => (
                     <option key={f.url} value={f.url}>{f.name}</option>
@@ -612,7 +612,7 @@ export default function CakeTopperCreator() {
                   type="range" min="6" max="30" step="1"
                   value={config.fontSize}
                   onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               <div>
@@ -624,7 +624,7 @@ export default function CakeTopperCreator() {
                   type="range" min="0.5" max="8" step="0.5"
                   value={config.textThickness}
                   onChange={(e) => updateConfig({ textThickness: parseFloat(e.target.value) })}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               <div>
@@ -636,7 +636,7 @@ export default function CakeTopperCreator() {
                   type="range" min="0" max="5" step="0.2"
                   value={config.letterSpacing}
                   onChange={(e) => updateConfig({ letterSpacing: parseFloat(e.target.value) })}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               <div className="flex gap-1.5">
@@ -647,7 +647,7 @@ export default function CakeTopperCreator() {
                     className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
                       config.alignment === align
                         ? "bg-[#632CE5] text-white border-[#632CE5]"
-                        : "bg-[#F9FAF4] text-zinc-500 border-[#E2E3DD] hover:border-[#632CE5]"
+                        : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
                     }`}
                   >
                     {align === "left" ? <AlignLeft className="w-3 h-3 mx-auto" /> : align === "center" ? <AlignCenter className="w-3 h-3 mx-auto" /> : <AlignRight className="w-3 h-3 mx-auto" />}
@@ -666,7 +666,7 @@ export default function CakeTopperCreator() {
                   <button
                     key={num}
                     onClick={() => handleAddNumber(num)}
-                    className="aspect-square bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg text-lg font-black text-[#1A1C19] hover:bg-[#632CE5] hover:text-white hover:border-[#632CE5] transition-all active:scale-95"
+                    className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg text-lg font-black text-[var(--workbench-text)] hover:bg-[#632CE5] hover:text-white hover:border-[#632CE5] transition-all active:scale-95"
                   >
                     {num}
                   </button>
@@ -677,7 +677,7 @@ export default function CakeTopperCreator() {
                 <input
                   type="text"
                   placeholder="Ex: 18, 50, 1..."
-                  className="w-full bg-[#F9FAF4] border border-[#E2E3DD] p-2.5 rounded-lg text-sm text-[#1A1C19] font-bold focus:outline-none focus:border-[#632CE5]"
+                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5]"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const val = (e.target as HTMLInputElement).value.trim();
@@ -708,12 +708,12 @@ export default function CakeTopperCreator() {
                 <button
                   key={shape}
                   onClick={() => handleAddShape(shape)}
-                  className="w-full flex items-center gap-3 p-2.5 bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all text-left"
+                  className="w-full flex items-center gap-3 p-2.5 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all text-left"
                 >
                   <div className="w-8 h-8 rounded bg-[#632CE5]/10 flex items-center justify-center">
                     <Icon className="w-4 h-4 text-[#632CE5]" />
                   </div>
-                  <span className="text-[10px] font-bold uppercase text-[#1A1C19]">{label}</span>
+                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">{label}</span>
                 </button>
               ))}
             </div>
@@ -728,7 +728,7 @@ export default function CakeTopperCreator() {
                   <button
                     key={shapeType}
                     onClick={() => handleAddShape(shapeType)}
-                    className="aspect-square bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all"
+                    className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all"
                   >
                     <div className="w-8 h-8">
                       <svg viewBox="-25 -25 50 50" className="w-full h-full">
@@ -753,7 +753,7 @@ export default function CakeTopperCreator() {
                   className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
                     config.theme === key
                       ? "bg-[#632CE5]/10 border-[#632CE5]"
-                      : "bg-[#F9FAF4] border-[#E2E3DD] hover:border-[#632CE5]/30"
+                      : "bg-[var(--workbench-viewport)] border-[var(--surface-container-high)] hover:border-[#632CE5]/30"
                   }`}
                 >
                   <div className="flex gap-1">
@@ -761,7 +761,7 @@ export default function CakeTopperCreator() {
                     <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.textColor }} />
                     <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.borderColor }} />
                   </div>
-                  <span className="text-[10px] font-bold uppercase text-[#1A1C19] capitalize">
+                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)] capitalize">
                     {key.replace(/_/g, " ")}
                   </span>
                 </button>
@@ -794,20 +794,20 @@ export default function CakeTopperCreator() {
               <button
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isUploading}
-                className="w-full p-4 bg-[#F9FAF4] border-2 border-dashed border-[#E2E3DD] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
+                className="w-full p-4 bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
               >
                 {isUploading ? (
                   <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
                 ) : (
                   <ImagePlus className="w-6 h-6 text-[#632CE5]" />
                 )}
-                <span className="text-[10px] font-bold uppercase text-[#1A1C19]">
+                <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">
                   {isUploading ? "Processando..." : "Selecionar Imagem"}
                 </span>
                 <span className="text-[8px] text-zinc-400">PNG, JPG, GIF, BMP, WebP</span>
               </button>
 
-              <div className="border-t border-[#E2E3DD] pt-3">
+              <div className="border-t border-[var(--surface-container-high)] pt-3">
                 <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-2">Upload de SVG</label>
                 <p className="text-[9px] text-zinc-400 leading-relaxed mb-2">
                   SVGs vetoriais preservam qualidade perfecta e são convertidos diretamente em formas 3D.
@@ -815,21 +815,21 @@ export default function CakeTopperCreator() {
                 <button
                   onClick={() => svgInputRef.current?.click()}
                   disabled={isUploading}
-                  className="w-full p-4 bg-[#F9FAF4] border-2 border-dashed border-[#E2E3DD] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
+                  className="w-full p-4 bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
                 >
                   {isUploading ? (
                     <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
                   ) : (
                     <Upload className="w-6 h-6 text-[#632CE5]" />
                   )}
-                  <span className="text-[10px] font-bold uppercase text-[#1A1C19]">
+                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">
                     {isUploading ? "Processando..." : "Selecionar SVG"}
                   </span>
                   <span className="text-[8px] text-zinc-400">Vetor SVG</span>
                 </button>
               </div>
 
-              <div className="border-t border-[#E2E3DD] pt-3">
+              <div className="border-t border-[var(--surface-container-high)] pt-3">
                 <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-2">Dicas</label>
                 <ul className="text-[8px] text-zinc-400 space-y-1 list-disc list-inside">
                   <li>Imagens com fundo claro e contours nítidos funcionam melhor</li>
@@ -849,11 +849,11 @@ export default function CakeTopperCreator() {
                 <button
                   key={tpl.name}
                   onClick={() => loadTemplate(tpl)}
-                  className="w-full p-3 bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg hover:border-[#632CE5]/30 transition-all text-left"
+                  className="w-full p-3 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg hover:border-[#632CE5]/30 transition-all text-left"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-4 h-4 rounded-full" style={{ background: tpl.plateColor }} />
-                    <span className="text-[10px] font-black uppercase text-[#1A1C19]">{tpl.name}</span>
+                    <span className="text-[10px] font-black uppercase text-[var(--workbench-text)]">{tpl.name}</span>
                   </div>
                   <span className="text-[9px] text-zinc-400 font-bold">{tpl.text}</span>
                 </button>
@@ -863,18 +863,18 @@ export default function CakeTopperCreator() {
         </div>
 
         {/* Undo/Redo */}
-        <div className="p-3 border-t border-[#E2E3DD] flex gap-2">
+        <div className="p-3 border-t border-[var(--surface-container-high)] flex gap-2">
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="flex-1 py-2 rounded-lg bg-[#F9FAF4] border border-[#E2E3DD] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[#E8E9E3] transition-colors"
+            className="flex-1 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[var(--surface-container-high)] transition-colors"
           >
             <Undo2 className="w-3 h-3" /> Desfazer
           </button>
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="flex-1 py-2 rounded-lg bg-[#F9FAF4] border border-[#E2E3DD] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[#E8E9E3] transition-colors"
+            className="flex-1 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[var(--surface-container-high)] transition-colors"
           >
             <Redo2 className="w-3 h-3" /> Refazer
           </button>
@@ -884,10 +884,10 @@ export default function CakeTopperCreator() {
       {/* CENTER - Viewport */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Toolbar */}
-        <div className="h-10 bg-[#FFFFFF] border-b border-[#E2E3DD] flex items-center justify-between px-4 shrink-0">
+        <div className="h-10 bg-[var(--workbench-panel)] border-b border-[var(--surface-container-high)] flex items-center justify-between px-4 shrink-0">
           <div className="flex items-center gap-2">
             {/* View Mode Toggle */}
-            <div className="flex bg-[#F9FAF4] rounded-lg border border-[#E2E3DD] p-0.5">
+            <div className="flex bg-[var(--workbench-viewport)] rounded-lg border border-[var(--surface-container-high)] p-0.5">
               <button
                 onClick={() => setViewMode("2d")}
                 className={`px-3 py-1 rounded text-[9px] font-bold uppercase transition-colors ${
@@ -905,7 +905,7 @@ export default function CakeTopperCreator() {
                 3D
               </button>
             </div>
-            <div className="w-px h-5 bg-[#E2E3DD]" />
+            <div className="w-px h-5 bg-[var(--surface-container-high)]" />
             <button
               onClick={() => setShowGrid(!showGrid)}
               className={`p-1.5 rounded transition-colors ${showGrid ? "bg-[#632CE5]/10 text-[#632CE5]" : "text-zinc-400 hover:text-zinc-600"}`}
@@ -969,14 +969,14 @@ export default function CakeTopperCreator() {
               </Canvas>
             </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#F9FAF4] p-8">
+            <div className="absolute inset-0 flex items-center justify-center bg-[var(--workbench-viewport)] p-8">
               <Canvas2DPreview config={config} />
             </div>
           )}
 
           {/* HUD Overlay */}
           <div className="absolute top-4 left-4 pointer-events-none">
-            <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-3 rounded-xl space-y-1">
+            <div className="bg-white/80 backdrop-blur-md border border-[var(--surface-container-high)] p-3 rounded-xl space-y-1">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
                 <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">
@@ -991,11 +991,11 @@ export default function CakeTopperCreator() {
         </div>
 
         {/* Bottom Actions */}
-        <div className="h-14 bg-[#FFFFFF] border-t border-[#E2E3DD] flex items-center justify-between px-4 shrink-0">
+        <div className="h-14 bg-[var(--workbench-panel)] border-t border-[var(--surface-container-high)] flex items-center justify-between px-4 shrink-0">
           <div className="flex items-center gap-2">
             <button
               onClick={resetConfig}
-              className="px-3 py-2 rounded-lg bg-[#F9FAF4] border border-[#E2E3DD] text-[9px] font-bold uppercase flex items-center gap-1.5 hover:bg-[#E8E9E3] transition-colors"
+              className="px-3 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center gap-1.5 hover:bg-[var(--surface-container-high)] transition-colors"
             >
               <RefreshCw className="w-3 h-3" /> Novo
             </button>
@@ -1003,7 +1003,7 @@ export default function CakeTopperCreator() {
           <div className="flex items-center gap-2">
             <button
               onClick={runValidation}
-              className="px-4 py-2 rounded-lg bg-[#F9FAF4] border border-[#E2E3DD] text-[9px] font-bold uppercase flex items-center gap-1.5 hover:bg-[#E8E9E3] transition-colors"
+              className="px-4 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center gap-1.5 hover:bg-[var(--surface-container-high)] transition-colors"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Verificar Impressão
             </button>
@@ -1026,9 +1026,9 @@ export default function CakeTopperCreator() {
       </div>
 
       {/* RIGHT SIDEBAR - Properties */}
-      <div className="w-full md:w-72 bg-[#FFFFFF] border-l border-[#E2E3DD] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
+      <div className="w-full md:w-72 bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
         {/* Sidebar Tabs */}
-        <div className="flex border-b border-[#E2E3DD]">
+        <div className="flex border-b border-[var(--surface-container-high)]">
           <button
             onClick={() => setSidebarTab("propriedades")}
             className={`flex-1 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-colors ${
@@ -1059,22 +1059,22 @@ export default function CakeTopperCreator() {
                 <PropRow label="Largura" value={`${config.plateWidth}mm`}>
                   <input type="range" min="40" max="200" step="1" value={config.plateWidth}
                     onChange={(e) => updateConfig({ plateWidth: parseInt(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
                 <PropRow label="Altura" value={`${config.plateHeight}mm`}>
                   <input type="range" min="20" max="120" step="1" value={config.plateHeight}
                     onChange={(e) => updateConfig({ plateHeight: parseInt(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
                 <PropRow label="Espessura" value={`${config.plateThickness}mm`}>
                   <input type="range" min="0.5" max="6" step="0.5" value={config.plateThickness}
                     onChange={(e) => updateConfig({ plateThickness: parseFloat(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
                 <PropRow label="Raio Bordas" value={`${config.plateCornerRadius}mm`}>
                   <input type="range" min="0" max="20" step="1" value={config.plateCornerRadius}
                     onChange={(e) => updateConfig({ plateCornerRadius: parseInt(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
               </Section>
 
@@ -1095,7 +1095,7 @@ export default function CakeTopperCreator() {
                   <PropRow label="Espessura" value={`${config.borderWidth}mm`}>
                     <input type="range" min="0.5" max="5" step="0.5" value={config.borderWidth}
                       onChange={(e) => updateConfig({ borderWidth: parseFloat(e.target.value) })}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </PropRow>
                 )}
               </Section>
@@ -1105,22 +1105,22 @@ export default function CakeTopperCreator() {
                 <PropRow label="Quantidade" value={`${config.stickCount}`}>
                   <input type="range" min="1" max="5" step="1" value={config.stickCount}
                     onChange={(e) => updateConfig({ stickCount: parseInt(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
                 <PropRow label="Altura" value={`${config.stickHeight}mm`}>
                   <input type="range" min="20" max="150" step="1" value={config.stickHeight}
                     onChange={(e) => updateConfig({ stickHeight: parseInt(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
                 <PropRow label="Espessura" value={`${config.stickThickness}mm`}>
                   <input type="range" min="1" max="5" step="0.5" value={config.stickThickness}
                     onChange={(e) => updateConfig({ stickThickness: parseFloat(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
                 <PropRow label="Largura" value={`${config.stickWidth}mm`}>
                   <input type="range" min="2" max="10" step="0.5" value={config.stickWidth}
                     onChange={(e) => updateConfig({ stickWidth: parseFloat(e.target.value) })}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                 </PropRow>
               </Section>
 
@@ -1130,27 +1130,27 @@ export default function CakeTopperCreator() {
                   <PropRow label="Posição X" value={`${selectedElement.x}mm`}>
                     <input type="range" min={-config.plateWidth / 2} max={config.plateWidth / 2} step="1" value={selectedElement.x}
                       onChange={(e) => updateElement(selectedElement.id, { x: parseInt(e.target.value) })}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </PropRow>
                   <PropRow label="Posição Y" value={`${selectedElement.y}mm`}>
                     <input type="range" min={-config.plateHeight / 2} max={config.plateHeight / 2} step="1" value={selectedElement.y}
                       onChange={(e) => updateElement(selectedElement.id, { y: parseInt(e.target.value) })}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </PropRow>
                   <PropRow label="Escala" value={`${selectedElement.scale.toFixed(1)}x`}>
                     <input type="range" min="0.2" max="3" step="0.1" value={selectedElement.scale}
                       onChange={(e) => updateElement(selectedElement.id, { scale: parseFloat(e.target.value) })}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </PropRow>
                   <PropRow label="Rotação" value={`${selectedElement.rotation}°`}>
                     <input type="range" min="-180" max="180" step="5" value={selectedElement.rotation}
                       onChange={(e) => updateElement(selectedElement.id, { rotation: parseInt(e.target.value) })}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </PropRow>
                   <ColorField label="Cor" value={selectedElement.color} onChange={(c) => updateElement(selectedElement.id, { color: c })} />
                   <div className="flex gap-2 mt-2">
                     <button onClick={() => duplicateElement(selectedElement.id)}
-                      className="flex-1 py-1.5 rounded bg-[#F9FAF4] border border-[#E2E3DD] text-[9px] font-bold flex items-center justify-center gap-1 hover:bg-[#E8E9E3]">
+                      className="flex-1 py-1.5 rounded bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold flex items-center justify-center gap-1 hover:bg-[var(--surface-container-high)]">
                       <Copy className="w-3 h-3" /> Duplicar
                     </button>
                     <button onClick={() => removeElement(selectedElement.id)}
@@ -1172,11 +1172,11 @@ export default function CakeTopperCreator() {
                         className={`w-full flex items-center gap-2 p-2 rounded text-left transition-colors ${
                           selectedElementId === el.id
                             ? "bg-[#632CE5]/10 border border-[#632CE5]"
-                            : "bg-[#F9FAF4] border border-[#E2E3DD] hover:border-[#632CE5]/30"
+                            : "bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] hover:border-[#632CE5]/30"
                         }`}
                       >
                         <div className="w-4 h-4 rounded" style={{ background: el.color }} />
-                        <span className="text-[9px] font-bold text-[#1A1C19] truncate flex-1">
+                        <span className="text-[9px] font-bold text-[var(--workbench-text)] truncate flex-1">
                           {el.type === "shape" ? el.shapeType : el.content}
                         </span>
                         <span className="text-[8px] text-zinc-400 font-mono">{el.type}</span>
@@ -1209,7 +1209,7 @@ export default function CakeTopperCreator() {
                   <PropRow label="Espessura Reforço" value={`${config.reinforcementThickness}mm`}>
                     <input type="range" min="1" max="5" step="0.5" value={config.reinforcementThickness}
                       onChange={(e) => updateConfig({ reinforcementThickness: parseFloat(e.target.value) })}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
+                      className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer" />
                   </PropRow>
                 )}
               </Section>
@@ -1295,10 +1295,10 @@ function ToggleRow({ label, active, onToggle }: { label: string; active: boolean
   return (
     <div
       onClick={onToggle}
-      className="flex items-center justify-between p-2.5 bg-[#F9FAF4] rounded-lg border border-[#E2E3DD] cursor-pointer hover:border-[#632CE5]/30 transition-all"
+      className="flex items-center justify-between p-2.5 bg-[var(--workbench-viewport)] rounded-lg border border-[var(--surface-container-high)] cursor-pointer hover:border-[#632CE5]/30 transition-all"
     >
-      <span className="text-[9px] font-bold uppercase text-[#1A1C19]">{label}</span>
-      <div className={`w-8 h-4.5 rounded-full transition-colors relative ${active ? "bg-[#632CE5]" : "bg-[#E2E3DD]"}`}>
+      <span className="text-[9px] font-bold uppercase text-[var(--workbench-text)]">{label}</span>
+      <div className={`w-8 h-4.5 rounded-full transition-colors relative ${active ? "bg-[#632CE5]" : "bg-[var(--surface-container-high)]"}`}>
         <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${active ? "left-4" : "left-0.5"}`} />
       </div>
     </div>
@@ -1312,7 +1312,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-6 h-6 rounded border border-[#E2E3DD] cursor-pointer"
+        className="w-6 h-6 rounded border border-[var(--surface-container-high)] cursor-pointer"
       />
       <div className="flex-1">
         <label className="text-[8px] uppercase font-bold text-zinc-500 block">{label}</label>
@@ -1324,7 +1324,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
 
 function InfoBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-2">
+    <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-2">
       <label className="text-[8px] uppercase font-bold text-zinc-400 block">{label}</label>
       <span className="text-[11px] font-mono font-bold text-[#632CE5]">{value}</span>
     </div>

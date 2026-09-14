@@ -172,13 +172,13 @@ function CategoryCard({ category, index, delay = 0 }: { category: typeof TOOL_CA
                   >
                     {category.label}
                   </span>
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1A1C19] leading-none">
+                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--workbench-text)] leading-none">
                     {category.tools.filter(t => t.featured).length} Featured
                   </h2>
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-[#F5F5F0] border border-[#E8E7E0]">
-                <span className="font-mono text-[10px] text-[#7A7487]">Tools</span>
+                <span className="font-mono text-[10px] text-[var(--on-surface-variant)]">Tools</span>
                 <span
                   className="w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold text-white"
                   style={{ background: category.accent }}
@@ -229,10 +229,10 @@ function CategoryCard({ category, index, delay = 0 }: { category: typeof TOOL_CA
                       )}
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <h3 className="font-semibold text-[#1A1C19] text-base leading-snug group-hover:text-[#632CE5] transition-colors">
+                      <h3 className="font-semibold text-[var(--workbench-text)] text-base leading-snug group-hover:text-[#632CE5] transition-colors">
                         {tool.label}
                       </h3>
-                      <p className="text-[12px] text-[#7A7487] leading-relaxed mt-1 line-clamp-2">{tool.desc}</p>
+                      <p className="text-[12px] text-[var(--on-surface-variant)] leading-relaxed mt-1 line-clamp-2">{tool.desc}</p>
                     </div>
                     <motion.div
                       className="w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
@@ -292,7 +292,7 @@ function QuickActionButton({ action, index }: { action: typeof QUICK_ACTIONS[0];
           <action.icon className="w-5 h-5" strokeWidth={2} />
         </div>
         <div className="flex-1 text-left">
-          <span className="font-semibold text-[#1A1C19]">{action.label}</span>
+          <span className="font-semibold text-[var(--workbench-text)]">{action.label}</span>
           <span className="font-mono text-[10px] text-[#A09B9B] ml-2">{action.shortcut}</span>
         </div>
         <motion.div
@@ -320,8 +320,8 @@ function StatCard({ label, value, icon: Icon, accent, delay }: { label: string; 
         <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${accent}15`, color: accent }}>
           <Icon className="w-5 h-5" strokeWidth={2} />
         </div>
-        <div className="font-mono text-3xl md:text-4xl font-bold text-[#1A1C19] leading-none tracking-tight mb-1">{value}</div>
-        <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#7A7487]">{label}</div>
+        <div className="font-mono text-3xl md:text-4xl font-bold text-[var(--workbench-text)] leading-none tracking-tight mb-1">{value}</div>
+        <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--on-surface-variant)]">{label}</div>
       </div>
     </motion.div>
   );
@@ -357,7 +357,7 @@ export default function Dashboard() {
   const totalTools = TOOL_CATEGORIES.reduce((sum, cat) => sum + cat.tools.length, 0);
 
   return (
-    <div className="relative min-h-[100dvh] bg-[#F9FAF4] overflow-x-hidden">
+    <div className="relative min-h-[100dvh] bg-[var(--workbench-viewport)] overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <FloatingOrb
           style={{
@@ -404,7 +404,7 @@ export default function Dashboard() {
               <a
                 key={cat.id}
                 href={`#${cat.id}`}
-                className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#7A7487] hover:text-[#1A1C19] transition-colors relative"
+                className="font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] transition-colors relative"
               >
                 {cat.label}
                 <motion.span
@@ -438,11 +438,11 @@ export default function Dashboard() {
                 <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-[0.15em] mb-6" style={{ background: "#E8E6F7", color: "#632CE5" }}>
                   Workbench Studio
                 </span>
-                <h1 className="text-5xl md:text-7xl lg:text-[72px] font-bold tracking-tighter leading-[0.95] text-[#1A1C19] max-w-xl">
+                <h1 className="text-5xl md:text-7xl lg:text-[72px] font-bold tracking-tighter leading-[0.95] text-[var(--workbench-text)] max-w-xl">
                   Your 3D Print{" "}
                   <span style={{ color: "#632CE5" }}>Workbench</span>
                 </h1>
-                <p className="mt-6 md:mt-8 text-lg md:text-xl text-[#494455] leading-relaxed max-w-lg pr-8">
+                <p className="mt-6 md:mt-8 text-lg md:text-xl text-[var(--on-surface-variant)] leading-relaxed max-w-lg pr-8">
                   A complete suite of parametric generators, slicers & creative tools for 3D printing.
                   {totalTools} specialized tools. Zero friction. Native 3MF color support.
                 </p>
@@ -453,7 +453,7 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-[#7A7487]">
+                <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-[var(--on-surface-variant)]">
                   <div className="flex items-center gap-2">
                     <Download className="w-4 h-4" strokeWidth={2} />
                     <span>STL • 3MF • OBJ • GLTF</span>
@@ -472,14 +472,14 @@ export default function Dashboard() {
               <div className="relative hidden lg:block">
                 <div className="relative aspect-[4/3] rounded-[2.5rem] overflow-hidden" style={{ background: "#FFFFFF" }}>
                   <div className="absolute inset-0 p-[1px] rounded-[2.5rem]" style={{ background: "linear-gradient(135deg, #632CE540 0%, #00C89640 50%, #F59E0B40 100%)" }}>
-                    <div className="relative h-full rounded-[calc(2.5rem-1px)] overflow-hidden bg-[#F9FAF4]">
+                    <div className="relative h-full rounded-[calc(2.5rem-1px)] overflow-hidden bg-[var(--workbench-viewport)]">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center p-8">
                           <div className="w-24 h-24 mx-auto mb-6 rounded-2xl flex items-center justify-center relative" style={{ background: "linear-gradient(135deg, #632CE5 0%, #00C896 100%)" }}>
                             <Printer className="w-12 h-12 text-white" strokeWidth={1.5} />
                           </div>
-                          <h3 className="text-2xl font-bold text-[#1A1C19] mb-2">Live Preview</h3>
-                          <p className="text-[#7A7487]">Drop a model → paint → slice → print</p>
+                          <h3 className="text-2xl font-bold text-[var(--workbench-text)] mb-2">Live Preview</h3>
+                          <p className="text-[var(--on-surface-variant)]">Drop a model → paint → slice → print</p>
                         </div>
                       </div>
                       <div className="absolute bottom-6 left-6 right-6 flex gap-3">
@@ -531,7 +531,7 @@ export default function Dashboard() {
                     >
                       {category.label}
                     </span>
-                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1A1C19] leading-none">
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--workbench-text)] leading-none">
                       {category.tools.length} Tools
                     </h2>
                   </div>
@@ -597,7 +597,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="mt-3 flex-1 flex flex-col">
-                          <p className="text-[13px] text-[#7A7487] leading-relaxed flex-1">{tool.desc}</p>
+                          <p className="text-[13px] text-[var(--on-surface-variant)] leading-relaxed flex-1">{tool.desc}</p>
                           <div className="mt-3 pt-3 border-t border-[#E8E7E0] flex items-center justify-between">
                             <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#A09B9B]">Launch</span>
                             <motion.div
@@ -631,8 +631,8 @@ export default function Dashboard() {
                             <div className="w-16 h-16 mx-auto mb-4 rounded-xl flex items-center justify-center" style={{ background: category.accentLight }}>
                               <category.icon className="w-8 h-8" style={{ color: category.accent }} strokeWidth={2} />
                             </div>
-                            <h3 className="font-semibold text-[#1A1C19] mb-1">+ {category.tools.length - 4} More Tools</h3>
-                            <p className="text-[13px] text-[#7A7487]">Explore the full {category.label.toLowerCase()} suite</p>
+                            <h3 className="font-semibold text-[var(--workbench-text)] mb-1">+ {category.tools.length - 4} More Tools</h3>
+                            <p className="text-[13px] text-[var(--on-surface-variant)]">Explore the full {category.label.toLowerCase()} suite</p>
                           </div>
                         </div>
                       </div>
@@ -706,9 +706,9 @@ export default function Dashboard() {
                       <step.icon className="w-7 h-7" strokeWidth={1.5} />
                     </div>
                     <h3 className="font-semibold text-white text-lg mb-1">{step.label}</h3>
-                    <p className="text-[13px] text-[#7A7487]">{step.desc}</p>
+                    <p className="text-[13px] text-[var(--on-surface-variant)]">{step.desc}</p>
                     {i < 2 && (
-                      <div className="absolute top-1/2 right-[-20px] w-8 h-8 flex items-center justify-center text-[#7A7487]">
+                      <div className="absolute top-1/2 right-[-20px] w-8 h-8 flex items-center justify-center text-[var(--on-surface-variant)]">
                         <ArrowRightLeft className="w-5 h-5" strokeWidth={1.5} />
                       </div>
                     )}
@@ -724,9 +724,9 @@ export default function Dashboard() {
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <M2crLogo size={24} withWordmark={false} />
-            <span className="font-sans text-[14px] font-medium text-[#494455]">Workbench Studio</span>
+            <span className="font-sans text-[14px] font-medium text-[var(--on-surface-variant)]">Workbench Studio</span>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-[12px] text-[#7A7487]">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-[12px] text-[var(--on-surface-variant)]">
             <span>30+ parametric tools</span>
             <span className="w-px h-4 bg-[#E8E7E0]"></span>
             <span>Native 3MF color pipeline</span>
@@ -734,13 +734,13 @@ export default function Dashboard() {
             <span>Open source • MIT License</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[#7A7487] transition-colors">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
               <Box className="w-4.5 h-4.5" strokeWidth={2} />
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[#7A7487] transition-colors">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
               <Share2 className="w-4.5 h-4.5" strokeWidth={2} />
             </a>
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[#7A7487] transition-colors">
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
               <MessageSquare className="w-4.5 h-4.5" strokeWidth={2} />
             </a>
           </div>

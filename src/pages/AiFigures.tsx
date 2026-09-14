@@ -20,7 +20,7 @@ function HelpTooltip({ text, position = "top" }: { text: string; position?: "top
         <Info className="w-3.5 h-3.5" />
       </span>
       <div 
-        className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-[#E8E9E3] border border-[#E8E9E3] rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}
+        className={`absolute hidden group-hover:block z-50 w-64 p-3 text-[10px] leading-relaxed font-sans normal-case font-medium text-zinc-300 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] rounded shadow-[0_6px_20px_rgba(0,0,0,0.95)] pointer-events-none transition-all duration-150 ${positionClasses[position]}`}
       >
         <p className="tracking-wide uppercase text-[#632CE5] font-black text-[9px] mb-1 font-sans">Dica de Ajuda / Help Tip</p>
         <p className="font-sans normal-case font-medium">{text}</p>
@@ -317,9 +317,9 @@ export default function AiFigures() {
   ];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden text-[#212121] bg-[#F9FAF4]">
+    <div className="flex flex-col h-full overflow-hidden text-[var(--workbench-text)] bg-[var(--workbench-viewport)]">
       {/* HEADER AREA */}
-      <header className="p-8 flex justify-between items-end border-b border-[#E2E3DD] shrink-0 bg-white">
+      <header className="p-8 flex justify-between items-end border-b border-[var(--surface-container-high)] shrink-0 bg-white">
         <div>
           <h1 className="text-6xl font-black tracking-tighter leading-none uppercase">AI Figures</h1>
         </div>
@@ -340,7 +340,7 @@ export default function AiFigures() {
           <div className="lg:col-span-7 space-y-6">
             
             {/* Custom Vértice Tab Selector */}
-            <div className="flex border-b border-[#E2E3DD] gap-4 mb-2">
+            <div className="flex border-b border-[var(--surface-container-high)] gap-4 mb-2">
               <button
                 onClick={() => setActiveTab("text")}
                 className={`pb-3 px-1 text-[10px] uppercase font-black tracking-widest border-b-2 transition-all cursor-pointer ${
@@ -376,7 +376,7 @@ export default function AiFigures() {
             </div>
 
             {/* FORMATO FÍSICO / PHYSICAL FORMAT SELECTOR */}
-            <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-4">
+            <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-4">
               <div>
                 <label className="text-[10px] uppercase text-[#632CE5] font-black tracking-widest flex items-center">
                   <span>Escolha o Formato de Fabricação / Physical Format</span>
@@ -392,7 +392,7 @@ export default function AiFigures() {
                     desc: "Foco em detalhes. Montado em pedestal de exibição rígido.",
                     icon: Layers,
                     badge: "Colecionável",
-                    color: "border-[#E8E9E3] hover:border-[#E8E9E3] bg-white"
+                    color: "border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] bg-white"
                   },
                   {
                     id: "articulated",
@@ -400,7 +400,7 @@ export default function AiFigures() {
                     desc: "Articulações móveis (flexi). Brinquedo sensorial livre.",
                     icon: Activity,
                     badge: "Sensorial / Fidget",
-                    color: "border-[#E8E9E3] hover:border-[#E8E9E3] bg-white"
+                    color: "border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] bg-white"
                   },
                   {
                     id: "keychain",
@@ -408,7 +408,7 @@ export default function AiFigures() {
                     desc: "Tamanho reduzido com olhal/anel de fixação superior.",
                     icon: Link,
                     badge: "Compacto",
-                    color: "border-[#E8E9E3] hover:border-[#E8E9E3] bg-white"
+                    color: "border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] bg-white"
                   },
                   {
                     id: "articulated_keychain",
@@ -416,7 +416,7 @@ export default function AiFigures() {
                     desc: "Corpo flexível com articulações e anel superior integrado.",
                     icon: Sparkles,
                     badge: "Híbrido",
-                    color: "border-[#E8E9E3] hover:border-[#E8E9E3] bg-white"
+                    color: "border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] bg-white"
                   },
                   {
                     id: "drawing_plate",
@@ -424,7 +424,7 @@ export default function AiFigures() {
                     desc: "Placa de desenhar. Relevo 2D estilo lineart para pintura.",
                     icon: PenTool,
                     badge: "Lineart",
-                    color: "border-[#E8E9E3] hover:border-[#E8E9E3] bg-white"
+                    color: "border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] bg-white"
                   }
                 ].map((item) => {
                   const Icon = item.icon;
@@ -441,11 +441,11 @@ export default function AiFigures() {
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <div className={`p-1.5 rounded-md ${isSelected ? "bg-[#632CE5]/15 text-[#632CE5]" : "bg-[#E8E9E3] text-zinc-500"}`}>
+                        <div className={`p-1.5 rounded-md ${isSelected ? "bg-[#632CE5]/15 text-[#632CE5]" : "bg-[var(--surface-container-high)] text-zinc-500"}`}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                          isSelected ? "bg-[#632CE5] text-[#212121]" : "bg-[#E8E9E3] text-zinc-500"
+                          isSelected ? "bg-[#632CE5] text-[var(--workbench-text)]" : "bg-[var(--surface-container-high)] text-zinc-500"
                         }`}>
                           {item.badge}
                         </span>
@@ -466,7 +466,7 @@ export default function AiFigures() {
             {activeTab === "text" ? (
               <div className="space-y-6">
                 {/* Target Concept Form */}
-                <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-5">
+                <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-5">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] uppercase text-[#632CE5] font-black tracking-widest flex items-center">
                       <span>01. Conceito do Personagem / Target Concept</span>
@@ -479,7 +479,7 @@ export default function AiFigures() {
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Ex: guerreiro elfo arqueiro, armadura dourada, pose dinâmica..."
-                      className="w-full bg-transparent border-b border-[#E8E9E3] outline-none text-xl font-mono text-[#1A1C19] py-2 focus:border-[#632CE5] transition-colors"
+                      className="w-full bg-transparent border-b border-[var(--surface-container-high)] outline-none text-xl font-mono text-[var(--workbench-text)] py-2 focus:border-[#632CE5] transition-colors"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && prompt) {
                           handleOptimizePrompt();
@@ -491,7 +491,7 @@ export default function AiFigures() {
                       <button 
                         onClick={handleOptimizePrompt} 
                         disabled={isGenerating || !prompt}
-                        className="flex-1 bg-[#E8E9E3] text-zinc-300 border border-[#E8E9E3] font-bold uppercase text-[10px] py-3 px-6 tracking-widest hover:border-[#632CE5] hover:text-[#212121] transition-all disabled:opacity-50 flex items-center justify-center gap-2 rounded cursor-pointer"
+                        className="flex-1 bg-[var(--surface-container-high)] text-zinc-300 border border-[var(--surface-container-high)] font-bold uppercase text-[10px] py-3 px-6 tracking-widest hover:border-[#632CE5] hover:text-[var(--workbench-text)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 rounded cursor-pointer"
                       >
                         {isGenerating ? <Loader2 className="w-4 h-4 animate-spin text-[#632CE5]" /> : <Sparkles className="w-4 h-4 text-[#632CE5]" />}
                         {isGenerating ? "Otimizando..." : "Otimizar Prompt (3D)"}
@@ -512,8 +512,8 @@ export default function AiFigures() {
                 {/* Presets and Custom Templates */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Recommended Presets */}
-                  <div className="bg-white border border-[#E2E3DD] rounded-lg p-5 space-y-4">
-                    <div className="flex items-center gap-2 border-b border-[#E2E3DD] pb-3">
+                  <div className="bg-white border border-[var(--surface-container-high)] rounded-lg p-5 space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[var(--surface-container-high)] pb-3">
                       <Bookmark className="w-4 h-4 text-[#632CE5]" />
                       <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">Presets Recomendados</h3>
                       <HelpTooltip text="Ideias prontas de figuras 3D otimizadas e testadas para você carregar de forma instantânea." />
@@ -523,7 +523,7 @@ export default function AiFigures() {
                         <button
                           key={tpl.id}
                           onClick={() => handleLoadTemplate(tpl.prompt)}
-                          className="text-left bg-white hover:bg-[#E8E9E3] border border-[#E2E3DD] hover:border-[#632CE5] p-3 rounded transition-all group flex flex-col justify-between h-20"
+                          className="text-left bg-white hover:bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] hover:border-[#632CE5] p-3 rounded transition-all group flex flex-col justify-between h-20"
                         >
                           <span className="text-[9px] font-bold text-zinc-300 group-hover:text-[#632CE5] transition-colors line-clamp-1 uppercase tracking-wide">
                             {tpl.name}
@@ -537,9 +537,9 @@ export default function AiFigures() {
                   </div>
 
                   {/* Saved Templates */}
-                  <div className="bg-white border border-[#E2E3DD] rounded-lg p-5 space-y-4 flex flex-col justify-between">
+                  <div className="bg-white border border-[var(--surface-container-high)] rounded-lg p-5 space-y-4 flex flex-col justify-between">
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between border-b border-[#E2E3DD] pb-3">
+                      <div className="flex items-center justify-between border-b border-[var(--surface-container-high)] pb-3">
                         <div className="flex items-center gap-2">
                           <Save className="w-4 h-4 text-[#632CE5]" />
                           <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-300">Meus Modelos / Templates</h3>
@@ -556,12 +556,12 @@ export default function AiFigures() {
                             onChange={(e) => setNewTemplateName(e.target.value)}
                             placeholder="Nome personalizado..."
                             disabled={!prompt.trim()}
-                            className="flex-1 bg-white border border-[#E2E3DD] focus:border-[#632CE5] text-xs text-[#212121] rounded px-3 py-2 outline-none transition-all disabled:opacity-50"
+                            className="flex-1 bg-white border border-[var(--surface-container-high)] focus:border-[#632CE5] text-xs text-[var(--workbench-text)] rounded px-3 py-2 outline-none transition-all disabled:opacity-50"
                           />
                           <button
                             type="submit"
                             disabled={!prompt.trim() || !newTemplateName.trim()}
-                            className="px-3 py-2 bg-[#632CE5] text-[#212121] text-[9px] font-black uppercase tracking-wider rounded hover:bg-[#7C4DFF] disabled:opacity-50 disabled:bg-[#E8E9E3] disabled:text-zinc-600 transition-all cursor-pointer shrink-0 flex items-center gap-1"
+                            className="px-3 py-2 bg-[#632CE5] text-[var(--workbench-text)] text-[9px] font-black uppercase tracking-wider rounded hover:bg-[#7C4DFF] disabled:opacity-50 disabled:bg-[var(--surface-container-high)] disabled:text-zinc-600 transition-all cursor-pointer shrink-0 flex items-center gap-1"
                           >
                             {saveSuccess ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                             {saveSuccess ? "Salvo" : "Salvar"}
@@ -572,14 +572,14 @@ export default function AiFigures() {
                       {/* List of custom templates */}
                       <div className="max-h-[100px] overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
                         {savedTemplates.length === 0 ? (
-                          <div className="text-center py-5 text-zinc-600 text-[8px] uppercase font-black tracking-widest border border-dashed border-[#E2E3DD] rounded">
+                          <div className="text-center py-5 text-zinc-600 text-[8px] uppercase font-black tracking-widest border border-dashed border-[var(--surface-container-high)] rounded">
                             Sem templates salvos
                           </div>
                         ) : (
                           savedTemplates.map((tpl) => (
                             <div
                               key={tpl.id}
-                              className="bg-white border border-[#E2E3DD] rounded p-2 flex items-center justify-between gap-3 group hover:border-[#E8E9E3] transition-all"
+                              className="bg-white border border-[var(--surface-container-high)] rounded p-2 flex items-center justify-between gap-3 group hover:border-[var(--surface-container-high)] transition-all"
                             >
                               <button
                                 onClick={() => handleLoadTemplate(tpl.prompt)}
@@ -610,7 +610,7 @@ export default function AiFigures() {
             ) : activeTab === "photo" ? (
               <div className="space-y-6 animate-fadeIn">
                 {/* Upload block */}
-                <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-5">
+                <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-5">
                   <div>
                     <label className="text-[10px] uppercase text-[#632CE5] font-black tracking-widest flex items-center">
                       <span>01. Carregar Sua Foto / Upload Photo</span>
@@ -627,13 +627,13 @@ export default function AiFigures() {
                       isDragActive 
                         ? "border-[#632CE5] bg-[#632CE5]/5" 
                         : uploadedImage 
-                          ? "border-[#E8E9E3] bg-[#E8E9E3]/40" 
-                          : "border-[#E2E3DD] hover:border-[#E2E3DD] bg-[#F9FAF4]"
+                          ? "border-[var(--surface-container-high)] bg-[var(--surface-container-high)]/40" 
+                          : "border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] bg-[var(--workbench-viewport)]"
                     }`}
                   >
                     {uploadedImage ? (
                       <div className="space-y-4 w-full flex flex-col items-center">
-                        <div className="relative group w-32 h-32 rounded-lg overflow-hidden border border-[#E8E9E3] shadow-2xl">
+                        <div className="relative group w-32 h-32 rounded-lg overflow-hidden border border-[var(--surface-container-high)] shadow-2xl">
                           <img 
                             src={uploadedImage} 
                             alt="Sua foto de referência" 
@@ -650,7 +650,7 @@ export default function AiFigures() {
                       </div>
                     ) : (
                       <label className="cursor-pointer flex flex-col items-center justify-center space-y-3.5 w-full h-full py-4">
-                        <div className="w-12 h-12 rounded-full bg-[#E8E9E3] border border-[#E2E3DD] flex items-center justify-center text-zinc-500 hover:text-[#632CE5] hover:border-[#632CE5] transition-all">
+                        <div className="w-12 h-12 rounded-full bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] flex items-center justify-center text-zinc-500 hover:text-[#632CE5] hover:border-[#632CE5] transition-all">
                           <Upload className="w-5 h-5" />
                         </div>
                         <div className="space-y-1">
@@ -673,7 +673,7 @@ export default function AiFigures() {
                 </div>
 
                 {/* Style selector */}
-                <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-5">
+                <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-5">
                   <div>
                     <label className="text-[10px] uppercase text-[#632CE5] font-black tracking-widest flex items-center">
                       <span>02. Escolha o Estilo do Seu Bonequinho / Miniature Style</span>
@@ -695,7 +695,7 @@ export default function AiFigures() {
                         className={`text-left p-4 rounded-lg border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between h-24 bg-white bg-gradient-to-br ${st.color} ${
                           selectedStyle === st.id 
                             ? "border-[#632CE5] shadow-[0_0_15px_rgba(124,58,237,0.15)] text-[#632CE5]" 
-                            : "border-[#E2E3DD] text-zinc-400 hover:border-[#E8E9E3]"
+                            : "border-[var(--surface-container-high)] text-zinc-400 hover:border-[var(--surface-container-high)]"
                         }`}
                       >
                         <span className="text-[10px] font-black uppercase tracking-wider">{st.label}</span>
@@ -726,8 +726,8 @@ export default function AiFigures() {
 
                 {/* Analysis result */}
                 {analysisResult && (
-                  <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-4">
-                    <div className="flex items-center gap-2 border-b border-[#E2E3DD] pb-3">
+                  <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-4">
+                    <div className="flex items-center gap-2 border-b border-[var(--surface-container-high)] pb-3">
                       <Camera className="w-4 h-4 text-[#632CE5]" />
                       <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-300 font-mono">Avatar Traduzido em 3D:</h3>
                     </div>
@@ -739,7 +739,7 @@ export default function AiFigures() {
               </div>
             ) : (
               <div className="space-y-6 animate-fadeIn">
-                <div className="bg-white border border-[#E2E3DD] p-6 rounded-lg space-y-5">
+                <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-5">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] uppercase text-[#632CE5] font-black tracking-widest flex items-center">
                       <span>01. Descrever Placa / Lineart Concept</span>
@@ -752,7 +752,7 @@ export default function AiFigures() {
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       placeholder="Ex: carro esportivo, dinossauro t-rex, castelo..."
-                      className="w-full bg-transparent border-b border-[#E8E9E3] outline-none text-xl font-mono text-[#1A1C19] py-2 focus:border-[#632CE5] transition-colors"
+                      className="w-full bg-transparent border-b border-[var(--surface-container-high)] outline-none text-xl font-mono text-[var(--workbench-text)] py-2 focus:border-[#632CE5] transition-colors"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && prompt) {
                           handleOptimizePrompt();
@@ -790,7 +790,7 @@ export default function AiFigures() {
 
             {/* Prompt Otimizado Output Block */}
             {result && (
-              <div className="bg-white border border-[#E8E9E3] p-6 rounded-lg space-y-4">
+              <div className="bg-white border border-[var(--surface-container-high)] p-6 rounded-lg space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-[10px] font-bold text-[#632CE5] uppercase tracking-widest flex items-center">
                     <span>Prompt Otimizado para Modelador 3D / Optimized Prompt</span>
@@ -799,14 +799,14 @@ export default function AiFigures() {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => navigator.clipboard.writeText(result)} 
-                      className="text-[9px] uppercase font-black tracking-widest text-zinc-400 hover:text-[#212121] flex items-center gap-1 border border-[#E2E3DD] px-3 py-1.5 rounded bg-white transition-colors"
+                      className="text-[9px] uppercase font-black tracking-widest text-zinc-400 hover:text-[var(--workbench-text)] flex items-center gap-1 border border-[var(--surface-container-high)] px-3 py-1.5 rounded bg-white transition-colors"
                     >
                       <Copy className="w-3 h-3" /> Copiar Prompt
                     </button>
                   </div>
                 </div>
                 
-                <div className="bg-white border border-[#E2E3DD] p-4 rounded font-mono text-xs leading-relaxed text-zinc-300 whitespace-pre-wrap select-all">
+                <div className="bg-white border border-[var(--surface-container-high)] p-4 rounded font-mono text-xs leading-relaxed text-zinc-300 whitespace-pre-wrap select-all">
                   {result}
                 </div>
 
@@ -828,22 +828,22 @@ export default function AiFigures() {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Visual Preview Container */}
-            <div className="bg-white border border-[#E2E3DD] rounded-lg p-6 flex flex-col justify-between space-y-6">
+            <div className="bg-white border border-[var(--surface-container-high)] rounded-lg p-6 flex flex-col justify-between space-y-6">
               <div>
-                <h3 className="text-[10px] uppercase text-zinc-400 font-bold tracking-widest border-b border-[#E2E3DD] pb-3 flex items-center">
+                <h3 className="text-[10px] uppercase text-zinc-400 font-bold tracking-widest border-b border-[var(--surface-container-high)] pb-3 flex items-center">
                   <span>02. Visualização do Modelo / 3D Style Preview</span>
                   <HelpTooltip text="Simulação visual de estúdio do personagem impresso e pós-processado. Útil para prever proporções antes de fabricar fisicamente." />
                 </h3>
               </div>
 
               {/* Rendering Stage */}
-              <div className="relative bg-white border border-[#E2E3DD] rounded-lg overflow-hidden flex items-center justify-center min-h-[340px] shadow-inner">
+              <div className="relative bg-white border border-[var(--surface-container-high)] rounded-lg overflow-hidden flex items-center justify-center min-h-[340px] shadow-inner">
                 {isGeneratingImage ? (
                   <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
                     <div className="relative flex items-center justify-center">
                       {/* Stylized loader halo */}
-                      <div className="w-16 h-16 rounded-full border-4 border-[#E2E3DD] border-t-[#632CE5] animate-spin" />
-                      <div className="absolute w-10 h-10 rounded-full border-2 border-dashed border-[#E8E9E3] border-b-[#A855F7] animate-spin-slow" style={{ animationDuration: "6s" }} />
+                      <div className="w-16 h-16 rounded-full border-4 border-[var(--surface-container-high)] border-t-[#632CE5] animate-spin" />
+                      <div className="absolute w-10 h-10 rounded-full border-2 border-dashed border-[var(--surface-container-high)] border-b-[#A855F7] animate-spin-slow" style={{ animationDuration: "6s" }} />
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-xs text-zinc-400 font-mono tracking-widest uppercase font-bold animate-pulse">MODELANDO FIGURA 3D</p>
@@ -856,12 +856,12 @@ export default function AiFigures() {
                       src={generatedImage} 
                       alt="3D Figurine Neural Render" 
                       referrerPolicy="no-referrer"
-                      className="max-w-full max-h-[420px] rounded object-contain shadow-2xl border border-[#E8E9E3]"
+                      className="max-w-full max-h-[420px] rounded object-contain shadow-2xl border border-[var(--surface-container-high)]"
                     />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center p-8 space-y-3.5">
-                    <div className="w-12 h-12 rounded-full bg-[#E8E9E3] border border-[#E2E3DD] flex items-center justify-center text-zinc-600">
+                    <div className="w-12 h-12 rounded-full bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] flex items-center justify-center text-zinc-600">
                       <Image className="w-6 h-6" />
                     </div>
                     <div className="space-y-1 max-w-[240px]">
@@ -886,7 +886,7 @@ export default function AiFigures() {
                       className={`py-2 text-[9px] font-black uppercase tracking-wider rounded border transition-all text-center cursor-pointer ${
                         aspectRatio === ar.value 
                           ? "bg-[#632CE5] text-white border-transparent" 
-                          : "bg-white border-[#E2E3DD] text-zinc-500 hover:border-[#E8E9E3] hover:text-zinc-300"
+                          : "bg-white border-[var(--surface-container-high)] text-zinc-500 hover:border-[var(--surface-container-high)] hover:text-zinc-300"
                       }`}
                       title={ar.desc}
                     >
@@ -898,10 +898,10 @@ export default function AiFigures() {
 
               {/* Download & Utility Actions */}
               {generatedImage && (
-                <div className="flex gap-3 pt-3 border-t border-[#E2E3DD]">
+                <div className="flex gap-3 pt-3 border-t border-[var(--surface-container-high)]">
                   <button
                     onClick={handleDownloadImage}
-                    className="flex-1 bg-[#E8E9E3] hover:bg-[#F9FAF4] text-zinc-300 hover:text-[#212121] border border-[#E2E3DD] py-2.5 rounded font-bold uppercase text-[9px] tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-[var(--surface-container-high)] hover:bg-[var(--workbench-viewport)] text-zinc-300 hover:text-[var(--workbench-text)] border border-[var(--surface-container-high)] py-2.5 rounded font-bold uppercase text-[9px] tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" /> Baixar Render
                   </button>
@@ -909,7 +909,7 @@ export default function AiFigures() {
                   <button
                     onClick={() => handleGenerateImage()}
                     disabled={isGeneratingImage}
-                    className="bg-transparent border border-[#E2E3DD] hover:border-[#E2E3DD] text-zinc-500 hover:text-zinc-300 p-2.5 rounded transition-all cursor-pointer"
+                    className="bg-transparent border border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] text-zinc-500 hover:text-zinc-300 p-2.5 rounded transition-all cursor-pointer"
                     title="Gerar Variação / Regenerate"
                   >
                     <RefreshCw className="w-4 h-4" />
@@ -919,8 +919,8 @@ export default function AiFigures() {
             </div>
 
             {/* EXPORTADOR DE MALHA 3D / 3D MESH EXPORTER */}
-            <div className="bg-white border border-[#E2E3DD] rounded-lg p-6 space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#E2E3DD] pb-3">
+            <div className="bg-white border border-[var(--surface-container-high)] rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[var(--surface-container-high)] pb-3">
                 <Layers className="w-4 h-4 text-[#632CE5]" />
                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-zinc-300 font-mono flex items-center gap-1.5">
                   <span>Exportar Malha Geométrica 3D (.STL)</span>
@@ -936,7 +936,7 @@ export default function AiFigures() {
                 type="button"
                 onClick={handleExport3D}
                 disabled={isExporting3D || !(result || prompt)}
-                className="w-full bg-[#632CE5] hover:bg-[#7C4DFF] disabled:opacity-50 disabled:bg-[#E8E9E3] disabled:text-zinc-600 text-black font-black uppercase text-[10px] py-3.5 px-4 tracking-widest rounded transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full bg-[#632CE5] hover:bg-[#7C4DFF] disabled:opacity-50 disabled:bg-[var(--surface-container-high)] disabled:text-zinc-600 text-black font-black uppercase text-[10px] py-3.5 px-4 tracking-widest rounded transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 {isExporting3D ? (
                   <>
@@ -959,22 +959,22 @@ export default function AiFigures() {
                     <span>Malha Gerada e Baixada com Sucesso!</span>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-zinc-400 bg-white/40 p-2.5 rounded border border-[#E2E3DD]">
+                  <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-zinc-400 bg-white/40 p-2.5 rounded border border-[var(--surface-container-high)]">
                     <div>
                       <span className="text-zinc-600 block uppercase">Sólido:</span>
                       <span className="text-[#632CE5] font-bold truncate block">{exportedFileInfo.solidName}</span>
                     </div>
                     <div>
                       <span className="text-zinc-600 block uppercase">Dimensões:</span>
-                      <span className="text-[#1A1C19] font-bold block">{exportedFileInfo.dimensions}</span>
+                      <span className="text-[var(--workbench-text)] font-bold block">{exportedFileInfo.dimensions}</span>
                     </div>
                     <div className="mt-1">
                       <span className="text-zinc-600 block uppercase">Triângulos:</span>
-                      <span className="text-[#1A1C19] font-bold block">{exportedFileInfo.triangles} fatias</span>
+                      <span className="text-[var(--workbench-text)] font-bold block">{exportedFileInfo.triangles} fatias</span>
                     </div>
                     <div className="mt-1">
                       <span className="text-zinc-600 block uppercase">Formato Físico:</span>
-                      <span className="text-[#1A1C19] font-bold uppercase block">{exportedFileInfo.format}</span>
+                      <span className="text-[var(--workbench-text)] font-bold uppercase block">{exportedFileInfo.format}</span>
                     </div>
                   </div>
 
@@ -993,8 +993,8 @@ export default function AiFigures() {
             </div>
 
             {/* Printable Model Slicing Advice */}
-            <div className="bg-white border border-[#E2E3DD] p-5 rounded-lg space-y-3.5">
-              <div className="flex items-center justify-between border-b border-[#E2E3DD] pb-2.5">
+            <div className="bg-white border border-[var(--surface-container-high)] p-5 rounded-lg space-y-3.5">
+              <div className="flex items-center justify-between border-b border-[var(--surface-container-high)] pb-2.5">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-[#632CE5]" />
                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Como obter o STL & Fatiamento 3D</h4>
@@ -1075,7 +1075,7 @@ export default function AiFigures() {
       </div>
 
       {/* FOOTER BAR */}
-      <footer className="h-12 border-t border-[#E2E3DD] px-8 flex items-center justify-between bg-white shrink-0 font-sans">
+      <footer className="h-12 border-t border-[var(--surface-container-high)] px-8 flex items-center justify-between bg-white shrink-0 font-sans">
         <div className="flex gap-6 items-center text-[9px] uppercase tracking-widest text-zinc-500 font-bold">
           <span>Engine: <span className="text-[#632CE5]">Gemini Imagen & Flash</span></span>
           <span>Slicing Optimization: Enabled</span>

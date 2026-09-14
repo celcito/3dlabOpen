@@ -137,120 +137,7 @@ export default function FlexiFromPhoto() {
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#F9FAF4]">
-      {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[#F9FAF4] border-r border-[#E2E3DD] overflow-y-auto p-6 space-y-8 scrollbar-hide">
-        <header>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
-              <Waves className="w-6 h-6 text-[#632CE5]" />
-            </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Flexi From Photo</h1>
-          </div>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-            Articula automaticamente um mesh gerado por foto (TripoSR/Hunyuan3D).
-          </p>
-        </header>
-
-        {/* UPLOAD */}
-        <section className="space-y-3">
-          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-            <ImageIcon className="w-3.5 h-3.5 text-[#632CE5]" />
-            01. Importar Mesh (.glb / .obj)
-          </h3>
-          <SplitDropzone fileName={fileName} onFile={handleFileUpload} disabled={status === "loading"} />
-          {status === "loading" && (
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando malha...
-            </div>
-          )}
-          {status === "error" && (
-            <div className="text-[10px] text-red-400">
-              Não consegui ler esse arquivo. Confirme se é um .glb/.obj válido e manifold.
-            </div>
-          )}
-        </section>
-
-        {/* PARÂMETROS */}
-        <section className="space-y-6 pt-4 border-t border-[#E2E3DD]">
-          <div className="space-y-4">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
-              02. Segmentação
-            </h3>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Número de Segmentos</label>
-                <span className="text-[10px] font-mono text-[#632CE5]">{config.segments}</span>
-              </div>
-              <input
-                type="range" min="3" max="24" step="1"
-                value={config.segments}
-                onChange={(e) => setConfig({ ...config, segments: parseInt(e.target.value) })}
-                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Folga entre Segmentos</label>
-                <span className="text-[10px] font-mono text-[#632CE5]">{config.gap.toFixed(2)}</span>
-              </div>
-              <input
-                type="range" min="0.05" max="0.5" step="0.01"
-                value={config.gap}
-                onChange={(e) => setConfig({ ...config, gap: parseFloat(e.target.value) })}
-                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4 pt-4 border-t border-[#E2E3DD]">
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
-              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
-              03. Dobradiça
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-[9px] uppercase font-bold text-zinc-600">Proporção do Pino</label>
-                <span className="text-[10px] font-mono text-[#632CE5]">{Math.round(config.hingeSizeRatio * 100)}%</span>
-              </div>
-              <input
-                type="range" min="0.3" max="0.8" step="0.05"
-                value={config.hingeSizeRatio}
-                onChange={(e) => setConfig({ ...config, hingeSizeRatio: parseFloat(e.target.value) })}
-                className="w-full accent-[#632CE5] h-1.5 bg-[#F9FAF4] rounded-lg appearance-none cursor-pointer"
-              />
-              <p className="text-[9px] text-zinc-600 leading-relaxed">
-                Escala o pino como % do raio real de cada junção — se adapta a partes finas e grossas do desenho automaticamente.
-              </p>
-            </div>
-          </div>
-
-          <div className="pt-2 space-y-3">
-            <button
-              onClick={runSlicing}
-              disabled={!sourceGeometry || status === "slicing"}
-              className="w-full bg-[#F9FAF4] disabled:opacity-40 text-[#212121] py-3 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#F9FAF4] transition-all"
-            >
-              {status === "slicing"
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Fatiando...</>
-                : "Gerar Articulação"}
-            </button>
-
-            <button
-              onClick={handleExportSTL}
-              disabled={segmentsPreview.length === 0}
-              className="w-full bg-[#632CE5] disabled:opacity-40 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)]"
-            >
-              <Download className="w-4 h-4" />
-              Download STL Flexi
-            </button>
-          </div>
-        </section>
-      </div>
-
+    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* VIEWPORT */}
       <div className="flex-1 relative">
         <div className="absolute inset-0">
@@ -278,14 +165,14 @@ export default function FlexiFromPhoto() {
         </div>
 
         <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-white/80 backdrop-blur-md border border-[#E2E3DD] p-4 rounded-xl space-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-[var(--surface-container-high)] p-4 rounded-xl space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" />
-              <span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">
+              <span className="text-[10px] font-black text-[var(--workbench-text)] uppercase tracking-widest">
                 {segmentsPreview.length > 0 ? "Preview Articulado" : "Preview do Mesh Original"}
               </span>
             </div>
-            <div className="text-[16px] font-black text-[#1A1C19] uppercase tracking-tighter">
+            <div className="text-[16px] font-black text-[var(--workbench-text)] uppercase tracking-tighter">
               {segmentsPreview.length > 0
                 ? `${segmentsPreview.length} Segmentos Fatiados`
                 : sourceGeometry ? "Mesh carregado — clique em Gerar Articulação" : "Aguardando upload"}
@@ -301,6 +188,119 @@ export default function FlexiFromPhoto() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* SIDEBAR */}
+      <div className="w-full md:w-80 bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+        <header>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
+              <Waves className="w-6 h-6 text-[#632CE5]" />
+            </div>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">Flexi From Photo</h1>
+          </div>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+            Articula automaticamente um mesh gerado por foto (TripoSR/Hunyuan3D).
+          </p>
+        </header>
+
+        {/* UPLOAD */}
+        <section className="space-y-3">
+          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+            <ImageIcon className="w-3.5 h-3.5 text-[#632CE5]" />
+            01. Importar Mesh (.glb / .obj)
+          </h3>
+          <SplitDropzone fileName={fileName} onFile={handleFileUpload} disabled={status === "loading"} />
+          {status === "loading" && (
+            <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando malha...
+            </div>
+          )}
+          {status === "error" && (
+            <div className="text-[10px] text-red-400">
+              Não consegui ler esse arquivo. Confirme se é um .glb/.obj válido e manifold.
+            </div>
+          )}
+        </section>
+
+        {/* PARÂMETROS */}
+        <section className="space-y-6 pt-4 border-t border-[var(--surface-container-high)]">
+          <div className="space-y-4">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+              <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
+              02. Segmentação
+            </h3>
+
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Número de Segmentos</label>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.segments}</span>
+              </div>
+              <input
+                type="range" min="3" max="24" step="1"
+                value={config.segments}
+                onChange={(e) => setConfig({ ...config, segments: parseInt(e.target.value) })}
+                className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Folga entre Segmentos</label>
+                <span className="text-[10px] font-mono text-[#632CE5]">{config.gap.toFixed(2)}</span>
+              </div>
+              <input
+                type="range" min="0.05" max="0.5" step="0.01"
+                value={config.gap}
+                onChange={(e) => setConfig({ ...config, gap: parseFloat(e.target.value) })}
+                className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+              <Sliders className="w-3.5 h-3.5 text-[#632CE5]" />
+              03. Dobradiça
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Proporção do Pino</label>
+                <span className="text-[10px] font-mono text-[#632CE5]">{Math.round(config.hingeSizeRatio * 100)}%</span>
+              </div>
+              <input
+                type="range" min="0.3" max="0.8" step="0.05"
+                value={config.hingeSizeRatio}
+                onChange={(e) => setConfig({ ...config, hingeSizeRatio: parseFloat(e.target.value) })}
+                className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer"
+              />
+              <p className="text-[9px] text-zinc-600 leading-relaxed">
+                Escala o pino como % do raio real de cada junção — se adapta a partes finas e grossas do desenho automaticamente.
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 space-y-3">
+            <button
+              onClick={runSlicing}
+              disabled={!sourceGeometry || status === "slicing"}
+              className="w-full bg-[var(--workbench-viewport)] disabled:opacity-40 text-[var(--workbench-text)] py-3 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[var(--workbench-viewport)] transition-all"
+            >
+              {status === "slicing"
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Fatiando...</>
+                : "Gerar Articulação"}
+            </button>
+
+            <button
+              onClick={handleExportSTL}
+              disabled={segmentsPreview.length === 0}
+              className="w-full bg-[#632CE5] disabled:opacity-40 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+            >
+              <Download className="w-4 h-4" />
+              Download STL Flexi
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );

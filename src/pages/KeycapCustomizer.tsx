@@ -91,15 +91,36 @@ export default function KeycapCustomizer() {
 
   return (
     <div className="workbench-page flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-page)]">
-      <aside className="w-full md:w-80 bg-[var(--workbench-panel)] border-r border-[var(--workbench-line)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <main className="workbench-viewport flex-1 relative min-w-0">
+        <div className="absolute inset-0">
+          <Canvas shadows camera={{ position: [30, 30, 30], fov: 45 }}>
+            <color attach="background" args={["#F1F3ED"]} />
+            <ambientLight intensity={0.6} />
+            <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} castShadow />
+            <pointLight position={[-50, -50, -50]} intensity={0.4} />
+            <OrbitControls makeDefault />
+            <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} position={[0, -0.1, 0]} />
+            <Center><mesh geometry={displayedGeometry} castShadow receiveShadow>          <meshStandardMaterial color="#d0d0d0" roughness={0.4} metalness={0.15} /></mesh></Center>
+          </Canvas>
+        </div>
+        <div className="absolute top-6 left-6 pointer-events-none">
+          <div className="bg-white/85 backdrop-blur-md border border-[var(--workbench-line)] p-4 rounded-xl space-y-1">
+            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" /><span className="text-[10px] font-black text-[var(--workbench-text)] uppercase tracking-widest">{resultGeometry ? "Keycap customizada" : "Base MX"}</span></div>
+            <div className="text-[11px] font-mono text-[var(--on-surface-variant)]">18 × 18 × 9 mm</div>
+          </div>
+        </div>
+        {successMessage && <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest"><Check className="w-4 h-4" />{successMessage}</div>}
+      </main>
+
+      <aside className="w-full md:w-80 bg-[var(--workbench-panel)] border-l border-[var(--workbench-line)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
               <Box className="w-5 h-5 text-[#632CE5]" />
             </div>
-            <h1 className="text-xl font-black uppercase tracking-tighter text-[#1A1C19]">Keycap customizer</h1>
+            <h1 className="text-xl font-black uppercase tracking-tighter text-[var(--workbench-text)]">Keycap customizer</h1>
           </div>
-          <p className="text-[10px] text-[#687064] font-bold uppercase tracking-widest">Crie uma keycap MX e aplique arte no topo.</p>
+          <p className="text-[10px] text-[var(--on-surface-variant)] font-bold uppercase tracking-widest">Crie uma keycap MX e aplique arte no topo.</p>
         </header>
 
         <section className="space-y-4">
@@ -110,14 +131,14 @@ export default function KeycapCustomizer() {
               ["svg", FileCode, "SVG"],
               ["model", Box, "Modelo 3D"],
             ] as const).map(([type, Icon, label]) => (
-              <button key={type} type="button" onClick={() => selectInputType(type)} className={`flex flex-col items-center gap-1.5 py-3 rounded-lg border text-[9px] font-bold uppercase tracking-wide ${inputType === type ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10" : "border-[var(--workbench-line)] text-[#687064] hover:border-[#632CE5]/40"}`}>
+              <button key={type} type="button" onClick={() => selectInputType(type)} className={`flex flex-col items-center gap-1.5 py-3 rounded-lg border text-[9px] font-bold uppercase tracking-wide ${inputType === type ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10" : "border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40"}`}>
                 <Icon className="w-4 h-4" />
                 {label}
               </button>
             ))}
           </div>
           <input ref={fileInputRef} type="file" accept={accept} className="hidden" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-          <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border border-dashed border-[var(--workbench-line)] hover:border-[#632CE5]/50 rounded-xl py-6 flex flex-col items-center gap-2 text-[#687064] hover:text-[#632CE5]">
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border border-dashed border-[var(--workbench-line)] hover:border-[#632CE5]/50 rounded-xl py-6 flex flex-col items-center gap-2 text-[var(--on-surface-variant)] hover:text-[#632CE5]">
             <UploadCloud className="w-6 h-6" />
             <span className="text-[10px] font-bold uppercase tracking-wide text-center px-2">{file?.name || `Selecionar ${inputType === "image" ? "imagem" : inputType === "svg" ? "SVG" : "modelo 3D"}`}</span>
           </button>
@@ -135,7 +156,7 @@ export default function KeycapCustomizer() {
             <div className="space-y-4 pt-4 border-t border-[var(--workbench-line)]">
               <SectionTitle>03. Imagem</SectionTitle>
               <RangeControl label="Threshold P&B" value={String(imageThreshold)} min="0" max="255" step="1" number={imageThreshold} onChange={setImageThreshold} />
-              <label className="flex items-center gap-2 text-[9px] uppercase font-bold text-[#687064] cursor-pointer">
+              <label className="flex items-center gap-2 text-[9px] uppercase font-bold text-[var(--on-surface-variant)] cursor-pointer">
                 <input type="checkbox" checked={invertImage} onChange={(event) => setInvertImage(event.target.checked)} className="accent-[#632CE5]" />
                 Inverter áreas claras
               </label>
@@ -152,39 +173,18 @@ export default function KeycapCustomizer() {
           </div>
         </section>
       </aside>
-
-      <main className="workbench-viewport flex-1 relative min-w-0">
-        <div className="absolute inset-0">
-          <Canvas shadows camera={{ position: [30, 30, 30], fov: 45 }}>
-            <color attach="background" args={["#F1F3ED"]} />
-            <ambientLight intensity={0.6} />
-            <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} castShadow />
-            <pointLight position={[-50, -50, -50]} intensity={0.4} />
-            <OrbitControls makeDefault />
-            <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} position={[0, -0.1, 0]} />
-            <Center><mesh geometry={displayedGeometry} castShadow receiveShadow>          <meshStandardMaterial color="#d0d0d0" roughness={0.4} metalness={0.15} /></mesh></Center>
-          </Canvas>
-        </div>
-        <div className="absolute top-6 left-6 pointer-events-none">
-          <div className="bg-white/85 backdrop-blur-md border border-[var(--workbench-line)] p-4 rounded-xl space-y-1">
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[#632CE5] animate-pulse" /><span className="text-[10px] font-black text-[#1A1C19] uppercase tracking-widest">{resultGeometry ? "Keycap customizada" : "Base MX"}</span></div>
-            <div className="text-[11px] font-mono text-[#687064]">18 × 18 × 9 mm</div>
-          </div>
-        </div>
-        {successMessage && <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest"><Check className="w-4 h-4" />{successMessage}</div>}
-      </main>
     </div>
   );
 }
 
 function SectionTitle({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
-  return <h2 className="text-[11px] uppercase tracking-[0.2em] text-[#687064] font-black flex items-center gap-2">{icon}{children}</h2>;
+  return <h2 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">{icon}{children}</h2>;
 }
 
 function ModeButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button type="button" onClick={onClick} className={`py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wide border ${active ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10" : "border-[var(--workbench-line)] text-[#687064] hover:border-[#632CE5]/40"}`}>{children}</button>;
+  return <button type="button" onClick={onClick} className={`py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wide border ${active ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10" : "border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40"}`}>{children}</button>;
 }
 
 function RangeControl({ label, value, min, max, step, number, onChange }: { label: string; value: string; min: string; max: string; step: string; number: number; onChange: (value: number) => void }) {
-  return <div className="space-y-3"><div className="flex justify-between"><label className="text-[9px] uppercase font-bold text-[#687064]">{label}</label><span className="text-[10px] font-mono text-[#632CE5]">{value}</span></div><input type="range" min={min} max={max} step={step} value={number} onChange={(event) => onChange(Number(event.target.value))} className="w-full h-1.5 bg-[var(--workbench-subtle)] rounded-lg appearance-none cursor-pointer" /></div>;
+  return <div className="space-y-3"><div className="flex justify-between"><label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">{label}</label><span className="text-[10px] font-mono text-[#632CE5]">{value}</span></div><input type="range" min={min} max={max} step={step} value={number} onChange={(event) => onChange(Number(event.target.value))} className="w-full h-1.5 bg-[var(--workbench-subtle)] rounded-lg appearance-none cursor-pointer" /></div>;
 }

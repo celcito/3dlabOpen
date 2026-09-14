@@ -1034,16 +1034,16 @@ export default function CookieCutterMaker() {
   }; */
 
   return (
-    <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[#F9FAF4] text-[#212121]">
+    <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 space-y-8 font-sans bg-[var(--workbench-viewport)] text-[var(--workbench-text)]">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[#E2E3DD]">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[var(--surface-container-high)]">
         <div>
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#632CE5] animate-pulse" />
             <span className="text-[10px] tracking-[0.2em] uppercase font-mono font-extrabold text-[#632CE5]">BISCOITO CUT MAKER</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-[#1A1C19] mt-1">
+          <h1 className="text-2xl font-black tracking-tight text-[var(--workbench-text)] mt-1">
             Gerador de Cortadores de Biscoito 3D
           </h1>
           <p className="text-xs text-zinc-500 max-w-xl">
@@ -1052,12 +1052,12 @@ export default function CookieCutterMaker() {
         </div>
 
         {/* Input Name Plate */}
-        <div className="flex items-center gap-2 w-full md:w-auto bg-white p-1 border border-[#E2E3DD] rounded-lg">
+        <div className="flex items-center gap-2 w-full md:w-auto bg-white p-1 border border-[var(--surface-container-high)] rounded-lg">
           <input 
             type="text" 
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="bg-white/40 text-[11px] font-bold uppercase tracking-wider px-3 py-2 border-0 outline-none focus:ring-1 focus:ring-[#632CE5] rounded text-[#212121] w-full md:w-[180px]"
+            className="bg-white/40 text-[11px] font-bold uppercase tracking-wider px-3 py-2 border-0 outline-none focus:ring-1 focus:ring-[#632CE5] rounded text-[var(--workbench-text)] w-full md:w-[180px]"
             placeholder="Nome do Projeto..."
           />
           <button 
@@ -1092,10 +1092,10 @@ export default function CookieCutterMaker() {
         <div className="lg:col-span-7 flex flex-col space-y-4">
           
           {/* Real-time 3D Viewport Box */}
-          <div className="relative aspect-[4/3] w-full bg-white border border-[#E2E3DD] rounded-lg overflow-hidden shadow-2xl flex flex-col justify-between">
+          <div className="relative aspect-[4/3] w-full bg-white border border-[var(--surface-container-high)] rounded-lg overflow-hidden shadow-2xl flex flex-col justify-between">
             
             {/* Viewport header tags */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/60 backdrop-blur border border-[#E8E9E3]/80 px-2.5 py-1 rounded font-mono text-[8.5px] text-zinc-400">
+            <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-white/60 backdrop-blur border border-[var(--surface-container-high)]/80 px-2.5 py-1 rounded font-mono text-[8.5px] text-zinc-400">
               <div className="w-1.5 h-1.5 rounded-full bg-[#632CE5] animate-pulse" />
               <span>VISUALIZADOR 3D INTERATIVO (ESC. 10:1)</span>
             </div>
@@ -1106,7 +1106,7 @@ export default function CookieCutterMaker() {
                 className={`p-1.5 rounded backdrop-blur text-[8.5px] font-mono border transition-all cursor-pointer ${
                   config.showWireframe 
                     ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/40" 
-                    : "bg-white/60 text-zinc-400 border-[#E8E9E3]"
+                    : "bg-white/60 text-zinc-400 border-[var(--surface-container-high)]"
                 }`}
               >
                 WIREFRAME
@@ -1150,7 +1150,7 @@ export default function CookieCutterMaker() {
             </div>
 
             {/* Viewport bottom controls HUD */}
-            <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 bg-white/85 backdrop-blur border border-[#E2E3DD]/90 p-3 rounded-md">
+            <div className="absolute bottom-4 left-4 right-4 z-10 flex flex-wrap items-center justify-between gap-3 bg-white/85 backdrop-blur border border-[var(--surface-container-high)]/90 p-3 rounded-md">
               <div className="flex items-center gap-4 w-full sm:w-auto">
                 <div className="flex flex-col">
                   <span className="text-[8.5px] font-mono text-[#632CE5] uppercase tracking-widest block font-extrabold">Vista Explodida (Folga Visual)</span>
@@ -1173,7 +1173,7 @@ export default function CookieCutterMaker() {
                 <button
                   type="button"
                   onClick={() => setConfig(prev => ({ ...prev, explodedView: 0 }))}
-                  className="bg-[#E8E9E3] hover:bg-[#F9FAF4] border border-[#E8E9E3] p-1.5 rounded cursor-pointer"
+                  className="bg-[var(--surface-container-high)] hover:bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-1.5 rounded cursor-pointer"
                   title="Unir Peças"
                   disabled={config.viewMode !== "cutter_stamp"}
                 >
@@ -1184,13 +1184,13 @@ export default function CookieCutterMaker() {
           </div>
 
           {/* VIEW MODE SELECTION BUTTONS */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#F9FAF4] border border-[#E2E3DD] p-1.5 rounded-lg">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-1.5 rounded-lg">
             <button
               onClick={() => setConfig(prev => ({ ...prev, viewMode: "cutter_stamp" }))}
               className={`py-2.5 px-3 rounded text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1 transition-all cursor-pointer border ${
                 config.viewMode === "cutter_stamp"
                   ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/40 shadow-lg shadow-[#632CE5]/5"
-                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[#212121] hover:bg-[#E8E9E3]"
+                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]"
               }`}
             >
               <Scissors className="w-4 h-4" />
@@ -1201,7 +1201,7 @@ export default function CookieCutterMaker() {
               className={`py-2.5 px-3 rounded text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1 transition-all cursor-pointer border ${
                 config.viewMode === "cutter_only"
                   ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/40 shadow-lg shadow-[#632CE5]/5"
-                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[#212121] hover:bg-[#E8E9E3]"
+                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]"
               }`}
             >
               <Scissors className="w-4 h-4" />
@@ -1212,7 +1212,7 @@ export default function CookieCutterMaker() {
               className={`py-2.5 px-3 rounded text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1 transition-all cursor-pointer border ${
                 config.viewMode === "stamp_only"
                   ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/40 shadow-lg shadow-[#632CE5]/5"
-                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[#212121] hover:bg-[#E8E9E3]"
+                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]"
               }`}
             >
               <Hammer className="w-4 h-4" />
@@ -1223,7 +1223,7 @@ export default function CookieCutterMaker() {
               className={`py-2.5 px-3 rounded text-[10px] font-bold uppercase tracking-wider flex flex-col items-center gap-1 transition-all cursor-pointer border ${
                 config.viewMode === "coloring_plate"
                   ? "bg-[#632CE5]/10 text-[#632CE5] border-[#632CE5]/40 shadow-lg shadow-[#632CE5]/5"
-                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[#212121] hover:bg-[#E8E9E3]"
+                  : "bg-white/60 text-zinc-500 border-transparent hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]"
               }`}
               title="Perfeito para criar placas de pintura de plástico para crianças"
             >
@@ -1233,7 +1233,7 @@ export default function CookieCutterMaker() {
           </div>
 
           {/* 3D STL PRINT DOWNLOADING AREA */}
-          <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-4">
+          <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-4">
             <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-2">
               <Download className="w-4 h-4 text-[#632CE5]" />
               <span>Ficheiros para Impressão 3D (STL)</span>
@@ -1255,14 +1255,14 @@ export default function CookieCutterMaker() {
                 <>
                   <button
                     onClick={() => exportToSTL("cutter")}
-                    className="py-2.5 px-3 bg-[#E8E9E3] hover:bg-[#F9FAF4] border border-[#E8E9E3] hover:border-[#E8E9E3] rounded text-[#212121] font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="py-2.5 px-3 bg-[var(--surface-container-high)] hover:bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] rounded text-[var(--workbench-text)] font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download Cortador (.STL)</span>
                   </button>
                   <button
                     onClick={() => exportToSTL("stamp")}
-                    className="py-2.5 px-3 bg-[#E8E9E3] hover:bg-[#F9FAF4] border border-[#E8E9E3] hover:border-[#E8E9E3] rounded text-[#212121] font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="py-2.5 px-3 bg-[var(--surface-container-high)] hover:bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] rounded text-[var(--workbench-text)] font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download Carimbo (.STL)</span>
@@ -1285,7 +1285,7 @@ export default function CookieCutterMaker() {
         <div className="lg:col-span-5 flex flex-col space-y-6">
           
           {/* CONTROL TABS */}
-          <div className="flex bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-1">
+          <div className="flex bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-1">
             {(["geral", "cutter", "stamp", "coloring", "biblioteca"] as const).map((tab) => (
               <button
                 key={tab}
@@ -1306,7 +1306,7 @@ export default function CookieCutterMaker() {
             <div className="space-y-6">
               
               {/* SVG IMPORT DROPZONE */}
-              <div className="bg-[#F9FAF4] border-2 border-dashed border-[#E8E9E3] hover:border-[#632CE5]/45 p-6 rounded-lg text-center transition-colors relative group">
+              <div className="bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] hover:border-[#632CE5]/45 p-6 rounded-lg text-center transition-colors relative group">
                 <input 
                   type="file" 
                   ref={fileInputRef}
@@ -1315,7 +1315,7 @@ export default function CookieCutterMaker() {
                   className="absolute inset-0 opacity-0 cursor-pointer" 
                 />
                 <Upload className="w-8 h-8 text-zinc-500 group-hover:text-[#632CE5] mx-auto mb-3 transition-colors" />
-                <span className="block text-xs font-bold text-zinc-300 group-hover:text-[#1A1C19] transition-colors">
+                <span className="block text-xs font-bold text-zinc-300 group-hover:text-[var(--workbench-text)] transition-colors">
                   Fazer Upload de SVG Próprio
                 </span>
                 <span className="block text-[10px] text-zinc-500 mt-1 font-mono">
@@ -1339,8 +1339,8 @@ export default function CookieCutterMaker() {
                       }}
                       className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer ${
                         activePresetId === p.id
-                          ? "bg-[#632CE5]/5 border-[#632CE5]/30 text-[#1A1C19] shadow-lg shadow-[#632CE5]/2"
-                          : "bg-[#E8E9E3] border-[#E2E3DD] text-zinc-400 hover:text-zinc-200 hover:bg-[#E8E9E3]"
+                          ? "bg-[#632CE5]/5 border-[#632CE5]/30 text-[var(--workbench-text)] shadow-lg shadow-[#632CE5]/2"
+                          : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-zinc-400 hover:text-zinc-200 hover:bg-[var(--surface-container-high)]"
                       }`}
                     >
                       <span className="text-xl">{p.icon}</span>
@@ -1354,8 +1354,8 @@ export default function CookieCutterMaker() {
               </div>
 
               {/* OVERALL SLIDER: SIZE */}
-              <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-4">
-                <div className="flex justify-between items-center border-b border-[#E2E3DD]/50 pb-2">
+              <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-4">
+                <div className="flex justify-between items-center border-b border-[var(--surface-container-high)]/50 pb-2">
                   <span className="text-[10px] font-black tracking-widest uppercase text-zinc-400">Dimensões do Biscoito</span>
                   <span className="text-[11px] font-mono text-[#632CE5] font-bold">{config.size} mm</span>
                 </div>
@@ -1400,8 +1400,8 @@ export default function CookieCutterMaker() {
 
           {/* TAB 2: CUTTER (CORTADOR SPECIFIC) */}
           {activeTab === "cutter" && (
-            <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[#E2E3DD] pb-3">
+            <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[var(--surface-container-high)] pb-3">
                 <Scissors className="w-4 h-4 text-[#632CE5]" />
                 <span>Geometria da Lâmina de Corte</span>
               </h3>
@@ -1443,7 +1443,7 @@ export default function CookieCutterMaker() {
               </div>
 
               {/* SLIDER: BRIM WIDTH */}
-              <div className="space-y-2 border-t border-[#E2E3DD] pt-4">
+              <div className="space-y-2 border-t border-[var(--surface-container-high)] pt-4">
                 <div className="flex justify-between items-center text-[11px]">
                   <span className="font-bold text-zinc-400">Largura da Aba de Apoio</span>
                   <span className="font-mono text-[#632CE5] font-bold">{config.brimWidth} mm</span>
@@ -1482,14 +1482,14 @@ export default function CookieCutterMaker() {
 
           {/* TAB 3: STAMP (CARIMBO SPECIFIC) */}
           {activeTab === "stamp" && (
-            <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[#E2E3DD] pb-3">
+            <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[var(--surface-container-high)] pb-3">
                 <Hammer className="w-4 h-4 text-[#632CE5]" />
                 <span>Geometria do Carimbo (Massa)</span>
               </h3>
 
               {/* TEXT LAYERS - Compact */}
-              <div className="space-y-2 bg-white border border-[#E2E3DD] rounded-lg p-3">
+              <div className="space-y-2 bg-white border border-[var(--surface-container-high)] rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Type className="w-3.5 h-3.5 text-[#632CE5]" />
@@ -1502,7 +1502,7 @@ export default function CookieCutterMaker() {
                     type="text"
                     id="addTextInput"
                     placeholder="Digite o texto..."
-                    className="flex-1 px-2 py-1.5 text-[11px] bg-zinc-50 border border-[#E2E3DD] rounded focus:outline-none focus:ring-1 focus:ring-[#632CE5]/50"
+                    className="flex-1 px-2 py-1.5 text-[11px] bg-zinc-50 border border-[var(--surface-container-high)] rounded focus:outline-none focus:ring-1 focus:ring-[#632CE5]/50"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const input = e.target as HTMLInputElement;
@@ -1530,7 +1530,7 @@ export default function CookieCutterMaker() {
                 {textLayers.length > 0 && (
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {textLayers.map((layer) => (
-                      <div key={layer.id} className="bg-zinc-50 border border-[#E2E3DD] rounded-lg p-2 space-y-1.5">
+                      <div key={layer.id} className="bg-zinc-50 border border-[var(--surface-container-high)] rounded-lg p-2 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-zinc-600 truncate max-w-[120px]">
                             "{layer.text}"
@@ -1676,7 +1676,7 @@ export default function CookieCutterMaker() {
               </div>
 
               {/* SLIDER: CLEARANCE GAP */}
-              <div className="space-y-2 border-t border-[#E2E3DD] pt-4">
+              <div className="space-y-2 border-t border-[var(--surface-container-high)] pt-4">
                 <div className="flex justify-between items-center text-[11px]">
                   <span className="font-bold text-zinc-400">Folga de Tolerância (Corte-Carimbo)</span>
                   <span className="font-mono text-[#632CE5] font-bold">{config.clearance} mm</span>
@@ -1696,13 +1696,13 @@ export default function CookieCutterMaker() {
               </div>
 
               {/* OPTION: ADD GRIP HANDLE */}
-              <div className="space-y-3 border-t border-[#E2E3DD] pt-4">
+              <div className="space-y-3 border-t border-[var(--surface-container-high)] pt-4">
                 <label className="flex items-center gap-3 text-xs text-zinc-300 font-bold cursor-pointer">
                   <input 
                     type="checkbox" 
                     checked={config.addHandle}
                     onChange={(e) => setConfig(prev => ({ ...prev, addHandle: e.target.checked }))}
-                    className="w-4 h-4 rounded text-[#632CE5] bg-white border-[#E8E9E3] accent-[#632CE5]"
+                    className="w-4 h-4 rounded text-[#632CE5] bg-white border-[var(--surface-container-high)] accent-[#632CE5]"
                   />
                   <span>Adicionar Alça/Puxador Traseiro</span>
                 </label>
@@ -1730,8 +1730,8 @@ export default function CookieCutterMaker() {
 
           {/* TAB 4: COLORING DRAWING (IMPRIMIR E PINTAR SPECIFIC) */}
           {activeTab === "coloring" && (
-            <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[#E2E3DD] pb-3">
+            <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-6">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[var(--surface-container-high)] pb-3">
                 <Palette className="w-4 h-4 text-[#632CE5]" />
                 <span>Configurar Placa para Colorir 🎨</span>
               </h3>
@@ -1791,8 +1791,8 @@ export default function CookieCutterMaker() {
                 />
               </div>
 
-              <div className="bg-[#E8E9E3] border border-[#E2E3DD] rounded p-3 text-[10px] text-zinc-400 font-mono space-y-1">
-                <div className="text-[#1A1C19] font-bold mb-1 flex items-center gap-1.5 text-[10.5px]">
+              <div className="bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] rounded p-3 text-[10px] text-zinc-400 font-mono space-y-1">
+                <div className="text-[var(--workbench-text)] font-bold mb-1 flex items-center gap-1.5 text-[10.5px]">
                   <Palette className="w-3.5 h-3.5 text-yellow-500" />
                   Dica de Impressão (Fatiador):
                 </div>
@@ -1805,8 +1805,8 @@ export default function CookieCutterMaker() {
 
           {/* TAB 5: BIBLIOTECA (SAVED SAVES) */}
           {activeTab === "biblioteca" && (
-            <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[#E2E3DD] pb-3">
+            <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5 border-b border-[var(--surface-container-high)] pb-3">
                 <Folder className="w-4 h-4 text-[#632CE5]" />
                 <span>Meus Cortadores Salvos</span>
               </h3>
@@ -1822,14 +1822,14 @@ export default function CookieCutterMaker() {
                     <div 
                       key={proj.id}
                       onClick={() => handleLoadProject(proj)}
-                      className="group bg-[#E8E9E3] border border-[#E2E3DD] hover:border-[#632CE5]/40 p-3 rounded-lg flex justify-between items-center transition-all cursor-pointer"
+                      className="group bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] hover:border-[#632CE5]/40 p-3 rounded-lg flex justify-between items-center transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="text-lg bg-[#E8E9E3] p-2 border border-[#E2E3DD] rounded">
+                        <div className="text-lg bg-[var(--surface-container-high)] p-2 border border-[var(--surface-container-high)] rounded">
                           {PRESETS.find(p => p.id === proj.presetId)?.icon || "🍪"}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-[#1A1C19] group-hover:text-[#632CE5] transition-colors">
+                          <span className="text-xs font-bold text-[var(--workbench-text)] group-hover:text-[#632CE5] transition-colors">
                             {proj.name}
                           </span>
                           <span className="text-[9px] text-zinc-500 font-mono mt-0.5">
@@ -1853,8 +1853,8 @@ export default function CookieCutterMaker() {
           )}
 
           {/* VECTOR LAYER PATH MANAGER (STRICT CONTROL) */}
-          <div className="bg-[#F9FAF4] border border-[#E2E3DD] rounded-lg p-5 space-y-4">
-            <div className="flex justify-between items-center border-b border-[#E2E3DD] pb-3">
+          <div className="bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg p-5 space-y-4">
+            <div className="flex justify-between items-center border-b border-[var(--surface-container-high)] pb-3">
               <h3 className="text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-[#632CE5]" />
                 <span>Gestão de Camadas do Vetor (SVG)</span>
@@ -1872,7 +1872,7 @@ export default function CookieCutterMaker() {
               {layers.map((layer) => (
                 <div 
                   key={layer.id} 
-                  className="bg-white/30 border border-[#E2E3DD] p-2.5 rounded flex flex-col sm:flex-row justify-between sm:items-center gap-3"
+                  className="bg-white/30 border border-[var(--surface-container-high)] p-2.5 rounded flex flex-col sm:flex-row justify-between sm:items-center gap-3"
                 >
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10.5px] font-mono text-zinc-300 font-bold truncate">
@@ -1886,7 +1886,7 @@ export default function CookieCutterMaker() {
                   </div>
 
                   {/* Symmetrical Layer toggle handles */}
-                  <div className="flex border border-[#E2E3DD] p-0.5 bg-white/60 rounded shrink-0">
+                  <div className="flex border border-[var(--surface-container-high)] p-0.5 bg-white/60 rounded shrink-0">
                     <button
                       onClick={() => toggleLayerType(layer.id, "cutter")}
                       className={`px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
@@ -1913,7 +1913,7 @@ export default function CookieCutterMaker() {
                       onClick={() => toggleLayerType(layer.id, "ignore")}
                       className={`px-2 py-1 rounded text-[8px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                         layer.type === "ignore"
-                          ? "bg-[#F9FAF4] text-zinc-400"
+                          ? "bg-[var(--workbench-viewport)] text-zinc-400"
                           : "text-zinc-500 hover:text-zinc-300"
                       }`}
                       title="Ignora este traço na geração de 3D"

@@ -1414,37 +1414,37 @@ export default function PuzzleGenerator() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#F9FAF4] text-[#1A1C19] font-sans overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--workbench-viewport)] text-[var(--workbench-text)] font-sans overflow-hidden">
       
       {/* TOP HEADER & STUDIO MODE SWITCHER */}
-      <header className="h-14 px-6 bg-white border-b border-[#E2E3DD] flex items-center justify-between shrink-0">
+      <header className="h-14 px-6 bg-white border-b border-[var(--surface-container-high)] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-[#632CE5]/10 border border-[#632CE5]/40 flex items-center justify-center text-[#632CE5]">
             <Puzzle className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xs font-black uppercase tracking-wider text-[#1A1C19]">
+              <h1 className="text-xs font-black uppercase tracking-wider text-[var(--workbench-text)]">
                 Puzzle & Memory Game AI Studio
               </h1>
               <span className="bg-[#632CE5]/10 text-[#632CE5] border border-[#632CE5]/30 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
                 2D & 3D
               </span>
             </div>
-            <p className="text-[10px] text-[#687064] font-mono">
+            <p className="text-[10px] text-[var(--on-surface-variant)] font-mono">
               Gere com IA, aplique moldes cortantes, exporte para impressão, laser ou 3D
             </p>
           </div>
         </div>
 
         {/* 2D vs 3D STUDIO TAB */}
-        <div className="flex items-center gap-1.5 bg-[#F3F4EE] p-1 rounded-xl border border-[#E2E3DD]">
+        <div className="flex items-center gap-1.5 bg-[var(--surface-container-low)] p-1 rounded-xl border border-[var(--surface-container-high)]">
           <button
             onClick={() => setActiveTab("2d")}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === "2d"
                 ? "bg-[#632CE5] text-white shadow-md shadow-[#632CE5]/20"
-                : "text-[#687064] hover:text-[#1A1C19] hover:bg-white"
+                : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-white"
             }`}
           >
             <Printer className="w-3.5 h-3.5" />
@@ -1456,7 +1456,7 @@ export default function PuzzleGenerator() {
             className={`px-3.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === "3d"
                 ? "bg-[#632CE5] text-white shadow-md shadow-[#632CE5]/20"
-                : "text-[#687064] hover:text-[#1A1C19] hover:bg-white"
+                : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-white"
             }`}
           >
             <Box className="w-3.5 h-3.5" />
@@ -1469,7 +1469,7 @@ export default function PuzzleGenerator() {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         
         {/* LEFT WORKSPACE: PREVIEW CANVAS */}
-        <div className="flex-1 flex flex-col bg-[#F3F4EE] relative overflow-hidden border-r border-[#E2E3DD]">
+        <div className="flex-1 flex flex-col bg-[var(--surface-container-low)] relative overflow-hidden border-r border-[var(--surface-container-high)]">
           
           {/* TAB 2D VIEWPORT */}
           {activeTab === "2d" && (
@@ -1484,7 +1484,7 @@ export default function PuzzleGenerator() {
               
               {/* SUBVIEW CONTROLS FOR 2D */}
               {gameType === "puzzle" && (
-                <div className="absolute top-4 left-6 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-[#E2E3DD]">
+                <div className="absolute top-4 left-6 z-20 flex items-center gap-1.5 bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-[var(--surface-container-high)]">
                   {[
                     { id: "withMold", label: "Imagem com Molde", icon: Eye },
                     { id: "moldOnly", label: "Apenas Linhas de Corte (SVG)", icon: Scissors },
@@ -1498,7 +1498,7 @@ export default function PuzzleGenerator() {
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                           previewMode2D === b.id
                             ? "bg-[#632CE5] text-white shadow-sm"
-                            : "text-[#687064] hover:text-[#1A1C19] hover:bg-[#E8E9E3]"
+                            : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -1513,7 +1513,7 @@ export default function PuzzleGenerator() {
               {(isProcessing2D || isGeneratingAI) && (
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/80 backdrop-blur-md">
                   <Loader2 className="w-12 h-12 text-[#632CE5] animate-spin mb-3" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#1A1C19]">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-[var(--workbench-text)]">
                     {isGeneratingAI ? "Gerando Imagem com IA..." : "Renderizando Molde Vetorial..."}
                   </h3>
                   {generationProgress.message && (
@@ -1527,7 +1527,7 @@ export default function PuzzleGenerator() {
               {/* PUZZLE 2D PREVIEW */}
               {gameType === "puzzle" && (
                 <div className="flex flex-col items-center justify-center max-w-full max-h-full">
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-[#E2E3DD] max-w-[500px] max-h-[500px] bg-white flex items-center justify-center">
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-[var(--surface-container-high)] max-w-[500px] max-h-[500px] bg-white flex items-center justify-center">
                     {previewMode2D === "withMold" && puzzleResult?.imageWithMoldPNG && (
                       <img 
                         src={puzzleResult.imageWithMoldPNG} 
@@ -1544,17 +1544,17 @@ export default function PuzzleGenerator() {
                     )}
                     {previewMode2D === "moldOnly" && puzzleResult?.moldSVGOnly && (
                       <div 
-                        className="w-[450px] h-[450px] p-6 flex items-center justify-center bg-[#F3F4EE]"
+                        className="w-[450px] h-[450px] p-6 flex items-center justify-center bg-[var(--surface-container-low)]"
                         dangerouslySetInnerHTML={{ __html: puzzleResult.moldSVGOnly }}
                       />
                     )}
                   </div>
 
-                  <div className="mt-4 flex items-center gap-3 text-xs text-[#687064] font-mono">
-                    <span className="bg-white px-2 py-1 rounded border border-[#E2E3DD] text-[#1A1C19]">
+                  <div className="mt-4 flex items-center gap-3 text-xs text-[var(--on-surface-variant)] font-mono">
+                    <span className="bg-white px-2 py-1 rounded border border-[var(--surface-container-high)] text-[var(--workbench-text)]">
                       {difficulty.cols}x{difficulty.rows} ({difficulty.cols * difficulty.rows} Peças)
                     </span>
-                    <span className="bg-white px-2 py-1 rounded border border-[#E2E3DD] text-[#632CE5] capitalize font-bold">
+                    <span className="bg-white px-2 py-1 rounded border border-[var(--surface-container-high)] text-[#632CE5] capitalize font-bold">
                       Molde: {moldShape}
                     </span>
                   </div>
@@ -1565,7 +1565,7 @@ export default function PuzzleGenerator() {
               {gameType === "memory" && (
                 <div className="flex flex-col items-center justify-center w-full max-w-2xl max-h-full">
                   {memoryResult?.memorySheetPNG ? (
-                    <div className="rounded-xl overflow-hidden shadow-2xl border border-[#E2E3DD] max-h-[520px] overflow-y-auto">
+                    <div className="rounded-xl overflow-hidden shadow-2xl border border-[var(--surface-container-high)] max-h-[520px] overflow-y-auto">
                       <img 
                         src={memoryResult.memorySheetPNG} 
                         alt="Folha Jogo da Memória" 
@@ -1573,10 +1573,10 @@ export default function PuzzleGenerator() {
                       />
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-[#E2E3DD] rounded-2xl text-center">
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-[var(--surface-container-high)] rounded-2xl text-center">
                       <LayoutGrid className="w-12 h-12 text-[#B0B5A8] mb-3" />
-                      <h3 className="text-xs font-bold text-[#1A1C19]">Nenhuma folha gerada ainda</h3>
-                      <p className="text-[10px] text-[#687064] mt-1 max-w-sm">
+                      <h3 className="text-xs font-bold text-[var(--workbench-text)]">Nenhuma folha gerada ainda</h3>
+                      <p className="text-[10px] text-[var(--on-surface-variant)] mt-1 max-w-sm">
                         Clique em "Gerar Jogo da Memória com IA" ou envie imagens para criar a grade de pares imprimível.
                       </p>
                     </div>
@@ -1598,7 +1598,7 @@ export default function PuzzleGenerator() {
 
                     <button
                       onClick={() => downloadFile(puzzleResult.imageWithMoldSVG, `puzzle_${difficulty.cols}x${difficulty.rows}_laser_print.svg`, true)}
-                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#F3F4EE] text-[#1A1C19] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer border border-[#E2E3DD]"
+                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-[var(--surface-container-low)] text-[var(--workbench-text)] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer border border-[var(--surface-container-high)]"
                     >
                       <Scissors className="w-3.5 h-3.5 text-[#632CE5]" />
                       <span>SVG Vetorial com Molde</span>
@@ -1606,7 +1606,7 @@ export default function PuzzleGenerator() {
 
                     <button
                       onClick={() => downloadFile(puzzleResult.moldSVGOnly, `linhas_de_corte_${difficulty.cols}x${difficulty.rows}.svg`, true)}
-                      className="px-3 py-2 rounded-xl bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#494455] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer border border-[#E2E3DD]"
+                      className="px-3 py-2 rounded-xl bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer border border-[var(--surface-container-high)]"
                       title="Linhas vetoriais de corte puras para Cricut, Silhouette, Laser, etc."
                     >
                       <Scissors className="w-3.5 h-3.5 text-red-400" />
@@ -1627,7 +1627,7 @@ export default function PuzzleGenerator() {
 
                     <button
                       onClick={() => downloadFile(memoryResult.memorySheetSVG, `jogo_memoria_${memoryResult.pairsCount}_pares.svg`, true)}
-                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#F3F4EE] text-[#1A1C19] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer border border-[#E2E3DD]"
+                      className="px-3.5 py-2 rounded-xl bg-white hover:bg-[var(--surface-container-low)] text-[var(--workbench-text)] font-bold text-xs flex items-center gap-2 transition-all cursor-pointer border border-[var(--surface-container-high)]"
                     >
                       <Download className="w-4 h-4 text-[#632CE5]" />
                       <span>Baixar Folha Vetorial (SVG)</span>
@@ -1644,8 +1644,8 @@ export default function PuzzleGenerator() {
               {isProcessing3D && (
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/75 backdrop-blur-md">
                   <Loader2 className="w-12 h-12 text-[#632CE5] animate-spin mb-3" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#1A1C19]">Calculando Geometria 3D CSG</h3>
-                  <p className="text-[10px] text-[#687064] mt-1">Gerando encaixes e molde dimensional...</p>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-[var(--workbench-text)]">Calculando Geometria 3D CSG</h3>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] mt-1">Gerando encaixes e molde dimensional...</p>
                 </div>
               )}
 
@@ -1748,13 +1748,13 @@ export default function PuzzleGenerator() {
 
               {/* 3D VIEW & SHADING TOGGLES */}
               <div className="absolute top-4 right-4 flex items-center gap-2">
-                <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-[#E2E3DD] flex items-center gap-1">
+                <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-[var(--surface-container-high)] flex items-center gap-1">
                   <button
                     onClick={() => setShadingMode3D(shadingMode3D === "textured" ? "solid" : "textured")}
                     className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                       shadingMode3D === "textured"
-                        ? "bg-amber-400 text-[#1A1C19] shadow-sm"
-                        : "text-[#687064] hover:text-[#1A1C19] hover:bg-[#F3F4EE]"
+                        ? "bg-amber-400 text-[var(--workbench-text)] shadow-sm"
+                        : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-low)]"
                     }`}
                   >
                     <Sparkles className="w-3.5 h-3.5" />
@@ -1762,7 +1762,7 @@ export default function PuzzleGenerator() {
                   </button>
                 </div>
 
-                <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-[#E2E3DD] flex items-center gap-1">
+                <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-[var(--surface-container-high)] flex items-center gap-1">
                   {[
                     { id: "pieces", label: "Peças (Sem Fundo)", icon: Puzzle },
                     { id: "both", label: "Conjunto 3D", icon: Layers },
@@ -1776,7 +1776,7 @@ export default function PuzzleGenerator() {
                         className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                           viewMode3D === v.id
                             ? "bg-[#632CE5] text-white shadow-sm"
-                            : "text-[#687064] hover:text-[#1A1C19] hover:bg-[#F3F4EE]"
+                            : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-low)]"
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
@@ -1788,7 +1788,7 @@ export default function PuzzleGenerator() {
               </div>
 
               {/* 3D BOTTOM ACTIONS (3MF MULTI-COLOR & STL) */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-wrap justify-center gap-2 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl border border-[#E2E3DD] shadow-2xl max-w-[95%]">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-wrap justify-center gap-2 bg-white/95 backdrop-blur-md p-2.5 rounded-2xl border border-[var(--surface-container-high)] shadow-2xl max-w-[95%]">
                 {/* 3MF Multi-Color Primary Export */}
                 <button
                   onClick={export3MFPiecesOnly}
@@ -1816,7 +1816,7 @@ export default function PuzzleGenerator() {
                   <button
                     onClick={export3MFTrayOnly}
                     disabled={isProcessing3D || isExporting3MF}
-                    className="px-3 py-2.5 rounded-xl bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#494455] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[#E2E3DD] disabled:opacity-50"
+                    className="px-3 py-2.5 rounded-xl bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[var(--surface-container-high)] disabled:opacity-50"
                     title="Exporta apenas o estojo/bandeja em 3MF com a cor do filamento 2"
                   >
                     <Box className="w-3.5 h-3.5 text-[#632CE5]" />
@@ -1824,7 +1824,7 @@ export default function PuzzleGenerator() {
                   </button>
                 )}
 
-                <div className="h-5 w-px bg-[#E8E9E3] mx-1 hidden sm:block" />
+                <div className="h-5 w-px bg-[var(--surface-container-high)] mx-1 hidden sm:block" />
 
                 {/* STL Fallbacks */}
                 <button
@@ -1835,7 +1835,7 @@ export default function PuzzleGenerator() {
                       : `quebracabeca_3d_pecas_${config3D.columns}x${config3D.rows}.stl`
                   )}
                   disabled={isProcessing3D || finalPieces3D.length === 0}
-                  className="px-2.5 py-2 rounded-xl bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#687064] hover:text-[#1A1C19] font-semibold text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[#E2E3DD] disabled:opacity-50"
+                  className="px-2.5 py-2 rounded-xl bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] font-semibold text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[var(--surface-container-high)] disabled:opacity-50"
                   title="Exporta em formato STL clássico (monocromático)"
                 >
                   <Download className="w-3 h-3" />
@@ -1850,8 +1850,8 @@ export default function PuzzleGenerator() {
         <div className="w-full md:w-[400px] bg-white flex flex-col overflow-hidden shrink-0">
           
           {/* GAME TYPE SELECTOR (Puzzle vs Memory) */}
-          <div className="p-4 border-b border-[#E2E3DD]">
-            <div className="grid grid-cols-2 gap-2 bg-[#F3F4EE] p-1.5 rounded-xl border border-[#E2E3DD]">
+          <div className="p-4 border-b border-[var(--surface-container-high)]">
+            <div className="grid grid-cols-2 gap-2 bg-[var(--surface-container-low)] p-1.5 rounded-xl border border-[var(--surface-container-high)]">
               <button
                 type="button"
                 onClick={() => {
@@ -1863,7 +1863,7 @@ export default function PuzzleGenerator() {
                 className={`py-2 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   gameType === "puzzle"
                     ? "bg-[#632CE5] text-white shadow-sm"
-                    : "text-[#687064] hover:text-[#1A1C19]"
+                    : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                 }`}
               >
                 <Puzzle className="w-4 h-4" />
@@ -1881,7 +1881,7 @@ export default function PuzzleGenerator() {
                 className={`py-2 rounded-lg text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   gameType === "memory"
                     ? "bg-[#632CE5] text-white shadow-sm"
-                    : "text-[#687064] hover:text-[#1A1C19]"
+                    : "text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -1896,7 +1896,7 @@ export default function PuzzleGenerator() {
             {/* SOURCE SELECTOR: AI vs Upload */}
             <div className="space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-black uppercase tracking-wider text-[#687064] flex items-center gap-1.5">
+                <span className="font-black uppercase tracking-wider text-[var(--on-surface-variant)] flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-[#632CE5]" /> Origem da Imagem
                 </span>
               </div>
@@ -1908,7 +1908,7 @@ export default function PuzzleGenerator() {
                   className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     imageSource === "ai"
                       ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                      : "bg-[#F3F4EE]/50 border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                      : "bg-[var(--surface-container-low)]/50 border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                   }`}
                 >
                   <Wand2 className="w-4 h-4" />
@@ -1921,7 +1921,7 @@ export default function PuzzleGenerator() {
                   className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     imageSource === "upload"
                       ? "bg-[#632CE5]/10 border-[#632CE5] text-[#632CE5]"
-                      : "bg-[#F3F4EE]/50 border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                      : "bg-[var(--surface-container-low)]/50 border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                   }`}
                 >
                   <Upload className="w-4 h-4" />
@@ -1931,7 +1931,7 @@ export default function PuzzleGenerator() {
 
               {/* AI GENERATOR PANEL */}
               {imageSource === "ai" && (
-                <div className="p-3.5 rounded-2xl bg-[#F3F4EE]/80 border border-[#632CE5]/30 space-y-3">
+                <div className="p-3.5 rounded-2xl bg-[var(--surface-container-low)]/80 border border-[#632CE5]/30 space-y-3">
                   
                   {/* AI NOTICE BANNER IF ANY */}
                   {aiNotice && (
@@ -1949,7 +1949,7 @@ export default function PuzzleGenerator() {
                       <button 
                         type="button" 
                         onClick={() => setAiNotice(null)}
-                        className="text-[#687064] hover:text-[#1A1C19] p-0.5"
+                        className="text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] p-0.5"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -1957,7 +1957,7 @@ export default function PuzzleGenerator() {
                   )}
 
                   <div>
-                    <label className="text-[10px] font-black uppercase text-[#687064] block mb-1">
+                    <label className="text-[10px] font-black uppercase text-[var(--on-surface-variant)] block mb-1">
                       {gameType === "puzzle" ? "Descreva a Imagem do Quebra-Cabeça" : "Tema do Jogo da Memória"}
                     </label>
                     <textarea
@@ -1965,13 +1965,13 @@ export default function PuzzleGenerator() {
                       value={aiPrompt}
                       onChange={e => setAiPrompt(e.target.value)}
                       placeholder={gameType === "puzzle" ? "Ex: Ovo de Páscoa mágico decorado com flores e cores vivas..." : "Ex: Animais da Fazenda, Frutas Tropicais, Veículos..."}
-                      className="w-full bg-white border border-[#E2E3DD] rounded-xl p-2.5 text-xs text-[#1A1C19] placeholder:text-[#B0B5A8] focus:border-[#632CE5] outline-none resize-none"
+                      className="w-full bg-white border border-[var(--surface-container-high)] rounded-xl p-2.5 text-xs text-[var(--workbench-text)] placeholder:text-[#B0B5A8] focus:border-[#632CE5] outline-none resize-none"
                     />
                   </div>
 
                   {/* QUICK THEME PROMPTS & INSPIRATIONS */}
                   <div>
-                    <span className="text-[9px] font-bold text-[#687064] uppercase tracking-wider block mb-1">Temas Rápidos Populares</span>
+                    <span className="text-[9px] font-bold text-[var(--on-surface-variant)] uppercase tracking-wider block mb-1">Temas Rápidos Populares</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       {[
                         { title: "🥚 Ovo de Páscoa Floral", prompt: "Ovo de Páscoa decorado com padrões florais, laço dourado e cores vibrantes", style: "Páscoa / Ovo Decorado", shape: "egg" as MoldShapeType },
@@ -1991,7 +1991,7 @@ export default function PuzzleGenerator() {
                               setMoldShape(preset.shape);
                             }
                           }}
-                          className="text-[10px] text-left p-1.5 rounded-lg bg-white hover:bg-[#E8E9E3]/90 text-[#1A1C19] hover:text-[#1A1C19] border border-[#E2E3DD] hover:border-[#632CE5]/50 transition-all truncate cursor-pointer"
+                          className="text-[10px] text-left p-1.5 rounded-lg bg-white hover:bg-[var(--surface-container-high)]/90 text-[var(--workbench-text)] hover:text-[var(--workbench-text)] border border-[var(--surface-container-high)] hover:border-[#632CE5]/50 transition-all truncate cursor-pointer"
                         >
                           {preset.title}
                         </button>
@@ -2002,11 +2002,11 @@ export default function PuzzleGenerator() {
                   {/* AI STYLE SELECTION */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-[#687064] block mb-1">Estilo Artístico</label>
+                      <label className="text-[10px] font-black uppercase text-[var(--on-surface-variant)] block mb-1">Estilo Artístico</label>
                       <select
                         value={aiStyle}
                         onChange={e => setAiStyle(e.target.value)}
-                        className="w-full bg-white border border-[#E2E3DD] rounded-xl p-2 text-[11px] text-[#1A1C19] focus:border-[#632CE5] outline-none"
+                        className="w-full bg-white border border-[var(--surface-container-high)] rounded-xl p-2 text-[11px] text-[var(--workbench-text)] focus:border-[#632CE5] outline-none"
                       >
                         <option value="Desenho infantil">Desenho Infantil</option>
                         <option value="Páscoa / Ovo Decorado">Páscoa / Ovo Decorado</option>
@@ -2019,11 +2019,11 @@ export default function PuzzleGenerator() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-black uppercase text-[#687064] block mb-1">Modelo de IA</label>
+                      <label className="text-[10px] font-black uppercase text-[var(--on-surface-variant)] block mb-1">Modelo de IA</label>
                       <select
                         value={aiModel}
                         onChange={e => setAiModel(e.target.value)}
-                        className="w-full bg-white border border-[#E2E3DD] rounded-xl p-2 text-[11px] text-[#1A1C19] focus:border-[#632CE5] outline-none"
+                        className="w-full bg-white border border-[var(--surface-container-high)] rounded-xl p-2 text-[11px] text-[var(--workbench-text)] focus:border-[#632CE5] outline-none"
                       >
                         <option value="gemini-3.1-flash-lite-image">Gemini Flash Lite (Rápido)</option>
                         <option value="gemini-3.1-flash-image">Gemini Flash Image (HD)</option>
@@ -2039,11 +2039,11 @@ export default function PuzzleGenerator() {
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           <span>{generationProgress.message || "Gerando com IA..."}</span>
                         </span>
-                        <span className="font-mono text-[#687064]">
+                        <span className="font-mono text-[var(--on-surface-variant)]">
                           {generationProgress.current} / {generationProgress.total}
                         </span>
                       </div>
-                      <div className="w-full h-1.5 bg-[#E8E9E3] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[var(--surface-container-high)] rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-[#632CE5] to-purple-500 transition-all duration-300 rounded-full"
                           style={{
@@ -2097,19 +2097,19 @@ export default function PuzzleGenerator() {
                     className={`p-5 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all cursor-pointer ${
                       isDragging
                         ? "border-[#632CE5] bg-[#632CE5]/15 scale-[1.01] shadow-lg shadow-[#632CE5]/20"
-                        : "border-[#E2E3DD] hover:border-[#632CE5]/70 bg-[#F3F4EE]/50 hover:bg-[#F3F4EE]/80"
+                        : "border-[var(--surface-container-high)] hover:border-[#632CE5]/70 bg-[var(--surface-container-low)]/50 hover:bg-[var(--surface-container-low)]/80"
                     }`}
                   >
                     <div className="w-10 h-10 rounded-xl bg-[#632CE5]/15 border border-[#632CE5]/30 flex items-center justify-center text-[#632CE5]">
                       <Upload className="w-5 h-5" />
                     </div>
                     <div className="text-center">
-                      <p className="text-xs font-bold text-[#1A1C19]">
+                      <p className="text-xs font-bold text-[var(--workbench-text)]">
                         {gameType === "memory"
                           ? "Arraste ou clique para enviar fotos das cartas"
                           : "Arraste ou clique para subir sua imagem"}
                       </p>
-                      <p className="text-[10px] text-[#687064] mt-1">
+                      <p className="text-[10px] text-[var(--on-surface-variant)] mt-1">
                         {gameType === "memory"
                           ? "Selecione uma ou várias imagens (PNG, JPG, WEBP, SVG)"
                           : "Suporta PNG, JPG, WEBP, SVG • Preserva cores e artes internas"}
@@ -2119,25 +2119,25 @@ export default function PuzzleGenerator() {
 
                   {/* CURRENT UPLOADED PREVIEW THUMBNAIL (PUZZLE) */}
                   {gameType === "puzzle" && currentImage && (
-                    <div className="p-3 bg-white rounded-xl border border-[#E2E3DD] flex items-center gap-3">
+                    <div className="p-3 bg-white rounded-xl border border-[var(--surface-container-high)] flex items-center gap-3">
                       <img
                         src={currentImage}
                         alt="Miniatura"
-                        className="w-12 h-12 object-cover rounded-lg border border-[#E2E3DD] shrink-0 bg-[#F3F4EE]"
+                        className="w-12 h-12 object-cover rounded-lg border border-[var(--surface-container-high)] shrink-0 bg-[var(--surface-container-low)]"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#632CE5] shrink-0" />
-                          <p className="text-[11px] font-bold text-[#1A1C19] truncate">
+                          <p className="text-[11px] font-bold text-[var(--workbench-text)] truncate">
                             {uploadedFileName || "Imagem ativa carregada"}
                           </p>
                         </div>
-                        <p className="text-[9px] text-[#687064] font-mono mt-0.5">Pronta para aplicar moldes e corte</p>
+                        <p className="text-[9px] text-[var(--on-surface-variant)] font-mono mt-0.5">Pronta para aplicar moldes e corte</p>
                       </div>
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#632CE5] hover:text-[#1A1C19] text-[10px] font-bold border border-[#E2E3DD] transition-colors cursor-pointer shrink-0"
+                        className="px-2.5 py-1.5 rounded-lg bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[#632CE5] hover:text-[var(--workbench-text)] text-[10px] font-bold border border-[var(--surface-container-high)] transition-colors cursor-pointer shrink-0"
                       >
                         Trocar
                       </button>
@@ -2148,9 +2148,9 @@ export default function PuzzleGenerator() {
 
               {/* CURRENT MEMORY CARDS LIST (AI OR UPLOAD) */}
               {gameType === "memory" && memoryCards.length > 0 && (
-                <div className="p-3 bg-white rounded-xl border border-[#E2E3DD] space-y-2">
+                <div className="p-3 bg-white rounded-xl border border-[var(--surface-container-high)] space-y-2">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-bold text-[#1A1C19]">
+                    <span className="font-bold text-[var(--workbench-text)]">
                       {memoryCards.length} {memoryCards.length === 1 ? "Carta Carregada" : "Cartas Geradas/Carregadas"} ({memoryCards.length} Pares)
                     </span>
                     <button
@@ -2168,11 +2168,11 @@ export default function PuzzleGenerator() {
                       <div 
                         key={idx} 
                         onClick={() => setCurrentImage(card)}
-                        className="relative group rounded-lg overflow-hidden border border-[#E2E3DD] hover:border-[#632CE5] aspect-square bg-[#F3F4EE] cursor-pointer"
+                        className="relative group rounded-lg overflow-hidden border border-[var(--surface-container-high)] hover:border-[#632CE5] aspect-square bg-[var(--surface-container-low)] cursor-pointer"
                         title={`Clique para selecionar como ativa ou remover • Carta ${idx + 1}`}
                       >
                         <img src={card} alt={`Carta ${idx + 1}`} className="w-full h-full object-cover" />
-                        <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-white/70 text-[8px] font-mono text-[#1A1C19]">
+                        <div className="absolute top-1 left-1 px-1 py-0.5 rounded bg-white/70 text-[8px] font-mono text-[var(--workbench-text)]">
                           #{idx + 1}
                         </div>
                         <button
@@ -2194,7 +2194,7 @@ export default function PuzzleGenerator() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-1.5 rounded-lg bg-[#F3F4EE] hover:bg-[#E8E9E3] text-[#632CE5] text-[10px] font-bold border border-[#E2E3DD] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-1.5 rounded-lg bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[#632CE5] text-[10px] font-bold border border-[var(--surface-container-high)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Upload className="w-3 h-3" />
                       <span>Adicionar Mais Cartas</span>
@@ -2205,9 +2205,9 @@ export default function PuzzleGenerator() {
             </div>
 
             {/* MOLD / TOKEN SHAPE SELECTOR */}
-            <div className="space-y-2.5 p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD]">
+            <div className="space-y-2.5 p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)]">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-black uppercase tracking-wider text-[#687064] flex items-center gap-1.5">
+                <span className="font-black uppercase tracking-wider text-[var(--on-surface-variant)] flex items-center gap-1.5">
                   <Shapes className="w-3.5 h-3.5 text-[#632CE5]" /> {gameType === "puzzle" ? "Formato do Molde" : "Formato das Fichas 3D"}
                 </span>
                 <span className="text-[10px] text-[#632CE5] font-bold uppercase">
@@ -2245,7 +2245,7 @@ export default function PuzzleGenerator() {
                     className={`p-2 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
                       moldShape === s.id
                         ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5] font-bold"
-                        : "bg-white border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                        : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                     }`}
                   >
                     <span className="text-base">{s.icon}</span>
@@ -2257,9 +2257,9 @@ export default function PuzzleGenerator() {
 
             {/* DIFFICULTY / PIECES COUNT */}
             {gameType === "puzzle" ? (
-              <div className="space-y-3 p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD]">
+              <div className="space-y-3 p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)]">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-black uppercase tracking-wider text-[#687064] flex items-center gap-1.5">
+                  <span className="font-black uppercase tracking-wider text-[var(--on-surface-variant)] flex items-center gap-1.5">
                     <Grid3X3 className="w-3.5 h-3.5 text-[#632CE5]" /> Dificuldade / Peças
                   </span>
                   <span className="text-[10px] text-[#632CE5] font-mono font-bold">
@@ -2281,19 +2281,19 @@ export default function PuzzleGenerator() {
                       className={`p-2 rounded-xl border flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                         difficulty.rows === d.r && difficulty.cols === d.c
                           ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5] font-bold"
-                          : "bg-white border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                          : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                       }`}
                     >
                       <span className="font-black">{d.count} pcs</span>
-                      <span className="text-[8px] text-[#687064] font-mono">{d.c}x{d.r}</span>
+                      <span className="text-[8px] text-[var(--on-surface-variant)] font-mono">{d.c}x{d.r}</span>
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="space-y-3 p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD]">
+              <div className="space-y-3 p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)]">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-black uppercase tracking-wider text-[#687064] flex items-center gap-1.5">
+                  <span className="font-black uppercase tracking-wider text-[var(--on-surface-variant)] flex items-center gap-1.5">
                     <LayoutGrid className="w-3.5 h-3.5 text-[#632CE5]" /> Quantidade de Pares
                   </span>
                   <span className="text-[10px] text-[#632CE5] font-mono font-bold">
@@ -2310,11 +2310,11 @@ export default function PuzzleGenerator() {
                       className={`p-2 rounded-xl border flex flex-col items-center gap-0.5 transition-all cursor-pointer ${
                         memoryPairsCount === count
                           ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5] font-bold"
-                          : "bg-white border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                          : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                       }`}
                     >
                       <span className="font-black">{count} Pares</span>
-                      <span className="text-[8px] text-[#687064] font-mono">{count * 2} Cartas</span>
+                      <span className="text-[8px] text-[var(--on-surface-variant)] font-mono">{count * 2} Cartas</span>
                     </button>
                   ))}
                 </div>
@@ -2323,15 +2323,15 @@ export default function PuzzleGenerator() {
 
             {/* CUT STYLES & RICH VARIATIONS (PUZZLE) */}
             {gameType === "puzzle" && (
-              <div className="space-y-3 p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD]">
+              <div className="space-y-3 p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)]">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-black uppercase tracking-wider text-[#687064] flex items-center gap-1.5">
+                  <span className="font-black uppercase tracking-wider text-[var(--on-surface-variant)] flex items-center gap-1.5">
                     <Scissors className="w-3.5 h-3.5 text-[#632CE5]" /> Variação dos Cortes
                   </span>
                   <button
                     type="button"
                     onClick={() => setSeed3D(s => s + 1)}
-                    className="px-2 py-1 rounded-lg bg-[#E8E9E3] hover:bg-[#E2E3DD] text-[#632CE5] hover:text-[#1A1C19] text-[10px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[#E2E3DD] shadow-sm active:scale-95"
+                    className="px-2 py-1 rounded-lg bg-[var(--surface-container-high)] hover:bg-[var(--surface-container-high)] text-[#632CE5] hover:text-[var(--workbench-text)] text-[10px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-[var(--surface-container-high)] shadow-sm active:scale-95"
                     title="Gerar nova variação de formatos e curvas"
                   >
                     <RefreshCw className="w-3 h-3" />
@@ -2342,7 +2342,7 @@ export default function PuzzleGenerator() {
                 {/* CUT STYLE SELECTOR */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] font-bold text-[#687064]">Estilo das Abas e Encaixes</span>
+                    <span className="text-[10px] font-bold text-[var(--on-surface-variant)]">Estilo das Abas e Encaixes</span>
                     <span className="text-[9px] text-[#632CE5] font-mono capitalize">
                       {config3D.tabType === "classic" && "Clássico"}
                       {config3D.tabType === "organic" && "Orgânico Sinuoso"}
@@ -2370,12 +2370,12 @@ export default function PuzzleGenerator() {
                         className={`p-2 rounded-xl border flex flex-col items-center gap-0.5 text-center transition-all cursor-pointer ${
                           config3D.tabType === style.id
                             ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5] font-bold shadow-sm ring-1 ring-[#632CE5]/40"
-                            : "bg-white border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                            : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                         }`}
                       >
                         <span className="text-sm">{style.icon}</span>
                         <span className="font-bold leading-tight">{style.label}</span>
-                        <span className="text-[8px] text-[#687064] truncate leading-tight">{style.desc}</span>
+                        <span className="text-[8px] text-[var(--on-surface-variant)] truncate leading-tight">{style.desc}</span>
                       </button>
                     ))}
                   </div>
@@ -2387,14 +2387,14 @@ export default function PuzzleGenerator() {
                     className={`w-full mt-1.5 p-2 rounded-xl border flex items-center justify-between text-xs transition-all cursor-pointer ${
                       config3D.tabType === "mixed"
                         ? "bg-gradient-to-r from-[#632CE5]/20 to-purple-500/20 border-[#632CE5] text-[#632CE5] font-bold shadow-sm ring-1 ring-[#632CE5]/40"
-                        : "bg-white border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                        : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm">✨</span>
                       <div className="text-left">
                         <p className="font-bold text-[11px] leading-tight">Misto & Único (Ultra Variado)</p>
-                        <p className="text-[9px] text-[#687064] leading-tight">Cada borda recebe uma forma e curvatura diferente</p>
+                        <p className="text-[9px] text-[var(--on-surface-variant)] leading-tight">Cada borda recebe uma forma e curvatura diferente</p>
                       </div>
                     </div>
                     {config3D.tabType === "mixed" && (
@@ -2404,8 +2404,8 @@ export default function PuzzleGenerator() {
                 </div>
 
                 {/* IRREGULARITY & ASSYMETRY SLIDER */}
-                <div className="space-y-2 pt-2 border-t border-[#E2E3DD]/60 text-[10px]">
-                  <div className="flex justify-between text-[#687064]">
+                <div className="space-y-2 pt-2 border-t border-[var(--surface-container-high)]/60 text-[10px]">
+                  <div className="flex justify-between text-[var(--on-surface-variant)]">
                     <span className="font-medium">Assimetria & Deformação Orgânica</span>
                     <span className="text-[#632CE5] font-bold">
                       {Math.round(config3D.irregularity * 100)}%
@@ -2418,14 +2418,14 @@ export default function PuzzleGenerator() {
                     onChange={e => setConfig3D(p => ({ ...p, irregularity: parseFloat(e.target.value) }))}
                     className="w-full accent-[#632CE5]"
                   />
-                  <div className="flex justify-between text-[8px] text-[#687064] font-mono">
+                  <div className="flex justify-between text-[8px] text-[var(--on-surface-variant)] font-mono">
                     <span>0% (Grade Padrão)</span>
                     <span>50% (Equilibrado)</span>
                     <span>100% (Artesanal Livre)</span>
                   </div>
 
                   {/* TAB SIZE SLIDER */}
-                  <div className="flex justify-between text-[#687064] pt-1.5">
+                  <div className="flex justify-between text-[var(--on-surface-variant)] pt-1.5">
                     <span className="font-medium">Proporção dos Encaixes (Abas)</span>
                     <span className="text-[#632CE5] font-bold">{Math.round(config3D.tabSize * 100)}%</span>
                   </div>
@@ -2444,9 +2444,9 @@ export default function PuzzleGenerator() {
             {activeTab === "3d" && (
               <div className="space-y-3">
                 {/* 3D PIECES & DIMENSIONS */}
-                <div className="p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD] space-y-3">
+                <div className="p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#1A1C19] text-xs flex items-center gap-1.5">
+                    <span className="font-bold text-[var(--workbench-text)] text-xs flex items-center gap-1.5">
                       <Maximize2 className="w-4 h-4 text-[#632CE5]" /> Dimensões e Peças 3D
                     </span>
                     <span className="text-[10px] text-[#632CE5] font-mono font-bold">
@@ -2455,7 +2455,7 @@ export default function PuzzleGenerator() {
                   </div>
 
                   <div className="space-y-2.5 pt-1 text-[10px]">
-                    <div className="flex justify-between text-[#687064]">
+                    <div className="flex justify-between text-[var(--on-surface-variant)]">
                       <span>Largura</span>
                       <span className="text-[#632CE5] font-bold">{config3D.width} mm</span>
                     </div>
@@ -2467,7 +2467,7 @@ export default function PuzzleGenerator() {
                       className="w-full accent-[#632CE5]"
                     />
 
-                    <div className="flex justify-between text-[#687064]">
+                    <div className="flex justify-between text-[var(--on-surface-variant)]">
                       <span>Altura</span>
                       <span className="text-[#632CE5] font-bold">{config3D.height} mm</span>
                     </div>
@@ -2479,7 +2479,7 @@ export default function PuzzleGenerator() {
                       className="w-full accent-[#632CE5]"
                     />
 
-                    <div className="flex justify-between text-[#687064]">
+                    <div className="flex justify-between text-[var(--on-surface-variant)]">
                       <span>Espessura das Peças</span>
                       <span className="text-[#632CE5] font-bold">{config3D.thickness} mm</span>
                     </div>
@@ -2491,7 +2491,7 @@ export default function PuzzleGenerator() {
                       className="w-full accent-[#632CE5]"
                     />
 
-                    <div className="flex justify-between text-[#687064]">
+                    <div className="flex justify-between text-[var(--on-surface-variant)]">
                       <span>Explosão / Separação</span>
                       <span className="text-[#632CE5] font-bold">{config3D.explode} mm</span>
                     </div>
@@ -2504,8 +2504,8 @@ export default function PuzzleGenerator() {
                     />
 
                     {/* Cor do Verso / Substrato das Peças */}
-                    <div className="pt-2 border-t border-[#E2E3DD]/80">
-                      <span className="text-[#687064] block mb-1.5 font-medium">Cor do Verso e Laterais (MDF / Filamento)</span>
+                    <div className="pt-2 border-t border-[var(--surface-container-high)]/80">
+                      <span className="text-[var(--on-surface-variant)] block mb-1.5 font-medium">Cor do Verso e Laterais (MDF / Filamento)</span>
                       <div className="flex items-center gap-1.5">
                         {[
                           { name: "MDF Cru", color: "#D4B996" },
@@ -2520,7 +2520,7 @@ export default function PuzzleGenerator() {
                             type="button"
                             onClick={() => setConfig3D(p => ({ ...p, pieceColor: c.color }))}
                             className={`w-5 h-5 rounded-full border transition-all cursor-pointer ${
-                              config3D.pieceColor === c.color ? "ring-2 ring-[#632CE5] scale-110 border-white" : "border-[#E2E3DD] opacity-80"
+                              config3D.pieceColor === c.color ? "ring-2 ring-[#632CE5] scale-110 border-white" : "border-[var(--surface-container-high)] opacity-80"
                             }`}
                             style={{ backgroundColor: c.color }}
                             title={c.name}
@@ -2532,9 +2532,9 @@ export default function PuzzleGenerator() {
                 </div>
 
                 {/* MULTI-FILAMENT & 3MF COLOR MANAGEMENT */}
-                <div className="p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD] space-y-3">
+                <div className="p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#1A1C19] text-xs flex items-center gap-1.5">
+                    <span className="font-bold text-[var(--workbench-text)] text-xs flex items-center gap-1.5">
                       <Palette className="w-4 h-4 text-[#632CE5]" /> Filamentos & Cores (.3MF)
                     </span>
                     <span className="text-[9px] bg-[#632CE5]/20 text-[#632CE5] px-1.5 py-0.5 rounded font-black">
@@ -2544,20 +2544,20 @@ export default function PuzzleGenerator() {
 
                   {/* PRESET PALETTES */}
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[10px] text-[#687064] font-medium block">Paletas de Cores Rápidas:</span>
+                    <span className="text-[10px] text-[var(--on-surface-variant)] font-medium block">Paletas de Cores Rápidas:</span>
                     <div className="grid grid-cols-1 gap-1.5">
                       {FILAMENT_PRESETS.map((preset, idx) => (
                         <button
                           key={idx}
                           type="button"
                           onClick={() => applyFilamentPreset(preset)}
-                          className="w-full p-2 rounded-xl bg-white hover:bg-[#E8E9E3]/80 border border-[#E2E3DD] flex items-center justify-between transition-all cursor-pointer group"
+                          className="w-full p-2 rounded-xl bg-white hover:bg-[var(--surface-container-high)]/80 border border-[var(--surface-container-high)] flex items-center justify-between transition-all cursor-pointer group"
                         >
                           <div className="text-left">
-                            <span className="text-[11px] font-bold text-[#1A1C19] block group-hover:text-[#632CE5]">
+                            <span className="text-[11px] font-bold text-[var(--workbench-text)] block group-hover:text-[#632CE5]">
                               {preset.name}
                             </span>
-                            <span className="text-[9px] text-[#687064] block">
+                            <span className="text-[9px] text-[var(--on-surface-variant)] block">
                               {preset.desc}
                             </span>
                           </div>
@@ -2576,8 +2576,8 @@ export default function PuzzleGenerator() {
                   </div>
 
                   {/* COLOR DISTRIBUTION MODE */}
-                  <div className="space-y-1.5 pt-2 border-t border-[#E2E3DD]/80 text-[10px]">
-                    <span className="text-[#687064] font-medium block">Distribuição de Cores nas Peças:</span>
+                  <div className="space-y-1.5 pt-2 border-t border-[var(--surface-container-high)]/80 text-[10px]">
+                    <span className="text-[var(--on-surface-variant)] font-medium block">Distribuição de Cores nas Peças:</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       {[
                         { id: "uniform", label: "Mono-Cor (Slot 1)", desc: "1 filamento" },
@@ -2593,7 +2593,7 @@ export default function PuzzleGenerator() {
                           className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
                             colorDistributionMode === mode.id
                               ? "bg-[#632CE5]/15 border-[#632CE5] text-[#632CE5] ring-1 ring-[#632CE5]/30 font-bold"
-                              : "bg-white border-[#E2E3DD] text-[#687064] hover:text-[#1A1C19]"
+                              : "bg-white border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]"
                           } ${mode.id === "ams4" ? "col-span-2" : ""}`}
                         >
                           <span className="text-[10px] font-bold block">{mode.label}</span>
@@ -2604,13 +2604,13 @@ export default function PuzzleGenerator() {
                   </div>
 
                   {/* CUSTOM FILAMENT SLOTS */}
-                  <div className="space-y-2 pt-2 border-t border-[#E2E3DD]/80 text-[10px]">
-                    <span className="text-[#687064] font-medium block">Slots de Filamento Individuais:</span>
+                  <div className="space-y-2 pt-2 border-t border-[var(--surface-container-high)]/80 text-[10px]">
+                    <span className="text-[var(--on-surface-variant)] font-medium block">Slots de Filamento Individuais:</span>
                     <div className="space-y-1.5">
                       {filaments.map((slot, idx) => (
                         <div 
                           key={slot.id} 
-                          className="flex items-center justify-between p-1.5 rounded-xl bg-white border border-[#E2E3DD]/80"
+                          className="flex items-center justify-between p-1.5 rounded-xl bg-white border border-[var(--surface-container-high)]/80"
                         >
                           <div className="flex items-center gap-2">
                             <label className="relative cursor-pointer">
@@ -2626,11 +2626,11 @@ export default function PuzzleGenerator() {
                               />
                             </label>
                             <div>
-                              <span className="font-bold text-[#1A1C19] block text-[10px]">{slot.name}</span>
-                              <span className="text-[8px] font-mono text-[#687064] uppercase">{slot.color}</span>
+                              <span className="font-bold text-[var(--workbench-text)] block text-[10px]">{slot.name}</span>
+                              <span className="text-[8px] font-mono text-[var(--on-surface-variant)] uppercase">{slot.color}</span>
                             </div>
                           </div>
-                          <span className="text-[9px] text-[#687064] font-mono px-2 py-0.5 rounded bg-[#F3F4EE] border border-[#E2E3DD]">
+                          <span className="text-[9px] text-[var(--on-surface-variant)] font-mono px-2 py-0.5 rounded bg-[var(--surface-container-low)] border border-[var(--surface-container-high)]">
                             Slot #{idx + 1}
                           </span>
                         </div>
@@ -2639,27 +2639,27 @@ export default function PuzzleGenerator() {
                   </div>
 
                   {/* 3MF SLICER INFO */}
-                  <div className="p-2.5 rounded-xl bg-[#632CE5]/5 border border-[#632CE5]/20 text-[9px] text-[#687064] space-y-1">
+                  <div className="p-2.5 rounded-xl bg-[#632CE5]/5 border border-[#632CE5]/20 text-[9px] text-[var(--on-surface-variant)] space-y-1">
                     <p className="font-bold text-[#632CE5] flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-[#632CE5]" /> 100% Compatível com:
                     </p>
-                    <p className="text-[#687064] leading-relaxed">
+                    <p className="text-[var(--on-surface-variant)] leading-relaxed">
                       Bambu Studio (AMS 4 Cores), OrcaSlicer, PrusaSlicer (MMU), Creality Print e Anycubic. O arquivo .3MF já contém os IDs e cores de cada material.
                     </p>
                   </div>
                 </div>
 
                 {/* TRAY & CLEARANCE */}
-                <div className="p-3.5 rounded-2xl bg-[#F3F4EE]/60 border border-[#E2E3DD] space-y-3">
+                <div className="p-3.5 rounded-2xl bg-[var(--surface-container-low)]/60 border border-[var(--surface-container-high)] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#1A1C19] text-xs flex items-center gap-1.5">
+                    <span className="font-bold text-[var(--workbench-text)] text-xs flex items-center gap-1.5">
                       <Box className="w-4 h-4 text-[#632CE5]" /> Molde e Bandeja 3D
                     </span>
                     <button
                       type="button"
                       onClick={() => setConfig3D(p => ({ ...p, generateTray: !p.generateTray }))}
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
-                        config3D.generateTray ? "bg-[#632CE5] text-white" : "bg-[#E8E9E3] text-[#687064]"
+                        config3D.generateTray ? "bg-[#632CE5] text-white" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]"
                       }`}
                     >
                       {config3D.generateTray ? "Ativado" : "Desativado"}
@@ -2667,10 +2667,10 @@ export default function PuzzleGenerator() {
                   </div>
 
                   {config3D.generateTray && (
-                    <div className="space-y-2.5 pt-2 border-t border-[#E2E3DD]/80 text-[10px]">
+                    <div className="space-y-2.5 pt-2 border-t border-[var(--surface-container-high)]/80 text-[10px]">
                       {/* Cor da Bandeja */}
                       <div>
-                        <span className="text-[#687064] block mb-1">Cor do Molde / Bandeja</span>
+                        <span className="text-[var(--on-surface-variant)] block mb-1">Cor do Molde / Bandeja</span>
                         <div className="flex items-center gap-1.5">
                           {[
                             { name: "Slate", color: "#334155" },
@@ -2684,7 +2684,7 @@ export default function PuzzleGenerator() {
                               type="button"
                               onClick={() => setConfig3D(p => ({ ...p, trayColor: c.color }))}
                               className={`w-5 h-5 rounded-full border transition-all cursor-pointer ${
-                                config3D.trayColor === c.color ? "ring-2 ring-[#632CE5] scale-110 border-white" : "border-[#E2E3DD] opacity-80"
+                                config3D.trayColor === c.color ? "ring-2 ring-[#632CE5] scale-110 border-white" : "border-[var(--surface-container-high)] opacity-80"
                               }`}
                               style={{ backgroundColor: c.color }}
                               title={c.name}
@@ -2693,7 +2693,7 @@ export default function PuzzleGenerator() {
                         </div>
                       </div>
 
-                      <div className="flex justify-between text-[#687064]">
+                      <div className="flex justify-between text-[var(--on-surface-variant)]">
                         <span>Altura da Borda</span>
                         <span className="text-[#632CE5] font-bold">{config3D.trayRimHeight} mm</span>
                       </div>
@@ -2705,7 +2705,7 @@ export default function PuzzleGenerator() {
                         className="w-full accent-[#632CE5]"
                       />
 
-                      <div className="flex justify-between text-[#687064]">
+                      <div className="flex justify-between text-[var(--on-surface-variant)]">
                         <span>Folga de Encaixe (Tolerância)</span>
                         <span className="text-[#632CE5] font-bold">{config3D.trayTolerance} mm</span>
                       </div>
@@ -2717,13 +2717,13 @@ export default function PuzzleGenerator() {
                         className="w-full accent-[#632CE5]"
                       />
 
-                      <div className="flex items-center justify-between pt-1 border-t border-[#E2E3DD]/60">
-                        <span className="text-[#687064]">Furo de Extração Traseiro</span>
+                      <div className="flex items-center justify-between pt-1 border-t border-[var(--surface-container-high)]/60">
+                        <span className="text-[var(--on-surface-variant)]">Furo de Extração Traseiro</span>
                         <button
                           type="button"
                           onClick={() => setConfig3D(p => ({ ...p, hasFingerHole: !p.hasFingerHole }))}
                           className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                            config3D.hasFingerHole ? "bg-[#632CE5]/20 text-[#632CE5] border border-[#632CE5]/40" : "bg-[#E8E9E3] text-[#687064]"
+                            config3D.hasFingerHole ? "bg-[#632CE5]/20 text-[#632CE5] border border-[#632CE5]/40" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]"
                           }`}
                         >
                           {config3D.hasFingerHole ? "Ativo" : "Inativo"}
