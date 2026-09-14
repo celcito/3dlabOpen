@@ -364,7 +364,7 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
                   type="text"
                   value={config.text}
                   onChange={(e) => onChange({ ...config, text: e.target.value.substring(0, 18) })}
-                  placeholder="Nome na ponteira (ex: Helena)"
+                  placeholder="Nome na ponteira (ex: Milene)"
                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--workbench-page)] border border-[var(--surface-container-high)] text-sm text-[var(--workbench-text)] font-bold tracking-wide focus:border-purple-500 outline-none transition-colors"
                 />
               </div>
@@ -379,7 +379,7 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
                   onChange={(e) => onChange({ ...config, fontFamily: e.target.value })}
                    className="w-full px-3 py-2 rounded-xl bg-[var(--workbench-page)] border border-[var(--surface-container-high)] text-xs text-[var(--workbench-text)] font-semibold focus:border-purple-500 outline-none cursor-pointer"
                 >
-                  <option value="Pacifico">Pacifico (Cursiva / Manuscrita - Modelo Helena)</option>
+                  <option value="Pacifico">Pacifico (Cursiva / Manuscrita - Modelo Milene)</option>
                   <option value="Dancing Script">Dancing Script (Caligrafia Fluida)</option>
                   <option value="Lobster">Lobster (Cursiva Espessa)</option>
                   <option value="Anton">Anton (Impactante e reta)</option>
@@ -428,6 +428,25 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
                   step="0.1"
                   value={config.letterSpacing}
                   onChange={(e) => onChange({ ...config, letterSpacing: Number(e.target.value) })}
+                  className="w-full accent-purple-600 cursor-pointer"
+                />
+              </div>
+
+              {/* Espessura da Fonte (Font Weight) */}
+              <div>
+                <div className="flex justify-between items-center text-xs font-semibold text-[var(--on-surface-variant)] mb-1">
+                  <span>Espessura da Fonte (Font Weight)</span>
+                  <span className="font-mono text-purple-400 bg-[var(--workbench-page)] px-2 py-0.5 rounded border border-[var(--surface-container-high)]">
+                    {config.fontWeightScale.toFixed(1)}x
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2.0"
+                  step="0.1"
+                  value={config.fontWeightScale}
+                  onChange={(e) => onChange({ ...config, fontWeightScale: Number(e.target.value) })}
                   className="w-full accent-purple-600 cursor-pointer"
                 />
               </div>

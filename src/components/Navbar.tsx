@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onQuickDownload3MF,
 }) => {
   const letterWords = ['M2CR', 'HOME', 'MAKER', 'LOVE', 'CAFÉ', '3D'];
-  const pencilNames = ['Helena', 'Lucas', 'Maria', 'Sofia', 'Theo', 'Alice'];
+  const pencilNames = ['Milene', 'Lucas', 'Maria', 'Sofia', 'Theo', 'Alice'];
 
   return (
     <header className="h-16 bg-[var(--workbench-panel)] border-b border-[var(--surface-container-high)] px-3 md:px-6 flex items-center justify-between shrink-0 z-20">

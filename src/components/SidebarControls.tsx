@@ -99,13 +99,13 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
   });
 
   return (
-    <aside className="w-full lg:w-[410px] xl:w-[440px] h-full bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden shadow-2xl z-10">
+    <aside className="w-full lg:w-[410px] xl:w-[440px] h-full bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden select-none">
       {/* Cabeçalho da Barra Lateral */}
-      <div className="p-4 border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)]/60 flex items-center justify-between">
+      <div className="p-4 border-b border-[var(--surface-container-high)] flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+            <h2 className="text-sm font-bold text-[var(--workbench-text)] uppercase tracking-wider">
               Painel Paramétrico
             </h2>
           </div>
@@ -127,7 +127,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
             onChange(DEFAULT_CONFIG);
           }}
           title="Restaurar Parâmetros Padrão de Fábrica"
-          className="p-1.5 rounded-lg text-[var(--on-surface-variant)] hover:text-white hover:bg-[var(--surface-container-high)] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)] transition-colors cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
@@ -138,14 +138,14 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
         {/* ========================================================================= */}
         {/* SEÇÃO 1: PARÂMETROS PRINCIPAIS */}
         {/* ========================================================================= */}
-        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-[var(--workbench-page)]/40 overflow-hidden transition-all">
+        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-[var(--workbench-viewport)] overflow-hidden transition-all">
           <button
             type="button"
             onClick={() => toggleSection('params')}
-            className="w-full p-3.5 flex items-center justify-between bg-[var(--workbench-panel)]/60 hover:bg-[var(--surface-container-high)] text-left transition-colors cursor-pointer"
+            className="w-full p-3.5 flex items-center justify-between bg-[var(--workbench-viewport)] hover:bg-[var(--surface-container-high)] text-left transition-colors cursor-pointer"
           >
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Type className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-bold text-[var(--workbench-text)] uppercase tracking-wider flex items-center gap-2">
+              <Type className="w-4 h-4 text-[#632CE5]" />
               Parâmetros Principais
             </span>
             {openSection.params ? (
@@ -173,7 +173,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                   value={config.text}
                   onChange={(e) => onChange({ ...config, text: e.target.value })}
                   placeholder="Ex: M2CR ou Nomes"
-                  className="w-full px-3 py-2 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-xl text-sm font-bold text-white focus:outline-none focus:border-purple-500 transition-colors resize-none uppercase"
+                  className="w-full px-3 py-2 bg-white border border-[var(--surface-container-high)] rounded-xl text-sm font-bold text-[var(--workbench-text)] focus:outline-none focus:border-[#632CE5] transition-colors resize-none uppercase"
                 />
               </div>
 
@@ -186,7 +186,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-[11px] text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium transition-colors"
+                    className="text-[11px] text-[#632CE5] hover:text-purple-300 flex items-center gap-1 font-medium transition-colors"
                   >
                     <Upload className="w-3 h-3" />
                     Upload Fonte (.ttf)
@@ -208,7 +208,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                 >
                   <div className="flex flex-col truncate pr-2">
                     <span
-                      className="text-sm font-bold text-white truncate"
+                      className="text-sm font-bold text-[var(--workbench-text)] truncate"
                       style={{ fontFamily: config.fontFamily }}
                     >
                       {config.customFontName || config.fontFamily}
@@ -231,7 +231,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                       placeholder="Buscar fonte..."
                       value={fontSearch}
                       onChange={(e) => setFontSearch(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                      className="w-full px-3 py-1.5 bg-white border border-[var(--surface-container-high)] rounded-lg text-xs text-[var(--workbench-text)] placeholder-slate-500 focus:outline-none focus:border-[#632CE5]"
                     />
 
                     {/* Filtro por Categoria */}
@@ -250,8 +250,8 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                           onClick={() => setFontCategoryFilter(cat.id)}
                           className={`px-2 py-0.5 rounded-md whitespace-nowrap transition-colors ${
                             fontCategoryFilter === cat.id
-                              ? 'bg-purple-600 text-white font-bold'
-                              : 'bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-white'
+                              ? 'bg-[#632CE5] text-[var(--workbench-text)] font-bold'
+                              : 'bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)]'
                           }`}
                         >
                           {cat.label}
@@ -276,7 +276,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                             }}
                             className={`w-full px-3 py-2 rounded-xl text-left flex items-center justify-between transition-colors ${
                               isSelected
-                                ? 'bg-purple-600/30 border border-purple-500 text-white'
+                                ? 'bg-[#632CE5]/30 border border-[#632CE5] text-[var(--workbench-text)]'
                                 : 'hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)]'
                             }`}
                           >
@@ -291,7 +291,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                                 {font.description}
                               </div>
                             </div>
-                            {isSelected && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+                            {isSelected && <Check className="w-4 h-4 text-[#632CE5] shrink-0" />}
                           </button>
                         );
                       })}
@@ -306,7 +306,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                   <label htmlFor="slider-letter-height" className="text-xs font-semibold text-[var(--workbench-text)]">
                     Tamanho da Letra (mm)
                   </label>
-                  <span className="text-xs font-mono font-bold text-purple-400">
+                  <span className="text-xs font-mono font-bold text-[#632CE5]">
                     {config.letterHeight} mm
                   </span>
                 </div>
@@ -330,7 +330,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     max="140"
                     value={config.letterHeight}
                     onChange={(e) => onChange({ ...config, letterHeight: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none focus:border-purple-500"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none focus:border-[#632CE5]"
                   />
                 </div>
               </div>
@@ -341,7 +341,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                   <label htmlFor="slider-back-depth" className="text-xs font-semibold text-[var(--workbench-text)]">
                     Profundidade da Caixa (Eixo Z)
                   </label>
-                  <span className="text-xs font-mono font-bold text-purple-400">
+                  <span className="text-xs font-mono font-bold text-[#632CE5]">
                     {config.backDepth} mm
                   </span>
                 </div>
@@ -365,7 +365,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     max="50"
                     value={config.backDepth}
                     onChange={(e) => onChange({ ...config, backDepth: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none focus:border-purple-500"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none focus:border-[#632CE5]"
                   />
                 </div>
               </div>
@@ -376,14 +376,14 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
         {/* ========================================================================= */}
         {/* SEÇÃO 2: AJUSTES FINOS & ESPAÇAMENTO */}
         {/* ========================================================================= */}
-        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-[var(--workbench-page)]/40 overflow-hidden transition-all">
+        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-white/40 overflow-hidden transition-all">
           <button
             type="button"
             onClick={() => toggleSection('fineTune')}
             className="w-full p-3.5 flex items-center justify-between bg-[var(--workbench-panel)]/60 hover:bg-[var(--surface-container-high)] text-left transition-colors cursor-pointer"
           >
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-bold text-[var(--workbench-text)] uppercase tracking-wider flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-[#632CE5]" />
               Ajustes Finos & Espaçamento
             </span>
             {openSection.fineTune ? (
@@ -421,7 +421,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     step="0.5"
                     value={config.letterSpacing}
                     onChange={(e) => onChange({ ...config, letterSpacing: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -432,7 +432,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                   <label htmlFor="slider-back-contour" className="text-xs font-semibold text-[var(--workbench-text)]">
                     Contorno Traseiro (Borda Externa)
                   </label>
-                  <span className="text-xs font-mono font-bold text-purple-400">
+                  <span className="text-xs font-mono font-bold text-[#632CE5]">
                     {config.backContour} mm
                   </span>
                 </div>
@@ -452,7 +452,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     step="0.5"
                     value={config.backContour}
                     onChange={(e) => onChange({ ...config, backContour: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -483,7 +483,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     step="0.5"
                     value={config.midContour}
                     onChange={(e) => onChange({ ...config, midContour: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -514,7 +514,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     step="0.2"
                     value={config.frontThickness}
                     onChange={(e) => onChange({ ...config, frontThickness: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -545,7 +545,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     step="0.2"
                     value={config.midThickness}
                     onChange={(e) => onChange({ ...config, midThickness: Number(e.target.value) })}
-                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-white focus:outline-none"
+                    className="w-16 px-2 py-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-xs font-mono text-center text-[var(--workbench-text)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -556,14 +556,14 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
         {/* ========================================================================= */}
         {/* SEÇÃO 3: BASE DE APOIO (FICAR EM PÉ) */}
         {/* ========================================================================= */}
-        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-[var(--workbench-page)]/40 overflow-hidden transition-all">
+        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-white/40 overflow-hidden transition-all">
           <button
             type="button"
             onClick={() => toggleSection('base')}
             className="w-full p-3.5 flex items-center justify-between bg-[var(--workbench-panel)]/60 hover:bg-[var(--surface-container-high)] text-left transition-colors cursor-pointer"
           >
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Box className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-bold text-[var(--workbench-text)] uppercase tracking-wider flex items-center gap-2">
+              <Box className="w-4 h-4 text-[#632CE5]" />
               Base de Apoio (Ficar em Pé)
             </span>
             {openSection.base ? (
@@ -583,7 +583,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                   className="mt-0.5 w-4 h-4 rounded border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-purple-600 focus:ring-purple-500 accent-purple-600"
                 />
                 <div className="flex-1">
-                  <div className="text-xs font-bold text-white">
+                  <div className="text-xs font-bold text-[var(--workbench-text)]">
                     Ativar Base Reta de Apoio
                   </div>
                   <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5 leading-relaxed">
@@ -598,14 +598,14 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
         {/* ========================================================================= */}
         {/* SEÇÃO 4: CORES DAS 3 CAMADAS */}
         {/* ========================================================================= */}
-        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-[var(--workbench-page)]/40 overflow-hidden transition-all">
+        <div className="rounded-2xl border border-[var(--surface-container-high)] bg-white/40 overflow-hidden transition-all">
           <button
             type="button"
             onClick={() => toggleSection('colors')}
             className="w-full p-3.5 flex items-center justify-between bg-[var(--workbench-panel)]/60 hover:bg-[var(--surface-container-high)] text-left transition-colors cursor-pointer"
           >
-            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Palette className="w-4 h-4 text-purple-400" />
+            <span className="text-xs font-bold text-[var(--workbench-text)] uppercase tracking-wider flex items-center gap-2">
+              <Palette className="w-4 h-4 text-[#632CE5]" />
               Cores das 3 Camadas
             </span>
             {openSection.colors ? (
@@ -625,7 +625,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     style={{ backgroundColor: config.backColor }}
                   />
                   <div>
-                    <div className="text-xs font-semibold text-white">
+                    <div className="text-xs font-semibold text-[var(--workbench-text)]">
                       1. Camada Traseira (Caixa)
                     </div>
                     <div className="text-[10px] text-[var(--on-surface-variant)] font-mono">
@@ -649,7 +649,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     style={{ backgroundColor: config.midColor }}
                   />
                   <div>
-                    <div className="text-xs font-semibold text-white">
+                    <div className="text-xs font-semibold text-[var(--workbench-text)]">
                       2. Camada Intermediária
                     </div>
                     <div className="text-[10px] text-[var(--on-surface-variant)] font-mono">
@@ -673,7 +673,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                     style={{ backgroundColor: config.frontColor }}
                   />
                   <div>
-                    <div className="text-xs font-semibold text-white">
+                    <div className="text-xs font-semibold text-[var(--workbench-text)]">
                       3. Texto Frontal
                     </div>
                     <div className="text-[10px] text-[var(--on-surface-variant)] font-mono">
@@ -709,7 +709,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
                       }
                       className="p-2 rounded-xl bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] hover:border-[var(--surface-container-high)] flex items-center justify-between transition-all group"
                     >
-                      <span className="text-xs font-medium text-[var(--on-surface-variant)] group-hover:text-white">
+                      <span className="text-xs font-medium text-[var(--on-surface-variant)] group-hover:text-[var(--workbench-text)]">
                         {pal.name}
                       </span>
                       <div className="flex -space-x-1.5">
@@ -736,7 +736,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
       </div>
 
       {/* Rodapé Fixo com Dimensões 3D & Botão Principal "Baixar 3MF" */}
-      <div className="p-4 bg-[var(--workbench-page)] border-t border-[var(--surface-container-high)] space-y-3">
+      <div className="p-4 bg-white border-t border-[var(--surface-container-high)] space-y-3">
         {/* Dimensões em Linha */}
         <div className="flex items-center justify-between text-xs px-1 text-[var(--on-surface-variant)]">
           <span className="font-semibold text-[var(--on-surface-variant)]">Dimensões 3D:</span>
@@ -751,7 +751,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
             id="btn-main-download-3mf"
             type="button"
             onClick={onQuickDownload3MF}
-            className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition-all cursor-pointer active:scale-[0.98]"
+            className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-[var(--workbench-text)] text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition-all cursor-pointer active:scale-[0.98]"
           >
             <Download className="w-4 h-4" />
             <span>Baixar 3MF</span>
@@ -761,7 +761,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
             type="button"
             onClick={onOpenExportModal}
             title="Mais Opções de Exportação (STL, ZIP, Dicas de Impressão)"
-            className="py-3 px-3.5 rounded-xl bg-[var(--surface-container-high)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-white transition-colors"
+            className="py-3 px-3.5 rounded-xl bg-[var(--surface-container-high)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] transition-colors"
           >
             <Box className="w-4 h-4" />
           </button>

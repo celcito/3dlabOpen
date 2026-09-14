@@ -13,9 +13,9 @@ export interface GeneratedPencilTopper {
 export async function generatePencilTopperModel(
   config: PencilTopperConfig
 ): Promise<GeneratedPencilTopper> {
-  const text = config.text.trim() || 'Helena';
+  const text = config.text.trim() || 'Milene';
   const effectiveDiameter = Math.max(4.0, config.pencilDiameter + config.clearance);
-  const pxPerMm = 14;
+  const pxPerMm = 20;
   const targetFontHeightPx = Math.max(10, config.letterHeight) * pxPerMm;
 
   try {
@@ -51,7 +51,7 @@ export async function generatePencilTopperModel(
   }
 
   const textHeightPx = targetFontHeightPx;
-  const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
+  const outlinePx = Math.max(1.5, config.outlineSize * (config.fontWeightScale || 1.0)) * pxPerMm;
 
   const innerRadiusMm = effectiveDiameter / 2;
   const socketOuterRadiusMm = innerRadiusMm + Math.max(1.5, config.baseWallThickness);
@@ -271,12 +271,15 @@ export async function generatePencilTopperModel(
   const safeBaseShapes = baseShapes.length > 0 ? baseShapes : reliefShapes;
   const safeReliefShapes = reliefShapes.length > 0 ? reliefShapes : safeBaseShapes;
 
+  const avgLetterHeight = config.letterHeight || 15;
+  const bevelScale = Math.min(1.0, avgLetterHeight / 15);
+
   const baseExtrudeGeom = new THREE.ExtrudeGeometry(safeBaseShapes, {
     depth: baseHeightMm,
     bevelEnabled: true,
-    bevelThickness: 0.35,
-    bevelSize: 0.25,
-    bevelSegments: 2,
+    bevelThickness: Math.min(0.4, avgLetterHeight * 0.025),
+    bevelSize: Math.min(0.3, avgLetterHeight * 0.02),
+    bevelSegments: 4,
   });
 
   baseExtrudeGeom.computeBoundingBox();
@@ -325,9 +328,9 @@ export async function generatePencilTopperModel(
   const reliefGeom = new THREE.ExtrudeGeometry(safeReliefShapes, {
     depth: Math.max(0.8, config.reliefThickness),
     bevelEnabled: true,
-    bevelThickness: 0.25,
-    bevelSize: 0.2,
-    bevelSegments: 2,
+    bevelThickness: Math.min(0.3, avgLetterHeight * 0.02),
+    bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
+    bevelSegments: 4,
   });
   reliefGeom.translate(0, 0, baseHeightMm);
 

@@ -164,7 +164,7 @@ export const PencilCanvas: React.FC<PencilCanvasProps> = ({
     const height = container.clientHeight;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090d16);
+    scene.background = new THREE.Color(0xf3f4ee);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 1000);
@@ -185,7 +185,7 @@ export const PencilCanvas: React.FC<PencilCanvasProps> = ({
     container.appendChild(renderer.domElement);
 
     // Iluminação PBR de Estúdio
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1e293b, 1.3);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe5e7eb, 1.3);
     hemiLight.position.set(0, 80, 0);
     scene.add(hemiLight);
 
@@ -202,7 +202,7 @@ export const PencilCanvas: React.FC<PencilCanvasProps> = ({
     scene.add(dirLight2);
 
     // Grade / Chapa de Impressão 3D estilizada
-    const grid = new THREE.GridHelper(160, 32, 0x3b82f6, 0x1e293b);
+    const grid = new THREE.GridHelper(160, 32, 0x94a3b8, 0xd1d5db);
     grid.position.y = -0.1;
     scene.add(grid);
 
@@ -561,7 +561,7 @@ export const PencilCanvas: React.FC<PencilCanvasProps> = ({
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--on-surface-variant)]">Nome:</span>
           <span className="font-mono font-bold text-[var(--workbench-text)]">
-            {config.text || 'Helena'}
+            {config.text || 'Milene'}
           </span>
         </div>
       </div>

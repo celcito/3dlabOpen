@@ -43,6 +43,39 @@ function perpendicularDistance(p: Point2D, lineStart: Point2D, lineEnd: Point2D)
   return Math.abs(dy * p.x - dx * p.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / mag;
 }
 
+export function chaikinSmooth(points: Point2D[], iterations: number = 2): Point2D[] {
+  if (points.length < 3) return points;
+  
+  let result = [...points];
+  
+  for (let iter = 0; iter < iterations; iter++) {
+    const smoothed: Point2D[] = [];
+    
+    for (let i = 0; i < result.length - 1; i++) {
+      const p0 = result[i];
+      const p1 = result[i + 1];
+      
+      smoothed.push({
+        x: p0.x * 0.75 + p1.x * 0.25,
+        y: p0.y * 0.75 + p1.y * 0.25,
+      });
+      smoothed.push({
+        x: p0.x * 0.25 + p1.x * 0.75,
+        y: p0.y * 0.25 + p1.y * 0.75,
+      });
+    }
+    
+    if (result.length > 0 && result[0].x === result[result.length - 1].x && result[0].y === result[result.length - 1].y) {
+      const last = smoothed[smoothed.length - 1];
+      smoothed.push({ x: last.x, y: last.y });
+    }
+    
+    result = smoothed;
+  }
+  
+  return result;
+}
+
 export function polygonArea(points: Point2D[]): number {
   let area = 0;
   const n = points.length;
@@ -141,8 +174,10 @@ export function extractContoursFromImageData(
 
       if (contour.length >= 6) {
         contour.push({ ...contour[0] });
-        const simplified = simplifyPolygon(contour, simplifyToleranceMm);
-        if (simplified.length >= 4 && Math.abs(polygonArea(simplified)) > 0.2) {
+        const area = Math.abs(polygonArea(contour));
+        const minArea = area < 1.0 ? 0.05 : 0.2;
+        const simplified = simplifyPolygon(contour, simplifyToleranceMm * (area < 1.0 ? 0.5 : 1.0));
+        if (simplified.length >= 4 && Math.abs(polygonArea(simplified)) > minArea) {
           rawContours.push(simplified);
         }
       }
@@ -163,9 +198,10 @@ export function extractContoursFromImageData(
     }
 
     if (enclosureCount % 2 === 1) {
-      holes.push(poly);
+      const holeArea = Math.abs(polygonArea(poly));
+      holes.push(chaikinSmooth(poly, holeArea < 1.0 ? 1 : 2));
     } else {
-      outer.push(poly);
+      outer.push(chaikinSmooth(poly, 2));
     }
   }
 

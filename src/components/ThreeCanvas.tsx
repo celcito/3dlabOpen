@@ -175,7 +175,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     // Cena
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#090d16');
+    scene.background = new THREE.Color('#f3f4ee');
     sceneRef.current = scene;
 
     // Câmera
@@ -238,7 +238,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     // Base quadrada da chapa 256x256mm (estilo Bambu Lab)
     const plateGeo = new THREE.BoxGeometry(260, 2, 260);
     const plateMat = new THREE.MeshStandardMaterial({
-      color: '#131926',
+      color: '#e5e7eb',
       roughness: 0.8,
       metalness: 0.2,
     });
@@ -248,7 +248,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     plateGroup.add(plateMesh);
 
     // Grid sobre a chapa
-    const grid = new THREE.GridHelper(250, 25, '#3b82f6', '#1e293b');
+    const grid = new THREE.GridHelper(250, 25, '#94a3b8', '#d1d5db');
     grid.position.y = 0.1;
     plateGroup.add(grid);
 

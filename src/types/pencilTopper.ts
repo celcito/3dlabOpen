@@ -33,6 +33,7 @@ export interface PencilTopperConfig {
   fontFamily: string;
   letterHeight: number;
   letterSpacing: number;
+  fontWeightScale: number;
 
   symbolId: string;
   symbolPosition: 'left' | 'right' | 'both';
