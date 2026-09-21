@@ -2061,7 +2061,7 @@ export default function ClipMaker() {
 
           <button
             onClick={() => handleExportSTL(config.batchGrid5x)}
-            className="px-4 py-1.5 bg-[#632CE5] hover:bg-[#7C4DFF] text-white font-black text-[10px] uppercase tracking-wider rounded flex items-center gap-2 shadow-lg shadow-[#632CE5]/20 transition-transform active:scale-95 cursor-pointer"
+            className="btn-primary"
           >
             <Download className="w-3.5 h-3.5" />
             Exportar STL {config.batchGrid5x ? "(Kit 5x)" : "(1x)"}
@@ -2086,7 +2086,7 @@ export default function ClipMaker() {
       {/* WORKSPACE BODY: 3 COLUMNS */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT CONTROLS PANEL */}
-        <div className="w-[380px] lg:w-[400px] bg-white border-r border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden">
+        <div className="w-[400px] bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden">
           {/* TABS NAVIGATION */}
           <div className="flex border-b border-[var(--surface-container-high)] bg-[var(--workbench-viewport)] p-1 gap-1 shrink-0">
             {[
@@ -2942,7 +2942,7 @@ export default function ClipMaker() {
               </button>
               <button
                 onClick={() => handleExportSTL(true)}
-                className="flex-1 py-2.5 bg-[#632CE5] hover:bg-[#7C4DFF] text-white font-black text-xs uppercase tracking-wider rounded flex items-center justify-center gap-1.5 shadow-lg shadow-[#632CE5]/20 transition-all cursor-pointer"
+                className="btn-primary"
               >
                 <Layers className="w-3.5 h-3.5" />
                 STL Kit 5x
@@ -2957,6 +2957,7 @@ export default function ClipMaker() {
           <div className="flex-1 w-full h-full">
             <Canvas
               shadows
+              dpr={[1, 2]}
               camera={{ position: [0, 8, 12], fov: 40 }}
               gl={{ antialias: true, preserveDrawingBuffer: true }}
             >
@@ -2975,6 +2976,8 @@ export default function ClipMaker() {
 
               <OrbitControls
                 makeDefault
+                enableDamping
+                dampingFactor={0.05}
                 minDistance={4}
                 maxDistance={35}
                 maxPolarAngle={Math.PI / 2 + 0.1}
@@ -3032,9 +3035,9 @@ export default function ClipMaker() {
 
         {/* --- RIGHT LATERAL PANEL: GRADE DE MINIATURAS LINE ART --- */}
         {isGalleryOpen && (
-          <aside className="w-[360px] xl:w-[410px] bg-white border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden shadow-2xl animate-in slide-in-from-right-4 duration-200 z-20">
+          <aside className="w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden shadow-2xl animate-in slide-in-from-right-4 duration-200 z-20">
             {/* PANEL HEADER */}
-            <div className="p-3.5 border-b border-[var(--surface-container-high)] bg-white flex items-center justify-between shrink-0">
+            <div className="p-3.5 border-b border-[var(--surface-container-high)] bg-[var(--workbench-panel)] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded bg-[#632CE5]/10 border border-[#632CE5]/30 flex items-center justify-center text-[#632CE5]">
                   <Sparkles className="w-3.5 h-3.5" />

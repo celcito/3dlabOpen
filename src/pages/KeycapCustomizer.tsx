@@ -93,12 +93,12 @@ export default function KeycapCustomizer() {
     <div className="workbench-page flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-page)]">
       <main className="workbench-viewport flex-1 relative min-w-0">
         <div className="absolute inset-0">
-          <Canvas shadows camera={{ position: [30, 30, 30], fov: 45 }}>
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [30, 30, 30], fov: 45 }}>
             <color attach="background" args={["#F1F3ED"]} />
             <ambientLight intensity={0.6} />
             <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-50, -50, -50]} intensity={0.4} />
-            <OrbitControls makeDefault />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
             <Grid infiniteGrid fadeDistance={100} cellColor="#222" sectionColor="#444" cellSize={10} sectionSize={50} position={[0, -0.1, 0]} />
             <Center><mesh geometry={displayedGeometry} castShadow receiveShadow>          <meshStandardMaterial color="#d0d0d0" roughness={0.4} metalness={0.15} /></mesh></Center>
           </Canvas>
@@ -112,7 +112,7 @@ export default function KeycapCustomizer() {
         {successMessage && <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 bg-[#632CE5] text-white px-6 py-3 rounded-full flex items-center gap-3 font-black uppercase text-[10px] tracking-widest"><Check className="w-4 h-4" />{successMessage}</div>}
       </main>
 
-      <aside className="w-full md:w-80 bg-[var(--workbench-panel)] border-l border-[var(--workbench-line)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <aside className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
@@ -163,7 +163,7 @@ export default function KeycapCustomizer() {
             </div>
           )}
           <div className="space-y-3 pt-2">
-            <button type="button" onClick={handleGenerate} disabled={!file || status === "processing"} className="w-full bg-[#632CE5] disabled:opacity-40 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#5420C9]">
+            <button type="button" onClick={handleGenerate} disabled={!file || status === "processing"} className="btn-primary">
               {status === "processing" ? <><Loader2 className="w-4 h-4 animate-spin" /> Aplicando</> : "Aplicar na keycap"}
             </button>
             {status === "error" && <p className="text-[10px] text-red-600 leading-relaxed">{errorMessage}</p>}

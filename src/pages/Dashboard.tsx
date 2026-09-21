@@ -143,14 +143,14 @@ function CategoryCard({ category, index, delay = 0 }: { category: typeof TOOL_CA
       style={{ borderRadius: "2rem" }}
     >
       <div
-        className="absolute inset-0 rounded-[2rem]"
+        className="absolute inset-0 rounded-2xl"
         style={{
           background: `linear-gradient(135deg, ${category.accentLight} 0%, transparent 60%)`,
           opacity: 0.6,
         }}
       />
       <div
-        className="absolute inset-0 rounded-[2rem] p-[1px] pointer-events-none"
+        className="absolute inset-0 rounded-2xl p-[1px] pointer-events-none"
         style={{
           background: `linear-gradient(135deg, ${category.accent}40 0%, transparent 50%)`,
         }}
@@ -177,7 +177,7 @@ function CategoryCard({ category, index, delay = 0 }: { category: typeof TOOL_CA
                   </h2>
                 </div>
               </div>
-              <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-[#F5F5F0] border border-[#E8E7E0]">
+              <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--surface-container-low)] border border-[var(--surface-container-high)]">
                 <span className="font-mono text-[10px] text-[var(--on-surface-variant)]">Tools</span>
                 <span
                   className="w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold text-white"
@@ -246,7 +246,7 @@ function CategoryCard({ category, index, delay = 0 }: { category: typeof TOOL_CA
               ))}
             </div>
 
-            <div className="pt-4 border-t border-[#E8E7E0]">
+            <div className="pt-4 border-t border-[var(--surface-container-high)]">
               <Link
                 to={category.tools[0].to}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-mono text-[11px] font-semibold uppercase tracking-[0.05em] transition-all duration-300"
@@ -286,14 +286,14 @@ function QuickActionButton({ action, index }: { action: typeof QUICK_ACTIONS[0];
     >
       <Link
         to={action.to}
-        className="relative flex items-center gap-3 px-5 py-4 rounded-xl border border-[#E8E7E0] bg-white hover:border-[#D8D5CC] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group w-full"
+        className="relative flex items-center gap-3 px-5 py-4 rounded-xl border border-[var(--surface-container-high)] bg-[var(--workbench-panel)] hover:border-[var(--surface-container)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group w-full"
       >
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#F5F5F0] text-[#632CE5] group-hover:bg-[#632CE5] group-hover:text-white transition-colors duration-300">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--surface-container-low)] text-[#632CE5] group-hover:bg-[#632CE5] group-hover:text-white transition-colors duration-300">
           <action.icon className="w-5 h-5" strokeWidth={2} />
         </div>
         <div className="flex-1 text-left">
           <span className="font-semibold text-[var(--workbench-text)]">{action.label}</span>
-          <span className="font-mono text-[10px] text-[#A09B9B] ml-2">{action.shortcut}</span>
+          <span className="font-mono text-[10px] text-[var(--workbench-muted)] ml-2">{action.shortcut}</span>
         </div>
         <motion.div
           className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 bg-[#632CE5]10 text-[#632CE5] transition-all duration-300"
@@ -313,7 +313,7 @@ function StatCard({ label, value, icon: Icon, accent, delay }: { label: string; 
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1], delay }}
-      className="relative p-5 md:p-6 rounded-2xl bg-white border border-[#E8E7E0] overflow-hidden"
+      className="relative p-5 md:p-6 rounded-2xl bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] overflow-hidden"
     >
       <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent}15 0%, transparent 70%)` }} />
       <div className="relative flex flex-col">
@@ -389,7 +389,7 @@ export default function Dashboard() {
       </div>
 
       <header
-        className="relative z-10 sticky top-0 backdrop-blur-2xl border-b border-[#E8E7E0]/80 transition-all duration-300"
+        className="relative z-10 sticky top-0 backdrop-blur-2xl border-b border-[var(--surface-container-high)]/80 transition-all duration-300"
         style={{
           background: scrolled ? "rgba(249, 250, 244, 0.9)" : "rgba(249, 250, 244, 0.7)",
           boxShadow: scrolled ? "0 4px 40px -20px rgba(0,0,0,0.08)" : "none",
@@ -417,8 +417,8 @@ export default function Dashboard() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:block font-mono text-[11px] text-[#A09B9B]">v0.5.0</span>
-            <div className="w-8 h-8 rounded-full bg-[#E8E6F7] border border-[#D8D5CC] flex items-center justify-center font-sans text-xs font-bold text-[#632CE5]">
+            <span className="hidden sm:block font-mono text-[11px] text-[var(--workbench-muted)]">v0.5.0</span>
+            <div className="w-8 h-8 rounded-full bg-[var(--primary-fixed)] border border-[var(--surface-container)] flex items-center justify-center font-sans text-xs font-bold text-[#632CE5]">
               MC
             </div>
           </div>
@@ -483,7 +483,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="absolute bottom-6 left-6 right-6 flex gap-3">
-                        <div className="flex-1 h-16 rounded-xl bg-white/80 backdrop-blur-xl border border-white/50 flex items-center justify-center gap-4 px-6">
+                        <div className="flex-1 h-16 rounded-xl bg-[var(--workbench-panel)]/80 backdrop-blur-xl border border-white/50 flex items-center justify-center gap-4 px-6">
                           <div className="w-2 h-2 rounded-full" style={{ background: "#632CE5" }} />
                           <div className="w-2 h-2 rounded-full" style={{ background: "#00C896" }} />
                           <div className="w-2 h-2 rounded-full" style={{ background: "#F59E0B" }} />
@@ -568,7 +568,7 @@ export default function Dashboard() {
                         className="relative group h-full flex flex-col"
                       >
                         <div
-                          className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-white border border-[#E8E7E0] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] group-hover:border-transparent"
+                          className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] group-hover:border-transparent"
                           style={{
                             boxShadow: `0 4px 20px -8px ${category.accent}20`,
                           }}
@@ -598,8 +598,8 @@ export default function Dashboard() {
                         </div>
                         <div className="mt-3 flex-1 flex flex-col">
                           <p className="text-[13px] text-[var(--on-surface-variant)] leading-relaxed flex-1">{tool.desc}</p>
-                          <div className="mt-3 pt-3 border-t border-[#E8E7E0] flex items-center justify-between">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#A09B9B]">Launch</span>
+                          <div className="mt-3 pt-3 border-t border-[var(--surface-container-high)] flex items-center justify-between">
+                            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--workbench-muted)]">Launch</span>
                             <motion.div
                               className="w-7 h-7 rounded-lg flex items-center justify-center text-[#632CE5] group-hover:bg-[#632CE5] group-hover:text-white transition-colors duration-300"
                               style={{ background: "#E8E6F7" }}
@@ -684,7 +684,7 @@ export default function Dashboard() {
                     Seconds
                   </span>
                 </h2>
-                <p className="text-lg text-[#A09B9B] leading-relaxed max-w-xl mx-auto">
+                <p className="text-lg text-[var(--workbench-muted)] leading-relaxed max-w-xl mx-auto">
                   No installation. No configuration. Open any tool and start designing for your 3D printer immediately.
                 </p>
               </div>
@@ -700,7 +700,7 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1], delay: 0.3 + i * 0.1 }}
-                    className="relative flex flex-col items-center text-center p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                    className="relative flex flex-col items-center text-center p-6 rounded-2xl bg-[var(--workbench-panel)]/5 border border-white/10 hover:bg-[var(--workbench-panel)]/10 transition-colors"
                   >
                     <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(99, 44, 229, 0.15)", color: "#C8B8FF" }}>
                       <step.icon className="w-7 h-7" strokeWidth={1.5} />
@@ -720,7 +720,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <footer className="relative z-10 border-t border-[#E8E7E0] bg-white py-8 px-4 md:px-8">
+      <footer className="relative z-10 border-t border-[var(--surface-container-high)] bg-[var(--workbench-panel)] py-8 px-4 md:px-8">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <M2crLogo size={24} withWordmark={false} />
@@ -734,13 +734,13 @@ export default function Dashboard() {
             <span>Open source • MIT License</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--surface-container-low)] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
               <Box className="w-4.5 h-4.5" strokeWidth={2} />
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--surface-container-low)] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
               <Share2 className="w-4.5 h-4.5" strokeWidth={2} />
             </a>
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[#F5F5F0] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--surface-container-low)] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
               <MessageSquare className="w-4.5 h-4.5" strokeWidth={2} />
             </a>
           </div>

@@ -205,6 +205,88 @@ function combinePaths(paths: string[]): string {
   return paths.join(" ");
 }
 
+export interface CutterPaths {
+  outerPaths: string[];
+  innerPaths: string[];
+  allPaths: string[];
+}
+
+export interface StampPaths {
+  detailPaths: string[];
+  allPaths: string[];
+}
+
+export function getCutterPaths(elements: DesignElement[]): CutterPaths {
+  const cutterElements = elements.filter(e => e.visible && e.role === "cutter");
+  const outerPaths: string[] = [];
+  const innerPaths: string[] = [];
+
+  for (const el of cutterElements) {
+    const pathData = toPathData(el);
+    if (!pathData) continue;
+    const transformed = applyPathTransform(pathData, el.transform);
+    outerPaths.push(transformed);
+  }
+
+  return { outerPaths, innerPaths, allPaths: [...outerPaths, ...innerPaths] };
+}
+
+export function getStampPaths(elements: DesignElement[]): StampPaths {
+  const stampElements = elements.filter(e => e.visible && e.role === "stamp");
+  const detailPaths: string[] = [];
+
+  for (const el of stampElements) {
+    const pathData = toPathData(el);
+    if (!pathData) continue;
+    const transformed = applyPathTransform(pathData, el.transform);
+    detailPaths.push(transformed);
+  }
+
+  return { detailPaths, allPaths: detailPaths };
+}
+
+export function getAllPaths(elements: DesignElement[]): string[] {
+  return elements
+    .filter(e => e.visible && e.role !== "ignore")
+    .map(e => toPathData(e))
+    .filter((p): p is string => p !== null);
+}
+
+function applyPathTransform(pathData: string, transform: Transform): string {
+  if (transform.x === 0 && transform.y === 0 && transform.rotation === 0 && transform.scaleX === 1 && transform.scaleY === 1) {
+    return pathData;
+  }
+  const regex = /([MLCQZ])([^MLCQZ]*)/g;
+  let result = "";
+  let match;
+  while ((match = regex.exec(pathData)) !== null) {
+    const cmd = match[1];
+    const coords = match[2].trim().split(/\s+/).filter(Boolean).map(Number);
+    if (cmd === "M" || cmd === "L") {
+      for (let i = 0; i < coords.length; i += 2) {
+        let x = coords[i] * transform.scaleX;
+        let y = coords[i + 1] * transform.scaleY;
+        if (transform.rotation !== 0) {
+          const cos = Math.cos(transform.rotation);
+          const sin = Math.sin(transform.rotation);
+          const rx = x * cos - y * sin;
+          const ry = x * sin + y * cos;
+          x = rx;
+          y = ry;
+        }
+        x += transform.x;
+        y += transform.y;
+        result += `${cmd} ${x} ${y} `;
+      }
+    } else if (cmd === "Z") {
+      result += "Z ";
+    } else {
+      result += `${cmd} ${match[2]} `;
+    }
+  }
+  return result.trim();
+}
+
 export function migrateLegacy(
   layers: { id: string; name: string; type: "cutter" | "stamp" | "ignore"; points: THREE.Vector2[]; isClosed: boolean; length: number }[],
   textObjects: { id: string; text: string; font: string; fontSize: number; x: number; y: number; scale: number }[]

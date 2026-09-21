@@ -74,7 +74,7 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-[410px] xl:w-[430px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col h-full overflow-hidden select-none">
+    <aside className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col h-full overflow-hidden select-none">
       {/* Cabeçalho do Painel Lateral */}
       <div className="p-4 border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)]/90 backdrop-blur-sm shrink-0">
         <div className="flex items-center justify-between">

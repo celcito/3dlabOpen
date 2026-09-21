@@ -1,9 +1,8 @@
 import * as THREE from "three";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { csgUnion, csgSubtract } from "../fastener/boolean";
+import { csgSubtract } from "../fastener/boolean";
 
 export type EngravingMode = "none" | "raised" | "recessed";
-export type TipStyle = "none" | "hook_only" | "hook_wheel";
 
 export interface CanOpenerConfig {
   /** Outer silhouette (in mm, after trace). The shape's bounding-box height
@@ -19,22 +18,6 @@ export interface CanOpenerConfig {
   engraving: EngravingMode;
   /** Engraving depth (raised) or carve depth (recessed). */
   engravingDepth: number;
-  /** Cutting tip style. */
-  tip: TipStyle;
-  /** Length of the cutting tip below the handle. */
-  tipLength: number;
-  /** Hook width (base) in mm. */
-  hookWidth: number;
-  /** Hook depth (how far the wedge sits above the apex). */
-  hookDepth: number;
-  /** Wheel outer radius in mm. */
-  wheelRadius: number;
-  /** Wheel tube radius in mm. */
-  wheelTube: number;
-  /** Arm thickness connecting the handle to the wheel in mm. */
-  armWidth: number;
-  /** Arm thickness in the depth direction. */
-  armDepth: number;
   /** Add a vertical keyring hole near the top of the handle. */
   keyring: boolean;
   /** Keyring hole diameter in mm. */
@@ -197,54 +180,6 @@ export function buildEngravingGeometries(cfg: CanOpenerConfig): THREE.BufferGeom
 }
 
 /**
- * Build the plastic cutting tip (hook + wheel + arm). All parts are
- * extruded along Z so the assembly can be unioned with the handle (also
- * built along Z) in one consistent coordinate space.
- */
-export function buildCuttingTipGeometry(cfg: CanOpenerConfig): THREE.BufferGeometry {
-  if (cfg.tip === "none") return new THREE.BufferGeometry();
-  const armW = Math.max(0.1, cfg.armWidth);
-  const armD = Math.max(0.1, cfg.armDepth);
-  // Guard the extreme combos the sliders allow: a wheel larger than the tip
-  // length would make the arm (and hook) negative, and a tube >= radius
-  // makes the torus self-intersect. Clamp to safe ranges.
-  const tipLen = Math.max(1, cfg.tipLength);
-  const wheelR = Math.min(Math.max(0.2, cfg.wheelRadius), tipLen - 0.5);
-  const wheelT = Math.min(Math.max(0.05, cfg.wheelTube), wheelR * 0.8);
-  const hookW = Math.max(0.2, cfg.hookWidth);
-  const hookDepth = Math.max(0, cfg.hookDepth);
-
-  // The arm sits at z = 0 with its top at y = 0 (handle base). It reaches
-  // down to y = -armLength where the wheel sits.
-  const armLength = tipLen - wheelR; // >= 0.5 by the wheelR clamp above
-  const arm = new THREE.BoxGeometry(armW, armLength, armD);
-  arm.translate(0, -armLength / 2, 0);
-
-  // The wheel: torus oriented with its axis vertical (along Y).
-  const wheel = new THREE.TorusGeometry(wheelR, wheelT, 12, 24);
-  wheel.rotateX(Math.PI / 2); // torus axis along Y → vertical
-  wheel.translate(0, -armLength, 0);
-
-  // The hook: a wedge pointing down. Use an extruded triangle. Clamp the
-  // height so the triangle can't invert when hookDepth eats the whole tip.
-  const hookHeight = Math.max(0.5, tipLen - wheelR - hookDepth);
-  const hookShape = new THREE.Shape();
-  hookShape.moveTo(-hookW / 2, 0);
-  hookShape.lineTo(hookW / 2, 0);
-  hookShape.lineTo(0, -hookHeight);
-  hookShape.closePath();
-  const hook = new THREE.ExtrudeGeometry(hookShape, {
-    depth: armD,
-    bevelEnabled: false,
-    curveSegments: 8,
-  });
-  hook.translate(0, -wheelR, -armD / 2); // centred on Z, top of hook at wheel centre
-
-  const merged = mergeCompatible([arm, wheel, hook]);
-  return merged ?? arm;
-}
-
-/**
  * Normalise a set of geometries so they can be safely merged. Three.js's
  * `mergeGeometries` requires every geometry to have the same set of
  * attributes (position always; normal/index/uv/colour only if present in
@@ -281,31 +216,16 @@ export function mergeCompatible(geometries: THREE.BufferGeometry[]): THREE.Buffe
 }
 
 /**
- * Build the entire can opener as handle + (optional) tip. The cutting tip is
- * NOT CSG-unioned with the handle — instead it is returned as a separate
- * mesh so the STL exporter can write both solids side by side. This avoids
- * fragile boolean operations on complex traced silhouettes where the
- * manifold CSG can reject the input.
+ * Build the can opener handle with optional engraving and keyring hole.
  *
  *   - Handle: extruded silhouette, optionally with engraved details.
- *   - Cutting tip: hook + wheel + arm, as its own watertight geometry.
  *   - Keyring hole: optional vertical cylinder, CSG-subtracted from the handle.
  *
  * All parts live in a coordinate space where Y is the handle's length
  * (handle base at y=0, top at y=handleLength), X is width, Z is depth.
  */
-export interface CanOpenerResult {
-  handle: THREE.BufferGeometry;
-  tip: THREE.BufferGeometry | null;
-}
 
 export async function buildCanOpenerGeometry(cfg: CanOpenerConfig): Promise<THREE.BufferGeometry> {
-  const parts = await buildCanOpenerParts(cfg);
-  return combineForExport(parts);
-}
-
-/** Build the handle and the tip as separate geometries. */
-export async function buildCanOpenerParts(cfg: CanOpenerConfig): Promise<CanOpenerResult> {
   let handle = buildHandleGeometry(cfg);
 
   // Engraving (raised → mergeCompatible/union, recessed → CSG subtract).
@@ -326,25 +246,6 @@ export async function buildCanOpenerParts(cfg: CanOpenerConfig): Promise<CanOpen
   // Keyring hole is baked into the handle Shape itself (see
   // buildHandleGeometry) so no CSG is required here.
 
-  // Tip stays as its own geometry — see file comment for why we skip CSG here.
-  let tip: THREE.BufferGeometry | null = null;
-  if (cfg.tip !== "none") {
-    const t = buildCuttingTipGeometry(cfg);
-    if (t.attributes.position.count > 0) tip = t;
-  }
-
   handle.computeBoundingBox();
-  if (tip) tip.computeBoundingBox();
-  return { handle, tip };
-}
-
-/**
- * Merge the handle and tip into a single BufferGeometry for STL export.
- * Both parts are independently watertight; concatenating their index
- * buffers preserves that without any boolean ops.
- */
-function combineForExport({ handle, tip }: CanOpenerResult): THREE.BufferGeometry {
-  if (!tip) return handle;
-  const merged = mergeCompatible([handle, tip]);
-  return merged ?? handle;
+  return handle;
 }

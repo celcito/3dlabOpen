@@ -99,7 +99,7 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
   });
 
   return (
-    <aside className="w-full lg:w-[410px] xl:w-[440px] h-full bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden select-none">
+    <aside className="w-full md:w-[400px] h-full bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] flex flex-col shrink-0 overflow-hidden select-none">
       {/* Cabeçalho da Barra Lateral */}
       <div className="p-4 border-b border-[var(--surface-container-high)] flex items-center justify-between">
         <div>

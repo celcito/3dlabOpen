@@ -14,6 +14,7 @@ const PriceCalculator = lazy(() => import("./pages/PriceCalculator"));
 const MarketingGenerator = lazy(() => import("./pages/MarketingGenerator"));
 const PlateCreator = lazy(() => import("./pages/PlateCreator"));
 const CookieCutterMaker = lazy(() => import("./pages/CookieCutterMaker"));
+const CookieCutterDesignEditor = lazy(() => import("./pages/CookieCutterDesignEditor"));
 const FileConverter = lazy(() => import("./pages/FileConverter"));
 const SvgConverter = lazy(() => import("./pages/SvgConverter"));
 const QrGenerator = lazy(() => import("./pages/QrGenerator"));
@@ -89,11 +90,11 @@ function NavItem({ to, icon: Icon, label, description }: { to: string; icon: any
       to={to}
       className={`flex items-center gap-3 px-4 py-3 rounded-r-full border-l-4 font-mono text-[11px] font-medium tracking-[0.05em] transition-colors scale-95 active:scale-100 ${
         isActive
-          ? "bg-[#7C4DFF] text-[#FCF6FF] border-[#632CE5]"
-          : "border-transparent text-[#494455] hover:bg-[#E8E9E3] hover:text-[#1A1C19]"
+          ? "bg-[var(--primary-container)] text-[var(--on-primary-container)] border-[var(--primary)]"
+          : "border-transparent text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] hover:text-[var(--on-surface)]"
       }`}
     >
-      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#FCF6FF]" : "text-[#7A7487]"}`} />
+      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[var(--on-primary-container)]" : "text-[var(--outline)]"}`} />
       <span className="truncate">{label}</span>
     </Link>
   );
@@ -103,12 +104,12 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-[100dvh] bg-[var(--workbench-page)] text-[var(--workbench-text)] font-sans overflow-hidden">
       {/* SIDEBAR NAVIGATION */}
-      <aside className="w-[280px] bg-[#FFFFFF] border-r border-[#CAC3D8] flex flex-col py-5 shrink-0">
+      <aside className="w-[280px] bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] flex flex-col py-5 shrink-0">
         <div className="px-5 mb-8 flex items-center gap-3 shrink-0">
           <M2crLogo size={30} withWordmark={false} />
           <div className="flex flex-col">
-            <h1 className="font-sans text-[20px] font-bold text-[#632CE5] leading-none">Workbench</h1>
-            <span className="font-mono text-[10px] text-[#494455] tracking-[0.05em] mt-1">V0.5.0</span>
+            <h1 className="font-sans text-[20px] font-bold text-[var(--primary)] leading-none">Workbench</h1>
+            <span className="font-mono text-[10px] text-[var(--on-surface-variant)] tracking-[0.05em] mt-1">V0.5.0</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-hide pb-6 px-2 space-y-0.5">
@@ -116,7 +117,7 @@ function Layout({ children }: { children: React.ReactNode }) {
             {NAV_ITEMS.map((item) => (
               <NavItem key={item.to} {...item} />
             ))}
-            <div className="px-4 pt-4 pb-1 font-mono text-[10px] uppercase tracking-[0.15em] text-[#7A7487] font-bold">
+            <div className="px-4 pt-4 pb-1 font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--outline)] font-bold">
               Engineering
             </div>
             {ENGINEERING_ITEMS.map((item) => (
@@ -126,16 +127,16 @@ function Layout({ children }: { children: React.ReactNode }) {
         </div>
         {/* CTA + Footer */}
         <div className="px-5 mt-auto pt-4 space-y-4 shrink-0">
-          <button className="w-full py-2 px-4 bg-[#632CE5] text-white rounded font-mono text-[11px] tracking-[0.05em] hover:bg-[#7C4DFF] transition-colors flex items-center justify-center gap-2">
+          <button className="w-full py-2 px-4 bg-[var(--primary)] text-[var(--on-primary)] rounded font-mono text-[11px] tracking-[0.05em] hover:bg-[var(--primary-container)] transition-colors flex items-center justify-center gap-2">
             <MonitorPlay className="w-4 h-4" />
             Upgrade to Pro
           </button>
-          <div className="border-t border-[#E8E9E3] pt-4 space-y-1">
-            <a className="flex items-center gap-3 px-2 py-2 text-[#494455] hover:bg-[#E8E9E3] rounded font-mono text-[11px] tracking-[0.05em] transition-colors">
+          <div className="border-t border-[var(--surface-container-high)] pt-4 space-y-1">
+            <a className="flex items-center gap-3 px-2 py-2 text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] rounded font-mono text-[11px] tracking-[0.05em] transition-colors">
               <HelpCircle className="w-4 h-4" />
               Documentation
             </a>
-            <a className="flex items-center gap-3 px-2 py-2 text-[#494455] hover:bg-[#E8E9E3] rounded font-mono text-[11px] tracking-[0.05em] transition-colors">
+            <a className="flex items-center gap-3 px-2 py-2 text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] rounded font-mono text-[11px] tracking-[0.05em] transition-colors">
               <Headset className="w-4 h-4" />
               Support
             </a>
@@ -146,15 +147,15 @@ function Layout({ children }: { children: React.ReactNode }) {
       {/* MAIN WORKSPACE */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* TOP TOOLBAR */}
-        <header className="h-16 bg-[#FFFFFF] border-b border-[#CAC3D8] flex items-center justify-between px-6 shrink-0 z-10">
+        <header className="h-16 bg-[var(--workbench-panel)] border-b border-[var(--surface-container-high)] flex items-center justify-between px-6 shrink-0 z-10">
           <div className="flex items-center gap-8">
             <M2crLogo size={24} />
           </div>
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-lg hover:bg-[#E8E9E3] flex items-center justify-center text-[#494455] transition-colors" aria-label="Configurações">
+            <button className="w-10 h-10 rounded-lg hover:bg-[var(--surface-container-high)] flex items-center justify-center text-[var(--on-surface-variant)] transition-colors" aria-label="Configurações">
               <Settings className="w-5 h-5" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-[#E2DFDE] border border-[#CAC3D8] flex items-center justify-center font-sans text-xs font-bold text-[#636262]">
+            <div className="w-8 h-8 rounded-full bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] flex items-center justify-center font-sans text-xs font-bold text-[var(--on-surface-variant)]">
               MC
             </div>
           </div>
@@ -206,6 +207,7 @@ export default function App() {
           <Route path="/qr-generator" element={<QrGenerator />} />
           <Route path="/svg-converter" element={<SvgConverter />} />
           <Route path="/cookie-cutter-maker" element={<CookieCutterMaker />} />
+          <Route path="/cookie-cutter-editor" element={<CookieCutterDesignEditor />} />
           <Route path="/plate-creator" element={<PlateCreator />} />
           <Route path="/paint-mixer" element={<PaintMixer />} />
           <Route path="/filament-painter" element={<FilamentPainter />} />

@@ -1649,7 +1649,7 @@ export default function PuzzleGenerator() {
                 </div>
               )}
 
-              <Canvas shadows camera={{ position: [0, 0, 240], fov: 45 }}>
+              <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 240], fov: 45 }}>
                 <color attach="background" args={["#F3F4EE"]} />
                 <ambientLight intensity={0.85} />
                 <directionalLight position={[100, 140, 120]} castShadow intensity={1.8} shadow-bias={-0.0001} />
@@ -1743,7 +1743,7 @@ export default function PuzzleGenerator() {
                 </Center>
 
                 <ContactShadows position={[0, -110, 0]} opacity={0.5} scale={450} blur={2.5} far={240} />
-                <OrbitControls makeDefault />
+                <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
               </Canvas>
 
               {/* 3D VIEW & SHADING TOGGLES */}
@@ -1847,7 +1847,7 @@ export default function PuzzleGenerator() {
         </div>
 
         {/* RIGHT CONTROLS PANEL */}
-        <div className="w-full md:w-[400px] bg-white flex flex-col overflow-hidden shrink-0">
+        <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] flex flex-col overflow-hidden shrink-0">
           
           {/* GAME TYPE SELECTOR (Puzzle vs Memory) */}
           <div className="p-4 border-b border-[var(--surface-container-high)]">

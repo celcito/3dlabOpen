@@ -19,12 +19,12 @@ export default function FidgetClickerMaker() {
       {/* VIEWPORT */}
       <div className="flex-1 relative">
         <div className="absolute inset-0">
-          <Canvas shadows camera={{ position: [40, 40, 40], fov: 45 }}>
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [40, 40, 40], fov: 45 }}>
             <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-50, -50, -50]} intensity={0.5} />
-            <OrbitControls makeDefault />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
             <Grid 
               infiniteGrid 
               fadeDistance={100} 
@@ -62,7 +62,7 @@ export default function FidgetClickerMaker() {
       </div>
 
       {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
@@ -187,7 +187,7 @@ export default function FidgetClickerMaker() {
           <div className="pt-6">
             <button
                onClick={exportSTL}
-              className="w-full bg-[#632CE5] text-[var(--workbench-text)] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] group"
+              className="btn-primary"
             >
               <Download className="w-4 h-4 group-hover:bounce" />
               Download STL

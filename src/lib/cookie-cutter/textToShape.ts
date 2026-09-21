@@ -1,5 +1,14 @@
-import * as opentype from "opentype.js";
 import * as THREE from "three";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _opentype: any = null;
+
+async function getOpentype() {
+  if (!_opentype) {
+    _opentype = await import("opentype.js");
+  }
+  return _opentype;
+}
 
 // Built-in fonts (loaded from CDN)
 const FONTS: Record<string, string> = {
@@ -9,7 +18,8 @@ const FONTS: Record<string, string> = {
 };
 
 // Cache loaded fonts
-const fontCache: Record<string, opentype.Font> = {};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fontCache: Record<string, any> = {};
 
 let _onFontsLoaded: (() => void) | null = null;
 let _loadedCount = 0;
@@ -24,13 +34,14 @@ export function areFontsLoaded(): boolean {
   return _loadedCount >= _totalFonts;
 }
 
-export async function loadFont(name: string): Promise<opentype.Font> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadFont(name: string): Promise<any> {
   if (fontCache[name]) return fontCache[name];
   const url = FONTS[name] || FONTS.Arial;
   try {
-    const response = await fetch(url);
+    const [response, ot] = await Promise.all([fetch(url), getOpentype()]);
     const buffer = await response.arrayBuffer();
-    const font = opentype.parse(buffer);
+    const font = ot.parse(buffer);
     fontCache[name] = font;
     _loadedCount++;
     if (_loadedCount >= _totalFonts && _onFontsLoaded) {
@@ -51,9 +62,10 @@ export function getAvailableFonts(): string[] {
  * Convert a text string into a THREE.ShapeGeometry at a given position and scale.
  * The text is centered at (x, y) with the given fontSize in mm.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function textToShapeGeometry(
   text: string,
-  font: opentype.Font,
+  font: any,
   fontSize: number
 ): THREE.ShapeGeometry {
   const paths = font.getPaths(text, 0, 0, fontSize);
@@ -116,9 +128,10 @@ export function textToShapeGeometry(
 /**
  * Generate SVG string from text for the existing SVG parsing pipeline.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function textToSvgString(
   text: string,
-  font: opentype.Font,
+  font: any,
   fontSize: number,
   x: number,
   y: number,

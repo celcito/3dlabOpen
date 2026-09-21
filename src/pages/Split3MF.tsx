@@ -371,7 +371,6 @@ export default function Split3MF() {
               camera.lookAt(0, 0, 0);
               gl.setClearColor("#F3F4EE", 1);
             }}
-            frameloop="always"
           >
             <Grid infiniteGrid fadeDistance={100} cellColor="var(--workbench-line)" sectionColor="var(--outline-variant)" cellSize={10} sectionSize={50} />
             {!state.geometry && <OrbitControls makeDefault />}

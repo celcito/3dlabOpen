@@ -1,6 +1,5 @@
 import * as ClipperLib from "clipper-lib";
-import { DesignElement, toPathData } from "./designElements";
-import { pathDataToPoints } from "../../hooks/cookie/useCookieCutterPage";
+import { DesignElement, toPathData, pathDataToPoints } from "./designElements";
 
 const CLIPPER_SCALE = 1000;
 

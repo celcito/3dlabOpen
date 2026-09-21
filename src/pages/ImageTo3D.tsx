@@ -235,7 +235,7 @@ export default function ImageTo3D() {
         </div>
 
         {/* LEFT PANE */}
-        <div className="bg-[var(--workbench-panel)] p-6 overflow-y-auto border-l border-[var(--surface-container-high)]">
+        <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] p-6 overflow-y-auto border-l border-[var(--surface-container-high)]">
           {!multiMode && !textMode ? (
             <section>
               <h3 className="text-[11px] uppercase tracking-widest text-zinc-400 mb-4 font-bold">01. Upload Image</h3>
@@ -244,7 +244,7 @@ export default function ImageTo3D() {
               </div>
               <div className="flex gap-3">
                 <Button disabled={!file || isProcessing} onClick={handleGenerate}
-                  className="flex-1 bg-[#632CE5] text-[var(--workbench-text)] font-black uppercase text-xs py-4 tracking-widest hover:bg-white transition-colors">
+                  className="btn-primary">
                   {uploading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Uploading...</> : <><Image className="w-4 h-4 mr-2" /> Generate</>}
                 </Button>
                 {isDone && <Button onClick={handleReset} variant="outline" className="font-black uppercase text-xs tracking-widest">New</Button>}
@@ -278,7 +278,7 @@ export default function ImageTo3D() {
                 <Button
                   disabled={!prompt.trim() || textIsProcessing}
                   onClick={handleTextGenerate}
-                  className="flex-1 bg-[#632CE5] text-[var(--workbench-text)] font-black uppercase text-xs py-4 tracking-widest hover:bg-white transition-colors"
+                  className="btn-primary"
                 >
                   {textUploading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Starting...</> : <><Type className="w-4 h-4 mr-2" /> Generate 3D</>}
                 </Button>
@@ -319,7 +319,7 @@ export default function ImageTo3D() {
                 <Button
                   disabled={multiFiles.filter((f): f is File => f !== null).length < 2 || multiProcessing}
                   onClick={handleGenerateMulti}
-                  className="flex-1 bg-[#632CE5] text-[var(--workbench-text)] font-black uppercase text-xs py-4 tracking-widest hover:bg-white transition-colors">
+                  className="btn-primary">
                   {multiUploading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Generating...</> : <><Image className="w-4 h-4 mr-2" /> Generate All</>}
                 </Button>
                 {multiAllDone && (

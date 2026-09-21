@@ -1360,7 +1360,7 @@ export default function Viewer3D() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_360px] overflow-hidden">
         <div className="workbench-viewport relative bg-[var(--workbench-page)] h-full flex flex-col">
           <div className="workbench-viewport flex-1 w-full relative overflow-hidden bg-[var(--workbench-page)]">
-                <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }} className="absolute inset-0">
+                <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 5], fov: 45 }} className="absolute inset-0">
                   <color attach="background" args={["#F3F4EE"]} />
                   <ambientLight intensity={0.8} />
                   <pointLight position={[10, 10, 10]} intensity={1.5} />
@@ -1489,7 +1489,7 @@ export default function Viewer3D() {
                   )}
                     </group>
                   </Bounds>}
-                  {!modelGeometry && <OrbitControls makeDefault />}
+                  {!modelGeometry && <OrbitControls makeDefault enableDamping dampingFactor={0.05} />}
                   {modelGeometry && <OrbitControls ref={controlsRef} makeDefault enabled={true} mouseButtons={{ LEFT: (placementMode || (paintMode && !previewSeparated)) ? null : THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: (paintMode && !previewSeparated) ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN }} touches={{ ONE: (placementMode || (paintMode && !previewSeparated)) ? null : THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }} />}
                   <Grid infiniteGrid fadeDistance={100} cellColor="var(--workbench-line)" sectionColor="var(--outline-variant)" cellSize={10} sectionSize={50} />
                   {watermarkEnabled && watermarkText.trim() !== "" && (
@@ -1515,23 +1515,23 @@ export default function Viewer3D() {
                 </div>
             {modelGeometry && (
               <div className="absolute bottom-6 left-6 right-6 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] p-4 flex flex-wrap items-center justify-between gap-4 z-10">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("brush"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "brush" && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`}><Paintbrush className="w-3 h-3" /> Brush</button>
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3 h-3" /> Bucket</button>
-                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[#FF1744] text-[var(--on-surface)] border-[#FF1744]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`} title="Borracha"><Eraser className="w-3 h-3" /> Eraser</button>
-                  <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`}><Move className="w-3 h-3" /> Rotate</button>
-                    <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); setBooleanGeometries(null); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-[var(--workbench-accent)] text-white border-[var(--workbench-accent)] font-bold" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("brush"); setPreviewSeparated(false); }} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "brush" && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`}><Paintbrush className="w-3 h-3" /> Brush</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("bucket"); setPreviewSeparated(false); }} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "bucket" && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`} title="Preenchimento inteligente 3D"><PaintBucket className="w-3 h-3" /> Bucket</button>
+                  <button onClick={() => { setPaintMode(true); setPlacementMode(false); setPaintTool("eraser"); setPreviewSeparated(false); }} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${paintMode && paintTool === "eraser" && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`} title="Borracha"><Eraser className="w-3 h-3" /> Eraser</button>
+                  <button onClick={() => { setPaintMode(false); setPlacementMode(false); setPreviewSeparated(false); }} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${!paintMode && !previewSeparated && !placementMode ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`}><Move className="w-3 h-3" /> Rotate</button>
+                    <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); setFinalizedPreview(false); setPreviewValidation("idle"); setBooleanGeometries(null); if (next) { setPaintMode(false); setPlacementMode(false); } }} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${previewSeparated ? "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)] font-bold" : "bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]"}`} title="Visualizar peças separadas"><Layers className="w-3 h-3" /> Preview Separar</button>
                   <span className="w-px self-stretch bg-[var(--workbench-page)] mx-0.5" />
-                  <button onClick={expandConnectedPaint} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] transition-colors" title="Preencher Parte Conectada"><PaintBucket className="w-3 h-3 text-[var(--workbench-accent)]" /> Fill Connected</button>
-                  <button onClick={fillRemainingWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] transition-colors"><Paintbrush className="w-3 h-3" /> Fill Remaining</button>
-                  <button onClick={fillAllWithActiveGroup} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] transition-colors"><Check className="w-3 h-3" /> Fill All</button>
+                  <button onClick={expandConnectedPaint} className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] transition-colors" title="Preencher Parte Conectada"><PaintBucket className="w-3 h-3 text-[var(--workbench-accent)]" /> Fill Connected</button>
+                  <button onClick={fillRemainingWithActiveGroup} className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] transition-colors"><Paintbrush className="w-3 h-3" /> Fill Remaining</button>
+                  <button onClick={fillAllWithActiveGroup} className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] transition-colors"><Check className="w-3 h-3" /> Fill All</button>
                 </div>
                 {previewSeparated ? (
                   <div className="flex items-center gap-6 flex-1 max-w-xs px-4">
-                    <span className="text-[10px] font-bold uppercase text-emerald-400 tracking-wider whitespace-nowrap flex items-center gap-1"><Layers className="w-3.5 h-3.5" /> Explosão / Offset</span>
+                    <span className="text-[10px] font-bold uppercase text-[var(--workbench-accent)] tracking-wider whitespace-nowrap flex items-center gap-1"><Layers className="w-3.5 h-3.5" /> Explosão / Offset</span>
                    <div className="flex-1 flex items-center gap-2">
                      <Slider value={[separationDistance]} onValueChange={(val) => setSeparationDistance(val[0])} min={0.0} max={4.0} step={0.05} className="flex-1" />
-                     <span className="font-mono text-xs text-emerald-400 w-12 text-right font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span>
+                      <span className="font-mono text-xs text-[var(--workbench-accent)] w-12 text-right font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span>
                    </div>
                     <button onClick={() => setShowConnectors(!showConnectors)} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-colors whitespace-nowrap ${showConnectors ? "bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]" : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"}`} title={showConnectors ? "Ocultar encaixes no preview" : "Mostrar encaixes no preview"}>
                       <Settings className="w-3 h-3" /> {showConnectors ? "Encaixes" : "Sem Encaixes"}
@@ -1548,8 +1548,8 @@ export default function Viewer3D() {
                       } else {
                         validatePreviewJoints();
                       }
-                    }} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-emerald-400/20 text-emerald-400 border-emerald-400" : "bg-[var(--workbench-accent)] text-white border-[var(--workbench-accent)]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Reabrir Preview" : "Finalizar"}</button>
-                   {finalizedPreview && <span className={`text-[9px] font-bold uppercase whitespace-nowrap ${previewValidation === "valid" ? "text-emerald-400" : "text-amber-400"}`}>{previewValidation === "valid" ? "Encaixe OK" : "Revisar encaixe"}</span>}
+                    }} className={`px-3 py-2 text-[9px] font-black uppercase tracking-wider border transition-colors whitespace-nowrap ${finalizedPreview ? "bg-[var(--workbench-accent)]/20 text-[var(--workbench-accent)] border-[var(--workbench-accent)]" : "bg-[var(--workbench-accent)] text-[var(--on-surface)] border-[var(--workbench-accent)]"}`}><Check className="w-3.5 h-3.5 inline mr-1" /> {finalizedPreview ? "Reabrir Preview" : "Finalizar"}</button>
+                    {finalizedPreview && <span className={`text-[9px] font-bold uppercase whitespace-nowrap ${previewValidation === "valid" ? "text-[var(--workbench-accent)]" : "text-amber-400"}`}>{previewValidation === "valid" ? "Encaixe OK" : "Revisar encaixe"}</span>}
                   </div>
                 ) : (
                   <div className="flex items-center gap-6 flex-1 max-w-xs px-4">
@@ -1560,9 +1560,9 @@ export default function Viewer3D() {
                     </div>
                   </div>
                 )}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button onClick={handleUndo} disabled={history.length === 0} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all ${history.length > 0 ? "bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] hover:bg-[var(--surface-container-high)] active:scale-95" : "bg-[var(--surface-container-high)]/40 border-[var(--surface-container-highest)] text-[var(--workbench-muted)] cursor-not-allowed"}`}><Undo className="w-3 h-3" /> Undo {history.length > 0 && `(${history.length})`}</button>
-                  <button onClick={resetPainting} className="px-3 py-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition-colors"><RotateCcw className="w-3 h-3" /> Clear All Paint</button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button onClick={handleUndo} disabled={history.length === 0} className={`px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all ${history.length > 0 ? "bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--workbench-accent)] hover:bg-[var(--surface-container-high)] active:scale-95" : "bg-[var(--surface-container-high)]/40 border-[var(--surface-container-highest)] text-[var(--workbench-muted)] cursor-not-allowed"}`}><Undo className="w-3 h-3" /> Undo {history.length > 0 && `(${history.length})`}</button>
+                  <button onClick={resetPainting} className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition-colors"><RotateCcw className="w-3 h-3" /> Clear All Paint</button>
                 </div>
               </div>
             )}
@@ -1611,7 +1611,7 @@ export default function Viewer3D() {
               {modelGeometry && (
                 <div className="grid grid-cols-2 gap-2 bg-[var(--surface-container-high)] p-3 border border-[var(--surface-container-high)] mt-2">
                   <div><span className="text-[9px] uppercase text-[var(--on-surface-variant)] block">Triangles</span><span className="font-mono text-sm text-[var(--on-surface)]">{stats.faces.toLocaleString()}</span></div>
-                  <div><span className="text-[9px] uppercase text-[var(--on-surface-variant)] block">Status</span><span className="font-mono text-sm text-[#00FF41]">LOADED</span></div>
+                  <div><span className="text-[9px] uppercase text-[var(--on-surface-variant)] block">Status</span><span className="font-mono text-sm text-[var(--workbench-accent)]">LOADED</span></div>
                 </div>
               )}
             </div>
@@ -1665,7 +1665,7 @@ export default function Viewer3D() {
                               <HelpTooltip text="Defina se esta peça será MACHO (pino) ou FÊMEA (furo). 'Auto' usa menor ID = fêmea." />
                             </label>
                             <div className="grid grid-cols-3 gap-1">
-                              <button onClick={() => setGroupJointType(group.id, 'female')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'female' ? 'bg-[#D500F9]/20 text-[#D500F9] border-[#D500F9]' : 'bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]'}`}>
+                              <button onClick={() => setGroupJointType(group.id, 'female')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'female' ? 'bg-[var(--workbench-accent)]/20 text-[var(--workbench-accent)] border-[var(--workbench-accent)]' : 'bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]'}`}>
                                 <Circle className="w-3 h-3" /> Fêmea
                               </button>
                               <button onClick={() => setGroupJointType(group.id, 'auto')} className={`py-2 text-[9px] font-bold uppercase rounded border transition-all flex items-center justify-center gap-1 ${jointTypeSetting === 'auto' ? 'bg-[var(--workbench-page)] text-[var(--on-surface)] border-[var(--surface-container-high)]' : 'bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]'}`}>
@@ -1692,7 +1692,7 @@ export default function Viewer3D() {
               <div className="p-6 border border-dashed border-[var(--surface-container-high)] rounded bg-[var(--workbench-page)] text-center text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">Upload a 3D model first</div>
             )}
           </section>
-          {modelGeometry && !booleanMode && (
+          {modelGeometry && (
             <section ref={jointsSectionRef} className="border-t border-[var(--surface-container-highest)] pt-6">
               <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> 03. Encaixes & Conectores</h3>
                 <p className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider mb-4 leading-relaxed">Snap-fit hexagonal com folga configurável, ímãs ou posicionamento manual.</p>
@@ -1867,31 +1867,28 @@ export default function Viewer3D() {
                   </div>
                 )}
               </div>
-            </section>
-          )}
-          {modelGeometry && (
-            <section className="border-t border-[var(--surface-container-highest)] pt-6">
-              <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] mb-4 font-bold flex items-center gap-2"><Settings className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> 03b. Modo Booleano</h3>
-              <p className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider mb-4 leading-relaxed">Subtração CSG volumétrica entre peças. A parte fêmea recebe uma cavidade com a forma exata da parte macho.</p>
-              <div className="bg-[var(--workbench-panel)] border border-[var(--surface-container-highest)] rounded p-3 space-y-3">
+              <div className="border-t border-[var(--surface-container-highest)]/60 pt-4 mt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-[var(--on-surface)]">Ativar Modo Boolean</span>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[var(--on-surface)] block">Modo Booleano</span>
+                    <span className="text-[8px] text-[var(--on-surface-variant)]">Subtração CSG volumétrica entre peças</span>
+                  </div>
                   <button
                     onClick={() => { setBooleanMode(!booleanMode); if (!booleanMode) { setPlacementMode(false); } }}
-                    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border transition-all ${booleanMode ? "bg-[#00FF41]/20 border-[#00FF41] text-[#00FF41]" : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"}`}
+                    className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border transition-all ${booleanMode ? "bg-[var(--workbench-accent)]/20 border-[var(--workbench-accent)] text-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"}`}
                   >
                     {booleanMode ? "ATIVADO" : "DESATIVADO"}
                   </button>
                 </div>
                 {booleanMode && (
                   <>
-                    <div className="bg-[#00FF41]/5 border border-[#00FF41]/20 rounded p-2 text-[8px] leading-relaxed text-[var(--on-surface-variant)]">
-                      <strong className="text-[#00FF41]">Como funciona:</strong> A parte fêmea terá uma cavidade com a forma exata da parte macho. A tolerância cria o espaço necessário para impressão 3D.
+                    <div className="bg-[var(--workbench-accent)]/5 border border-[var(--workbench-accent)]/20 rounded p-2 text-[8px] leading-relaxed text-[var(--on-surface-variant)]">
+                      <strong className="text-[var(--workbench-accent)]">Como funciona:</strong> A parte fêmea terá uma cavidade com a forma exata da parte macho. A tolerância cria o espaço necessário para impressão 3D.
                     </div>
                     <div className="space-y-1.5 border-t border-[var(--surface-container-highest)]/60 pt-2.5">
                       <div className="flex justify-between text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">
                         <span>Tolerância / Folga</span>
-                        <span className="text-[#00FF41] font-mono">{booleanTolerance.toFixed(2)} mm</span>
+                        <span className="text-[var(--workbench-accent)] font-mono">{booleanTolerance.toFixed(2)} mm</span>
                       </div>
                       <Slider
                         value={[booleanTolerance]}
@@ -1905,31 +1902,29 @@ export default function Viewer3D() {
                         <span className="w-2 h-2 rounded-full bg-[var(--workbench-accent)] inline-block" /> Macho = volumes fundidos
                       </div>
                       <div className="flex items-center gap-2 text-[8px] uppercase font-bold text-[var(--on-surface-variant)]">
-                        <span className="w-2 h-2 rounded-full bg-[#FF1744] inline-block" /> Fêmea = cavidade CSG
+                        <span className="w-2 h-2 rounded-full bg-[var(--workbench-accent)]/60 inline-block" /> Fêmea = cavidade CSG
                       </div>
                     </div>
-                    {booleanMode && (
-                      <div className="bg-[var(--surface-container-high)] p-2 rounded border border-[var(--surface-container-highest)] text-[8px] text-[var(--on-surface-variant)] leading-relaxed">
-                        <strong className="text-[var(--on-surface)]">Fluxo:</strong> Pinte as partes → Configure macho/fêmea → Exporte. A subtração é aplicada automaticamente na exportação.
-                      </div>
-                    )}
-                    {booleanMode && booleanGeometries && csgFailures.length > 0 && (
+                    <div className="bg-[var(--surface-container-high)] p-2 rounded border border-[var(--surface-container-highest)] text-[8px] text-[var(--on-surface-variant)] leading-relaxed">
+                      <strong className="text-[var(--on-surface)]">Fluxo:</strong> Pinte as partes → Configure macho/fêmea → Exporte. A subtração é aplicada automaticamente na exportação.
+                    </div>
+                    {booleanGeometries && csgFailures.length > 0 && (
                       <div className="border-t border-[var(--surface-container-highest)]/60 pt-2.5 space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-amber-400">
+                        <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-[var(--workbench-accent)]">
                           <AlertTriangle className="w-3 h-3" /> {csgFailures.length} encaixe(s) falharam
                         </div>
                         {csgFailures.map((f, i) => (
-                          <div key={i} className="bg-[#FF1744]/5 border border-[#FF1744]/20 rounded p-2 text-[8px] leading-relaxed">
-                            <span className="font-bold text-[#FF1744]">{f.groupName} ↔ {f.neighborName}</span>
+                          <div key={i} className="bg-[var(--workbench-accent)]/5 border border-[var(--workbench-accent)]/20 rounded p-2 text-[8px] leading-relaxed">
+                            <span className="font-bold text-[var(--workbench-accent)]">{f.groupName} ↔ {f.neighborName}</span>
                             <span className="text-[var(--on-surface-variant)] ml-1">({f.phase === "manifold" ? "malha" : "CSG"})</span>
                             <p className="text-[var(--on-surface-variant)] mt-0.5">{f.error}</p>
                           </div>
                         ))}
                       </div>
                     )}
-                    {booleanMode && booleanGeometries && csgFailures.length === 0 && (
+                    {booleanGeometries && csgFailures.length === 0 && (
                       <div className="border-t border-[var(--surface-container-highest)]/60 pt-2.5">
-                        <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-emerald-400">
+                        <div className="flex items-center gap-1.5 text-[9px] uppercase font-bold text-[var(--workbench-accent)]">
                           <Check className="w-3 h-3" /> Todos os encaixes CSG OK
                         </div>
                       </div>
@@ -1941,7 +1936,7 @@ export default function Viewer3D() {
           )}
           {modelGeometry && (
             <section className="border-t border-[var(--surface-container-highest)] pt-6">
-              <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] mb-4 font-bold flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> 06. Auto-Detecção</h3>
+              <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] mb-4 font-bold flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> 04. Auto-Detecção</h3>
               <p className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider mb-4 leading-relaxed">Segmentação automática.</p>
               <div className="bg-[var(--workbench-page)] border border-[var(--surface-container-highest)] rounded p-3 mb-4 space-y-3">
                 <div><span className="text-[8px] font-mono text-[var(--workbench-accent)] uppercase tracking-widest block font-extrabold">Filtro Anatômico</span><span className="text-[9.5px] text-[var(--on-surface-variant)] block mt-0.5">Escolha as partes:</span></div>
@@ -1963,11 +1958,11 @@ export default function Viewer3D() {
                   <span className="text-[9px] text-[var(--on-surface-variant)] uppercase">Separação por posição.</span>
                 </button>
                 <button onClick={autoSegmentAnatomy} className="w-full flex flex-col items-start gap-1.5 p-3 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] hover:border-[var(--workbench-accent)] hover:bg-[var(--surface-container-high)] transition-all rounded text-left">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200"><Sparkles className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> Segmentação Anatômica</div>
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--on-surface)]"><Sparkles className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> Segmentação Anatômica</div>
                   <span className="text-[9px] text-[var(--on-surface-variant)] uppercase">Braços/Pernas/Tronco.</span>
                 </button>
                 <button onClick={autoSegmentShells} className="w-full flex flex-col items-start gap-1.5 p-3 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] hover:border-[var(--workbench-accent)] hover:bg-[var(--surface-container-high)] transition-all rounded text-left">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-zinc-200"><Layers className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> Detectar Shells</div>
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase text-[var(--on-surface)]"><Layers className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> Detectar Shells</div>
                   <span className="text-[9px] text-[var(--on-surface-variant)] uppercase">Peças desconectadas.</span>
                 </button>
               </div>
@@ -1976,7 +1971,7 @@ export default function Viewer3D() {
           {modelGeometry && (
             <section className="border-t border-[var(--surface-container-highest)] pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] font-bold flex items-center gap-2"><Ruler className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> 07. Marca d'água 3D</h3>
+                <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] font-bold flex items-center gap-2"><Ruler className="w-3.5 h-3.5 text-[var(--workbench-accent)]" /> 05. Marca d'água 3D</h3>
                 <button onClick={() => setWatermarkEnabled(!watermarkEnabled)} className={`px-2.5 py-1 text-[9px] font-black uppercase border rounded ${watermarkEnabled ? "bg-[var(--workbench-accent)]/20 border-[var(--workbench-accent)] text-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)]"}`}>{watermarkEnabled ? "Ativado" : "Desativado"}</button>
               </div>
               {watermarkEnabled && (
@@ -2046,16 +2041,16 @@ export default function Viewer3D() {
           )}
           {modelGeometry && (
             <section className="flex-1 flex flex-col justify-end border-t border-[var(--surface-container-highest)] pt-6">
-              <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] mb-4 font-bold"> 08. Exportar</h3>
+              <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] mb-4 font-bold"> 06. Exportar</h3>
               <p className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider mb-4 leading-relaxed">Export each colored region as STL.</p>
               <div className="bg-[var(--workbench-panel)] border border-[var(--surface-container-highest)] rounded p-4 mb-5 space-y-4 font-sans">
                 <div className="flex justify-between items-center">
                   <div><span className="text-[10px] uppercase font-bold text-[var(--on-surface)] block">Explodir Peças</span><span className="text-[9px] text-[var(--on-surface-variant)]">Visualize separadas</span></div>
-                  <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); if (next) setPaintMode(false); }} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border ${previewSeparated ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"}`}>{previewSeparated ? "ATIVADO" : "DESATIVADO"}</button>
+                  <button onClick={() => { const next = !previewSeparated; setPreviewSeparated(next); if (next) setPaintMode(false); }} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded border ${previewSeparated ? "bg-[var(--workbench-accent)]/20 border-[var(--workbench-accent)] text-[var(--workbench-accent)]" : "bg-[var(--surface-container-high)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"}`}>{previewSeparated ? "ATIVADO" : "DESATIVADO"}</button>
                 </div>
                 {previewSeparated && (
                   <div className="space-y-2 border-t border-[var(--surface-container-highest)]/60 pt-3">
-                    <div className="flex justify-between text-[10px] uppercase font-bold text-[var(--on-surface-variant)]"><span>Distância</span><span className="text-emerald-400 font-mono font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span></div>
+                    <div className="flex justify-between text-[10px] uppercase font-bold text-[var(--on-surface-variant)]"><span>Distância</span><span className="text-[var(--workbench-accent)] font-mono font-bold">{(separationDistance ?? 1.0).toFixed(2)}x</span></div>
                     <Slider value={[separationDistance]} onValueChange={(val) => setSeparationDistance(val[0])} min={0.0} max={4.0} step={0.05} />
                     <span className="text-[8px] text-[var(--on-surface-variant)] block leading-relaxed">Arraste o slider para afastar ou aproximar as partes e verificar os encaixes.</span>
                     <div className="flex flex-wrap gap-3 pt-2 border-t border-[var(--surface-container-highest)]/60">
@@ -2066,7 +2061,7 @@ export default function Viewer3D() {
                   </div>
                 )}
               </div>
-              <button onClick={exportAllSeparatedParts} disabled={!modelGeometry || isExporting !== null} className="w-full bg-[var(--workbench-accent)] hover:bg-[var(--workbench-accent)] text-black font-black uppercase text-[11px] py-4 px-4 tracking-widest flex items-center justify-center gap-2 transition-all mb-4 shadow-[0_0_15px_rgba(124,58,237,0.2)] disabled:opacity-40"><Download className="w-4 h-4 text-black" /> Exportar Todas as Peças (.stl)</button>
+              <button onClick={exportAllSeparatedParts} disabled={!modelGeometry || isExporting !== null} className="btn-primary"><Download className="w-4 h-4 text-black" /> Exportar Todas as Peças (.stl)</button>
               <button onClick={exportAllAsThreeMF} disabled={!modelGeometry || isExporting !== null} className="w-full bg-[#00FF41] hover:bg-[#00CC33] text-black font-black uppercase text-[11px] py-4 px-4 tracking-widest flex items-center justify-center gap-2 transition-all mb-4 shadow-[0_0_15px_rgba(0,255,65,0.2)] disabled:opacity-40"><Save className="w-4 h-4 text-black" /> Exportar 3MF com Cores</button>
               <div className="space-y-2">
                 {groups.map(group => {
@@ -2096,7 +2091,7 @@ export default function Viewer3D() {
           {modelGeometry && (
             <section className="border-t border-[var(--surface-container-highest)] pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] font-bold flex items-center gap-2"><Printer className="w-4 h-4 text-[var(--workbench-accent)]" /> 04. Calculadora de Preços</h3>
+                <h3 className="text-[11px] uppercase tracking-widest text-[var(--on-surface-variant)] font-bold flex items-center gap-2"><Printer className="w-4 h-4 text-[var(--workbench-accent)]" /> 07. Calculadora de Preços</h3>
                 <button onClick={handleDownloadCSV} className="flex items-center gap-1.5 px-2 py-1 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] rounded text-[9px] uppercase font-bold text-[var(--on-surface-variant)] hover:text-[var(--workbench-accent)] hover:border-[var(--workbench-accent)]/30 transition-all group"><FileJson className="w-3 h-3 group-hover:scale-110 transition-transform" /> CSV</button>
               </div>
               <div className="flex bg-[var(--workbench-panel)] p-1 rounded border border-[var(--surface-container-highest)] mb-4 font-sans">
@@ -2105,7 +2100,7 @@ export default function Viewer3D() {
               </div>
               <div className="mb-4 space-y-1.5">
                 <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block px-1">Perfil de Material</label>
-                <select value={selectedMaterialId} onChange={(e) => { const m = MATERIALS.find(x => x.id === e.target.value); if (m) { setSelectedMaterialId(m.id); setMaterialDensity(m.density); if (m.type === "SLA") setResinCostPerKg(m.defaultCost); else setFdmFilamentCostPerKg(m.defaultCost); } }} className="w-full bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] p-2.5 rounded text-[10px] text-zinc-200 font-bold uppercase focus:outline-none focus:border-[var(--workbench-accent)]">
+                <select value={selectedMaterialId} onChange={(e) => { const m = MATERIALS.find(x => x.id === e.target.value); if (m) { setSelectedMaterialId(m.id); setMaterialDensity(m.density); if (m.type === "SLA") setResinCostPerKg(m.defaultCost); else setFdmFilamentCostPerKg(m.defaultCost); } }} className="w-full bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] p-2.5 rounded text-[10px] text-[var(--on-surface)] font-bold uppercase focus:outline-none focus:border-[var(--workbench-accent)]">
                   {MATERIALS.filter(m => m.type === estimatorType).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
                 <div className="flex justify-between text-[8px] text-[var(--workbench-muted)] uppercase font-black px-1">
@@ -2117,7 +2112,7 @@ export default function Viewer3D() {
                 {isEstimating && (
                   <>
                     <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--surface-container-high)] z-20"><div className={`h-full transition-all duration-100 ease-out ${estimatorType === "SLA" ? "bg-gradient-to-r from-cyan-500 to-[#632CE5]" : "bg-gradient-to-r from-emerald-500 to-emerald-400"}`} style={{ width: `${estimateProgress}%` }} /></div>
-                    <div className="absolute inset-0 bg-[var(--surface-container-high)]/85 backdrop-blur-[1px] flex flex-col items-center justify-center space-y-3 z-10 select-none">
+                    <div className="absolute inset-0 bg-[var(--surface-container-high)] flex flex-col items-center justify-center space-y-3 z-10 select-none">
                       <div className="flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 animate-spin ${estimatorType === "SLA" ? "text-[var(--workbench-accent)]" : "text-emerald-400"}`} /><span className="text-[9px] uppercase font-bold tracking-widest text-[var(--on-surface)]">{estimatorType === "SLA" ? "Fatiando SLA..." : "Fatiando FDM..."}</span></div>
                       <div className="text-center space-y-1 w-full max-w-[220px] px-4">
                         <div className="flex justify-between items-center text-[8px] uppercase font-mono text-[var(--on-surface-variant)]"><span>Status</span><span className={`${estimatorType === "SLA" ? "text-[var(--workbench-accent)]" : "text-emerald-400"} font-bold`}>{estimateProgress}%</span></div>
@@ -2184,7 +2179,7 @@ export default function Viewer3D() {
                   <>
                     <div className="flex items-center justify-between border-t border-[var(--surface-container-highest)]/60 pt-3">
                       <div><span className="text-[10px] uppercase font-bold text-[var(--on-surface-variant)]">Modelo Oco</span><span className="text-[9px] text-[var(--on-surface-variant)] block">Parede de 2mm</span></div>
-                      <button onClick={() => setIsHollow(!isHollow)} className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border ${isHollow ? "bg-emerald-400/20 border-emerald-400 text-emerald-400" : "bg-[var(--workbench-panel)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)]"}`}>{isHollow ? "Ativo" : "Não"}</button>
+                      <button onClick={() => setIsHollow(!isHollow)} className={`px-3 py-1.5 text-[9px] font-bold uppercase rounded border ${isHollow ? "bg-[var(--workbench-accent)]/20 border-[var(--workbench-accent)] text-[var(--workbench-accent)]" : "bg-[var(--workbench-panel)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)]"}`}>{isHollow ? "Ativo" : "Não"}</button>
                     </div>
                     <div className="space-y-1.5 border-t border-[var(--surface-container-highest)]/60 pt-3">
                       <div className="flex justify-between text-[10px] uppercase font-bold text-[var(--on-surface-variant)]"><span>Camada</span><span className="text-purple-400 font-mono">{(layerHeight * 1000).toFixed(0)} μm</span></div>
@@ -2202,7 +2197,7 @@ export default function Viewer3D() {
                 ) : (
                   <>
                     <div className="space-y-1.5 border-t border-[var(--surface-container-highest)]/60 pt-3">
-                      <div className="flex justify-between text-[10px] uppercase font-bold text-[var(--on-surface-variant)]"><span>Infill</span><span className="text-emerald-400 font-mono">{fdmInfill}%</span></div>
+                      <div className="flex justify-between text-[10px] uppercase font-bold text-[var(--on-surface-variant)]"><span>Infill</span><span className="text-[var(--workbench-accent)] font-mono">{fdmInfill}%</span></div>
                       <Slider value={[fdmInfill]} onValueChange={(v) => setFdmInfill(v[0])} min={0} max={100} step={5} />
                     </div>
                     <div className="space-y-1.5 border-t border-[var(--surface-container-highest)]/60 pt-3">
@@ -2230,14 +2225,14 @@ export default function Viewer3D() {
       </div>
       <footer className="h-12 border-t border-[var(--surface-container-highest)] px-8 flex items-center justify-between bg-[var(--workbench-page)] shrink-0">
         <div className="flex gap-6 items-center text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-bold">
-          <span>Status: <span className="text-[#00FF41]">Watertight Export Ready</span></span>
+          <span>Status: <span className="text-[var(--workbench-accent)]">Watertight Export Ready</span></span>
           <span>GPU Mesh Painting: ACTIVE</span>
           <span>Subdivisions: {modelGeometry ? "Multi-layer" : "None"}</span>
         </div>
         <div className="text-[10px] uppercase tracking-widest text-[var(--workbench-muted)] font-bold">© VÉRTICE STUDIO</div>
       </footer>
       {isProcessing && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--workbench-panel)]/80 backdrop-blur-sm transition-all animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--workbench-panel)] transition-all animate-in fade-in duration-300">
           <div className="flex flex-col items-center gap-6 p-10 bg-[var(--surface-container-high)] border border-[var(--surface-container-high)] rounded-lg shadow-2xl max-w-sm w-full text-center">
             <div className="relative"><Loader2 className="w-12 h-12 text-[var(--workbench-accent)] animate-spin" /><div className="absolute inset-0 blur-xl bg-[var(--workbench-accent)]/20 animate-pulse"></div></div>
             <div className="space-y-2"><h3 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--on-surface)]">Processando</h3><p className="text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest leading-relaxed">{processingMessage || "Aguarde..."}</p></div>

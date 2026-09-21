@@ -156,7 +156,7 @@ export default function NameSignGenerator() {
             <button
                onClick={exportSTL}
               disabled={isExporting}
-              className="w-full bg-[#632CE5] text-[var(--workbench-text)] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-white transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] group disabled:opacity-50"
+              className="btn-primary"
             >
               {isExporting ? <span className="animate-pulse">PROCESSANDO...</span> : (
                 <>
@@ -172,12 +172,12 @@ export default function NameSignGenerator() {
       {/* VIEWPORT */}
       <div className="flex-1 relative">
         <div className="absolute inset-0">
-          <Canvas shadows camera={{ position: [50, 50, 50], fov: 45 }}>
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [50, 50, 50], fov: 45 }}>
             <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[50, 100, 50]} angle={0.15} penumbra={1} castShadow />
             <pointLight position={[-50, -50, -50]} intensity={0.5} />
-            <OrbitControls makeDefault />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
             <Grid 
               infiniteGrid 
               fadeDistance={200} 
@@ -242,7 +242,7 @@ function Scene({ config, previewGeometry }: { config: SignConfig; previewGeometr
         color={config.textColor}
         anchorX="center"
         anchorY="middle"
-        font={config.font === FONTS[0].url ? undefined : "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGkyMZhrib2Bg-4.woff"}
+        font={config.font === FONTS[0].url ? undefined : config.font}
         maxWidth={pW - 1}
       >
         {config.text}

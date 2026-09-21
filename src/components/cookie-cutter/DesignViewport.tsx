@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useState, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, TransformControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
@@ -32,6 +32,12 @@ interface DesignViewportProps {
 
 const SC = 0.1;
 
+interface MarqueeState {
+  active: boolean;
+  start: THREE.Vector2;
+  end: THREE.Vector2;
+}
+
 function ViewportContent({
   elements,
   selectedIds,
@@ -45,11 +51,13 @@ function ViewportContent({
   outlinePoints,
   detailRibbonShapes,
 }: DesignViewportProps) {
-  const { camera, gl } = useThree();
+  const { camera, gl, size } = useThree();
   const transformControlsRef = useRef<any>(null);
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
   const dragStart = useRef<{ ids: string[]; transforms: Map<string, { x: number; y: number; rotation: number; scaleX: number; scaleY: number }> } | null>(null);
+  const marqueeState = useRef<MarqueeState>({ active: false, start: new THREE.Vector2(), end: new THREE.Vector2() });
+  const [marquee, setMarquee] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 
   const elementRefs = useRef<Map<string, THREE.Mesh>>(new Map());
 
@@ -62,14 +70,58 @@ function ViewportContent({
     return ids.map(id => elementRefs.current.get(id)).filter(Boolean) as THREE.Mesh[];
   };
 
-  const handlePointerDown = (event: React.PointerEvent) => {
+  const screenToNDC = useCallback((clientX: number, clientY: number) => {
     const rect = gl.domElement.getBoundingClientRect();
-    mouse.current.set(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1
+    return new THREE.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+  }, [gl]);
+
+  const ndcToScreen = useCallback((ndc: THREE.Vector2) => {
+    const rect = gl.domElement.getBoundingClientRect();
+    return {
+      x: ((ndc.x + 1) / 2) * rect.width + rect.left,
+      y: ((-ndc.y + 1) / 2) * rect.height + rect.top,
+    };
+  }, [gl]);
+
+  const getElementScreenBounds = useCallback((element: DesignElement) => {
+    const bounds = elementBounds(element);
+    if (!bounds) return null;
+
+    const corners = [
+      new THREE.Vector3(bounds.minX * SC, bounds.minY * SC, 0),
+      new THREE.Vector3(bounds.maxX * SC, bounds.minY * SC, 0),
+      new THREE.Vector3(bounds.minX * SC, bounds.maxY * SC, 0),
+      new THREE.Vector3(bounds.maxX * SC, bounds.maxY * SC, 0),
+    ];
+
+    const elementPos = new THREE.Vector3(
+      element.transform.x * SC,
+      element.transform.y * SC,
+      0
     );
 
-    raycaster.current.setFromCamera(mouse.current, camera);
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const corner of corners) {
+      corner.add(elementPos);
+      const projected = corner.clone().project(camera);
+      const screen = ndcToScreen(new THREE.Vector2(projected.x, projected.y));
+      minX = Math.min(minX, screen.x);
+      minY = Math.min(minY, screen.y);
+      maxX = Math.max(maxX, screen.x);
+      maxY = Math.max(maxY, screen.y);
+    }
+
+    return { minX, minY, maxX, maxY };
+  }, [camera, ndcToScreen]);
+
+  const handlePointerDown = useCallback((event: React.PointerEvent) => {
+    const ndc = screenToNDC(event.clientX, event.clientY);
+    mouse.current.copy(ndc);
+
+    raycaster.current.setFromCamera(ndc, camera);
     const meshes = Array.from(elementRefs.current.values());
     const intersects = raycaster.current.intersectObjects(meshes, false);
 
@@ -101,12 +153,53 @@ function ViewportContent({
         const el = elements.find(e => e.id === id);
         if (el) dragStart.current!.transforms.set(id, { ...el.transform });
       });
-    } else if (!shift) {
-      onSelect([]);
+    } else {
+      if (!shift) onSelect([]);
+      marqueeState.current = { active: true, start: ndc.clone(), end: ndc.clone() };
     }
-  };
+  }, [camera, elements, onSelect, screenToNDC, selectedIds]);
 
-  const handlePointerUp = () => {
+  const handlePointerMove = useCallback((event: PointerEvent) => {
+    if (!marqueeState.current.active) return;
+    const ndc = screenToNDC(event.clientX, event.clientY);
+    marqueeState.current.end.copy(ndc);
+
+    const startScreen = ndcToScreen(marqueeState.current.start);
+    const endScreen = ndcToScreen(marqueeState.current.end);
+    setMarquee({
+      x1: Math.min(startScreen.x, endScreen.x),
+      y1: Math.min(startScreen.y, endScreen.y),
+      x2: Math.max(startScreen.x, endScreen.x),
+      y2: Math.max(startScreen.y, endScreen.y),
+    });
+  }, [screenToNDC, ndcToScreen]);
+
+  const handlePointerUp = useCallback(() => {
+    if (marqueeState.current.active) {
+      const { start, end } = marqueeState.current;
+      const minX = Math.min(start.x, end.x);
+      const maxX = Math.max(start.x, end.x);
+      const minY = Math.min(start.y, end.y);
+      const maxY = Math.max(start.y, end.y);
+
+      if (Math.abs(maxX - minX) > 0.01 || Math.abs(maxY - minY) > 0.01) {
+        const selected: string[] = [];
+        for (const el of elements) {
+          if (!el.visible || el.role === "ignore") continue;
+          const screenBounds = getElementScreenBounds(el);
+          if (!screenBounds) continue;
+
+          if (screenBounds.minX >= minX && screenBounds.maxX <= maxX &&
+              screenBounds.minY >= minY && screenBounds.maxY <= maxY) {
+            selected.push(el.id);
+          }
+        }
+        onSelect(selected);
+      }
+      marqueeState.current.active = false;
+      setMarquee(null);
+    }
+
     if (dragStart.current) {
       dragStart.current.ids.forEach(id => {
         const el = elements.find(e => e.id === id);
@@ -114,20 +207,21 @@ function ViewportContent({
       });
       dragStart.current = null;
     }
-  };
+  }, [elements, getElementScreenBounds, onSelect, onTransformCommit]);
 
   useEffect(() => {
     gl.domElement.addEventListener("pointerdown", handlePointerDown as any);
+    window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     return () => {
       gl.domElement.removeEventListener("pointerdown", handlePointerDown as any);
+      window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, []);
+  }, [gl, handlePointerDown, handlePointerMove, handlePointerUp]);
 
   const selectedMeshes = useMemo(() => getMeshesForIds(selectedIds), [selectedIds]);
 
-  // Create selection group with clones for TransformControls
   const selectionGroup = useMemo(() => {
     if (selectedMeshes.length === 0) return null;
     if (selectedMeshes.length === 1) return selectedMeshes[0];
@@ -286,6 +380,18 @@ function ViewportContent({
           />
         )}
       </TransformControls>
+
+      {marquee && (
+        <div
+          className="absolute pointer-events-none border border-[#632CE5] bg-[#632CE5]/10"
+          style={{
+            left: marquee.x1,
+            top: marquee.y1,
+            width: marquee.x2 - marquee.x1,
+            height: marquee.y2 - marquee.y1,
+          }}
+        />
+      )}
     </>
   );
 }
@@ -301,40 +407,43 @@ function getMeshesForIds(ids: string[]): THREE.Mesh[] {
 
 export function DesignViewport(props: DesignViewportProps) {
   return (
-    <Canvas
-      camera={{ position: [0, 0, 10], fov: 30 }}
-      style={{ width: "100%", height: "100%", display: "block" }}
-      gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
-    >
-      <color attach="background" args={["#F9FAF4"]} />
-      <ambientLight intensity={0.6} color="#ffffff" />
-      <directionalLight position={[5, 5, 10]} intensity={1} color="#ffffff" castShadow />
-      <directionalLight position={[-5, -5, 5]} intensity={0.3} color="#ffffff" />
-      
-      <Grid
-        args={[20, 20]}
-        cellSize={1}
-        cellThickness={0.5}
-        cellColor="#E2E3DD"
-        sectionSize={5}
-        sectionThickness={1}
-        sectionColor="#632CE5"
-        position={[0, 0, -0.1]}
-        fadeDistance={30}
-      />
-      
-      <ViewportContent {...props} />
-      
-      <OrbitControls
-        enableDamping
-        dampingFactor={0.05}
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        minZoom={0.5}
-        maxZoom={50}
-        maxPolarAngle={Math.PI / 2}
-      />
-    </Canvas>
+    <div className="relative w-full h-full">
+      <Canvas
+        dpr={[1, 2]}
+        camera={{ position: [0, 0, 10], fov: 30 }}
+        style={{ width: "100%", height: "100%", display: "block" }}
+        gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
+      >
+        <color attach="background" args={["#F9FAF4"]} />
+        <ambientLight intensity={0.6} color="#ffffff" />
+        <directionalLight position={[5, 5, 10]} intensity={1} color="#ffffff" castShadow />
+        <directionalLight position={[-5, -5, 5]} intensity={0.3} color="#ffffff" />
+        
+        <Grid
+          args={[20, 20]}
+          cellSize={1}
+          cellThickness={0.5}
+          cellColor="#E2E3DD"
+          sectionSize={5}
+          sectionThickness={1}
+          sectionColor="#632CE5"
+          position={[0, 0, -0.1]}
+          fadeDistance={30}
+        />
+        
+        <ViewportContent {...props} />
+        
+        <OrbitControls
+          enableDamping
+          dampingFactor={0.05}
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          minZoom={0.5}
+          maxZoom={50}
+          maxPolarAngle={Math.PI / 2}
+        />
+      </Canvas>
+    </div>
   );
 }

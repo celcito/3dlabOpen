@@ -530,7 +530,7 @@ export default function CakeTopperCreator() {
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* LEFT SIDEBAR - Tools */}
-      <div className="w-full md:w-72 bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
         {/* Header */}
         <div className="p-4 border-b border-[var(--surface-container-high)]">
           <div className="flex items-center gap-2 mb-1">
@@ -940,12 +940,12 @@ export default function CakeTopperCreator() {
         <div className="flex-1 relative">
           {viewMode === "3d" ? (
             <div className="absolute inset-0">
-              <Canvas shadows camera={{ position: [0, 0, 20], fov: 50 }}>
+              <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 20], fov: 50 }}>
                 <color attach="background" args={["#F3F4EE"]} />
                 <ambientLight intensity={0.6} />
                 <spotLight position={[20, 30, 20]} angle={0.15} penumbra={1} castShadow intensity={1} />
                 <pointLight position={[-20, -10, -20]} intensity={0.4} />
-                <OrbitControls makeDefault enableDamping />
+                <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
                 {showGrid && (
                   <Grid
                     infiniteGrid
@@ -1026,7 +1026,7 @@ export default function CakeTopperCreator() {
       </div>
 
       {/* RIGHT SIDEBAR - Properties */}
-      <div className="w-full md:w-72 bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
         {/* Sidebar Tabs */}
         <div className="flex border-b border-[var(--surface-container-high)]">
           <button
@@ -1246,7 +1246,7 @@ export default function CakeTopperCreator() {
                 <button
                   onClick={exportSTL}
                   disabled={isExporting}
-                  className="w-full py-3 rounded-lg bg-[#632CE5] text-white text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#7C4DFF] transition-colors disabled:opacity-50 shadow-[0_0_15px_rgba(99,44,229,0.3)]"
+                  className="btn-primary"
                 >
                   {isExporting ? (
                     <span className="animate-pulse">Processando...</span>

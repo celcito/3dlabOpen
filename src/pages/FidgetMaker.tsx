@@ -506,7 +506,7 @@ export default function FidgetMaker() {
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
       {/* SIDEBAR */}
-      <div className="w-full md:w-[380px] bg-[var(--workbench-viewport)] border-r border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-6 scrollbar-hide">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
@@ -779,7 +779,7 @@ export default function FidgetMaker() {
         {/* EXPORT (shared) */}
         <div className="pt-4 border-t border-[var(--surface-container-high)] space-y-3">
           <button onClick={handleExportSTL} disabled={!geometry}
-            className="w-full bg-[#632CE5] text-white py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-[0_0_20px_rgba(124,58,237,0.2)] disabled:opacity-40">
+            className="btn-primary">
             <Download className="w-4 h-4" /> Exportar STL
           </button>
           <button onClick={handleExport3MF} disabled={!geometry}
@@ -792,13 +792,13 @@ export default function FidgetMaker() {
       {/* VIEWPORT */}
       <div className="flex-1 relative">
         <div className="absolute inset-0">
-          <Canvas shadows camera={{ position: [0, 30, 80], fov: 35 }}>
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 30, 80], fov: 35 }}>
             <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.6} />
             <hemisphereLight args={["#ffffff", "#666666", 0.6]} />
             <directionalLight position={[40, 40, 40]} intensity={1.4} castShadow />
             <pointLight position={[-40, -40, -20]} intensity={0.6} />
-            <OrbitControls makeDefault />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
             <Grid infiniteGrid fadeDistance={120} cellColor="#222" sectionColor="#444" cellSize={2} sectionSize={10} />
             <Center>
               {geometry ? (

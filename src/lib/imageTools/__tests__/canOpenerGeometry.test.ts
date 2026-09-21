@@ -3,7 +3,6 @@ import path from "node:path";
 import * as THREE from "three";
 import {
   buildCanOpenerGeometry,
-  buildCuttingTipGeometry,
   buildEngravingGeometries,
   buildHandleGeometry,
 } from "../canOpenerGeometry";
@@ -40,14 +39,6 @@ const baseConfig = {
   bevel: 0.6,
   engraving: "raised" as const,
   engravingDepth: 0.6,
-  tip: "hook_wheel" as const,
-  tipLength: 12,
-  hookWidth: 5,
-  hookDepth: 4,
-  wheelRadius: 4,
-  wheelTube: 0.6,
-  armWidth: 3,
-  armDepth: 2,
   keyring: false,
   keyringDiameter: 3,
 };
@@ -65,21 +56,7 @@ describe("can opener geometry", () => {
     expect(g.boundingBox!.max.z - g.boundingBox!.min.z).toBeCloseTo(expectedDepth, 1);
   });
 
-  it("cutting tip with hook+wheel is watertight", () => {
-    const cfg = { ...baseConfig, outer: rectShape(30, 70), details: [] };
-    const g = buildCuttingTipGeometry(cfg);
-    expect(g.attributes.position.count).toBeGreaterThan(0);
-    expect(isWatertight(g)).toBe(true);
-  });
-
-  it("cutting tip hook_only still produces geometry", () => {
-    const cfg = { ...baseConfig, outer: rectShape(30, 70), details: [], tip: "hook_only" as const };
-    const g = buildCuttingTipGeometry(cfg);
-    expect(g.attributes.position.count).toBeGreaterThan(0);
-    expect(isWatertight(g)).toBe(true);
-  });
-
-  it("full assembly (handle + tip) is watertight", async () => {
+  it("full assembly is watertight", async () => {
     const cfg = {
       ...baseConfig,
       outer: rectShape(30, 70),
@@ -99,7 +76,7 @@ describe("can opener geometry", () => {
   });
 
   it("keyring hole subtracts from the handle", async () => {
-    const cfg = { ...baseConfig, outer: rectShape(30, 70), details: [], tip: "none" as const, keyring: true };
+    const cfg = { ...baseConfig, outer: rectShape(30, 70), details: [], keyring: true };
     const g = await buildCanOpenerGeometry(cfg);
     // Volume with hole must be smaller than the same handle without hole.
     const cfgNoHole = { ...cfg, keyring: false };
@@ -136,7 +113,6 @@ describe("can opener geometry", () => {
       ...baseConfig,
       outer: rectShape(30, 10),
       details: [],
-      tip: "none" as const,
       keyring: true,
       keyringDiameter: 6,
     };
@@ -158,41 +134,11 @@ describe("can opener geometry", () => {
       ...baseConfig,
       outer: teardrop,
       details: [],
-      tip: "none" as const,
       keyring: true,
       keyringDiameter: 3,
     };
     const g = await buildCanOpenerGeometry(cfg);
     expect(isWatertight(g)).toBe(true);
     expect(signedVolume(g)).toBeGreaterThan(0);
-  });
-
-  it("cutting tip clamps when wheel radius exceeds tip length", () => {
-    // wheelRadius 8 > tipLength 6 → arm/hook must not go negative.
-    const cfg = {
-      ...baseConfig,
-      outer: rectShape(30, 70),
-      details: [],
-      tip: "hook_wheel" as const,
-      tipLength: 6,
-      wheelRadius: 8,
-    };
-    const g = buildCuttingTipGeometry(cfg);
-    expect(g.attributes.position.count).toBeGreaterThan(0);
-    expect(isWatertight(g)).toBe(true);
-  });
-
-  it("cutting tip clamps when wheel tube approaches the radius", () => {
-    const cfg = {
-      ...baseConfig,
-      outer: rectShape(30, 70),
-      details: [],
-      tip: "hook_wheel" as const,
-      wheelRadius: 2,
-      wheelTube: 2,
-    };
-    const g = buildCuttingTipGeometry(cfg);
-    expect(g.attributes.position.count).toBeGreaterThan(0);
-    expect(isWatertight(g)).toBe(true);
   });
 });

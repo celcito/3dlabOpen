@@ -28,12 +28,12 @@ export default function LithophaneGenerator() {
         </div>
 
         <div className="flex-1 relative">
-          <Canvas shadows camera={{ position: [0, 0, 150], fov: 45 }}>
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 0, 150], fov: 45 }}>
             <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.6} />
             <directionalLight position={[100, 200, 100]} intensity={1.5} castShadow />
             <directionalLight position={[-100, -100, -100]} intensity={0.5} />
-            <OrbitControls makeDefault />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
             
             <Grid 
               infiniteGrid 
@@ -53,7 +53,7 @@ export default function LithophaneGenerator() {
       </div>
 
       {/* SIDEBAR */}
-      <div className="w-full md:w-80 bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide">
         <header>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-[#632CE5]/20 flex items-center justify-center border border-[#632CE5]/30">
@@ -168,7 +168,7 @@ export default function LithophaneGenerator() {
           <button 
             onClick={handleExportSTL}
             disabled={!imagePixels || isLoading}
-            className="w-full bg-gradient-to-r from-[#632CE5] to-blue-600 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+            className="btn-primary"
           >
             {isLoading ? (
               <span className="animate-pulse">Processando...</span>

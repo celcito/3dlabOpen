@@ -36,12 +36,12 @@ export default function FilamentPainter() {
 
         {/* 3D CANVAS */}
         <div className="flex-1 relative">
-          <Canvas shadows camera={{ position: [0, 150, 150], fov: 45 }}>
+          <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 150, 150], fov: 45 }}>
             <color attach="background" args={["#F3F4EE"]} />
             <ambientLight intensity={0.6} />
             <directionalLight position={[100, 200, 50]} intensity={1.5} castShadow />
             <directionalLight position={[-100, -50, -50]} intensity={0.5} />
-            <OrbitControls makeDefault />
+            <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
             
             <Grid 
               infiniteGrid 
@@ -241,7 +241,7 @@ export default function FilamentPainter() {
             <button
               onClick={handleExportOBJ}
               disabled={!imagePixels}
-              className="w-full bg-gradient-to-r from-[#632CE5] to-blue-600 text-black py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(124,58,237,0.2)]"
+              className="btn-primary"
             >
               <Download className="w-4 h-4" />
               Download OBJ

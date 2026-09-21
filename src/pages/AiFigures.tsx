@@ -936,7 +936,7 @@ export default function AiFigures() {
                 type="button"
                 onClick={handleExport3D}
                 disabled={isExporting3D || !(result || prompt)}
-                className="w-full bg-[#632CE5] hover:bg-[#7C4DFF] disabled:opacity-50 disabled:bg-[var(--surface-container-high)] disabled:text-zinc-600 text-black font-black uppercase text-[10px] py-3.5 px-4 tracking-widest rounded transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="btn-primary"
               >
                 {isExporting3D ? (
                   <>

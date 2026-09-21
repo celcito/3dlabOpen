@@ -21,6 +21,7 @@ interface ToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onBooleanOp: (op: BooleanOp) => void;
+  onBooleanHover?: (op: BooleanOp | null) => void;
   onAlign: (align: "left" | "center" | "right" | "top" | "middle" | "bottom" | "distribute-h" | "distribute-v") => void;
   onZoomFit: () => void;
   onAddPrimitive: (shape: string) => void;
@@ -84,6 +85,7 @@ export function Toolbar({
   onUndo,
   onRedo,
   onBooleanOp,
+  onBooleanHover,
   onAlign,
   onZoomFit,
   onAddPrimitive,
@@ -201,6 +203,8 @@ export function Toolbar({
             <button
               key={op.id}
               onClick={() => onBooleanOp(op.id)}
+              onMouseEnter={() => onBooleanHover?.(op.id)}
+              onMouseLeave={() => onBooleanHover?.(null)}
               className="p-1.5 rounded text-zinc-500 hover:text-zinc-700 hover:bg-[#E8E9E3] transition-colors"
               title={`${op.label} (${op.shortcut})`}
             >

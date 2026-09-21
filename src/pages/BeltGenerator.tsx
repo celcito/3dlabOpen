@@ -187,7 +187,7 @@ if (shape == "straight") {
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
-      <div className="w-full md:w-[400px] bg-[var(--workbench-viewport)] border-r border-[var(--surface-container-high)] flex flex-col">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] flex flex-col">
         <header className="p-6 pb-4 shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-[#632CE5]/10 border border-[#632CE5]/20 flex items-center justify-center">
@@ -427,7 +427,7 @@ if (shape == "straight") {
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={handleExportSTL}
-                    className="w-full bg-[#632CE5] text-[var(--workbench-text)] py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group"
+                    className="btn-primary"
                   >
                     <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                     Download Preview STL
@@ -530,12 +530,12 @@ if (shape == "straight") {
               <Play className="w-4 h-4 text-[#632CE5]" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">Visualização Simbólica</span>
             </div>
-            <Canvas shadows camera={{ position: [0, 40, 60], fov: 45 }}>
+            <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 40, 60], fov: 45 }}>
               <color attach="background" args={["#F1F3ED"]} />
               <ambientLight intensity={0.5} />
               <spotLight position={[50, 50, 50]} angle={0.2} penumbra={1} castShadow />
               <pointLight position={[-50, -50, -50]} intensity={0.5} />
-              <OrbitControls makeDefault />
+              <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
               
               <Grid 
                 infiniteGrid 

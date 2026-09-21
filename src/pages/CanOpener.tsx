@@ -4,12 +4,9 @@ import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { toastExportError, toastActionSuccess, toastInvalidFormat } from "@/lib/toast";
-import { Image as ImageIcon, Upload, Settings, Download, Hammer, Scissors, Layers, Palette, Sparkles, Dna } from "lucide-react";
+import { Image as ImageIcon, Upload, Settings, Download, Hammer, Scissors, Layers, Palette, Sparkles } from "lucide-react";
 import {
-  buildCanOpenerGeometry,
-  type CanOpenerConfig,
   type EngravingMode,
-  type TipStyle,
 } from "../lib/imageTools/canOpenerGeometry";
 import {
   buildTabLifterParts,
@@ -34,17 +31,8 @@ interface UiConfig {
   bevel: number;
   engraving: EngravingMode;
   engravingDepth: number;
-  tip: TipStyle;
-  tipLength: number;
-  hookWidth: number;
-  hookDepth: number;
-  wheelRadius: number;
-  wheelTube: number;
-  armWidth: number;
-  armDepth: number;
   keyring: boolean;
   keyringDiameter: number;
-  materialColor: string;
 }
 
 const DEFAULT_UI: UiConfig = {
@@ -53,17 +41,8 @@ const DEFAULT_UI: UiConfig = {
   bevel: 0.6,
   engraving: "raised",
   engravingDepth: 0.8,
-  tip: "hook_wheel",
-  tipLength: 14,
-  hookWidth: 5,
-  hookDepth: 5,
-  wheelRadius: 4,
-  wheelTube: 0.6,
-  armWidth: 3.5,
-  armDepth: 2,
   keyring: true,
   keyringDiameter: 3,
-  materialColor: "#fcd34d",
 };
 
 const DEFAULT_PROJECT_NAME = "MEU ABRIDOR";
@@ -198,36 +177,6 @@ export default function CanOpener() {
     setProjectName(file.name.replace(/\.[^.]+$/, "").toUpperCase().slice(0, 32) || DEFAULT_PROJECT_NAME);
   };
 
-  // Build the 3D geometry whenever inputs change.
-  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
-  const [geometryError, setGeometryError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!traced || mode !== "gancho") {
-      setGeometry(null);
-      return;
-    }
-    let cancelled = false;
-    setGeometry(null);
-    setGeometryError(null);
-    const cfg: CanOpenerConfig = {
-      outer: traced.outer,
-      details: traced.details,
-      ...ui,
-    };
-    buildCanOpenerGeometry(cfg)
-      .then((g) => {
-        if (cancelled) return;
-        setGeometry(g);
-      })
-      .catch((err) => {
-        if (!cancelled) setGeometryError(err instanceof Error ? err.message : String(err));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [traced, ui, mode]);
-
   // Tab-lifter (rasgo) mode: per-colour pieces in place, ready for 3MF.
   const [pieces, setPieces] = useState<ExportPiece[] | null>(null);
   const [piecesError, setPiecesError] = useState<string | null>(null);
@@ -293,22 +242,13 @@ export default function CanOpener() {
 
   const handleExportSTL = async () => {
     try {
-      if (mode === "rasgo") {
-        if (!tabCfg) return;
-        const geometry = await buildTabLifterSingleColor(tabCfg);
-        const mesh = new THREE.Mesh(geometry);
-        const exporter = new STLExporter();
-        const output = exporter.parse(mesh, { binary: true });
-        downloadBlob(new Blob([output], { type: "application/octet-stream" }), `${slugName()}_tablifter.stl`);
-        toastActionSuccess(`STL "${slugName()}_tablifter.stl" exportado!`);
-        return;
-      }
-      if (!geometry) return;
+      if (!tabCfg) return;
+      const geometry = await buildTabLifterSingleColor(tabCfg);
       const mesh = new THREE.Mesh(geometry);
       const exporter = new STLExporter();
       const output = exporter.parse(mesh, { binary: true });
-      downloadBlob(new Blob([output], { type: "application/octet-stream" }), `${slugName()}_canopener.stl`);
-      toastActionSuccess(`STL "${slugName()}_canopener.stl" exportado!`);
+      downloadBlob(new Blob([output], { type: "application/octet-stream" }), `${slugName()}_tablifter.stl`);
+      toastActionSuccess(`STL "${slugName()}_tablifter.stl" exportado!`);
     } catch (err) {
       console.error(err);
       toastExportError();
@@ -361,7 +301,7 @@ export default function CanOpener() {
           <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">Preview 3D</span>
         </div>
 
-        <Canvas shadows camera={{ position: [0, 30, 80], fov: 35 }}>
+        <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 30, 80], fov: 35 }}>
           <color attach="background" args={["#F1F3ED"]} />
           <ambientLight intensity={0.6} />
           <hemisphereLight args={["#ffffff", "#666666", 0.6]} />
@@ -377,48 +317,22 @@ export default function CanOpener() {
             sectionSize={10}
           />
 
-          {mode === "rasgo" ? (
-            piecesError ? (
-              <Center>
-                <mesh>
-                  <boxGeometry args={[10, 10, 10]} />
-                  <meshStandardMaterial color="#ef4444" wireframe />
-                </mesh>
-              </Center>
-            ) : pieces?.length ? (
-              <Center>
-                <group>
-                  {pieces.map((p) => (
-                    <mesh key={p.regionId} geometry={p.geometry} castShadow receiveShadow scale={[SCALE, SCALE, SCALE]}>
-                      <meshStandardMaterial color={p.color} metalness={0.25} roughness={0.45} />
-                    </mesh>
-                  ))}
-                </group>
-              </Center>
-            ) : (
-              <Center>
-                <mesh>
-                  <boxGeometry args={[12, 18, 1.5]} />
-                  <meshStandardMaterial color="#d4d4d8" wireframe />
-                </mesh>
-              </Center>
-            )
-          ) : geometryError ? (
+          {piecesError ? (
             <Center>
               <mesh>
                 <boxGeometry args={[10, 10, 10]} />
                 <meshStandardMaterial color="#ef4444" wireframe />
               </mesh>
             </Center>
-          ) : geometry ? (
+          ) : pieces?.length ? (
             <Center>
-              <mesh geometry={geometry} castShadow receiveShadow scale={[SCALE, SCALE, SCALE]}>
-                <meshStandardMaterial
-                  color={ui.materialColor}
-                  metalness={0.25}
-                  roughness={0.45}
-                />
-              </mesh>
+              <group>
+                {pieces.map((p) => (
+                  <mesh key={p.regionId} geometry={p.geometry} castShadow receiveShadow scale={[SCALE, SCALE, SCALE]}>
+                    <meshStandardMaterial color={p.color} metalness={0.25} roughness={0.45} />
+                  </mesh>
+                ))}
+              </group>
             </Center>
           ) : (
             <Center>
@@ -429,15 +343,15 @@ export default function CanOpener() {
             </Center>
           )}
 
-          <OrbitControls makeDefault />
+          <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
         </Canvas>
 
-        {(geometryError || (mode === "rasgo" && piecesError)) && (
+        {piecesError && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-[#FEE2E2] text-[#991B1B] text-[10px] font-bold px-4 py-2 rounded-lg border border-[#FCA5A5]">
-            Erro ao gerar geometria: {geometryError || piecesError}
+            Erro ao gerar geometria: {piecesError}
           </div>
         )}
-        {!traced && !geometryError && !piecesError && (
+        {!traced && !piecesError && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur text-[var(--on-surface-variant)] text-[10px] font-bold px-4 py-2 rounded-lg border border-[var(--surface-container-high)]">
             Envie uma imagem para começar
           </div>
@@ -458,34 +372,9 @@ export default function CanOpener() {
           </p>
         </header>
 
-        {/* Mode selector */}
         <div className="px-6 pb-2 shrink-0">
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setMode("rasgo")}
-              className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all ${
-                mode === "rasgo"
-                  ? "bg-[#632CE5] text-white border-[#632CE5] shadow-md"
-                  : "bg-white text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#632CE5]/40 hover:text-[var(--workbench-text)]"
-              }`}
-            >
-              <span className="flex items-center justify-center gap-1.5"><Dna className="w-3.5 h-3.5" />Puxador de Aba</span>
-            </button>
-            <button
-              onClick={() => setMode("gancho")}
-              className={`py-2 rounded-lg text-[10px] font-black uppercase tracking-wider border transition-all ${
-                mode === "gancho"
-                  ? "bg-[#632CE5] text-white border-[#632CE5] shadow-md"
-                  : "bg-white text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#632CE5]/40 hover:text-[var(--workbench-text)]"
-              }`}
-            >
-              <span className="flex items-center justify-center gap-1.5"><Scissors className="w-3.5 h-3.5" />Gancho + Roda</span>
-            </button>
-          </div>
-          <p className="mt-2 text-[9px] text-[var(--on-surface-variant)] font-bold tracking-widest uppercase">
-            {mode === "rasgo"
-              ? "Silhueta (sempre) + rasgo vertical no topo + cores"
-              : "Cabo + ponta gancho/roda (clássico)"}
+          <p className="text-[9px] text-[var(--on-surface-variant)] font-bold tracking-widest uppercase">
+            Silhueta (sempre) + rasgo vertical no topo + cores
           </p>
         </div>
 
@@ -672,13 +561,13 @@ export default function CanOpener() {
                 Reset
               </button>
             </section>
-          ) : mode === "rasgo" ? (
+          ) : (
             <section className="space-y-6 pb-10">
               {/* Handle */}
               <div className="space-y-4">
                 <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
-                  01. Corpo
+                  01. Cabo
                 </h3>
                 <div className="space-y-2">
                   <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">
@@ -858,7 +747,7 @@ export default function CanOpener() {
                 <button
                   onClick={handleExport3MF}
                   disabled={!pieces?.length}
-                  className="w-full bg-[#632CE5] text-white py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="btn-primary"
                 >
                   <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
                   Download 3MF Multi-cor (.3mf)
@@ -873,185 +762,6 @@ export default function CanOpener() {
                 </button>
                 <p className="text-[9px] text-[var(--on-surface-variant)] mt-3 leading-relaxed">
                   O 3MF multi-cor exporta 1 objeto por filamento. No slicer, atribua cada cor ao filamento correspondente (AMS/Bambu) — a peça imprime em camadas de relevo.
-                </p>
-              </div>
-            </section>
-          ) : (
-            <section className="space-y-6 pb-10">
-              {/* Handle */}
-              <div className="space-y-4">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
-                  <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
-                  01. Cabo
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Largura (mm)</label>
-                    <span className="text-[10px] font-mono text-[#632CE5]">{ui.targetWidthMm}</span>
-                  </div>
-                  <input type="range" min="30" max="120" step="1"
-                    value={ui.targetWidthMm}
-                    onChange={(e) => updateUi("targetWidthMm", parseInt(e.target.value))}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Espessura</label>
-                    <span className="text-[10px] font-mono text-[#632CE5]">{ui.handleThickness}mm</span>
-                  </div>
-                  <input type="range" min="4" max="16" step="0.5"
-                    value={ui.handleThickness}
-                    onChange={(e) => updateUi("handleThickness", parseFloat(e.target.value))}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Bevel</label>
-                    <span className="text-[10px] font-mono text-[#632CE5]">{ui.bevel}mm</span>
-                  </div>
-                  <input type="range" min="0" max="2" step="0.1"
-                    value={ui.bevel}
-                    onChange={(e) => updateUi("bevel", parseFloat(e.target.value))}
-                    className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <label className="text-[10px] font-bold text-[var(--on-surface-variant)]">Furo para chaveiro</label>
-                  <input type="checkbox" checked={ui.keyring}
-                    onChange={(e) => updateUi("keyring", e.target.checked)}
-                    className="accent-[#632CE5] w-4 h-4 rounded bg-[#F3F4EE] border-[var(--surface-container-high)]" />
-                </div>
-                {ui.keyring && (
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Diâmetro do furo</label>
-                      <span className="text-[10px] font-mono text-[#632CE5]">{ui.keyringDiameter}mm</span>
-                    </div>
-                    <input type="range" min="2" max="6" step="0.5"
-                      value={ui.keyringDiameter}
-                      onChange={(e) => updateUi("keyringDiameter", parseFloat(e.target.value))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                  </div>
-                )}
-              </div>
-
-              {/* Engraving */}
-              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#632CE5]" />
-                  02. Detalhes
-                </h3>
-                <div className="space-y-2">
-                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Modo</label>
-                  <select value={ui.engraving} onChange={(e) => updateUi("engraving", e.target.value as EngravingMode)}
-                    className="w-full bg-white border border-[var(--surface-container-high)] rounded-lg p-2 text-[11px] outline-none focus:border-[#632CE5]">
-                    <option value="none">Sem detalhes</option>
-                    <option value="raised">Relevo alto</option>
-                    <option value="recessed">Gravado</option>
-                  </select>
-                </div>
-                {ui.engraving !== "none" && (
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Profundidade</label>
-                      <span className="text-[10px] font-mono text-[#632CE5]">{ui.engravingDepth}mm</span>
-                    </div>
-                    <input type="range" min="0.2" max="2.0" step="0.1"
-                      value={ui.engravingDepth}
-                      onChange={(e) => updateUi("engravingDepth", parseFloat(e.target.value))}
-                      className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                  </div>
-                )}
-              </div>
-
-              {/* Tip */}
-              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
-                  <Scissors className="w-3.5 h-3.5 text-[#632CE5]" />
-                  03. Ponta
-                </h3>
-                <div className="space-y-2">
-                  <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)] block">Estilo</label>
-                  <select value={ui.tip} onChange={(e) => updateUi("tip", e.target.value as TipStyle)}
-                    className="w-full bg-white border border-[var(--surface-container-high)] rounded-lg p-2 text-[11px] outline-none focus:border-[#632CE5]">
-                    <option value="none">Sem ponta</option>
-                    <option value="hook_only">Apenas gancho</option>
-                    <option value="hook_wheel">Gancho + roda</option>
-                  </select>
-                </div>
-                {ui.tip !== "none" && (
-                  <>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Comprimento</label>
-                        <span className="text-[10px] font-mono text-[#632CE5]">{ui.tipLength}mm</span>
-                      </div>
-                      <input type="range" min="6" max="25" step="0.5"
-                        value={ui.tipLength}
-                        onChange={(e) => updateUi("tipLength", parseFloat(e.target.value))}
-                        className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Gancho (largura)</label>
-                        <span className="text-[10px] font-mono text-[#632CE5]">{ui.hookWidth}mm</span>
-                      </div>
-                      <input type="range" min="2" max="10" step="0.5"
-                        value={ui.hookWidth}
-                        onChange={(e) => updateUi("hookWidth", parseFloat(e.target.value))}
-                        className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                    </div>
-                    {ui.tip === "hook_wheel" && (
-                      <>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Raio da roda</label>
-                            <span className="text-[10px] font-mono text-[#632CE5]">{ui.wheelRadius}mm</span>
-                          </div>
-                          <input type="range" min="2" max="8" step="0.5"
-                            value={ui.wheelRadius}
-                            onChange={(e) => updateUi("wheelRadius", parseFloat(e.target.value))}
-                            className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                        </div>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <label className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Braço (largura)</label>
-                            <span className="text-[10px] font-mono text-[#632CE5]">{ui.armWidth}mm</span>
-                          </div>
-                          <input type="range" min="2" max="6" step="0.5"
-                            value={ui.armWidth}
-                            onChange={(e) => updateUi("armWidth", parseFloat(e.target.value))}
-                            className="w-full accent-[#632CE5] h-1.5 bg-[#E2E3DD] rounded-lg appearance-none cursor-pointer" />
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Material */}
-              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
-                <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
-                  <Palette className="w-3.5 h-3.5 text-[#632CE5]" />
-                  04. Cor
-                </h3>
-                <div className="flex items-center gap-3">
-                  <input type="color" value={ui.materialColor} onChange={(e) => updateUi("materialColor", e.target.value)}
-                    className="w-10 h-10 rounded-lg border border-[var(--surface-container-high)] cursor-pointer" />
-                  <span className="text-[10px] font-mono text-[var(--workbench-text)]">{ui.materialColor}</span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-[var(--surface-container-high)] pb-10">
-                <button
-                  onClick={handleExportSTL}
-                  disabled={!geometry}
-                  className="w-full bg-[#632CE5] text-white py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 hover:bg-[#7C4DFF] transition-all shadow-md group disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Download className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
-                  Download STL (.stl)
-                </button>
-                <p className="text-[9px] text-[var(--on-surface-variant)] mt-3 leading-relaxed">
-                  Para uso real: imprima em <strong>PETG ou ABS</strong> e afie manualmente a ponta do gancho com uma lima fina. A roda precisa de folga suficiente para a borda da tampa entrar.
                 </p>
               </div>
             </section>
