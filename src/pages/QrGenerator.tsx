@@ -192,6 +192,30 @@ export default function QrGenerator() {
                     <span>Baixo ↓</span>
                   </div>
                 </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] uppercase font-bold text-zinc-600 block">Ícone</label>
+                  <select value={config.icon} onChange={(e) => setConfig({ ...config, icon: e.target.value })}
+                    className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
+                    {ICON_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  </select>
+                </div>
+                {config.icon !== "none" && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] uppercase font-bold text-zinc-600 block">Posição Ícone</label>
+                      <select value={config.iconPosition} onChange={(e) => setConfig({ ...config, iconPosition: e.target.value })}
+                        className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
+                        <option value="right">Direita do texto →</option>
+                        <option value="left">Esquerda do texto ←</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] uppercase font-bold text-zinc-600 block">Tamanho Ícone</label>
+                      <input type="number" min="2" step="1" value={config.iconSize} {...numInput("iconSize", 2, 30)}
+                        className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold" />
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -330,6 +354,184 @@ function Label3D({ text, fontSize, color, depth, position }: {
   );
 }
 
+/* ─── SVG PATH PARSER ─── */
+function svgPath(d: string, vbW: number, vbH: number, scale: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  const tokens = d.match(/[MmLlCcQqSsTtHhVvAaZz]|[-+]?\d*\.?\d+/g) || [];
+  let i = 0, cx = 0, cy = 0, sx = 0, sy = 0;
+  const g = () => parseFloat(tokens[i++]);
+  const mapX = (x: number) => (x / vbW - 0.5) * scale;
+  const mapY = (y: number) => -(y / vbH - 0.5) * scale;
+  while (i < tokens.length) {
+    const cmd = tokens[i++];
+    switch (cmd) {
+      case 'M': cx = mapX(g()); cy = mapY(g()); shape.moveTo(cx, cy); sx = cx; sy = cy; break;
+      case 'm': cx += g() * scale / vbW; cy -= g() * scale / vbH; shape.moveTo(cx, cy); sx = cx; sy = cy; break;
+      case 'L': cx = mapX(g()); cy = mapY(g()); shape.lineTo(cx, cy); break;
+      case 'l': cx += g() * scale / vbW; cy -= g() * scale / vbH; shape.lineTo(cx, cy); break;
+      case 'H': cx = mapX(g()); shape.lineTo(cx, cy); break;
+      case 'h': cx += g() * scale / vbW; shape.lineTo(cx, cy); break;
+      case 'V': cy = mapY(g()); shape.lineTo(cx, cy); break;
+      case 'v': cy -= g() * scale / vbH; shape.lineTo(cx, cy); break;
+      case 'C': {
+        const x1 = mapX(g()), y1 = mapY(g()), x2 = mapX(g()), y2 = mapY(g());
+        cx = mapX(g()); cy = mapY(g());
+        shape.bezierCurveTo(x1, y1, x2, y2, cx, cy); break;
+      }
+      case 'c': {
+        const dx1 = g(), dy1 = g(), dx2 = g(), dy2 = g(), dx = g(), dy = g();
+        shape.bezierCurveTo(cx + dx1 * scale / vbW, cy - dy1 * scale / vbH,
+          cx + dx2 * scale / vbW, cy - dy2 * scale / vbH,
+          cx + dx * scale / vbW, cy - dy * scale / vbH);
+        cx += dx * scale / vbW; cy -= dy * scale / vbH; break;
+      }
+      case 'Q': {
+        const x1 = mapX(g()), y1 = mapY(g());
+        cx = mapX(g()); cy = mapY(g());
+        shape.quadraticCurveTo(x1, y1, cx, cy); break;
+      }
+      case 'q': {
+        const dx1 = g(), dy1 = g(), dx = g(), dy = g();
+        shape.quadraticCurveTo(cx + dx1 * scale / vbW, cy - dy1 * scale / vbH,
+          cx + dx * scale / vbW, cy - dy * scale / vbH);
+        cx += dx * scale / vbW; cy -= dy * scale / vbH; break;
+      }
+      case 'S': {
+        const x2 = mapX(g()), y2 = mapY(g());
+        cx = mapX(g()); cy = mapY(g());
+        shape.bezierCurveTo(cx, cy, x2, y2, cx, cy); break;
+      }
+      case 'A': {
+        const rx = g() * scale / vbW, ry = g() * scale / vbH, rot = g();
+        const large = g(), sweep = g();
+        cx = mapX(g()); cy = mapY(g());
+        shape.lineTo(cx, cy); break;
+      }
+      case 'Z': case 'z': cx = sx; cy = sy; shape.closePath(); break;
+    }
+  }
+  return shape;
+}
+
+/* ─── SVG ICON DEFINITIONS ─── */
+// SVGs from: pix-106.svg, instagram-logo-facebook-svgrepo-com.svg, whatsapp-svgrepo-com.svg
+const SVG_ICONS: Record<string, { paths: string[]; vb: [number, number]; fills?: string[] }> = {
+  instagram: {
+    vb: [32, 32],
+    paths: [
+      // Outer rounded rect
+      "M6,2h20c2.2,0,4,1.8,4,4v20c0,2.2-1.8,4-4,4H6c-2.2,0-4-1.8-4-4V6C2,3.8,3.8,2,6,2z",
+      // Inner rounded rect (cutout)
+      "M20,6h-8c-3.3,0-6,2.7-6,6v8c0,3.3,2.7,6,6,6h8c3.3,0,6-2.7,6-6v-8C26,8.7,23.3,6,20,6z",
+      // Circle (cutout)
+      "M16,11.2c-2.7,0-4.9,2.2-4.9,4.9c0,2.7,2.2,4.9,4.9,4.9s4.9-2.2,4.9-4.9C21,13.4,18.8,11.2,16,11.2z",
+      // Dot (cutout)
+      "M21.3,9.7c-0.6,0-1.2,0.5-1.2,1.2c0,0.7,0.5,1.2,1.2,1.2c0.7,0,1.2-0.5,1.2-1.2C22.4,10.2,21.9,9.7,21.3,9.7z",
+    ],
+  },
+  whatsapp: {
+    vb: [24, 24],
+    paths: [
+      // Speech bubble + phone outline
+      "M12,23C10.7764,23,10.0994,22.8687,9,22.5L6.89443,23.5528C5.56462,24.2177,4,23.2507,4,21.7639V19.5C1.84655,17.492,1,15.1767,1,12C1,5.92487,5.92487,1,12,1C18.0751,1,23,5.92487,23,12C23,18.0751,18.0751,23,12,23Z",
+      // Phone handset cutout
+      "M6.014,8.00613C6.12827,7.1024,7.30277,5.87414,8.23488,6.01043C9.14051,6.18132,9.85859,7.74261,10.2635,8.44465C10.5504,8.95402,10.3641,9.4701,10.0965,9.68787C9.7355,9.97883,9.17099,10.3803,9.28943,10.7834C9.5,11.5,12,14,13.2296,14.7107C13.695,14.9797,14.0325,14.2702,14.3207,13.9067C14.5301,13.6271,15.0466,13.46,15.5548,13.736C16.3138,14.178,17.0288,14.6917,17.69,15.27C18.0202,15.546,18.0977,15.9539,17.8689,16.385C17.4659,17.1443,16.3003,18.1456,15.4542,17.9421C13.9764,17.5868,8,15.27,6.08033,8.55801C5.97237,8.24048,5.99955,8.12044,6.014,8.00613Z",
+    ],
+  },
+};
+
+/* ─── SIMPLE ICON SHAPES (non-SVG) ─── */
+const SIMPLE_ICONS: Record<string, (s: number) => THREE.Shape> = {
+  pix: (s) => {
+    // Simplified PIX diamond logo
+    const shape = new THREE.Shape();
+    shape.moveTo(0, s * 0.45);
+    shape.lineTo(s * 0.45, 0);
+    shape.lineTo(0, -s * 0.45);
+    shape.lineTo(-s * 0.45, 0);
+    shape.closePath();
+    // Inner diamond cutout
+    const hole = new THREE.Path();
+    hole.moveTo(0, s * 0.2);
+    hole.lineTo(s * 0.2, 0);
+    hole.lineTo(0, -s * 0.2);
+    hole.lineTo(-s * 0.2, 0);
+    hole.closePath();
+    shape.holes.push(hole);
+    return shape;
+  },
+  email: (s) => {
+    const shape = new THREE.Shape();
+    const w = s * 0.45, h = s * 0.32;
+    shape.moveTo(-w, -h);
+    shape.lineTo(w, -h);
+    shape.lineTo(w, h);
+    shape.lineTo(-w, h);
+    shape.closePath();
+    const flap = new THREE.Path();
+    flap.moveTo(-w, h);
+    flap.lineTo(0, 0);
+    flap.lineTo(w, h);
+    shape.holes.push(flap);
+    return shape;
+  },
+};
+
+/* ─── ICON SHAPES (merged) ─── */
+const ICON_SHAPES: Record<string, (s: number) => THREE.Shape> = {
+  ...SIMPLE_ICONS,
+  instagram: (s) => {
+    const shape = svgPath(SVG_ICONS.instagram.paths[0], 32, 32, s);
+    // Add inner rounded rect as hole
+    const hole1 = svgPath(SVG_ICONS.instagram.paths[1], 32, 32, s);
+    shape.holes.push(hole1);
+    // Add circle as hole
+    const hole2 = svgPath(SVG_ICONS.instagram.paths[2], 32, 32, s);
+    shape.holes.push(hole2);
+    // Add dot as hole
+    const hole3 = svgPath(SVG_ICONS.instagram.paths[3], 32, 32, s);
+    shape.holes.push(hole3);
+    return shape;
+  },
+  whatsapp: (s) => {
+    const shape = svgPath(SVG_ICONS.whatsapp.paths[0], 24, 24, s);
+    const hole = svgPath(SVG_ICONS.whatsapp.paths[1], 24, 24, s);
+    shape.holes.push(hole);
+    return shape;
+  },
+  none: () => new THREE.Shape(),
+};
+
+const ICON_OPTIONS = [
+  { id: "none", label: "Nenhum" },
+  { id: "pix", label: "PIX" },
+  { id: "instagram", label: "Instagram" },
+  { id: "whatsapp", label: "WhatsApp" },
+  { id: "email", label: "E-mail" },
+];
+
+/* ─── ICON 3D ─── */
+function Icon3D({ iconName, iconSize, color, position }: {
+  iconName: string; iconSize: number; color: string; position: [number, number, number];
+}) {
+  const geometry = useMemo(() => {
+    const shapeFn = ICON_SHAPES[iconName];
+    if (!shapeFn || iconName === "none") return null;
+    const shape = shapeFn(iconSize / 10);
+    return new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false });
+  }, [iconName, iconSize]);
+
+  useEffect(() => () => { geometry?.dispose(); }, [geometry]);
+
+  if (!geometry) return null;
+
+  return (
+    <mesh geometry={geometry} position={position}>
+      <meshStandardMaterial color={color} roughness={0.8} />
+    </mesh>
+  );
+}
+
 /* ─── INSTANCED QR MODULES ─── */
 function QrModules({ qrMatrix, moduleSize, qrOffset, yShift, config }: {
   qrMatrix: number[][]; moduleSize: number; qrOffset: number; yShift: number; config: QrConfig;
@@ -394,6 +596,14 @@ function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
   // Label position: just below QR area, adjustable offset
   const labelAreaCenter = -(plateDimensions.qrDim / 20 + config.padding / 10 + config.labelSize / 20) - config.labelOffset / 10;
 
+  // Icon position: same line as label, left or right on X axis
+  const labelHalfW = config.label.length * config.labelSize / 20;
+  const iconHalfW = config.iconSize / 20;
+  const iconGap = 0.3;
+  const iconX = config.iconPosition === "left"
+    ? -(labelHalfW + iconHalfW + iconGap)
+    : (labelHalfW + iconHalfW + iconGap);
+
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
       {/* PLATE */}
@@ -419,6 +629,16 @@ function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
           color={config.labelColor}
           depth={config.labelDepth / 10}
           position={[0, labelAreaCenter, config.thickness / 10 + config.labelDepth / 20]}
+        />
+      )}
+
+      {/* ICON */}
+      {config.icon !== "none" && (
+        <Icon3D
+          iconName={config.icon}
+          iconSize={config.iconSize}
+          color={config.labelColor}
+          position={[iconX, labelAreaCenter, config.thickness / 10 + config.labelDepth / 20]}
         />
       )}
     </group>

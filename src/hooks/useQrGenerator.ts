@@ -20,6 +20,9 @@ export interface QrConfig {
   labelSize: number;
   labelDepth: number;
   labelOffset: number;
+  icon: string;
+  iconSize: number;
+  iconPosition: string;
 }
 
 export function useQrGenerator() {
@@ -38,6 +41,9 @@ export function useQrGenerator() {
     labelSize: 6,
     labelDepth: 1.5,
     labelOffset: 0,
+    icon: "none",
+    iconSize: 8,
+    iconPosition: "below",
   });
 
   const [qrMatrix, setQrMatrix] = useState<number[][]>([]);
