@@ -2,7 +2,6 @@ import { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
-import QRCodeLib from "qrcode";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { useQrGenerator, type QrConfig } from "../hooks/useQrGenerator";
@@ -15,17 +14,6 @@ export default function QrGenerator() {
   const generator = useQrGenerator();
   const { config, setConfig, qrMatrix, plateDimensions, previewGeometry, successMsg } = generator;
   const exportSTL = generator.handleExportSTL;
-
-  const [qrDataUrl, setQrDataUrl] = useState("");
-  useEffect(() => {
-    if (!config.text) { setQrDataUrl(""); return; }
-    QRCodeLib.toDataURL(config.text, {
-      width: 160,
-      margin: 2,
-      color: { dark: config.qrColor, light: config.baseColor },
-      errorCorrectionLevel: "M",
-    }).then(setQrDataUrl).catch(() => setQrDataUrl(""));
-  }, [config.text, config.qrColor, config.baseColor]);
 
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
   const numInput = (field: keyof QrConfig, min: number, max: number) => ({
@@ -192,32 +180,35 @@ export default function QrGenerator() {
                     <span>Baixo ↓</span>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[9px] uppercase font-bold text-zinc-600 block">Ícone</label>
-                  <select value={config.icon} onChange={(e) => setConfig({ ...config, icon: e.target.value })}
-                    className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
-                    {ICON_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
-                  </select>
-                </div>
-                {config.icon !== "none" && (
-                  <>
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] uppercase font-bold text-zinc-600 block">Posição Ícone</label>
-                      <select value={config.iconPosition} onChange={(e) => setConfig({ ...config, iconPosition: e.target.value })}
-                        className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
-                        <option value="right">Direita do texto →</option>
-                        <option value="left">Esquerda do texto ←</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] uppercase font-bold text-zinc-600 block">Tamanho Ícone</label>
-                      <input type="number" min="2" step="1" value={config.iconSize} {...numInput("iconSize", 2, 30)}
-                        className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold" />
-                    </div>
-                  </>
-                )}
               </div>
             )}
+            {/* Ícone — sempre visível, independente do texto */}
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-600 block">Ícone</label>
+                <select value={config.icon} onChange={(e) => setConfig({ ...config, icon: e.target.value })}
+                  className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
+                  {ICON_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                </select>
+              </div>
+              {config.icon !== "none" && (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 block">Posição Ícone</label>
+                    <select value={config.iconPosition} onChange={(e) => setConfig({ ...config, iconPosition: e.target.value })}
+                      className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
+                      <option value="right">Direita do texto →</option>
+                      <option value="left">Esquerda do texto ←</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase font-bold text-zinc-600 block">Tamanho Ícone</label>
+                    <input type="number" min="2" step="1" value={config.iconSize} {...numInput("iconSize", 2, 30)}
+                      className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold" />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Export */}
@@ -278,15 +269,7 @@ export default function QrGenerator() {
           </div>
         </div>
 
-        {/* 2D QR SCANNABLE PREVIEW */}
-        {qrDataUrl && (
-          <div className="absolute top-6 right-6 pointer-events-auto">
-            <div className="bg-white/90 backdrop-blur-md border border-[var(--surface-container-high)] p-3 rounded-xl space-y-1.5">
-              <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest text-center">Escaneie para testar</p>
-              <img src={qrDataUrl} alt="QR Code preview" className="w-[160px] h-[160px] rounded-lg" />
-            </div>
-          </div>
-        )}
+
 
         {successMsg && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -596,13 +579,17 @@ function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
   // Label position: just below QR area, adjustable offset
   const labelAreaCenter = -(plateDimensions.qrDim / 20 + config.padding / 10 + config.labelSize / 20) - config.labelOffset / 10;
 
-  // Icon position: same line as label, left or right on X axis
-  const labelHalfW = config.label.length * config.labelSize / 20;
+  // Icon position: same line as label, left or right on X axis; centered if no text
+  const labelHalfW = config.includeText ? config.label.length * config.labelSize / 20 : 0;
   const iconHalfW = config.iconSize / 20;
   const iconGap = 0.3;
-  const iconX = config.iconPosition === "left"
-    ? -(labelHalfW + iconHalfW + iconGap)
-    : (labelHalfW + iconHalfW + iconGap);
+  const iconX = !config.includeText ? 0
+    : config.iconPosition === "left"
+      ? -(labelHalfW + iconHalfW + iconGap)
+      : (labelHalfW + iconHalfW + iconGap);
+  const iconZ = config.includeText
+    ? config.thickness / 10 + config.labelDepth / 20
+    : config.thickness / 10 + config.qrHeight / 20 + 0.05;
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
@@ -638,7 +625,7 @@ function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
           iconName={config.icon}
           iconSize={config.iconSize}
           color={config.labelColor}
-          position={[iconX, labelAreaCenter, config.thickness / 10 + config.labelDepth / 20]}
+          position={[iconX, labelAreaCenter, iconZ]}
         />
       )}
     </group>
