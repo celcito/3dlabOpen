@@ -180,16 +180,109 @@ async function toDataUrl(image: string): Promise<string | null> {
   }
 }
 
-function detectImageFormat(src: string): "png" | "jpg" {
-  const lower = src.toLowerCase();
-  if (
-    lower.startsWith("data:image/jpeg") ||
-    lower.startsWith("data:image/jpg") ||
-    lower.includes(".jpg") ||
-    lower.includes(".jpeg")
-  ) {
-    return "jpg";
+function getDataUrlMime(dataUrl: string): string {
+  const header = dataUrl.slice(0, dataUrl.indexOf(","));
+  // data:image/svg+xml;utf8 → image/svg+xml
+  const mime = header.replace(/^data:/i, "").split(";")[0].trim().toLowerCase();
+  return mime || "application/octet-stream";
+}
+
+function isBase64DataUrl(dataUrl: string): boolean {
+  return /;base64,/i.test(dataUrl);
+}
+
+/** Decode a data URL to bytes (base64 or percent-encoded payload). */
+function dataUrlToBytes(dataUrl: string): Uint8Array | null {
+  const comma = dataUrl.indexOf(",");
+  if (comma < 0) return null;
+  const payload = dataUrl.slice(comma + 1);
+  if (isBase64DataUrl(dataUrl)) {
+    const b64 = payload.replace(/\s+/g, "");
+    try {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    } catch {
+      return null;
+    }
   }
+  try {
+    return new TextEncoder().encode(decodeURIComponent(payload));
+  } catch {
+    return null;
+  }
+}
+
+/** Rasterize SVG (or any non-raster data URL) to a base64 PNG via canvas. */
+async function rasterizeToPngDataUrl(dataUrl: string): Promise<string | null> {
+  try {
+    // Prefer a base64 form — browsers are pickier about `data:...;utf8,` payloads
+    let src = dataUrl;
+    if (!isBase64DataUrl(dataUrl)) {
+      const mime = getDataUrlMime(dataUrl) || "image/svg+xml";
+      const comma = dataUrl.indexOf(",");
+      const text = decodeURIComponent(dataUrl.slice(comma + 1));
+      const bytes = new TextEncoder().encode(text);
+      let bin = "";
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      src = `data:${mime};base64,${btoa(bin)}`;
+    }
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("image load failed"));
+      img.src = src;
+    });
+    const maxSide = 2048;
+    const iw = img.naturalWidth || img.width || 800;
+    const ih = img.naturalHeight || img.height || 800;
+    const scale = Math.min(1, maxSide / Math.max(iw, ih));
+    const w = Math.max(1, Math.round(iw * scale));
+    const h = Math.max(1, Math.round(ih * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL("image/png");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve an image to a 3MF-safe base64 PNG/JPEG data URL.
+ * SVG / percent-encoded / non-raster sources are rasterized to PNG.
+ */
+async function normalizeTextureFor3Mf(image: string): Promise<string | null> {
+  const resolved = await toDataUrl(image);
+  if (!resolved) return null;
+
+  const mime = getDataUrlMime(resolved);
+  const alreadyRasterB64 =
+    isBase64DataUrl(resolved) &&
+    (mime === "image/png" || mime === "image/jpeg" || mime === "image/jpg");
+  if (alreadyRasterB64) {
+    return resolved;
+  }
+
+  // Non-base64 raster (rare) or SVG/other → rasterize to PNG
+  const png = await rasterizeToPngDataUrl(resolved);
+  if (png && isBase64DataUrl(png)) return png;
+
+  // Last resort: if it was already base64 bytes, keep as-is for atob path
+  if (isBase64DataUrl(resolved)) return resolved;
+  return null;
+}
+
+function detectImageFormat(src: string): "png" | "jpg" {
+  const mime = src.startsWith("data:") ? getDataUrlMime(src) : src.toLowerCase();
+  if (mime === "image/jpeg" || mime === "image/jpg") return "jpg";
+  if (!src.startsWith("data:") && (src.includes(".jpg") || src.includes(".jpeg"))) return "jpg";
   return "png";
 }
 
@@ -489,12 +582,11 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     _format?: "png" | "jpg"
   ): Promise<void> => {
     if (!name || !image || textureMap.has(name)) return;
-    const dataUrl = await toDataUrl(image);
+    const dataUrl = await normalizeTextureFor3Mf(image);
     if (!dataUrl) {
-      console.warn(`3MF export: could not read texture "${name}" (URL/CORS?)`);
+      console.warn(`3MF export: could not read texture "${name}" (URL/CORS/SVG?)`);
       return;
     }
-    // Prefer mime from the resolved data URL over a caller-supplied hint
     textureMap.set(name, {
       image: dataUrl,
       format: detectImageFormat(dataUrl),
@@ -631,12 +723,10 @@ ${buildItemsList.join("\n")}
 
   // Texture image binaries
   textureMap.forEach((tex) => {
-    const base64Data = tex.image.split(",")[1];
-    if (!base64Data) return;
-    const binaryData = atob(base64Data);
-    const bytes = new Uint8Array(binaryData.length);
-    for (let i = 0; i < binaryData.length; i++) {
-      bytes[i] = binaryData.charCodeAt(i);
+    const bytes = dataUrlToBytes(tex.image);
+    if (!bytes) {
+      console.warn(`3MF export: failed to decode texture "${tex.name}"`);
+      return;
     }
     const ext = tex.format === "jpg" ? "jpg" : "png";
     zip.file(`3D/Textures/${tex.name}.${ext}`, bytes);
