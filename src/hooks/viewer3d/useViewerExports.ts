@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { addPeg, addSocket, addReinforcedSocket, capBoundaryHoles } from "../../../lib/csg";
-import { ThreeMFExporter } from "../../lib/ThreeMFExporter";
+import { ThreeMFExporter } from "../../lib/ThreeMFColorExporter";
 
 const belongsToGroup = (a: number, b: number, c: number, group: number) => group === 0 ? a === 0 && b === 0 && c === 0 : [a, b, c].filter((value) => value === group).length >= 2;
 

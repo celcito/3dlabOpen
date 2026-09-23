@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { ThreeMFExporter } from "../../ThreeMFExporter";
+import { ThreeMFExporter } from "../../ThreeMFColorExporter";
 import type { ExportPiece } from "./types";
 
 export interface ThreeMFExportInput {
@@ -9,7 +9,7 @@ export interface ThreeMFExportInput {
 
 /**
  * Multi-object 3MF export: one `<object>` per piece, each referencing a color
- * resource. Reuses the existing `src/lib/ThreeMFExporter` by merging pieces into
+ * resource. Reuses the existing `src/lib/ThreeMFColorExporter` by merging pieces into
  * a single indexed geometry and tagging per-vertex groups.
  */
 export async function exportThreeMF(input: ThreeMFExportInput): Promise<Blob> {

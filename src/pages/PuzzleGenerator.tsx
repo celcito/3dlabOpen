@@ -1263,10 +1263,18 @@ export default function PuzzleGenerator() {
         const name = isMemory
           ? `Ficha_${p.index + 1}_Par_${(p.pairIndex !== undefined ? p.pairIndex + 1 : 1)}`
           : `Peca_Linha${p.row + 1}_Col${p.col + 1}`;
+
+        // Texture is resolved (data:/blob:/http) inside generate3MfBlob
+        const textureDataUrl = (shadingMode3D === "textured" && currentImage)
+          ? currentImage
+          : undefined;
+
         return {
           geometry: p.geom,
           name,
           filamentIndex: filIdx,
+          textureImage: textureDataUrl,
+          textureName: textureDataUrl ? "puzzle_artwork" : undefined,
         };
       });
 
@@ -1279,6 +1287,11 @@ export default function PuzzleGenerator() {
         designer: "Puzzle Studio 3D",
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
         items,
+        globalTexture: (shadingMode3D === "textured" && currentImage) ? {
+          image: currentImage,
+          format: currentImage.toLowerCase().includes("jpeg") ? "jpg" as const : "png" as const,
+          name: "puzzle_artwork"
+        } : undefined,
       });
 
       const url = URL.createObjectURL(blob);
@@ -1362,10 +1375,18 @@ export default function PuzzleGenerator() {
         const name = isMemory
           ? `Ficha_${p.index + 1}_Par_${(p.pairIndex !== undefined ? p.pairIndex + 1 : 1)}`
           : `Peca_Linha${p.row + 1}_Col${p.col + 1}`;
+
+        // Texture is resolved (data:/blob:/http) inside generate3MfBlob
+        const textureDataUrl = (shadingMode3D === "textured" && currentImage)
+          ? currentImage
+          : undefined;
+
         items.push({
           geometry: p.geom,
           name,
           filamentIndex: filIdx,
+          textureImage: textureDataUrl,
+          textureName: textureDataUrl ? "puzzle_artwork" : undefined,
         });
       });
 
@@ -1396,6 +1417,11 @@ export default function PuzzleGenerator() {
         designer: "Puzzle Studio 3D",
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
         items,
+        globalTexture: (shadingMode3D === "textured" && currentImage) ? {
+          image: currentImage,
+          format: currentImage.toLowerCase().includes("jpeg") ? "jpg" as const : "png" as const,
+          name: "puzzle_artwork"
+        } : undefined,
       });
 
       const url = URL.createObjectURL(blob);

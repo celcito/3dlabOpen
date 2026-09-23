@@ -17,6 +17,12 @@ export interface ThreeMfMeshItem {
   filamentIndex: number; // Index in the filaments array (0-based)
   position?: [number, number, number];
   rotation?: [number, number, number];
+  /** Texture image data (base64 or blob URL) for the primary face */
+  textureImage?: string;
+  /** Texture image format (png, jpg) */
+  textureFormat?: "png" | "jpg";
+  /** Texture name for reference */
+  textureName?: string;
 }
 
 export interface ThreeMfExportOptions {
@@ -25,6 +31,12 @@ export interface ThreeMfExportOptions {
   filaments: FilamentDefinition[];
   items: ThreeMfMeshItem[];
   unit?: "millimeter" | "inch";
+  /** Global texture for all pieces (optional) */
+  globalTexture?: {
+    image: string;
+    format: "png" | "jpg";
+    name: string;
+  };
 }
 
 /**
@@ -45,13 +57,16 @@ function normalizeColor(hex: string): string {
 }
 
 /**
- * Converts THREE.BufferGeometry into 3MF mesh XML string
+ * Converts THREE.BufferGeometry into 3MF mesh XML string.
+ * When texturing, UV indices are aligned with vertex indices and
+ * triangles reference an m:texture2dgroup (3MF Material Extension).
  */
 function geometryTo3MfMesh(
   geometry: THREE.BufferGeometry,
   defaultColorIndex: number,
-  colorgroupId: number = 1
-): { verticesXml: string; trianglesXml: string } {
+  colorgroupId: number = 1,
+  options?: { textureGroupId?: number }
+): { verticesXml: string; trianglesXml: string; tex2coordsXml?: string } {
   const geom = geometry.index ? geometry.toNonIndexed() : geometry.clone();
   geom.computeVertexNormals();
 
@@ -60,8 +75,32 @@ function geometryTo3MfMesh(
     return { verticesXml: "", trianglesXml: "" };
   }
 
-  // We can de-duplicate vertices for cleaner and smaller 3MF file
+  const useTexture = options?.textureGroupId !== undefined;
+  const uvAttr = geom.getAttribute("uv");
+  let readUV: (i: number) => readonly [number, number] | null = () => null;
+
+  if (useTexture) {
+    if (uvAttr && uvAttr.count === posAttr.count) {
+      readUV = (i) => [uvAttr.getX(i), uvAttr.getY(i)] as const;
+    } else {
+      // Planar UV fallback from bounding box when geometry has no UVs
+      geom.computeBoundingBox();
+      const bb = geom.boundingBox;
+      if (bb) {
+        const minX = bb.min.x;
+        const minY = bb.min.y;
+        const w = Math.max(1e-6, bb.max.x - bb.min.x);
+        const h = Math.max(1e-6, bb.max.y - bb.min.y);
+        readUV = (i) => [
+          Math.min(1, Math.max(0, (posAttr.getX(i) - minX) / w)),
+          Math.min(1, Math.max(0, (posAttr.getY(i) - minY) / h)),
+        ] as const;
+      }
+    }
+  }
+
   const vertices: string[] = [];
+  const tex2coords: string[] = [];
   const vertexMap = new Map<string, number>();
   const triangleIndices: number[] = [];
 
@@ -70,38 +109,88 @@ function geometryTo3MfMesh(
     const x = posAttr.getX(i);
     const y = posAttr.getY(i);
     const z = posAttr.getZ(i);
+    const uv = useTexture ? readUV(i) : null;
 
-    // Format coordinates
-    const key = `${x.toFixed(precision)}_${y.toFixed(precision)}_${z.toFixed(precision)}`;
+    // Include UV in the dedupe key so texture seams keep correct coordinates
+    const key = uv
+      ? `${x.toFixed(precision)}_${y.toFixed(precision)}_${z.toFixed(precision)}_${uv[0].toFixed(4)}_${uv[1].toFixed(4)}`
+      : `${x.toFixed(precision)}_${y.toFixed(precision)}_${z.toFixed(precision)}`;
+
     let vIdx = vertexMap.get(key);
     if (vIdx === undefined) {
       vIdx = vertices.length;
       vertexMap.set(key, vIdx);
       vertices.push(`<vertex x="${x.toFixed(precision)}" y="${y.toFixed(precision)}" z="${z.toFixed(precision)}" />`);
+      if (uv) {
+        tex2coords.push(`<m:tex2coord u="${uv[0].toFixed(4)}" v="${uv[1].toFixed(4)}" />`);
+      } else if (useTexture) {
+        tex2coords.push(`<m:tex2coord u="0" v="0" />`);
+      }
     }
     triangleIndices.push(vIdx);
   }
 
   const triangles: string[] = [];
-  const p1Attr = defaultColorIndex;
 
   for (let i = 0; i < triangleIndices.length; i += 3) {
     const v1 = triangleIndices[i];
     const v2 = triangleIndices[i + 1];
     const v3 = triangleIndices[i + 2];
 
-    // Ensure non-degenerate triangle
     if (v1 !== v2 && v2 !== v3 && v1 !== v3) {
-      triangles.push(
-        `<triangle v1="${v1}" v2="${v2}" v3="${v3}" pid="${colorgroupId}" p1="${p1Attr}" />`
-      );
+      if (useTexture) {
+        triangles.push(
+          `<triangle v1="${v1}" v2="${v2}" v3="${v3}" pid="${options!.textureGroupId}" p1="${v1}" p2="${v2}" p3="${v3}" />`
+        );
+      } else {
+        triangles.push(
+          `<triangle v1="${v1}" v2="${v2}" v3="${v3}" pid="${colorgroupId}" p1="${defaultColorIndex}" />`
+        );
+      }
     }
   }
 
   return {
     verticesXml: vertices.join("\n        "),
-    trianglesXml: triangles.join("\n        ")
+    trianglesXml: triangles.join("\n        "),
+    tex2coordsXml: tex2coords.length > 0 ? tex2coords.join("\n        ") : undefined
   };
+}
+
+/**
+ * Normalize any image reference (data:, blob:, http) to a data URL.
+ * Returns null when the image cannot be read (e.g. CORS).
+ */
+async function toDataUrl(image: string): Promise<string | null> {
+  if (image.startsWith("data:")) {
+    return image;
+  }
+  try {
+    const res = await fetch(image);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+function detectImageFormat(src: string): "png" | "jpg" {
+  const lower = src.toLowerCase();
+  if (
+    lower.startsWith("data:image/jpeg") ||
+    lower.startsWith("data:image/jpg") ||
+    lower.includes(".jpg") ||
+    lower.includes(".jpeg")
+  ) {
+    return "jpg";
+  }
+  return "png";
 }
 
 /**
@@ -387,12 +476,51 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     : [{ name: "Filamento 1", color: "#00E5FF" }];
   const unit = options.unit || "millimeter";
 
+  // Single ID space for all resources + objects (required by 3MF core)
+  const basematerialsId = 1;
+  let nextResourceId = basematerialsId + 1;
+
+  // Collect unique textures; resolve blob/http URLs to data URLs
+  const textureMap = new Map<string, { image: string; format: "png" | "jpg"; name: string; id: number }>();
+
+  const registerTexture = async (
+    name: string,
+    image: string,
+    _format?: "png" | "jpg"
+  ): Promise<void> => {
+    if (!name || !image || textureMap.has(name)) return;
+    const dataUrl = await toDataUrl(image);
+    if (!dataUrl) {
+      console.warn(`3MF export: could not read texture "${name}" (URL/CORS?)`);
+      return;
+    }
+    // Prefer mime from the resolved data URL over a caller-supplied hint
+    textureMap.set(name, {
+      image: dataUrl,
+      format: detectImageFormat(dataUrl),
+      name,
+      id: nextResourceId++,
+    });
+  };
+
+  if (options.globalTexture) {
+    await registerTexture(options.globalTexture.name, options.globalTexture.image, options.globalTexture.format);
+  }
+  for (const item of options.items) {
+    if (item.textureImage && item.textureName) {
+      await registerTexture(item.textureName, item.textureImage, item.textureFormat);
+    }
+  }
+
   // 1. [Content_Types].xml
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
   <Default Extension="config" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
+  <Default Extension="png" ContentType="image/png"/>
+  <Default Extension="jpg" ContentType="image/jpeg"/>
+  <Default Extension="jpeg" ContentType="image/jpeg"/>
 </Types>`;
   zip.file("[Content_Types].xml", contentTypesXml);
 
@@ -404,28 +532,60 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
   zip.file("_rels/.rels", relsXml);
 
   // 3. 3D/3dmodel.model
-  // Base materials for slicer (must come first in resources for Bambu Studio)
   const baseMaterialElements = filaments.map(f =>
     `      <base name="${f.name.replace(/"/g, "'")}" displaycolor="${normalizeColor(f.color)}" />`
   ).join("\n");
 
+  // m:texture2d resources (Material Extension — must use m: prefix)
+  const texture2dElements: string[] = [];
+  textureMap.forEach((tex) => {
+    const ext = tex.format === "jpg" ? "jpg" : "png";
+    const contentType = tex.format === "jpg" ? "image/jpeg" : "image/png";
+    texture2dElements.push(
+      `    <m:texture2d id="${tex.id}" path="/3D/Textures/${tex.name}.${ext}" contenttype="${contentType}" tilestyleu="wrap" tilestylev="wrap" filter="auto" />`
+    );
+  });
+
   const objectsXmlList: string[] = [];
   const buildItemsList: string[] = [];
+  const textureGroupElements: string[] = [];
   const settingsObjects: Array<{ name: string; objId: number }> = [];
 
-  // Object IDs start at 1 (required by Bambu Studio)
-  let nextObjectId = 1;
-  const basematerialsId = 1;
-
   options.items.forEach((item, idx) => {
-    const objId = nextObjectId++;
+    const objId = nextResourceId++;
     const safeName = (item.name || `Object_${idx + 1}`).replace(/[<>&"]/g, "_");
     const filIdx = Math.max(0, Math.min(item.filamentIndex ?? 0, filaments.length - 1));
 
-    const { verticesXml, trianglesXml } = geometryTo3MfMesh(item.geometry, filIdx, basematerialsId);
+    const textureInfo = item.textureImage && item.textureName
+      ? textureMap.get(item.textureName)
+      : null;
 
-    // Each object references basematerials with pid and pindex
-    const objXml = `    <object id="${objId}" name="${safeName}" type="model" pid="${basematerialsId}" pindex="${filIdx}">
+    // Dedicated texture2dgroup per object so UV indices stay local to the mesh
+    let textureGroupId: number | undefined;
+    if (textureInfo) {
+      textureGroupId = nextResourceId++;
+      textureGroupElements.push(
+        `    <m:texture2dgroup id="${textureGroupId}" texid="${textureInfo.id}">`
+      );
+    }
+
+    const { verticesXml, trianglesXml, tex2coordsXml } = geometryTo3MfMesh(
+      item.geometry,
+      filIdx,
+      basematerialsId,
+      { textureGroupId }
+    );
+
+    if (textureGroupId !== undefined && tex2coordsXml) {
+      textureGroupElements.push(`${tex2coordsXml}\n    </m:texture2dgroup>`);
+    } else if (textureGroupId !== undefined) {
+      // No UVs produced — drop the empty group
+      textureGroupElements.pop();
+      textureGroupId = undefined;
+    }
+
+    // Object-level basematerials = filament color; textured triangles override with UV group
+    let objXml = `    <object id="${objId}" name="${safeName}" type="model" pid="${basematerialsId}" pindex="${filIdx}">
       <mesh>
         <vertices>
         ${verticesXml}
@@ -439,7 +599,6 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     objectsXmlList.push(objXml);
     settingsObjects.push({ name: safeName, objId });
 
-    // Build item with transform if needed
     let transformAttr = "";
     if (item.position || item.rotation) {
       const pos = item.position || [0, 0, 0];
@@ -461,7 +620,7 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     <basematerials id="${basematerialsId}">
 ${baseMaterialElements}
     </basematerials>
-${objectsXmlList.join("\n")}
+${texture2dElements.length > 0 ? `${texture2dElements.join("\n")}\n` : ""}${textureGroupElements.length > 0 ? `${textureGroupElements.join("\n")}\n` : ""}${objectsXmlList.join("\n")}
   </resources>
   <build>
 ${buildItemsList.join("\n")}
@@ -469,6 +628,19 @@ ${buildItemsList.join("\n")}
 </model>`;
 
   zip.file("3D/3dmodel.model", modelXml);
+
+  // Texture image binaries
+  textureMap.forEach((tex) => {
+    const base64Data = tex.image.split(",")[1];
+    if (!base64Data) return;
+    const binaryData = atob(base64Data);
+    const bytes = new Uint8Array(binaryData.length);
+    for (let i = 0; i < binaryData.length; i++) {
+      bytes[i] = binaryData.charCodeAt(i);
+    }
+    const ext = tex.format === "jpg" ? "jpg" : "png";
+    zip.file(`3D/Textures/${tex.name}.${ext}`, bytes);
+  });
 
   // 4. Metadata/project_settings.config — essential BambuStudio print settings
   const projectSettings = buildProjectSettingsConfig(filaments);
