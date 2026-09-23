@@ -215,7 +215,7 @@ export default function QrGenerator() {
           <div className="pt-6 space-y-3">
             <button onClick={exportSTL} disabled={qrMatrix.length === 0} className="btn-primary">
               <Download className="w-4 h-4" />
-              Exportar para STL
+              Exportar para 3MF
             </button>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1.5">
               <p className="text-[9px] font-bold text-blue-700 uppercase tracking-wider">Dicas de Escaneabilidade</p>
