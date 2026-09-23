@@ -124,18 +124,18 @@ export function useQrGenerator() {
       const t = config.thickness / 10;
       const qh = config.qrHeight / 10;
       const module = config.size / 10;
+      const S = 10; // scale: preview → mm
 
-      // Scale factor: preview units → mm
-      const S = 10;
+      const round = (v: number) => Math.round(v * 10000) / 10000;
 
-      // Helper: THREE.BufferGeometry → 3MF mesh XML
-      const geomTo3mf = (geom: THREE.BufferGeometry, scale: number) => {
+      // THREE.BufferGeometry → 3MF mesh XML string
+      const geomTo3mf = (geom: THREE.BufferGeometry) => {
         const pos = geom.getAttribute("position");
         const idx = geom.getIndex();
         let verts = "";
         let tris = "";
         for (let i = 0; i < pos.count; i++) {
-          verts += `<vertex x="${pos.getX(i) * scale}" y="${pos.getY(i) * scale}" z="${pos.getZ(i) * scale}"/>`;
+          verts += `<vertex x="${round(pos.getX(i) * S)}" y="${round(pos.getY(i) * S)}" z="${round(pos.getZ(i) * S)}"/>`;
         }
         if (idx) {
           for (let i = 0; i < idx.count; i += 3) {
@@ -146,16 +146,16 @@ export function useQrGenerator() {
             tris += `<triangle v1="${i}" v2="${i + 1}" v3="${i + 2}"/>`;
           }
         }
-        return `<vertices>${verts}</vertices><triangles>${tris}</triangles>`;
+        return `<mesh><vertices>${verts}</vertices><triangles>${tris}</triangles></mesh>`;
       };
 
-      // Helper: hex color → ARGB string for3MF
-      const hexToArgb = (hex: string) => {
-        const c = hex.replace("#", "");
-        return "FF" + c.toUpperCase();
-      };
+      const hexToArgb = (hex: string) => "FF" + hex.replace("#", "").toUpperCase();
 
-      // 1. Plate geometry
+      // Collect objects and their material indices
+      const objects: { id: number; xml: string; matIndex: number }[] = [];
+      let nextId = 2;
+
+      // 1. Plate
       const plateShape = new THREE.Shape();
       plateShape.moveTo(-w / 2 + r, -h / 2);
       plateShape.lineTo(w / 2 - r, -h / 2);
@@ -168,11 +168,12 @@ export function useQrGenerator() {
       plateShape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
 
       const plateGeom = new THREE.ExtrudeGeometry(plateShape, {
-        steps: 1, depth: t, bevelEnabled: true,
-        bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 3,
+        steps: 1, depth: t, bevelEnabled: false,
       });
+      objects.push({ id: nextId++, xml: geomTo3mf(plateGeom), matIndex: 0 });
+      plateGeom.dispose();
 
-      // 2. QR modules geometry (merged)
+      // 2. QR modules
       const qrGeometries: THREE.BoxGeometry[] = [];
       const offset = -(qrMatrix.length * module) / 2;
       const yShift = config.includeText ? config.labelSize / 10 : 0;
@@ -189,30 +190,29 @@ export function useQrGenerator() {
           }
         })
       );
-      const qrMerged = qrGeometries.length
-        ? BufferGeometryUtils.mergeGeometries(qrGeometries)
-        : null;
+      if (qrGeometries.length) {
+        const qrMerged = BufferGeometryUtils.mergeGeometries(qrGeometries);
+        if (qrMerged) {
+          objects.push({ id: nextId++, xml: geomTo3mf(qrMerged), matIndex: 1 });
+          qrMerged.dispose();
+        }
+      }
+      qrGeometries.forEach(g => g.dispose());
 
-      // 3. Label geometry (if text enabled)
-      let labelMeshXml = "";
+      // 3. Label (box placeholder)
       if (config.includeText && config.label) {
-        // We'll export label as a simple box placeholder since font loading is async
-        // The actual label geometry comes from the scene — we rebuild it here
         const labelW = config.label.length * config.labelSize / 10 * 0.6;
         const labelH = config.labelSize / 10;
         const labelD = config.labelDepth / 10;
         const labelY = -(width / 20 + config.padding / 10 + config.labelSize / 20) - config.labelOffset / 10;
-        const labelZ = t + labelD / 2;
         const labelGeom = new THREE.BoxGeometry(labelW, labelH, labelD);
-        labelGeom.translate(0, labelY, labelZ);
-        labelMeshXml = `<object id="4" type="model"><mesh>${geomTo3mf(labelGeom, S)}</mesh></object>`;
+        labelGeom.translate(0, labelY, t + labelD / 2);
+        objects.push({ id: nextId++, xml: geomTo3mf(labelGeom), matIndex: 2 });
         labelGeom.dispose();
       }
 
-      // 4. Icon geometry (if selected)
-      let iconMeshXml = "";
+      // 4. Icon (box placeholder)
       if (config.icon !== "none") {
-        // Icon placeholder as box
         const iconS = config.iconSize / 10;
         const labelHalfW = config.includeText ? config.label.length * config.labelSize / 20 : 0;
         const iconX = !config.includeText ? 0
@@ -223,50 +223,41 @@ export function useQrGenerator() {
         const iconZ = config.includeText ? t + config.labelDepth / 20 : t + qh / 2 + 0.05;
         const iconGeom = new THREE.BoxGeometry(iconS, iconS, 0.05);
         iconGeom.translate(iconX, labelY, iconZ);
-        iconMeshXml = `<object id="5" type="model"><mesh>${geomTo3mf(iconGeom, S)}</mesh></object>`;
+        objects.push({ id: nextId++, xml: geomTo3mf(iconGeom), matIndex: 2 });
         iconGeom.dispose();
       }
 
-      // Build 3MF XML
-      const baseColor = hexToArgb(config.baseColor);
-      const qrColor = hexToArgb(config.qrColor);
-      const labelColor = hexToArgb(config.labelColor);
+      // Build3MF model XML
+      const colors = [
+        hexToArgb(config.baseColor),
+        hexToArgb(config.qrColor),
+        hexToArgb(config.labelColor),
+      ];
 
       const modelXml = `<?xml version="1.0" encoding="UTF-8"?>
-<model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
+<model unit="millimeter" xml:lang="pt-BR"
+  xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
   xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
   <metadata name="Application">3D Lab QR Generator</metadata>
   <resources>
     <basematerials id="1">
-      <base name="Plate" displaycolor="${baseColor}" />
-      <base name="QR Code" displaycolor="${qrColor}" />
-      <base name="Label" displaycolor="${labelColor}" />
+      ${colors.map((c, i) => `<base name="Material ${i + 1}" displaycolor="${c}" />`).join("\n      ")}
     </basematerials>
-    <object id="2" type="model">
-      <mesh>${geomTo3mf(plateGeom, S)}</mesh>
-    </object>
-    <object id="3" type="model">
-      <mesh>${qrMerged ? geomTo3mf(qrMerged, S) : "<vertices></vertices><triangles></triangles>"}</mesh>
-    </object>
-    ${labelMeshXml}
-    ${iconMeshXml}
+${objects.map(o => `    <object id="${o.id}" type="model">\n      ${o.xml}\n    </object>`).join("\n")}
   </resources>
   <build>
-    <item objectid="2" pid="1" pindex="0" />
-    <item objectid="3" pid="1" pindex="1" />
-    ${config.includeText && config.label ? '<item objectid="4" pid="1" pindex="2" />' : ""}
-    ${config.icon !== "none" ? '<item objectid="5" pid="1" pindex="2" />' : ""}
+${objects.map(o => `    <item objectid="${o.id}" pid="1" pindex="${o.matIndex}" />`).join("\n")}
   </build>
 </model>`;
 
-      // Build 3MF ZIP
+      // Build ZIP
       const zip = new JSZip();
       zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />
   <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml" />
 </Types>`);
-      zip.file("[Metadata]/_rels/.rels", `<?xml version="1.0" encoding="UTF-8"?>
+      zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" />
 </Relationships>`);
@@ -277,7 +268,7 @@ export function useQrGenerator() {
       link.href = URL.createObjectURL(blob);
       link.download = `qrcode-plate-${Date.now()}.3mf`;
       link.click();
-      showNotification("3MF exportado com cores e objetos separados!");
+      showNotification("3MF exportado com sucesso!");
     } catch (err) {
       console.error("Export failed:", err);
       toastExportError();
