@@ -417,14 +417,6 @@ export default function Dashboard() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <a
-              href="/catalogo_m2cr.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] transition-colors"
-            >
-              Catálogo
-            </a>
             <span className="hidden sm:block font-mono text-[11px] text-[var(--workbench-muted)]">v0.5.0</span>
             <div className="w-8 h-8 rounded-full bg-[var(--primary-fixed)] border border-[var(--surface-container)] flex items-center justify-center font-sans text-xs font-bold text-[#632CE5]">
               MC
