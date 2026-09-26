@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, Type } from "lucide-react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, Type, BookOpen } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { M2crLogo } from "@/components/M2crLogo";
 import Viewer3D from "./pages/Viewer3D";
@@ -152,6 +152,15 @@ function Layout({ children }: { children: React.ReactNode }) {
             <M2crLogo size={24} />
           </div>
           <div className="flex items-center gap-4">
+            <a
+              href="/catalogo_m2cr.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.05em] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] transition-colors"
+            >
+              <BookOpen className="w-4 h-4" />
+              Catálogo
+            </a>
             <button className="w-10 h-10 rounded-lg hover:bg-[var(--surface-container-high)] flex items-center justify-center text-[var(--on-surface-variant)] transition-colors" aria-label="Configurações">
               <Settings className="w-5 h-5" />
             </button>

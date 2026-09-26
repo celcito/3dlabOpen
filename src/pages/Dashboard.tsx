@@ -417,6 +417,14 @@ export default function Dashboard() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <a
+              href="/catalogo_m2cr.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[11px] uppercase tracking-[0.1em] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] transition-colors"
+            >
+              Catálogo
+            </a>
             <span className="hidden sm:block font-mono text-[11px] text-[var(--workbench-muted)]">v0.5.0</span>
             <div className="w-8 h-8 rounded-full bg-[var(--primary-fixed)] border border-[var(--surface-container)] flex items-center justify-center font-sans text-xs font-bold text-[#632CE5]">
               MC
@@ -732,6 +740,15 @@ export default function Dashboard() {
             <span>Native 3MF color pipeline</span>
             <span className="w-px h-4 bg-[#E8E7E0]"></span>
             <span>Open source • MIT License</span>
+            <span className="w-px h-4 bg-[#E8E7E0]"></span>
+            <a
+              href="/catalogo_m2cr.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[var(--workbench-text)] transition-colors underline underline-offset-4 decoration-[#E8E7E0]"
+            >
+              Catálogo M2CR
+            </a>
           </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--surface-container-low)] hover:bg-[#E8E7E0] text-[var(--on-surface-variant)] transition-colors">
