@@ -6,7 +6,6 @@ import { downloadBlob } from '../lib/pencilTopper/stlExporter';
 import { generatePencilTopperModel } from '../lib/pencilTopper/geometry';
 import { PencilCanvas } from '../components/PencilCanvas';
 import { PencilTopperControls } from '../components/PencilTopperControls';
-import { PencilExportModal } from '../components/PencilExportModal';
 import { SvgConverterModal } from '../components/SvgConverterModal';
 
 export default function PencilTopperCreator() {
@@ -14,7 +13,6 @@ export default function PencilTopperCreator() {
   const [dimensions, setDimensions] = useState<Model3DDimensions>({
     dimX: 0, dimY: 0, dimZ: 0, volumeCm3: 0, weightGrams: 0, printTimeMinutes: 0,
   });
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSvgModalOpen, setIsSvgModalOpen] = useState(false);
 
   const handleChange = useCallback((newConfig: PencilTopperConfig) => {
@@ -52,22 +50,14 @@ export default function PencilTopperCreator() {
         <PencilCanvas
           config={config}
           onDimensionsChange={setDimensions}
-          onOpenExportModal={() => setIsExportModalOpen(true)}
         />
       </div>
       <PencilTopperControls
         config={config}
         onChange={handleChange}
         dimensions={dimensions}
-        onOpenExportModal={() => setIsExportModalOpen(true)}
         onQuickDownload3MF={handleQuickDownload3MF}
         onOpenSvgConverter={() => setIsSvgModalOpen(true)}
-      />
-      <PencilExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        config={config}
-        dimensions={dimensions}
       />
       <SvgConverterModal
         isOpen={isSvgModalOpen}

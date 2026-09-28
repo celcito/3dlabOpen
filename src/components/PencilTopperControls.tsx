@@ -18,7 +18,6 @@ interface PencilTopperControlsProps {
   config: PencilTopperConfig;
   onChange: (newConfig: PencilTopperConfig) => void;
   dimensions: Model3DDimensions;
-  onOpenExportModal: () => void;
   onQuickDownload3MF: () => void;
   onOpenSvgConverter: () => void;
 }
@@ -27,7 +26,6 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
   config,
   onChange,
   dimensions,
-  onOpenExportModal,
   onQuickDownload3MF,
   onOpenSvgConverter,
 }) => {
@@ -419,15 +417,6 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
         <button type="button" onClick={onQuickDownload3MF} className="btn-primary">
           <Download className="w-4 h-4" />
           Baixar 3MF (Multicolor)
-        </button>
-
-        <button
-          type="button"
-          onClick={onOpenExportModal}
-          className="w-full py-3 rounded-lg border border-[var(--workbench-line)] text-[10px] font-mono uppercase tracking-wider text-[var(--on-surface-variant)] hover:border-[#632CE5]/50 hover:text-[#632CE5] flex items-center justify-center gap-2 transition-colors cursor-pointer"
-        >
-          <Box className="w-4 h-4" />
-          Mais Opções de Exportação (STL)
         </button>
       </section>
     </aside>

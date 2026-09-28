@@ -19,13 +19,11 @@ import {
 interface PencilCanvasProps {
   config: PencilTopperConfig;
   onDimensionsChange: (dims: Model3DDimensions) => void;
-  onOpenExportModal: () => void;
 }
 
 export const PencilCanvas: React.FC<PencilCanvasProps> = ({
   config,
   onDimensionsChange,
-  onOpenExportModal,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);

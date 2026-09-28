@@ -19,13 +19,11 @@ import {
 interface ThreeCanvasProps {
   config: LetterBoxConfig;
   onDimensionsChange: (dimensions: Model3DDimensions) => void;
-  onOpenExportModal: () => void;
 }
 
 export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   config,
   onDimensionsChange,
-  onOpenExportModal,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);

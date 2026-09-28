@@ -8,7 +8,6 @@ interface SidebarControlsProps {
   config: LetterBoxConfig;
   onChange: (newConfig: LetterBoxConfig) => void;
   dimensions: Model3DDimensions;
-  onOpenExportModal: () => void;
   onQuickDownload3MF: () => void;
 }
 
@@ -16,7 +15,6 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
   config,
   onChange,
   dimensions,
-  onOpenExportModal,
   onQuickDownload3MF,
 }) => {
   const [fontSearch, setFontSearch] = useState('');
@@ -430,16 +428,6 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
         <button id="btn-main-download-3mf" type="button" onClick={onQuickDownload3MF} className="btn-primary">
           <Download className="w-4 h-4" />
           Baixar 3MF (Multicolor)
-        </button>
-
-        <button
-          type="button"
-          onClick={onOpenExportModal}
-          title="Mais Opções de Exportação (STL, ZIP, Dicas de Impressão)"
-          className="w-full py-3 rounded-lg border border-[var(--workbench-line)] text-[10px] font-mono uppercase tracking-wider text-[var(--on-surface-variant)] hover:border-[#632CE5]/50 hover:text-[#632CE5] flex items-center justify-center gap-2 transition-colors cursor-pointer"
-        >
-          <Box className="w-4 h-4" />
-          Mais Opções de Exportação (STL)
         </button>
       </section>
     </aside>

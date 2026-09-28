@@ -6,14 +6,12 @@ import { exportToMulticolor3MF } from '../lib/letterBox/threeMfExporter';
 import { downloadBlob } from '../lib/pencilTopper/stlExporter';
 import { ThreeCanvas } from '../components/ThreeCanvas';
 import { SidebarControls } from '../components/SidebarControls';
-import { ExportModal } from '../components/ExportModal';
 
 export default function LetterBoxCreator() {
   const [config, setConfig] = useState<LetterBoxConfig>(loadSavedConfig);
   const [dimensions, setDimensions] = useState<Model3DDimensions>({
     dimX: 0, dimY: 0, dimZ: 0, volumeCm3: 0, weightGrams: 0, printTimeMinutes: 0,
   });
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleChange = useCallback((newConfig: LetterBoxConfig) => {
     setConfig(newConfig);
@@ -50,21 +48,13 @@ export default function LetterBoxCreator() {
         <ThreeCanvas
           config={config}
           onDimensionsChange={setDimensions}
-          onOpenExportModal={() => setIsExportModalOpen(true)}
         />
       </div>
       <SidebarControls
         config={config}
         onChange={handleChange}
         dimensions={dimensions}
-        onOpenExportModal={() => setIsExportModalOpen(true)}
         onQuickDownload3MF={handleQuickDownload3MF}
-      />
-      <ExportModal
-        isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
-        config={config}
-        dimensions={dimensions}
       />
     </div>
   );
