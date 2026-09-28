@@ -21,6 +21,7 @@ export function loadSavedPencilConfig(): PencilTopperConfig {
       clearance: typeof parsed.clearance === 'number' ? parsed.clearance : DEFAULT_PENCIL_CONFIG.clearance,
       letterSpacing: typeof parsed.letterSpacing === 'number' && parsed.letterSpacing >= 0.5 ? parsed.letterSpacing : DEFAULT_PENCIL_CONFIG.letterSpacing,
       holeShape: parsed.holeShape || DEFAULT_PENCIL_CONFIG.holeShape,
+      holeOrientation: 'horizontal',
       baseColor: typeof parsed.baseColor === 'string' && parsed.baseColor.startsWith('#') ? parsed.baseColor : DEFAULT_PENCIL_CONFIG.baseColor,
       reliefColor: typeof parsed.reliefColor === 'string' && parsed.reliefColor.startsWith('#') ? parsed.reliefColor : DEFAULT_PENCIL_CONFIG.reliefColor,
     };
