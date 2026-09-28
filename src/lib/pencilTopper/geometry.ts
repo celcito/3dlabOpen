@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import type { PencilTopperConfig, Model3DDimensions } from '../../types/pencilTopper';
 import { extractContoursFromImageData, buildThreeShapes } from './contourExtractor';
+import { ensureGoogleFont } from '../fonts/googleFonts';
 
 export interface GeneratedPencilTopper {
   baseMesh: THREE.Mesh;
@@ -19,6 +20,7 @@ export async function generatePencilTopperModel(
   const targetFontHeightPx = Math.max(10, config.letterHeight) * pxPerMm;
 
   try {
+    await ensureGoogleFont(config.fontFamily);
     if (typeof document !== 'undefined' && document.fonts) {
       await document.fonts.load(`${targetFontHeightPx}px "${config.fontFamily}"`);
       await document.fonts.load(`bold ${targetFontHeightPx}px "${config.fontFamily}"`);

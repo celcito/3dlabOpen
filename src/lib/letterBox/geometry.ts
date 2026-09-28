@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { LetterBoxConfig, Model3DDimensions } from '../../types/letterBox';
 import { extractContoursFromImageData, buildThreeShapes } from '../pencilTopper/contourExtractor';
+import { ensureGoogleFont } from '../fonts/googleFonts';
 
 export interface GeneratedLetterBox {
   backMesh: THREE.Mesh;
@@ -19,6 +20,7 @@ export async function generateLetterBoxModel(
   const targetFontHeightPx = Math.max(20, config.letterHeight) * pxPerMm;
 
   try {
+    if (!config.customFontName) await ensureGoogleFont(config.fontFamily);
     if (document.fonts) {
       await document.fonts.load(`bold ${targetFontHeightPx}px "${config.fontFamily}"`);
     }
