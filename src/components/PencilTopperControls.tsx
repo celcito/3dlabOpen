@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PencilTopperConfig, Model3DDimensions } from '../types/pencilTopper';
 import { PENCIL_MODELS, PENCIL_COLOR_PALETTES, PRESET_SYMBOLS } from '../lib/pencilTopper/presets';
+import { FontPicker } from './FontPicker';
 import {
   Download,
   Sparkles,
@@ -183,29 +184,11 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
           />
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-[9px] uppercase font-bold text-zinc-600 block">
-            Família da Fonte
-          </label>
-          <select
-            value={config.fontFamily}
-            onChange={(e) => onChange({ ...config, fontFamily: e.target.value })}
-            className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] cursor-pointer"
-          >
-            <option value="Pacifico">Pacifico (Cursiva / Manuscrita - Modelo Milene)</option>
-            <option value="Dancing Script">Dancing Script (Caligrafia Fluida)</option>
-            <option value="Lobster">Lobster (Cursiva Espessa)</option>
-            <option value="Anton">Anton (Impactante e reta)</option>
-            <option value="Poppins">Poppins (Moderna & Geométrica)</option>
-            <option value="Lilita One">Lilita One (Gordinha e volumosa)</option>
-            <option value="Fredoka">Fredoka (Arredondada e lúdica)</option>
-            <option value="Bebas Neue">Bebas Neue (Alta e condensada)</option>
-            <option value="Chewy">Chewy (Divertida e animada)</option>
-            <option value="Archivo Black">Archivo Black (Ultra pesada)</option>
-            <option value="Bangers">Bangers (Estilo Gibi/HQ)</option>
-            <option value="Orbitron">Orbitron (Tecnológica)</option>
-          </select>
-        </div>
+        <FontPicker
+          fontFamily={config.fontFamily}
+          customFontName={config.customFontName}
+          onChange={(patch) => onChange({ ...config, ...patch })}
+        />
 
         <RangeControl
           label="Tamanho da Letra"

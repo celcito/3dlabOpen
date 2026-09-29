@@ -12,6 +12,28 @@ export function loadSavedPencilConfig(): PencilTopperConfig {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return DEFAULT_PENCIL_CONFIG;
 
+    if (parsed.customFontBase64 && parsed.customFontName && 'fonts' in document) {
+      try {
+        const binaryString = window.atob(parsed.customFontBase64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const fontFace = new FontFace(parsed.customFontName, bytes.buffer);
+        fontFace
+          .load()
+          .then((loadedFace) => {
+            document.fonts.add(loadedFace);
+          })
+          .catch((err) => {
+            console.warn('Não foi possível restaurar fonte customizada:', err);
+          });
+      } catch (fontErr) {
+        console.warn('Falha ao decodificar fonte customizada salva:', fontErr);
+      }
+    }
+
     return {
       ...DEFAULT_PENCIL_CONFIG,
       ...parsed,
@@ -37,7 +59,13 @@ export function savePencilConfigToStorage(config: PencilTopperConfig): boolean {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     return true;
   } catch (err) {
-    console.warn('Erro ao salvar ponteira no localStorage:', err);
-    return false;
+    try {
+      const configWithoutBase64 = { ...config, customFontBase64: undefined };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(configWithoutBase64));
+      return true;
+    } catch (fallbackErr) {
+      console.warn('Erro ao salvar ponteira no localStorage:', fallbackErr);
+      return false;
+    }
   }
 }

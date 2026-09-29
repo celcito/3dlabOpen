@@ -31,6 +31,8 @@ export interface PencilTopperConfig {
 
   text: string;
   fontFamily: string;
+  customFontName?: string;
+  customFontBase64?: string;
   letterHeight: number;
   letterSpacing: number;
   fontWeightScale: number;

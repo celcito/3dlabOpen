@@ -20,7 +20,7 @@ export async function generatePencilTopperModel(
   const targetFontHeightPx = Math.max(10, config.letterHeight) * pxPerMm;
 
   try {
-    await ensureGoogleFont(config.fontFamily);
+    if (!config.customFontName) await ensureGoogleFont(config.fontFamily);
     if (typeof document !== 'undefined' && document.fonts) {
       await document.fonts.load(`${targetFontHeightPx}px "${config.fontFamily}"`);
       await document.fonts.load(`bold ${targetFontHeightPx}px "${config.fontFamily}"`);
