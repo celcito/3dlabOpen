@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import type { PencilTopperConfig, Model3DDimensions } from '../../types/pencilTopper';
-import { extractContoursFromImageData, buildThreeShapes } from './contourExtractor';
+import { extractContoursFromImageData, buildThreeShapes, computeEnclosedEmptyMask, punchMask } from './contourExtractor';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 
 export interface GeneratedPencilTopper {
@@ -195,6 +195,21 @@ export async function generatePencilTopperModel(
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
+  ctx.font = fontStyle;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  for (let i = 0; i < text.length; i++) {
+    ctx.fillText(text[i], textStartXPx + charOffsets[i], textBaselineY);
+  }
+  if (hasSymbol) {
+    drawPresetSymbol(ctx, symbolX, tunnelCenterYPx, symbolSizePx);
+  }
+  const counterMask = computeEnclosedEmptyMask(
+    ctx.getImageData(0, 0, canvasWidth, canvasHeight)
+  );
+
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
@@ -242,6 +257,7 @@ export async function generatePencilTopperModel(
   }
 
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+  punchMask(baseImgData, counterMask);
   const mmPerPixel = 1 / pxPerMm;
   const baseContours = extractContoursFromImageData(baseImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.2);
   const baseShapes = buildThreeShapes(baseContours.outer, baseContours.holes);
@@ -267,6 +283,7 @@ export async function generatePencilTopperModel(
   }
 
   const reliefImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+  punchMask(reliefImgData, counterMask);
   const reliefContours = extractContoursFromImageData(reliefImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.15);
   const reliefShapes = buildThreeShapes(reliefContours.outer, reliefContours.holes);
 

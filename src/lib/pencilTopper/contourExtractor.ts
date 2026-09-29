@@ -99,6 +99,61 @@ export function isPointInsidePolygon(point: Point2D, poly: Point2D[]): boolean {
   return inside;
 }
 
+export function computeEnclosedEmptyMask(imageData: ImageData): Uint8Array {
+  const { width, height, data } = imageData;
+  const count = width * height;
+  const solid = new Uint8Array(count);
+  for (let i = 0; i < count; i++) {
+    solid[i] = data[i * 4 + 3] > 120 ? 1 : 0;
+  }
+
+  const outside = new Uint8Array(count);
+  const stack: number[] = [];
+
+  const seed = (i: number) => {
+    if (!solid[i] && !outside[i]) {
+      outside[i] = 1;
+      stack.push(i);
+    }
+  };
+
+  for (let x = 0; x < width; x++) {
+    seed(x);
+    seed((height - 1) * width + x);
+  }
+  for (let y = 0; y < height; y++) {
+    seed(y * width);
+    seed(y * width + width - 1);
+  }
+
+  while (stack.length > 0) {
+    const i = stack.pop()!;
+    const x = i % width;
+    const y = (i / width) | 0;
+    if (x > 0) seed(i - 1);
+    if (x < width - 1) seed(i + 1);
+    if (y > 0) seed(i - width);
+    if (y < height - 1) seed(i + width);
+  }
+
+  const mask = new Uint8Array(count);
+  for (let i = 0; i < count; i++) {
+    if (!solid[i] && !outside[i]) mask[i] = 1;
+  }
+  return mask;
+}
+
+export function punchMask(imageData: ImageData, mask: Uint8Array): void {
+  const { data } = imageData;
+  for (let i = 0; i < mask.length; i++) {
+    if (!mask[i]) continue;
+    data[i * 4] = 0;
+    data[i * 4 + 1] = 0;
+    data[i * 4 + 2] = 0;
+    data[i * 4 + 3] = 0;
+  }
+}
+
 export function extractContoursFromImageData(
   imageData: ImageData,
   mmPerPixel: number,

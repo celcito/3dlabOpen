@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { LetterBoxConfig, Model3DDimensions } from '../../types/letterBox';
-import { extractContoursFromImageData, buildThreeShapes } from '../pencilTopper/contourExtractor';
+import { extractContoursFromImageData, buildThreeShapes, computeEnclosedEmptyMask, punchMask } from '../pencilTopper/contourExtractor';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 
 export interface GeneratedLetterBox {
@@ -117,15 +117,22 @@ export async function generateLetterBoxModel(
 
   const mmPerPixel = 1 / pxPerMm;
 
+  renderTextToContext(ctx, 'fill', 0, config.flatBase);
+  const counterMask = computeEnclosedEmptyMask(
+    ctx.getImageData(0, 0, canvasWidth, canvasHeight)
+  );
+
   const backStrokePx = Math.max(1, config.backContour * 2 * pxPerMm);
   renderTextToContext(ctx, 'stroke_and_fill', backStrokePx, config.flatBase);
   const backImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+  punchMask(backImgData, counterMask);
   const backContours = extractContoursFromImageData(backImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.45);
   const backShapes = buildThreeShapes(backContours.outer, backContours.holes);
 
   const midStrokePx = Math.max(1, config.midContour * 2 * pxPerMm);
   renderTextToContext(ctx, 'stroke_and_fill', midStrokePx, config.flatBase);
   const midImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+  punchMask(midImgData, counterMask);
   const midContours = extractContoursFromImageData(midImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.4);
   const midShapes = buildThreeShapes(midContours.outer, midContours.holes);
 
