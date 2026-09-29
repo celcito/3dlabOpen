@@ -117,10 +117,9 @@ export async function generateLetterBoxModel(
 
   const mmPerPixel = 1 / pxPerMm;
 
-  renderTextToContext(ctx, 'fill', 0, config.flatBase);
-  const counterMask = computeEnclosedEmptyMask(
-    ctx.getImageData(0, 0, canvasWidth, canvasHeight)
-  );
+  renderTextToContext(ctx, 'fill', 0, false);
+  const frontImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+  const counterMask = computeEnclosedEmptyMask(frontImgData);
 
   const backStrokePx = Math.max(1, config.backContour * 2 * pxPerMm);
   renderTextToContext(ctx, 'stroke_and_fill', backStrokePx, config.flatBase);
@@ -136,8 +135,6 @@ export async function generateLetterBoxModel(
   const midContours = extractContoursFromImageData(midImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.4);
   const midShapes = buildThreeShapes(midContours.outer, midContours.holes);
 
-  renderTextToContext(ctx, 'fill', 0, false);
-  const frontImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   const frontContours = extractContoursFromImageData(frontImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.3);
   const frontShapes = buildThreeShapes(frontContours.outer, frontContours.holes);
 
