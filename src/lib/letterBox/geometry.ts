@@ -16,7 +16,7 @@ export async function generateLetterBoxModel(
   const textLines = config.text.trim().split('\n').filter((l) => l.length > 0);
   const displayTextLines = textLines.length > 0 ? textLines : ['M2CR'];
 
-  const pxPerMm = 8;
+  const pxPerMm = 16;
   const targetFontHeightPx = Math.max(20, config.letterHeight) * pxPerMm;
 
   try {
@@ -125,17 +125,17 @@ export async function generateLetterBoxModel(
   renderTextToContext(ctx, 'stroke_and_fill', backStrokePx, config.flatBase);
   const backImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(backImgData, counterMask);
-  const backContours = extractContoursFromImageData(backImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.45);
+  const backContours = extractContoursFromImageData(backImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.15, { chaikin: false, minContourLength: 8, minAreaMm2: 0.8 });
   const backShapes = buildThreeShapes(backContours.outer, backContours.holes);
 
   const midStrokePx = Math.max(1, config.midContour * 2 * pxPerMm);
   renderTextToContext(ctx, 'stroke_and_fill', midStrokePx, config.flatBase);
   const midImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(midImgData, counterMask);
-  const midContours = extractContoursFromImageData(midImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.4);
+  const midContours = extractContoursFromImageData(midImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.12, { chaikin: false, minContourLength: 8, minAreaMm2: 0.8 });
   const midShapes = buildThreeShapes(midContours.outer, midContours.holes);
 
-  const frontContours = extractContoursFromImageData(frontImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.3);
+  const frontContours = extractContoursFromImageData(frontImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.1, { chaikin: false, minContourLength: 8, minAreaMm2: 0.8 });
   const frontShapes = buildThreeShapes(frontContours.outer, frontContours.holes);
 
   const safeBackShapes = backShapes.length > 0 ? backShapes : (midShapes.length > 0 ? midShapes : frontShapes);

@@ -13,26 +13,40 @@ export interface PolygonContour {
 export function simplifyPolygon(points: Point2D[], tolerance: number): Point2D[] {
   if (points.length <= 2) return points;
 
-  let maxDist = 0;
-  let index = 0;
-  const start = points[0];
-  const end = points[points.length - 1];
+  const n = points.length;
+  const keep = new Uint8Array(n);
+  keep[0] = 1;
+  keep[n - 1] = 1;
 
-  for (let i = 1; i < points.length - 1; i++) {
-    const d = perpendicularDistance(points[i], start, end);
-    if (d > maxDist) {
-      maxDist = d;
-      index = i;
+  const stack: number[] = [0, n - 1];
+  while (stack.length > 0) {
+    const end = stack.pop()!;
+    const start = stack.pop()!;
+    if (end <= start + 1) continue;
+
+    let maxDist = 0;
+    let index = -1;
+    const s = points[start];
+    const e = points[end];
+    for (let i = start + 1; i < end; i++) {
+      const d = perpendicularDistance(points[i], s, e);
+      if (d > maxDist) {
+        maxDist = d;
+        index = i;
+      }
+    }
+
+    if (maxDist > tolerance && index !== -1) {
+      keep[index] = 1;
+      stack.push(start, index, index, end);
     }
   }
 
-  if (maxDist > tolerance) {
-    const left = simplifyPolygon(points.slice(0, index + 1), tolerance);
-    const right = simplifyPolygon(points.slice(index), tolerance);
-    return left.slice(0, left.length - 1).concat(right);
-  } else {
-    return [start, end];
+  const result: Point2D[] = [];
+  for (let i = 0; i < n; i++) {
+    if (keep[i]) result.push(points[i]);
   }
+  return result;
 }
 
 function perpendicularDistance(p: Point2D, lineStart: Point2D, lineEnd: Point2D): number {
@@ -108,12 +122,13 @@ export function computeEnclosedEmptyMask(imageData: ImageData): Uint8Array {
   }
 
   const outside = new Uint8Array(count);
-  const stack: number[] = [];
+  const stack = new Int32Array(count);
+  let sp = 0;
 
   const seed = (i: number) => {
     if (!solid[i] && !outside[i]) {
       outside[i] = 1;
-      stack.push(i);
+      stack[sp++] = i;
     }
   };
 
@@ -126,8 +141,8 @@ export function computeEnclosedEmptyMask(imageData: ImageData): Uint8Array {
     seed(y * width + width - 1);
   }
 
-  while (stack.length > 0) {
-    const i = stack.pop()!;
+  while (sp > 0) {
+    const i = stack[--sp];
     const x = i % width;
     const y = (i / width) | 0;
     if (x > 0) seed(i - 1);
@@ -154,20 +169,36 @@ export function punchMask(imageData: ImageData, mask: Uint8Array): void {
   }
 }
 
+export interface ContourExtractOptions {
+  /** Aplica Chaikin nas bordas (arredonda cantos). Padrão: true. */
+  chaikin?: boolean;
+  /** Número mínimo de pontos brutos do contorno. Padrão: 6. */
+  minContourLength?: number;
+  /** Área mínima em mm² após simplificação. Padrão: dinâmico (0.05 / 0.2). */
+  minAreaMm2?: number;
+}
+
 export function extractContoursFromImageData(
   imageData: ImageData,
   mmPerPixel: number,
   offsetX: number,
   offsetY: number,
-  simplifyToleranceMm: number = 0.35
+  simplifyToleranceMm: number = 0.35,
+  options: ContourExtractOptions = {}
 ): { outer: Point2D[][]; holes: Point2D[][] } {
+  const chaikin = options.chaikin ?? true;
+  const minContourLength = options.minContourLength ?? 6;
+  const fixedMinArea = options.minAreaMm2;
   const { width, height, data } = imageData;
-  const visited = new Uint8Array(width * height);
+  const pixelCount = width * height;
+  const visited = new Uint8Array(pixelCount);
+  const solid = new Uint8Array(pixelCount);
+  for (let i = 0; i < pixelCount; i++) {
+    solid[i] = data[i * 4 + 3] > 120 ? 1 : 0;
+  }
 
-  const isSolid = (x: number, y: number): boolean => {
-    if (x < 0 || x >= width || y < 0 || y >= height) return false;
-    return data[(y * width + x) * 4 + 3] > 120;
-  };
+  const isSolid = (x: number, y: number): boolean =>
+    x >= 0 && x < width && y >= 0 && y < height && solid[y * width + x] === 1;
 
   const rawContours: Point2D[][] = [];
 
@@ -179,7 +210,7 @@ export function extractContoursFromImageData(
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       const idx = y * width + x;
-      if (!isSolid(x, y) || visited[idx] === 1) continue;
+      if (solid[idx] === 0 || visited[idx] === 1) continue;
 
       let isBoundary = false;
       for (const [dx, dy] of dirs) {
@@ -227,13 +258,20 @@ export function extractContoursFromImageData(
         steps++;
       } while ((cx !== startX || cy !== startY) && steps < maxSteps);
 
-      if (contour.length >= 6) {
+      if (contour.length >= minContourLength) {
         contour.push({ ...contour[0] });
-        const area = Math.abs(polygonArea(contour));
-        const minArea = area < 1.0 ? 0.05 : 0.2;
-        const simplified = simplifyPolygon(contour, simplifyToleranceMm * (area < 1.0 ? 0.5 : 1.0));
-        if (simplified.length >= 4 && Math.abs(polygonArea(simplified)) > minArea) {
-          rawContours.push(simplified);
+        if (fixedMinArea !== undefined) {
+          const simplified = simplifyPolygon(contour, simplifyToleranceMm);
+          if (simplified.length >= 4 && Math.abs(polygonArea(simplified)) > fixedMinArea) {
+            rawContours.push(simplified);
+          }
+        } else {
+          const area = Math.abs(polygonArea(contour));
+          const minArea = area < 1.0 ? 0.05 : 0.2;
+          const simplified = simplifyPolygon(contour, simplifyToleranceMm * (area < 1.0 ? 0.5 : 1.0));
+          if (simplified.length >= 4 && Math.abs(polygonArea(simplified)) > minArea) {
+            rawContours.push(simplified);
+          }
         }
       }
     }
@@ -253,10 +291,18 @@ export function extractContoursFromImageData(
     }
 
     if (enclosureCount % 2 === 1) {
-      const holeArea = Math.abs(polygonArea(poly));
-      holes.push(chaikinSmooth(poly, holeArea < 1.0 ? 1 : 2));
+      if (!chaikin) {
+        holes.push(poly);
+      } else {
+        const holeArea = Math.abs(polygonArea(poly));
+        holes.push(chaikinSmooth(poly, holeArea < 1.0 ? 1 : 2));
+      }
     } else {
-      outer.push(chaikinSmooth(poly, 2));
+      if (!chaikin) {
+        outer.push(poly);
+      } else {
+        outer.push(chaikinSmooth(poly, 2));
+      }
     }
   }
 
