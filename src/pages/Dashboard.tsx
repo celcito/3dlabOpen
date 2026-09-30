@@ -44,6 +44,7 @@ import {
   Zap,
   Heart,
   MessageSquare,
+  KeyRound,
 } from "lucide-react";
 import { M2crLogo } from "@/components/M2crLogo";
 
@@ -88,6 +89,7 @@ const TOOL_CATEGORIES = [
       { to: "/bin-generator", label: "Bin & Tray Generator", desc: "Stackable bins, grid trays, organizers with labels", icon: Box, featured: true },
       { to: "/flexi-creator", label: "Flexi Creator", desc: "Articulated print-in-place models with joint libraries", icon: Waves, featured: true },
       { to: "/keycap-customizer", label: "Keycap Designer", desc: "MX-compatible keycaps with legends, profiles & textures", icon: Keyboard, featured: false },
+      { to: "/chaveiro", label: "Chaveiro com Nome", desc: "Name silhouette keychains with raised text & loop", icon: KeyRound, featured: false },
       { to: "/cookie-cutter-maker", label: "Cookie Cutter Maker", desc: "Food-safe cutters from SVG with bevel & handle options", icon: Scissors, featured: false },
       { to: "/cake-topper", label: "Cake Topper Creator", desc: "Personalized cake toppers with names, ages & themes", icon: Cake, featured: false },
       { to: "/clip-maker", label: "Clip Maker", desc: "Cable clips, bag seals, card holders & organizers", icon: Paperclip, featured: false },

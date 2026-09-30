@@ -33,13 +33,27 @@ function geometryToXmlMesh(geometry: THREE.BufferGeometry): string {
   return `<mesh>\n<vertices>\n${vertexStrings.join('\n')}\n</vertices>\n<triangles>\n${triangleStrings.join('\n')}\n</triangles>\n</mesh>`;
 }
 
+export interface ThreeMFMeta {
+  application?: string;
+  baseObjectName?: string;
+  reliefObjectName?: string;
+}
+
+const DEFAULT_APPLICATION = '3D Lab Open Ponteira de Lapis 3D Parametrico';
+const DEFAULT_BASE_OBJECT_NAME = '1_Corpo_da_Base';
+const DEFAULT_RELIEF_OBJECT_NAME = '2_Letras_em_Relevo';
+
 export async function exportPencilTopper3MF(
   baseGeom: THREE.BufferGeometry,
   reliefGeom: THREE.BufferGeometry,
   baseColorHex: string,
   reliefColorHex: string,
-  modelName: string = 'Ponteira_Lapis_3D'
+  modelName: string = 'Ponteira_Lapis_3D',
+  meta?: ThreeMFMeta
 ): Promise<Blob> {
+  const application = meta?.application ?? DEFAULT_APPLICATION;
+  const baseObjectName = meta?.baseObjectName ?? DEFAULT_BASE_OBJECT_NAME;
+  const reliefObjectName = meta?.reliefObjectName ?? DEFAULT_RELIEF_OBJECT_NAME;
   const zip = new JSZip();
 
   const cleanColor1 = (baseColorHex.startsWith('#') ? baseColorHex : `#${baseColorHex}`) + 'FF';
@@ -64,16 +78,16 @@ export async function exportPencilTopper3MF(
   const modelXml = `<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="pt-BR" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
   <metadata name="Title">${modelName}</metadata>
-  <metadata name="Application">3D Lab Open Ponteira de Lapis 3D Parametrico</metadata>
+  <metadata name="Application">${application}</metadata>
   <resources>
     <m:colorgroup id="1">
       <m:color color="${cleanColor1}"/>
       <m:color color="${cleanColor2}"/>
     </m:colorgroup>
-    <object id="2" type="model" pid="1" pindex="0" name="1_Corpo_da_Base">
+    <object id="2" type="model" pid="1" pindex="0" name="${baseObjectName}">
       ${baseMeshXml}
     </object>
-    <object id="3" type="model" pid="1" pindex="1" name="2_Letras_em_Relevo">
+    <object id="3" type="model" pid="1" pindex="1" name="${reliefObjectName}">
       ${reliefMeshXml}
     </object>
   </resources>
