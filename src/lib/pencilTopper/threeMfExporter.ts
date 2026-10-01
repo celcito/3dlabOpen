@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import JSZip from 'jszip';
+import { zipSync, strToU8 } from 'fflate';
 
 function geometryToXmlMesh(geometry: THREE.BufferGeometry): string {
   let nonIndexed = geometry;
@@ -12,21 +12,29 @@ function geometryToXmlMesh(geometry: THREE.BufferGeometry): string {
     return '<mesh><vertices></vertices><triangles></triangles></mesh>';
   }
 
+  const vertexIds = new Map<string, number>();
   const vertexStrings: string[] = [];
   const triangleStrings: string[] = [];
   const totalTriangles = pos.count / 3;
 
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i).toFixed(4);
-    const y = pos.getY(i).toFixed(4);
-    const z = pos.getZ(i).toFixed(4);
-    vertexStrings.push(`<vertex x="${x}" y="${y}" z="${z}"/>`);
-  }
+  const vertexId = (index: number): number => {
+    const x = pos.getX(index).toFixed(4);
+    const y = pos.getY(index).toFixed(4);
+    const z = pos.getZ(index).toFixed(4);
+    const key = `${x}|${y}|${z}`;
+    let id = vertexIds.get(key);
+    if (id === undefined) {
+      id = vertexStrings.length;
+      vertexIds.set(key, id);
+      vertexStrings.push(`<vertex x="${x}" y="${y}" z="${z}"/>`);
+    }
+    return id;
+  };
 
   for (let t = 0; t < totalTriangles; t++) {
-    const v1 = t * 3;
-    const v2 = t * 3 + 1;
-    const v3 = t * 3 + 2;
+    const v1 = vertexId(t * 3);
+    const v2 = vertexId(t * 3 + 1);
+    const v3 = vertexId(t * 3 + 2);
     triangleStrings.push(`<triangle v1="${v1}" v2="${v2}" v3="${v3}"/>`);
   }
 
@@ -54,7 +62,6 @@ export async function exportPencilTopper3MF(
   const application = meta?.application ?? DEFAULT_APPLICATION;
   const baseObjectName = meta?.baseObjectName ?? DEFAULT_BASE_OBJECT_NAME;
   const reliefObjectName = meta?.reliefObjectName ?? DEFAULT_RELIEF_OBJECT_NAME;
-  const zip = new JSZip();
 
   const cleanColor1 = (baseColorHex.startsWith('#') ? baseColorHex : `#${baseColorHex}`) + 'FF';
   const cleanColor2 = (reliefColorHex.startsWith('#') ? reliefColorHex : `#${reliefColorHex}`) + 'FF';
@@ -64,13 +71,11 @@ export async function exportPencilTopper3MF(
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
 </Types>`;
-  zip.file('[Content_Types].xml', contentTypesXml);
 
   const relsXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
 </Relationships>`;
-  zip.folder('_rels')?.file('.rels', relsXml);
 
   const baseMeshXml = geometryToXmlMesh(baseGeom);
   const reliefMeshXml = geometryToXmlMesh(reliefGeom);
@@ -97,12 +102,14 @@ export async function exportPencilTopper3MF(
   </build>
 </model>`;
 
-  zip.folder('3D')?.file('3dmodel.model', modelXml);
+  const zipped = zipSync(
+    {
+      '[Content_Types].xml': strToU8(contentTypesXml),
+      '_rels/.rels': strToU8(relsXml),
+      '3D/3dmodel.model': strToU8(modelXml),
+    },
+    { level: 6 }
+  );
 
-  return await zip.generateAsync({
-    type: 'blob',
-    mimeType: 'application/vnd.ms-package.3dmanufacturing-3dmodel+xml',
-    compression: 'DEFLATE',
-    compressionOptions: { level: 6 },
-  });
+  return new Blob([zipped], { type: 'application/vnd.ms-package.3dmanufacturing-3dmodel+xml' });
 }

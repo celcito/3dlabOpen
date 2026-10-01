@@ -24,6 +24,7 @@ export default function KeychainCreator() {
     dimX: 0, dimY: 0, dimZ: 0, volumeCm3: 0, weightGrams: 0, printTimeMinutes: 0,
   });
   const [isSvgModalOpen, setIsSvgModalOpen] = useState(false);
+  const [exporting, setExporting] = useState<'stl' | '3mf' | null>(null);
 
   const handleChange = useCallback((newConfig: KeychainConfig) => {
     setConfig(newConfig);
@@ -31,6 +32,9 @@ export default function KeychainCreator() {
   }, []);
 
   const handleDownloadSTL = useCallback(async () => {
+    if (exporting) return;
+    setExporting('stl');
+    await new Promise((resolve) => setTimeout(resolve, 30));
     try {
       const model = await generateKeychainModel(config);
       const buffer = exportToBinarySTL([model.baseMesh.geometry, model.reliefMesh.geometry]);
@@ -38,10 +42,15 @@ export default function KeychainCreator() {
       downloadBlob(new Blob([buffer], { type: 'model/stl' }), filename);
     } catch (err) {
       console.error('Erro ao exportar STL:', err);
+    } finally {
+      setExporting(null);
     }
-  }, [config]);
+  }, [config, exporting]);
 
   const handleDownload3MF = useCallback(async () => {
+    if (exporting) return;
+    setExporting('3mf');
+    await new Promise((resolve) => setTimeout(resolve, 30));
     try {
       const model = await generateKeychainModel(config);
       const filename = `Chaveiro_${safeName(config)}_Multicolor.3mf`;
@@ -58,8 +67,10 @@ export default function KeychainCreator() {
       downloadBlob(blob, filename);
     } catch (err) {
       console.error('Erro ao exportar 3MF:', err);
+    } finally {
+      setExporting(null);
     }
-  }, [config]);
+  }, [config, exporting]);
 
   const handleApplyIcon = useCallback((svgDataUrl: string, _name: string) => {
     handleChange({ ...config, customIconUrl: svgDataUrl });
@@ -80,6 +91,7 @@ export default function KeychainCreator() {
         onQuickDownloadSTL={handleDownloadSTL}
         onQuickDownload3MF={handleDownload3MF}
         onOpenSvgConverter={() => setIsSvgModalOpen(true)}
+        exporting={exporting}
       />
       <SvgConverterModal
         isOpen={isSvgModalOpen}

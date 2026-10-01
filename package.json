@@ -34,6 +34,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "fabric": "^7.4.0",
+    "fflate": "^0.8.3",
     "imagetracerjs": "^1.2.6",
     "jszip": "^3.10.1",
     "lucide-react": "^0.546.0",

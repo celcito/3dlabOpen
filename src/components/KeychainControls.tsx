@@ -25,6 +25,7 @@ interface KeychainControlsProps {
   onQuickDownloadSTL: () => void;
   onQuickDownload3MF: () => void;
   onOpenSvgConverter: () => void;
+  exporting?: 'stl' | '3mf' | null;
 }
 
 export const KeychainControls: React.FC<KeychainControlsProps> = ({
@@ -34,6 +35,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
   onQuickDownloadSTL,
   onQuickDownload3MF,
   onOpenSvgConverter,
+  exporting = null,
 }) => {
   const handleApplyPalette = (palette: (typeof PENCIL_COLOR_PALETTES)[0]) => {
     onChange({
@@ -421,14 +423,24 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           </div>
         </div>
 
-        <button type="button" onClick={onQuickDownloadSTL} className="btn-primary">
+        <button
+          type="button"
+          onClick={onQuickDownloadSTL}
+          disabled={exporting !== null}
+          className="btn-primary"
+        >
           <Download className="w-4 h-4" />
-          Baixar STL (1 peça)
+          {exporting === 'stl' ? 'Gerando STL…' : 'Baixar STL (1 peça)'}
         </button>
 
-        <button type="button" onClick={onQuickDownload3MF} className="btn-primary">
+        <button
+          type="button"
+          onClick={onQuickDownload3MF}
+          disabled={exporting !== null}
+          className="btn-primary"
+        >
           <Download className="w-4 h-4" />
-          Baixar 3MF (Multicolor)
+          {exporting === '3mf' ? 'Gerando 3MF…' : 'Baixar 3MF (Multicolor)'}
         </button>
       </section>
     </aside>
