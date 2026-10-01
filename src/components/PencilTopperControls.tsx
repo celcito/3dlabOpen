@@ -21,6 +21,7 @@ interface PencilTopperControlsProps {
   dimensions: Model3DDimensions;
   onQuickDownload3MF: () => void;
   onOpenSvgConverter: () => void;
+  exporting?: boolean;
 }
 
 export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
@@ -29,6 +30,7 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
   dimensions,
   onQuickDownload3MF,
   onOpenSvgConverter,
+  exporting = false,
 }) => {
   const effectiveDiameter = Number((config.pencilDiameter + config.clearance).toFixed(1));
   const selectedModel = PENCIL_MODELS.find((model) => model.id === config.pencilModel);
@@ -397,9 +399,14 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
           </div>
         </div>
 
-        <button type="button" onClick={onQuickDownload3MF} className="btn-primary">
+        <button
+          type="button"
+          onClick={onQuickDownload3MF}
+          disabled={exporting}
+          className="btn-primary"
+        >
           <Download className="w-4 h-4" />
-          Baixar 3MF (Multicolor)
+          {exporting ? 'Gerando 3MF…' : 'Baixar 3MF (Multicolor)'}
         </button>
       </section>
     </aside>

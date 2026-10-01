@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import type { PencilTopperConfig, Model3DDimensions } from '../types/pencilTopper';
 import { loadSavedPencilConfig, savePencilConfigToStorage } from '../lib/pencilTopper/storage';
 import { exportPencilTopper3MF } from '../lib/pencilTopper/threeMfExporter';
@@ -14,6 +15,7 @@ export default function PencilTopperCreator() {
     dimX: 0, dimY: 0, dimZ: 0, volumeCm3: 0, weightGrams: 0, printTimeMinutes: 0,
   });
   const [isSvgModalOpen, setIsSvgModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleChange = useCallback((newConfig: PencilTopperConfig) => {
     setConfig(newConfig);
@@ -21,6 +23,15 @@ export default function PencilTopperCreator() {
   }, []);
 
   const handleQuickDownload3MF = useCallback(async () => {
+    if (isExporting) return;
+    // Commit síncrono: o rótulo "Gerando…" precisa estar no DOM antes do rAF abaixo
+    flushSync(() => setIsExporting(true));
+    // Pinta o rótulo antes de bloquear a main thread com o CSG
+    await new Promise<void>((resolve) => {
+      const finish = () => resolve();
+      requestAnimationFrame(() => setTimeout(finish, 0));
+      setTimeout(finish, 250);
+    });
     try {
       const model = await generatePencilTopperModel(config);
       const safeText = config.text.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 16) || 'Ponteira';
@@ -37,8 +48,10 @@ export default function PencilTopperCreator() {
       downloadBlob(blob, filename);
     } catch (err) {
       console.error('Erro ao exportar 3MF:', err);
+    } finally {
+      setIsExporting(false);
     }
-  }, [config]);
+  }, [config, isExporting]);
 
   const handleApplyIcon = useCallback((svgDataUrl: string, _name: string) => {
     handleChange({ ...config, customIconUrl: svgDataUrl });
@@ -58,6 +71,7 @@ export default function PencilTopperCreator() {
         dimensions={dimensions}
         onQuickDownload3MF={handleQuickDownload3MF}
         onOpenSvgConverter={() => setIsSvgModalOpen(true)}
+        exporting={isExporting}
       />
       <SvgConverterModal
         isOpen={isSvgModalOpen}

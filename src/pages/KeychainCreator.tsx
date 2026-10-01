@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import type { KeychainConfig, Model3DDimensions } from '../types/keychain';
 import { loadSavedKeychainConfig, saveKeychainConfigToStorage } from '../lib/keychain/storage';
 import { exportPencilTopper3MF } from '../lib/pencilTopper/threeMfExporter';
@@ -33,8 +34,14 @@ export default function KeychainCreator() {
 
   const handleDownloadSTL = useCallback(async () => {
     if (exporting) return;
-    setExporting('stl');
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    // Commit síncrono: o rótulo "Gerando…" precisa estar no DOM antes do rAF abaixo
+    flushSync(() => setExporting('stl'));
+    // Pinta o rótulo "Gerando…" antes de bloquear a main thread com o CSG
+    await new Promise<void>((resolve) => {
+      const finish = () => resolve();
+      requestAnimationFrame(() => setTimeout(finish, 0));
+      setTimeout(finish, 250);
+    });
     try {
       const model = await generateKeychainModel(config);
       const buffer = exportToBinarySTL([model.baseMesh.geometry, model.reliefMesh.geometry]);
@@ -49,8 +56,14 @@ export default function KeychainCreator() {
 
   const handleDownload3MF = useCallback(async () => {
     if (exporting) return;
-    setExporting('3mf');
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    // Commit síncrono: o rótulo "Gerando…" precisa estar no DOM antes do rAF abaixo
+    flushSync(() => setExporting('3mf'));
+    // Pinta o rótulo "Gerando…" antes de bloquear a main thread com o CSG
+    await new Promise<void>((resolve) => {
+      const finish = () => resolve();
+      requestAnimationFrame(() => setTimeout(finish, 0));
+      setTimeout(finish, 250);
+    });
     try {
       const model = await generateKeychainModel(config);
       const filename = `Chaveiro_${safeName(config)}_Multicolor.3mf`;

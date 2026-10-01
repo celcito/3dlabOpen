@@ -45,6 +45,7 @@ import {
   Heart,
   MessageSquare,
   KeyRound,
+  FileSearch,
 } from "lucide-react";
 import { M2crLogo } from "@/components/M2crLogo";
 
@@ -57,6 +58,7 @@ const TOOL_CATEGORIES = [
     icon: Sparkles,
     tools: [
       { to: "/split-3mf", label: "Split 3MF", desc: "Import, segment & export multi-color 3MF with precision", icon: Scissors, featured: true },
+      { to: "/analisador-3mf", label: "Analisador 3MF", desc: "Audit mesh, units & print settings before slicing", icon: FileSearch, featured: true },
       { to: "/viewer3d", label: "3D Slicer & Painter", desc: "Vertex painting, auto-segmentation, connectors, STL/3MF export", icon: BoxSelect, featured: true },
       { to: "/plate-creator", label: "Plate Creator", desc: "Arrange, auto-pack & export print plates for multi-material", icon: Grid, featured: false },
       { to: "/filament-painter", label: "Filament Painter", desc: "Paint models for multi-color prints with AMS/MMU support", icon: Layers, featured: false },
