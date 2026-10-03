@@ -169,6 +169,7 @@ export function runMeshChecks(meshes: WorldMesh[], model?: RawModel): MeshCheckR
       offBed,
       overhangArea: analysis.overhangArea,
       overhangRatio: analysis.area > 0 ? analysis.overhangArea / analysis.area : 0,
+      genus: analysis.genus,
     });
 
     appendLimited(boundary, analysis.boundarySegments, MAX_OVERLAY_SEGMENTS * 6);
@@ -406,6 +407,7 @@ interface MeshAnalysis {
   max: [number, number, number];
   area: number;
   overhangArea: number;
+  genus: number;
   boundarySegments: number[];
   overhangTriangles: number[];
 }
@@ -523,6 +525,42 @@ function analyzeMesh(mesh: WorldMesh): MeshAnalysis {
     }
   }
 
+  // Gênero topológico (só para fechado/2-manifold): χ = V − E + F → g = (2C − χ)/2.
+  // g = 0 sem furo passante; g ≥ 1 = furo/túnel (ex.: buraco de parafuso).
+  let genus = 0;
+  if (used > 0 && boundaryEdges === 0 && nonManifoldEdges === 0) {
+    const parent = new Int32Array(vc);
+    for (let i = 0; i < vc; i++) parent[i] = i;
+    const find = (x: number): number => {
+      while (parent[x] !== x) {
+        parent[x] = parent[parent[x]];
+        x = parent[x];
+      }
+      return x;
+    };
+    const usedVert = new Uint8Array(vc);
+    for (let f = 0; f < used; f++) {
+      usedVert[ca[f]] = 1;
+      usedVert[cb[f]] = 1;
+      usedVert[cc[f]] = 1;
+    }
+    for (const key of edgeCount.keys()) {
+      const u = Math.floor(key / vc);
+      const ru = find(u);
+      const rv = find(key - u * vc);
+      if (ru !== rv) parent[ru] = rv;
+    }
+    let vUsed = 0;
+    let components = 0;
+    for (let i = 0; i < vc; i++) {
+      if (!usedVert[i]) continue;
+      vUsed++;
+      if (parent[i] === i) components++;
+    }
+    const euler = vUsed - edgeCount.size + used;
+    genus = Math.max(0, Math.round((2 * components - euler) / 2));
+  }
+
   const inconsistent = propagateOrientation(used, pairA, pairB, pairSame);
   const volume = signedVolume(positions, valid);
 
@@ -575,6 +613,7 @@ function analyzeMesh(mesh: WorldMesh): MeshAnalysis {
     max,
     area,
     overhangArea,
+    genus,
     boundarySegments,
     overhangTriangles,
   };

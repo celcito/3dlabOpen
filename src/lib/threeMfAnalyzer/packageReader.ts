@@ -12,6 +12,7 @@ import type {
 import { SOURCES } from "./rules";
 import { resolveWorldMeshes, runMeshChecks } from "./meshChecks";
 import { runSettingsChecks } from "./settingsChecks";
+import { runProfileChecks } from "./profiles";
 
 const CAD_APPLICATIONS = ["fusion", "solidworks", "onshape", "freecad", "openscad", "rhino", "inventor", "catia"];
 
@@ -98,6 +99,12 @@ export async function analyzePackage(buffer: ArrayBuffer): Promise<{ info: Packa
         footprint: mesh.footprint,
         height: mesh.height,
         modelColors: info.colors.length,
+      })
+    );
+    issues.push(
+      ...runProfileChecks({
+        settings: info.projectSettings,
+        objects: mesh.objects,
       })
     );
   }

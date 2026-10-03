@@ -74,6 +74,10 @@ describe("runSettingsChecks (C1–C6)", () => {
     expect(byId(runSettingsChecks({ ...base, footprint: 60, settings: { brim_type: "none" } }), "C5").severity).toBe(
       "info"
     );
+    expect(
+      byId(runSettingsChecks({ ...base, footprint: 10, settings: { brim_type: "no_brim", brim_width: "5" } }), "C5")
+        .severity
+    ).toBe("warning");
   });
 
   it("sempre emite C6 como dica", () => {

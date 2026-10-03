@@ -23,6 +23,7 @@ export const SOURCES = {
   bed: `${BAMBU} · estrutura do projeto (256×256 A1/P1/X1, 180×180 A1 mini)`,
   slicedGcode: `${BAMBU} · regra de segurança do G-code embutido`,
   packageStructure: `${BAMBU} + ${PRINT} · references/formats.md`,
+  profiles: `${BAMBU} · Wiki Bambu Studio — parâmetros de processo (perfis)`,
 } as const;
 
 export const RULES = {
@@ -59,6 +60,12 @@ export const RULES = {
   C4_ELEPHANT_FOOT_MM: { value: 0.2, source: SOURCES.elephantFoot },
   /** C5: base pequena precisa de brim para aderência. */
   C5_SMALL_FOOTPRINT_MM: { value: 20, source: SOURCES.bed },
+  /** C7–C16: perfis de processo — limiares de detecção/recomendação. */
+  P_MINIATURE_LAYER_MM: { value: 0.08, source: SOURCES.profiles },
+  P_MINIATURE_MAX_MM: { value: 30, source: SOURCES.profiles },
+  P_LARGE_PLATE_MM: { value: 150, source: SOURCES.profiles },
+  P_SLOW_FIRST_LAYER: { value: 30, source: SOURCES.profiles },
+  P_MIN_GENUS: { value: 1, source: SOURCES.profiles },
   /** M1: snap do weld — 0,1 µm = 1e-4 mm. */
   M1_WELD_SNAP_MM: { value: 1e-4, source: SOURCES.manifold },
   /** M6: profundidade de assentamento em Z=0. */

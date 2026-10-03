@@ -12,7 +12,7 @@ export interface SettingsContext {
 }
 
 /** Lê um número de `project_settings.config` (string, number ou array de uma peça). */
-function num(settings: Record<string, unknown>, key: string, fallback: number): number {
+export function num(settings: Record<string, unknown>, key: string, fallback: number): number {
   const raw = settings[key];
   const value = Array.isArray(raw) ? raw[0] : raw;
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -23,14 +23,14 @@ function num(settings: Record<string, unknown>, key: string, fallback: number): 
   return fallback;
 }
 
-function bool(settings: Record<string, unknown>, key: string): boolean {
+export function bool(settings: Record<string, unknown>, key: string): boolean {
   const raw = settings[key];
   if (typeof raw === "boolean") return raw;
   if (typeof raw === "string") return raw.toLowerCase() === "true" || raw === "1";
   return false;
 }
 
-function str(settings: Record<string, unknown>, key: string, fallback = ""): string {
+export function str(settings: Record<string, unknown>, key: string, fallback = ""): string {
   const raw = settings[key];
   const value = Array.isArray(raw) ? raw[0] : raw;
   return typeof value === "string" ? value : fallback;
@@ -38,6 +38,7 @@ function str(settings: Record<string, unknown>, key: string, fallback = ""): str
 
 function brimEnabled(settings: Record<string, unknown>): boolean {
   const type = str(settings, "brim_type", "none").toLowerCase();
+  if (type === "no_brim" || type === "no brim") return false;
   if (type && type !== "none" && type !== "") return true;
   return num(settings, "brim_width", 0) > 0;
 }

@@ -96,6 +96,8 @@ export interface MeshStats {
   offBed: boolean;
   overhangArea: number;
   overhangRatio: number;
+  /** Gênero topológico (0 = sem furo passante; ≥1 = com furo/túnel). */
+  genus: number;
 }
 
 export type PresetId = "detalhe" | "equilibrado" | "rapido";

@@ -79,6 +79,57 @@ ${triangleLines}
 </model>`;
 }
 
+/** Toro fechado (gênero 1) sobre Z=0 — recomendado pelo perfil C10. */
+export function torusModelXml(major = 20, minor = 6, segMajor = 24, segMinor = 12): string {
+  const vertices: [number, number, number][] = [];
+  for (let i = 0; i < segMajor; i++) {
+    const u = (i / segMajor) * Math.PI * 2;
+    for (let j = 0; j < segMinor; j++) {
+      const v = (j / segMinor) * Math.PI * 2;
+      const ring = major + minor * Math.cos(v);
+      vertices.push([ring * Math.cos(u), ring * Math.sin(u), minor * Math.sin(v) + minor]);
+    }
+  }
+  const triangles: [number, number, number][] = [];
+  const idx = (i: number, j: number) => (i % segMajor) * segMinor + (j % segMinor);
+  for (let i = 0; i < segMajor; i++) {
+    for (let j = 0; j < segMinor; j++) {
+      const a = idx(i, j);
+      const b = idx(i + 1, j);
+      const c = idx(i + 1, j + 1);
+      const d = idx(i, j + 1);
+      triangles.push([a, b, c], [a, c, d]);
+    }
+  }
+
+  const vertexLines = vertices
+    .map(([x, y, z]) => `   <vertex x="${x}" y="${y}" z="${z}"/>`)
+    .join("\n");
+  const triangleLines = triangles
+    .map(([v1, v2, v3]) => `   <triangle v1="${v1}" v2="${v2}" v3="${v3}"/>`)
+    .join("\n");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+ <metadata name="Application">Test Fixture</metadata>
+ <resources>
+  <object id="1" type="model" name="Torus">
+   <mesh>
+    <vertices>
+${vertexLines}
+    </vertices>
+    <triangles>
+${triangleLines}
+    </triangles>
+   </mesh>
+  </object>
+ </resources>
+ <build>
+  <item objectid="1"/>
+ </build>
+</model>`;
+}
+
 function toBuffer(data: Uint8Array): ArrayBuffer {
   return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
 }
@@ -96,6 +147,16 @@ export function makeSimple3mf(options: CubeFixture = {}, extra: Record<string, s
     "_rels/.rels": RELS,
     [CORE_PATH]: cubeModelXml(options),
     "Metadata/thumbnail.png.b64": "iVBORw0KGgo=",
+    ...extra,
+  });
+}
+
+/** 3MF com modelo arbitrário (toro etc.) + entradas extras. */
+export function makeModel3mf(modelXml: string, extra: Record<string, string> = {}): ArrayBuffer {
+  return make3mf({
+    "[Content_Types].xml": CONTENT_TYPES,
+    "_rels/.rels": RELS,
+    [CORE_PATH]: modelXml,
     ...extra,
   });
 }
