@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, Type, BookOpen, KeyRound, FileSearch } from "lucide-react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, Type, BookOpen, KeyRound, FileSearch, Award } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { M2crLogo } from "@/components/M2crLogo";
 import Viewer3D from "./pages/Viewer3D";
@@ -41,6 +41,7 @@ const CakeTopperCreator = lazy(() => import("./pages/CakeTopperCreator"));
 const PencilTopperCreator = lazy(() => import("./pages/PencilTopperCreator"));
 const KeychainCreator = lazy(() => import("./pages/KeychainCreator"));
 const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
+const MedalCreator = lazy(() => import("./pages/MedalCreator"));
 const ThreeMfAnalyzer = lazy(() => import("./pages/ThreeMfAnalyzer"));
 
 const NAV_ITEMS = [
@@ -49,6 +50,7 @@ const NAV_ITEMS = [
   { to: "/viewer3d", icon: BoxSelect, label: "3D Slicer", description: "3D Viewer & Slicer" },
   { to: "/pencil-topper", icon: Pencil, label: "Ponteira de Lápis", description: "Clips 2 Cores p/ Lápis/Caneta" },
   { to: "/chaveiro", icon: KeyRound, label: "Chaveiro com Nome", description: "Nome em relevo + argola" },
+  { to: "/medalha", icon: Award, label: "Medalhas 3D", description: "Texto circular, borda e passador" },
   { to: "/letra-caixa", icon: Type, label: "Letra Caixa 3D", description: "3 Camadas Multicolor" },
   { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
   { to: "/image-to-3d", icon: Image, label: "Image to 3D", description: "Image to 3D Model" },
@@ -209,6 +211,7 @@ export default function App() {
           <Route path="/viewer3d" element={<Viewer3D />} />
           <Route path="/pencil-topper" element={<PencilTopperCreator />} />
           <Route path="/chaveiro" element={<KeychainCreator />} />
+          <Route path="/medalha" element={<MedalCreator />} />
           <Route path="/letra-caixa" element={<LetterBoxCreator />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />
           <Route path="/image-to-3d" element={<ImageTo3D />} />

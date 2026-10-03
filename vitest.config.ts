@@ -16,6 +16,7 @@ export default defineConfig({
       "src/lib/fastener/**/*.test.ts",
       "src/lib/imageTools/**/*.test.ts",
       "src/lib/threeMfAnalyzer/**/*.test.ts",
+      "src/lib/medal/**/*.test.ts",
       "src/hooks/**/*.test.ts",
     ],
     globals: false,
