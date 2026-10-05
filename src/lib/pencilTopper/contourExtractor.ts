@@ -57,37 +57,66 @@ function perpendicularDistance(p: Point2D, lineStart: Point2D, lineEnd: Point2D)
   return Math.abs(dy * p.x - dx * p.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / mag;
 }
 
+/**
+ * Aresta máxima (mm) usada na densificação antes do Chaikin. O corte de canto do
+ * Chaikin é proporcional ao comprimento da aresta (25% dela): sem densificar,
+ * um lado longo de 40 mm virava canto cortado de 10 mm — hexágono/octógono/
+ * escudo saíam deformados e tortos (até 4,3 mm de desvio, pior nos cantos).
+ * Com arestas de no máximo 1 mm, o suavizado só mata o degrau do raster e o
+ * formato se mantém (corte ≤ ~0,3 mm por iteração).
+ */
+const CHAIKIN_MAX_EDGE_MM = 1;
+/** Re-simplificação pós-Chaikin para remover os pontos inseridos na densificação. */
+const CHAIKIN_RESIMPLIFY_MM = 0.05;
+
+function densifyClosed(points: Point2D[], maxEdge: number): Point2D[] {
+  const n = points.length;
+  const out: Point2D[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % n];
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    const steps = Math.max(1, Math.ceil(len / maxEdge));
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps;
+      out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+  }
+  return out;
+}
+
+/**
+ * Suavização Chaikin de um contorno FECHADO: normaliza o ponto final duplicado,
+ * densifica as arestas, aplica o Chaikin como anel (i → i+1 % n) e re-simplifica
+ * para ponto único nas retas. O laço em anel também elimina a assimetria da
+ * versão anterior, que tratava o contorno como polilinha aberta e deixava um
+ * buraco/chorda maior no ponto inicial do traçado.
+ */
 export function chaikinSmooth(points: Point2D[], iterations: number = 2): Point2D[] {
   if (points.length < 3) return points;
-  
-  let result = [...points];
-  
-  for (let iter = 0; iter < iterations; iter++) {
-    const smoothed: Point2D[] = [];
-    
-    for (let i = 0; i < result.length - 1; i++) {
-      const p0 = result[i];
-      const p1 = result[i + 1];
-      
-      smoothed.push({
-        x: p0.x * 0.75 + p1.x * 0.25,
-        y: p0.y * 0.75 + p1.y * 0.25,
-      });
-      smoothed.push({
-        x: p0.x * 0.25 + p1.x * 0.75,
-        y: p0.y * 0.25 + p1.y * 0.75,
-      });
-    }
-    
-    if (result.length > 0 && result[0].x === result[result.length - 1].x && result[0].y === result[result.length - 1].y) {
-      const last = smoothed[smoothed.length - 1];
-      smoothed.push({ x: last.x, y: last.y });
-    }
-    
-    result = smoothed;
+
+  let ring = points;
+  if (ring.length > 1) {
+    const a = ring[0];
+    const b = ring[ring.length - 1];
+    if (Math.abs(a.x - b.x) < 1e-9 && Math.abs(a.y - b.y) < 1e-9) ring = ring.slice(0, -1);
   }
-  
-  return result;
+  if (ring.length < 3) return ring;
+
+  let cur = densifyClosed(ring, CHAIKIN_MAX_EDGE_MM);
+  for (let iter = 0; iter < iterations; iter++) {
+    const n = cur.length;
+    const next: Point2D[] = new Array(n * 2);
+    for (let i = 0; i < n; i++) {
+      const p = cur[i];
+      const q = cur[(i + 1) % n];
+      next[2 * i] = { x: p.x * 0.75 + q.x * 0.25, y: p.y * 0.75 + q.y * 0.25 };
+      next[2 * i + 1] = { x: p.x * 0.25 + q.x * 0.75, y: p.y * 0.25 + q.y * 0.75 };
+    }
+    cur = next;
+  }
+  const simplified = simplifyPolygon(cur, CHAIKIN_RESIMPLIFY_MM);
+  return simplified.length >= 3 ? simplified : cur;
 }
 
 export function polygonArea(points: Point2D[]): number {
