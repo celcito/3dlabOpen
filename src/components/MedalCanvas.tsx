@@ -19,6 +19,7 @@ const SHAPE_LABELS: Record<MedalConfig['bodyShape'], string> = {
 const HANDLE_LABELS: Record<MedalConfig['handleMode'], string> = {
   passante: 'Passante',
   'furo-redondo': 'Furo redondo',
+  fita: 'Fita retangular',
   nenhuma: 'Sem alça',
 };
 

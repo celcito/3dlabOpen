@@ -43,7 +43,7 @@ function readBodyShape(value: unknown): MedalConfig['bodyShape'] {
 }
 
 function readHandleMode(value: unknown): MedalConfig['handleMode'] {
-  return value === 'furo-redondo' || value === 'nenhuma' ? value : 'passante';
+  return value === 'furo-redondo' || value === 'fita' || value === 'nenhuma' ? value : 'passante';
 }
 
 function readRimCoverage(value: unknown): MedalConfig['rimCoverage'] {

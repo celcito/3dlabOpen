@@ -26,20 +26,16 @@ const HANDLE_MIN_OVERLAP_MM = 2;
 const HANDLE_MIN_WALL = 1.2;
 /** Reforço (pescoço) da alça sobre o corpo — AC MED-004.7. */
 const GUSSET_FLARE = 1.3;
-/** Folga do reforço até o contorno do corpo. */
+/** Folga do reforço até o contorno do corpo (clamp de largura na base). */
 const GUSSET_EDGE_MARGIN_MM = 0.5;
 /**
- * Ponto de controle vertical do flanco (0 = topo, 1 = base). Define o ângulo de
- * chegada na base do reforço: muito perto de 1 a curva fica tangente à base e a
- * ponta do canto é perdida no raster/contorno.
- */
-const GUSSET_CTRL_FRAC = 0.3;
-/**
- * Raio de filete nos cantos inferiores do reforço: um canto vivo ali vira uma
- * cunha finíssima que o raster descarta e o contorno arredonda (perda de ~3 mm
- * na largura útil e desalinhamento com o recorte da base).
+ * Raio de filete nos cantos inferiores do reforço: o encontro com a borda vira
+ * um canto de ~120° que desce para o patch interior; sem esse raio a união
+ * rasterizada perde a ponta que toca o contorno (cantos vivos finos somem).
  */
 const GUSSET_FILLET_MM = 3;
+/** Ombro radial da aba retangular além da fenda (moldura da fenda). */
+const FITA_SHOULDER_MM = 4;
 const PAD_MM = 5;
 const MAX_ARC_SPAN_RAD = (150 * Math.PI) / 180;
 const MIN_ARC_FONT_MM = 2.5;
@@ -52,6 +48,8 @@ interface PointMm {
 
 export interface HandleLayout {
   outerR: number;
+  /** Meia-largura tangencial da alça (= outerR nos modos redondos). */
+  outerT: number;
   slotW: number;
   slotH: number;
   holeR: number;
@@ -60,7 +58,7 @@ export interface HandleLayout {
   cy: number;
   /** Menor distância da origem até a pegada da alça. */
   innerRadius: number;
-  /** Reforço (pescoço) trapezoidal da alça dentro do corpo, em mm. */
+  /** Reforço (pescoço) da alça dentro do corpo, em mm. */
   gusset: GussetLayout;
 }
 
@@ -70,6 +68,11 @@ export interface GussetLayout {
   yBot: number;
   wTop: number;
   wBot: number;
+  /** Altura do apoio do pescoço na borda do corpo (ponto de encontro). */
+  yEdge: number;
+  /** Direção da borda do corpo no apoio, apontando para baixo. */
+  edgeDx: number;
+  edgeDy: number;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -208,8 +211,41 @@ function bodyHalfWidthAt(pts: PointMm[], y: number): number {
 }
 
 /**
- * Reforço entre alça e corpo (AC MED-004.7): pescoço trapezoidal que nasce no
- * diâmetro da alça (tangente ao círculo) e alarga até o fundo da pegada.
+ * Apoio do pescoço na borda superior do corpo em x = x0: altura do cruzamento
+ * mais alto e direção da borda ali, apontando para baixo (afastando do topo).
+ * É essa direção que o flanco do reforço deve receber ao chegar — sem ela o
+ * encontro com o contorno vira um vinco visível.
+ */
+function bodyEdgeAtX(pts: PointMm[], x0: number): { y: number; dx: number; dy: number } {
+  let bestY = -Infinity;
+  let dx = 1;
+  let dy = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    if ((a.x >= x0) === (b.x >= x0)) continue;
+    const t = (x0 - a.x) / (b.x - a.x);
+    const y = a.y + t * (b.y - a.y);
+    if (y <= bestY) continue;
+    bestY = y;
+    let ex = b.x - a.x;
+    let ey = b.y - a.y;
+    if (ey > 0 || (ey === 0 && ex < 0)) {
+      ex = -ex;
+      ey = -ey;
+    }
+    dx = ex;
+    dy = ey;
+  }
+  if (!Number.isFinite(bestY)) return { y: NaN, dx: 1, dy: 0 };
+  return { y: bestY, dx, dy };
+}
+
+/**
+ * Reforço entre alça e corpo (AC MED-004.7): pescoço que nasce no diâmetro da
+ * alça (tangente ao círculo) e encontra o contorno do corpo na largura alargada
+ * — a tangente de chegada é a da própria borda, então o encontro é contínuo
+ * (sem vinco), como no reforço da argola de referência.
  * `yBot` = fundo do círculo → `innerRadius` intacto (texto de arco superior não muda).
  */
 function computeGussetLayout(bodyPts: PointMm[], cy: number, outerR: number): GussetLayout {
@@ -218,7 +254,23 @@ function computeGussetLayout(bodyPts: PointMm[], cy: number, outerR: number): Gu
   const wTop = outerR;
   const edge = bodyHalfWidthAt(bodyPts, yBot);
   const wBot = Math.max(wTop, Math.min(outerR * GUSSET_FLARE, edge - GUSSET_EDGE_MARGIN_MM));
-  return { yTop, yBot, wTop, wBot };
+  const junction = bodyEdgeAtX(bodyPts, wBot);
+  const yEdge = Number.isFinite(junction.y) ? Math.max(junction.y, yBot) : yBot;
+  const onBody = Number.isFinite(junction.y) && junction.y >= yBot;
+  return {
+    yTop,
+    yBot,
+    wTop,
+    wBot,
+    yEdge,
+    edgeDx: onBody && junction.dx > 1e-6 ? junction.dx : 1,
+    edgeDy: onBody ? junction.dy : 0,
+  };
+}
+
+/** Reforço vazio — a aba retangular entra no corpo na largura toda, sem pescoço. */
+function emptyGusset(cy: number, outerR: number): GussetLayout {
+  return { yTop: cy, yBot: cy - outerR, wTop: 0, wBot: 0, yEdge: cy - outerR, edgeDx: 1, edgeDy: 0 };
 }
 
 export function computeHandleLayout(
@@ -231,6 +283,7 @@ export function computeHandleLayout(
 
   const wall = Math.max(HANDLE_MIN_WALL, config.handleWall);
   let outerR: number;
+  let outerT = 0;
   let slotW = 0;
   let slotH = 0;
   let holeR = 0;
@@ -239,6 +292,13 @@ export function computeHandleLayout(
     slotW = config.ribbonWidth;
     slotH = config.slotHeight;
     outerR = Math.max(slotW, slotH) / 2 + wall;
+  } else if (config.handleMode === 'fita') {
+    slotW = config.ribbonWidth;
+    slotH = config.slotHeight;
+    // aba retangular: largura tangencial = fenda + parede; profundidade radial
+    // = fenda + parede + ombro (moldura como na referência da nova fita)
+    outerR = slotH / 2 + wall + FITA_SHOULDER_MM;
+    outerT = slotW / 2 + wall;
   } else {
     holeR = config.holeDiameter / 2;
     outerR = holeR + wall;
@@ -257,20 +317,27 @@ export function computeHandleLayout(
       slotW = Math.max(2, slotW * scale);
       slotH = Math.max(1, slotH * scale);
     }
+  } else if (config.handleMode === 'fita') {
+    slotH = Math.max(1, Math.min(slotH, 2 * (outerR - HANDLE_MIN_WALL)));
   } else {
     holeR = Math.max(1, Math.min(holeR, outerR - HANDLE_MIN_WALL));
   }
+  if (outerT <= 0) outerT = outerR;
 
   const cy = bodyTopY + (1 - HANDLE_OVERLAP) * outerR;
   return {
     outerR,
+    outerT,
     slotW,
     slotH,
     holeR,
     mode: config.handleMode,
     cy,
     innerRadius: Math.max(1, cy - outerR),
-    gusset: computeGussetLayout(bodyPts, cy, outerR),
+    gusset:
+      config.handleMode === 'fita'
+        ? emptyGusset(cy, outerR)
+        : computeGussetLayout(bodyPts, cy, outerR),
   };
 }
 
@@ -295,26 +362,57 @@ function handleCanvasPoint(cx: number, cy: number, handle: HandleLayout): { x: n
 
 /**
  * Path do reforço (pescoço) em coordenadas de canvas, ancorado no centro da alça.
- * Lados nascem verticais (tangentes ao círculo), terminam em cantos filetados
- * (raio GUSSET_FILLET_MM) e a base é horizontal.
+ * Os flancos nascem verticais (tangentes ao círculo da alça) e chegam à borda do
+ * corpo na direção da própria borda — encontro contínuo, sem vinco. Do apoio, um
+ * filete desce para o patch interior (íntegro dentro do corpo): ele dá ângulo
+ * gordo no ponto de maior x, que o raster senão descarta.
  */
 function gussetPath(ctx: CanvasRenderingContext2D, center: { x: number; y: number }, handle: HandleLayout): void {
   const g = handle.gusset;
+  if (g.wTop <= 0) return;
   const X = (x: number) => center.x + x * pxPerMm;
   const Y = (y: number) => center.y - (y - handle.cy) * pxPerMm;
-  const fillet = Math.min(GUSSET_FILLET_MM, g.wBot * 0.5);
+  const flare = g.wBot - g.wTop;
+  // controle: x em ±wTop (tangente vertical no topo), y pela direção da borda
+  // (tangente de chegada = direção da borda; escala do segmento é irrelevante)
+  const blend = g.edgeDx > 1e-6 && flare > 0.05;
+  const ctrlY = blend ? g.yEdge - (flare * g.edgeDy) / g.edgeDx : g.yEdge;
+  const fillet = Math.min(GUSSET_FILLET_MM, g.wBot * 0.5, Math.max(0, g.yEdge - g.yBot));
   const yEnd = g.yBot + fillet;
-  const ctrl = g.yTop + (yEnd - g.yTop) * GUSSET_CTRL_FRAC;
   const top = Y(g.yTop);
-  const bot = Y(g.yBot);
+  const edgeY = Y(g.yEdge);
   ctx.moveTo(X(-g.wTop), top);
   ctx.lineTo(X(g.wTop), top);
-  ctx.quadraticCurveTo(X(g.wTop), Y(ctrl), X(g.wBot), Y(yEnd));
-  ctx.quadraticCurveTo(X(g.wBot), bot, X(g.wBot - fillet), bot);
-  ctx.lineTo(X(-(g.wBot - fillet)), bot);
-  ctx.quadraticCurveTo(X(-g.wBot), bot, X(-g.wBot), Y(yEnd));
-  ctx.quadraticCurveTo(X(-g.wTop), Y(ctrl), X(-g.wTop), top);
+  if (blend) ctx.quadraticCurveTo(X(g.wTop), Y(ctrlY), X(g.wBot), edgeY);
+  else ctx.lineTo(X(g.wBot), edgeY);
+  ctx.lineTo(X(g.wBot), Y(yEnd));
+  ctx.quadraticCurveTo(X(g.wBot), Y(g.yBot), X(g.wBot - fillet), Y(g.yBot));
+  ctx.lineTo(X(-(g.wBot - fillet)), Y(g.yBot));
+  ctx.quadraticCurveTo(X(-g.wBot), Y(g.yBot), X(-g.wBot), Y(yEnd));
+  ctx.lineTo(X(-g.wBot), edgeY);
+  if (blend) ctx.quadraticCurveTo(X(-g.wTop), Y(ctrlY), X(-g.wTop), top);
+  else ctx.lineTo(X(-g.wTop), top);
   ctx.closePath();
+}
+
+/**
+ * Contorno externo da alça (inset ≥ 0 para filetes): círculo nos modos redondos,
+ * retângulo arredondado na aba de fita.
+ */
+function handleOuterPath(
+  ctx: CanvasRenderingContext2D,
+  center: { x: number; y: number },
+  handle: HandleLayout,
+  insetPx = 0
+): void {
+  if (handle.mode === 'fita') {
+    const w = handle.outerT * 2 * pxPerMm;
+    const h = handle.outerR * 2 * pxPerMm;
+    const r = Math.max(0.1, Math.min(w, h) * 0.3 - insetPx);
+    ctx.roundRect(center.x - w / 2 + insetPx, center.y - h / 2 + insetPx, w - 2 * insetPx, h - 2 * insetPx, r);
+  } else {
+    ctx.arc(center.x, center.y, handle.outerR * pxPerMm - insetPx, 0, TAU);
+  }
 }
 
 function eraseHandleFootprint(ctx: CanvasRenderingContext2D, cx: number, cy: number, handle: HandleLayout | null): void {
@@ -324,10 +422,21 @@ function eraseHandleFootprint(ctx: CanvasRenderingContext2D, cx: number, cy: num
   ctx.globalCompositeOperation = 'destination-out';
   ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.arc(p.x, p.y, handle.outerR * pxPerMm, 0, TAU);
+  handleOuterPath(ctx, p, handle);
   gussetPath(ctx, p, handle);
   ctx.fill();
   ctx.restore();
+}
+
+/** Caminho da abertura (furo/fenda) em coordenadas de canvas. */
+function handleSlotPath(ctx: CanvasRenderingContext2D, center: { x: number; y: number }, handle: HandleLayout): void {
+  if (handle.mode === 'furo-redondo') {
+    ctx.arc(center.x, center.y, handle.holeR * pxPerMm, 0, TAU);
+  } else {
+    const w = handle.slotW * pxPerMm;
+    const h = handle.slotH * pxPerMm;
+    ctx.roundRect(center.x - w / 2, center.y - h / 2, w, h, Math.min(h, w) * 0.35);
+  }
 }
 
 function punchHandleOpening(ctx: CanvasRenderingContext2D, cx: number, cy: number, handle: HandleLayout): void {
@@ -336,13 +445,7 @@ function punchHandleOpening(ctx: CanvasRenderingContext2D, cx: number, cy: numbe
   ctx.globalCompositeOperation = 'destination-out';
   ctx.fillStyle = '#000000';
   ctx.beginPath();
-  if (handle.mode === 'furo-redondo') {
-    ctx.arc(p.x, p.y, handle.holeR * pxPerMm, 0, TAU);
-  } else {
-    const w = handle.slotW * pxPerMm;
-    const h = handle.slotH * pxPerMm;
-    ctx.roundRect(p.x - w / 2, p.y - h / 2, w, h, Math.min(h, w) * 0.35);
-  }
+  handleSlotPath(ctx, p, handle);
   ctx.fill();
   ctx.restore();
 }
@@ -583,7 +686,7 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
   base.ctx.fill();
   eraseHandleFootprint(base.ctx, cx, cy, handle);
   const baseImg = base.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-  const baseShapes = shapesFrom(baseImg, 0.2);
+  const baseShapes = shapesFrom(baseImg, 0.05);
 
   // --- 2) alça: pegada cheia − abertura ------------------------------------
   const handleCtx = makeCanvas(canvasWidth, canvasHeight).ctx;
@@ -592,14 +695,14 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
     const p = handleCanvasPoint(cx, cy, handle);
     handleCtx.fillStyle = '#000000';
     handleCtx.beginPath();
-    handleCtx.arc(p.x, p.y, handle.outerR * pxPerMm, 0, TAU);
+    handleOuterPath(handleCtx, p, handle);
     handleCtx.fill();
     handleCtx.beginPath();
     gussetPath(handleCtx, p, handle);
     handleCtx.fill();
     punchHandleOpening(handleCtx, cx, cy, handle);
     const handleImg = handleCtx.getImageData(0, 0, canvasWidth, canvasHeight);
-    handleShapes = shapesFrom(handleImg, 0.2);
+    handleShapes = shapesFrom(handleImg, 0.05);
   }
   const handleImg = handleCtx.getImageData(0, 0, canvasWidth, canvasHeight);
 
@@ -614,6 +717,10 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
     rimCtx.lineJoin = 'round';
     rimCtx.stroke();
     rimCtx.restore();
+    // O anel é apagado sob a pegada da alça em TODOS os modos (senão o relevo
+    // empilha/intersecciona o volume da alça quando as espessuras divergem).
+    // A continuação do anel dentro da pegada é desenhada no relevo da alça,
+    // abaixo — ali o relevo nasce no topo da alça e o miolo continua protegido.
     eraseHandleFootprint(rimCtx, cx, cy, handle);
   }
   const rimImg = rimCtx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -623,17 +730,15 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
   const wantsHandleRim = !!handle && rimWidthMm > 0 && rimHeightMm > 0 && config.rimCoverage === 'geral';
   if (handle && wantsHandleRim) {
     const p = handleCanvasPoint(cx, cy, handle);
-    const outerPx = handle.outerR * pxPerMm;
-    const innerLimitPx =
+    const wallMm =
       handle.mode === 'furo-redondo'
-        ? handle.holeR * pxPerMm
-        : (Math.max(handle.slotW, handle.slotH) * pxPerMm) / 2;
-    const wallMm = (outerPx - innerLimitPx) / pxPerMm;
+        ? handle.outerR - handle.holeR
+        : Math.min(handle.outerT - handle.slotW / 2, handle.outerR - handle.slotH / 2);
     const bandMm = Math.max(0.4, Math.min(rimWidthMm, Math.max(0.4, wallMm / 3)));
 
     handleRimCtx.save();
     handleRimCtx.beginPath();
-    handleRimCtx.arc(p.x, p.y, outerPx, 0, TAU);
+    handleOuterPath(handleRimCtx, p, handle);
     handleRimCtx.clip();
     handleRimCtx.fillStyle = '#000000';
     handleRimCtx.strokeStyle = '#000000';
@@ -641,25 +746,59 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
 
     if (config.rimHandleStyle === 'contorno') {
       handleRimCtx.beginPath();
-      handleRimCtx.arc(p.x, p.y, outerPx - handleRimCtx.lineWidth / 2, 0, TAU);
+      handleOuterPath(handleRimCtx, p, handle, handleRimCtx.lineWidth / 2);
       handleRimCtx.stroke();
     } else if (config.rimHandleStyle === 'macica') {
+      // Preenchida: a almofada inteira (contorno → vão) em relevo, como na
+      // referência. O destination-out do miolo deixava só a faixa da borda —
+      // idêntico ao contorno. O vão é furado por punchHandleOpening abaixo.
       handleRimCtx.beginPath();
-      handleRimCtx.arc(p.x, p.y, outerPx, 0, TAU);
+      handleOuterPath(handleRimCtx, p, handle);
       handleRimCtx.fill();
-      handleRimCtx.globalCompositeOperation = 'destination-out';
-      handleRimCtx.beginPath();
-      handleRimCtx.arc(p.x, p.y, outerPx - handleRimCtx.lineWidth, 0, TAU);
-      handleRimCtx.fill();
-      handleRimCtx.globalCompositeOperation = 'source-over';
     } else {
+      // canal-duplo: anel externo na borda da alça
       handleRimCtx.beginPath();
-      handleRimCtx.arc(p.x, p.y, outerPx - handleRimCtx.lineWidth / 2, 0, TAU);
+      handleOuterPath(handleRimCtx, p, handle, handleRimCtx.lineWidth / 2);
       handleRimCtx.stroke();
+      // anel interno: na fita, colado na fenda (moldura da referência);
+      // nos demais modos, recuado da borda externa
       handleRimCtx.beginPath();
-      handleRimCtx.arc(p.x, p.y, outerPx - handleRimCtx.lineWidth * 2.5, 0, TAU);
+      if (handle.mode === 'fita') handleSlotPath(handleRimCtx, p, handle);
+      else handleOuterPath(handleRimCtx, p, handle, handleRimCtx.lineWidth * 2.5);
       handleRimCtx.stroke();
     }
+    handleRimCtx.restore();
+    if (handle.mode === 'fita') {
+      // Bandas da aba só fora do corpo: dentro do disco o retângulo riscado
+      // (e o miolo da parede) seria desenhado sobre a face redonda. A borda
+      // circular e a moldura da aba se encontram exatamente nos pontos de
+      // cruzamento, sem degrau nem cantos retos na volta.
+      handleRimCtx.save();
+      handleRimCtx.globalCompositeOperation = 'destination-out';
+      polygonPath(handleRimCtx, bodyPts, cx, cy);
+      handleRimCtx.fill();
+      handleRimCtx.restore();
+    }
+    // Continuação do anel circular dentro da pegada: recorta o mesmo filete do
+    // rim (corpo ∩ pegada) e o redesenha sobre o relevo da alça. O anel fica
+    // completo em todos os modos (fita, passante, furo-redondo), exatamente nos
+    // pontos de encontro com as bandas, sem degrau — e sem empilhar volume
+    // sobre a alça, porque este relevo já nasce em handleThicknessZ.
+    // A pegada é círculo ∪ pescoço: sem o pescoço no clip, o furo redondo (alça
+    // pequena + reforço largo) deixava dois vãos de ~3,4 mm no anel da borda.
+    handleRimCtx.save();
+    handleRimCtx.beginPath();
+    handleOuterPath(handleRimCtx, p, handle);
+    gussetPath(handleRimCtx, p, handle);
+    handleRimCtx.clip();
+    polygonPath(handleRimCtx, bodyPts, cx, cy);
+    handleRimCtx.clip();
+    handleRimCtx.beginPath();
+    appendPolygonPath(handleRimCtx, bodyPts, cx, cy);
+    handleRimCtx.strokeStyle = '#000000';
+    handleRimCtx.lineWidth = rimWidthMm * 2 * pxPerMm;
+    handleRimCtx.lineJoin = 'round';
+    handleRimCtx.stroke();
     handleRimCtx.restore();
     punchHandleOpening(handleRimCtx, cx, cy, handle);
   }
@@ -759,7 +898,7 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
   eraseHandleFootprint(decorCtx, cx, cy, handle);
 
   const decorFinalImg = decorCtx.getImageData(0, 0, canvasWidth, canvasHeight);
-  const decorShapes = shapesFrom(decorFinalImg, 0.15);
+  const decorShapes = shapesFrom(decorFinalImg, 0.05);
 
   // --- 6) extrudes ---------------------------------------------------------
   const safeBaseShapes = baseShapes.length > 0 ? baseShapes : decorShapes;
@@ -767,12 +906,12 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
   const handleGeom = handle && handleShapes.length > 0 ? extrude(handleShapes, config.handleThicknessZ, 0) : null;
 
   const reliefParts: THREE.BufferGeometry[] = [];
-  const rimGeom = extrude(shapesFrom(rimImg, 0.2), rimHeightMm, config.baseThickness);
+  const rimGeom = extrude(shapesFrom(rimImg, 0.05), rimHeightMm, config.baseThickness);
   if (rimGeom) reliefParts.push(rimGeom);
   const decorGeom = extrude(decorShapes, decorHeightMm, config.baseThickness);
   if (decorGeom) reliefParts.push(decorGeom);
   if (wantsHandleRim) {
-    const handleRimGeom = extrude(shapesFrom(handleRimImg, 0.2), rimHeightMm, config.handleThicknessZ);
+    const handleRimGeom = extrude(shapesFrom(handleRimImg, 0.05), rimHeightMm, config.handleThicknessZ);
     if (handleRimGeom) reliefParts.push(handleRimGeom);
   }
 

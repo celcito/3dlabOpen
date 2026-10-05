@@ -66,7 +66,23 @@ const SHAPE_LABELS: Record<MedalConfig['bodyShape'], string> = {
 const HANDLE_LABELS: Record<MedalConfig['handleMode'], string> = {
   passante: 'Passante',
   'furo-redondo': 'Furo Redondo',
+  fita: 'Fita Retangular',
   nenhuma: 'Sem Alça',
+};
+
+const HANDLE_RIM_STYLES: Record<MedalConfig['rimHandleStyle'], { sub: string; help: string }> = {
+  'canal-duplo': {
+    sub: 'Estilo da Foto',
+    help: 'A moldura contorna a alça e o vão da fita na cor da borda, deixando o canal central na cor da base.',
+  },
+  macica: {
+    sub: 'Preenchida',
+    help: 'Toda a almofada da alça preenchida na cor da borda, do contorno até o vão.',
+  },
+  contorno: {
+    sub: 'Só Externo',
+    help: 'Só o filete externo da alça na cor da borda.',
+  },
 };
 
 export const MedalControls: React.FC<MedalControlsProps> = ({
@@ -82,8 +98,18 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
       ...config,
       backgroundColor: palette.backgroundColor,
       rimColor: palette.rimColor,
-      handleColor: palette.handleColor,
+      handleColor: config.handleMode === 'fita' ? palette.backgroundColor : palette.handleColor,
     });
+  };
+
+  // fita nasce com campo na cor do corpo (referência); demais modos, sincronizados com a borda
+  const handleSelectMode = (mode: MedalConfig['handleMode']) => {
+    if (mode === config.handleMode) return;
+    onChange(
+      mode === 'fita'
+        ? { ...config, handleMode: mode, handleColorSync: false, handleColor: config.backgroundColor }
+        : { ...config, handleMode: mode, handleColorSync: true }
+    );
   };
 
   const showHandleRimStyle = config.rimEnabled && config.rimCoverage === 'geral' && config.handleMode !== 'nenhuma';
@@ -393,7 +419,7 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
             />
 
             <div className="space-y-1.5">
-              <label className="text-[9px] uppercase font-bold text-zinc-600 block">Abrangência</label>
+              <label className="text-[9px] uppercase font-bold text-zinc-600 block">Abrangência da Borda</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -404,7 +430,10 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
                       : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
                   }`}
                 >
-                  Apenas no Disco
+                  <span className="block">Apenas no Disco</span>
+                  <span className="block mt-1 text-[8px] font-bold normal-case tracking-normal opacity-70">
+                    Borda clássica ao redor do corpo
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -415,7 +444,10 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
                       : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
                   }`}
                 >
-                  Borda Geral (+ Alça)
+                  <span className="block">Borda Geral (Corpo + Alça)</span>
+                  <span className="block mt-1 text-[8px] font-bold normal-case tracking-normal opacity-70">
+                    Contorno na alça estilo esportivo
+                  </span>
                 </button>
               </div>
             </div>
@@ -435,7 +467,10 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
                         : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
                     }`}
                   >
-                    Canal Duplo
+                    <span className="block">Canal Duplo</span>
+                    <span className="block mt-1 text-[8px] font-bold normal-case tracking-normal opacity-70">
+                      {HANDLE_RIM_STYLES['canal-duplo'].sub}
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -446,7 +481,10 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
                         : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
                     }`}
                   >
-                    Maciça
+                    <span className="block">Maciça</span>
+                    <span className="block mt-1 text-[8px] font-bold normal-case tracking-normal opacity-70">
+                      {HANDLE_RIM_STYLES.macica.sub}
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -457,9 +495,15 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
                         : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
                     }`}
                   >
-                    Contorno
+                    <span className="block">Contorno</span>
+                    <span className="block mt-1 text-[8px] font-bold normal-case tracking-normal opacity-70">
+                      {HANDLE_RIM_STYLES.contorno.sub}
+                    </span>
                   </button>
                 </div>
+                <p className="text-[9px] leading-snug text-[var(--on-surface-variant)]">
+                  {HANDLE_RIM_STYLES[config.rimHandleStyle].help}
+                </p>
               </div>
             )}
           </>
@@ -472,12 +516,12 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
           04. Passador de Fita
         </SectionTitle>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {(Object.keys(HANDLE_LABELS) as MedalConfig['handleMode'][]).map((mode) => (
             <button
               key={mode}
               type="button"
-              onClick={() => onChange({ ...config, handleMode: mode })}
+              onClick={() => handleSelectMode(mode)}
               className={`py-2.5 rounded-lg border text-[9px] font-black uppercase tracking-wide transition-all ${
                 config.handleMode === mode
                   ? 'border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10'
@@ -489,7 +533,7 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
           ))}
         </div>
 
-        {config.handleMode === 'passante' && (
+        {(config.handleMode === 'passante' || config.handleMode === 'fita') && (
           <>
             <div className="space-y-1.5">
               <label className="text-[9px] uppercase font-bold text-zinc-600 block">Vão para a Fita</label>

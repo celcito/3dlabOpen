@@ -1,7 +1,7 @@
 export type { Model3DDimensions } from './pencilTopper';
 
 export type MedalBodyShape = 'redonda' | 'hexagonal' | 'octogonal' | 'escudo';
-export type HandleMode = 'passante' | 'furo-redondo' | 'nenhuma';
+export type HandleMode = 'passante' | 'furo-redondo' | 'fita' | 'nenhuma';
 export type RimCoverage = 'disco' | 'geral';
 export type RimHandleStyle = 'canal-duplo' | 'macica' | 'contorno';
 
