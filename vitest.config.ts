@@ -17,6 +17,7 @@ export default defineConfig({
       "src/lib/imageTools/**/*.test.ts",
       "src/lib/threeMfAnalyzer/**/*.test.ts",
       "src/lib/medal/**/*.test.ts",
+      "src/lib/pencilPersonal/**/*.test.ts",
       "src/hooks/**/*.test.ts",
     ],
     globals: false,

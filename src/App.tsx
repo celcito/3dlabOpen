@@ -43,12 +43,14 @@ const KeychainCreator = lazy(() => import("./pages/KeychainCreator"));
 const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
 const MedalCreator = lazy(() => import("./pages/MedalCreator"));
 const ThreeMfAnalyzer = lazy(() => import("./pages/ThreeMfAnalyzer"));
+const PencilPersonalizer = lazy(() => import("./pages/PencilPersonalizer"));
 
 const NAV_ITEMS = [
   { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
   { to: "/analisador-3mf", icon: FileSearch, label: "Analisador 3MF", description: "Auditar malha, unidade e configuração" },
   { to: "/viewer3d", icon: BoxSelect, label: "3D Slicer", description: "3D Viewer & Slicer" },
   { to: "/pencil-topper", icon: Pencil, label: "Ponteira de Lápis", description: "Clips 2 Cores p/ Lápis/Caneta" },
+  { to: "/personalizar-lapis", icon: PenTool, label: "Personalizar Lápis", description: "Nome gravado na face hexagonal" },
   { to: "/chaveiro", icon: KeyRound, label: "Chaveiro com Nome", description: "Nome em relevo + argola" },
   { to: "/medalha", icon: Award, label: "Medalhas 3D", description: "Texto circular, borda e passador" },
   { to: "/letra-caixa", icon: Type, label: "Letra Caixa 3D", description: "3 Camadas Multicolor" },
@@ -210,6 +212,7 @@ export default function App() {
           <Route path="/keycap-customizer" element={<KeycapCustomizer />} />
           <Route path="/viewer3d" element={<Viewer3D />} />
           <Route path="/pencil-topper" element={<PencilTopperCreator />} />
+          <Route path="/personalizar-lapis" element={<PencilPersonalizer />} />
           <Route path="/chaveiro" element={<KeychainCreator />} />
           <Route path="/medalha" element={<MedalCreator />} />
           <Route path="/letra-caixa" element={<LetterBoxCreator />} />
