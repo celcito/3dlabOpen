@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import path from 'node:path';
 import * as THREE from 'three';
-import { generatePencilPersonal, measureWallThickness, faceNormal } from '../geometry';
+import { buildTextShapes, generatePencilPersonal, measureWallThickness, faceNormal } from '../geometry';
 import { setManifoldWasmUrl } from '../../split3mf/engines/manifoldLoader';
-import { DEFAULT_PENCIL_PERSONAL_CONFIG, MAX_DEPTH } from '../presets';
+import { DEFAULT_PENCIL_PERSONAL_CONFIG, LETTER_RELIEF, MAX_DEPTH } from '../presets';
 import { loadModelOnce } from './helpers';
 import type { PencilPersonalConfig } from '../../../types/pencilPersonal';
 
@@ -51,16 +51,25 @@ describe('measureWallThickness', () => {
 });
 
 describe('faceNormal', () => {
-  it('gera as 6 normais a 60° no plano XZ', () => {
+  it('gera as 6 normais a 60° no plano XY (eixo do corpo em Z)', () => {
     const normals = [1, 2, 3, 4, 5, 6].map((f) => faceNormal(f as 1));
-    expect(normals[0].y).toBe(0);
-    expect(normals[0].x).toBeCloseTo(0.5, 5);
-    expect(normals[0].z).toBeCloseTo(Math.sqrt(3) / 2, 5);
+    expect(normals[2].x).toBeCloseTo(1, 5);
+    expect(normals[2].y).toBeCloseTo(0, 5);
+    expect(normals[2].z).toBe(0);
     for (const normal of normals) {
       expect(normal.length()).toBeCloseTo(1, 6);
-      expect(Math.abs(normal.y)).toBe(0);
+      expect(normal.z).toBe(0);
     }
   });
+});
+
+describe('buildTextShapes', () => {
+  it('gera contorno denso, sem facetas grossas nas curvas', async () => {
+    const shapes = await buildTextShapes(config({ text: 'Nome', letterSpacing: 1 }));
+    const points = shapes.shapes.reduce((n, s) => n + s.getPoints(1).length, 0);
+    expect(points).toBeGreaterThan(250);
+    expect(shapes.shapes.length).toBeGreaterThan(1);
+  }, 60000);
 });
 
 describe('generatePencilPersonal', () => {
@@ -77,10 +86,14 @@ describe('generatePencilPersonal', () => {
       generated.letters.getAttribute('position') as THREE.BufferAttribute
     );
     const size = letterBox.getSize(new THREE.Vector3());
-    expect(size.z).toBeCloseTo(generated.clampedDepth - 0.2, 3);
+    expect(size.z).toBeCloseTo(generated.clampedDepth + LETTER_RELIEF, 3);
+    expect(size.z).toBeGreaterThan(generated.clampedDepth);
     expect(size.z).toBeGreaterThanOrEqual(0.4);
     expect(size.x).toBeGreaterThan(0);
     expect(letterBox.min.z).toBeCloseTo(0, 5);
+
+    expect(generated.engraveRangeMin).toBeCloseTo(2.054931640625, 4);
+    expect(generated.engraveRangeMax).toBeCloseTo(117.054931640625, 4);
   }, 120000);
 
   it('clampa a profundidade pela espessura da parede', async () => {

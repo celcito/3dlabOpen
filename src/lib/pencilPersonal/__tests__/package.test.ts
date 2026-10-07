@@ -4,41 +4,53 @@ import { loadPencilPackage, transformMatrix } from '../package';
 import { loadModelOnce } from './helpers';
 
 describe('loadPencilPackage', () => {
-  it('extrai as 6 peças, o corpo e os transforms do pacote real', async () => {
+  it('extrai as 5 peças, o corpo e os transforms do pacote real', async () => {
     const pkg = await loadModelOnce();
 
-    expect(pkg.parts).toHaveLength(6);
-    expect(pkg.bodyPart.name).toBe('Pencil_Main_Body.stl');
-    expect(pkg.bodyObjectId).toBe(8);
+    expect(pkg.parts).toHaveLength(5);
+    expect(pkg.bodyPart.name).toBe('Pencil_corpo_hexagonal_encaixe_reto.stl');
+    expect(pkg.bodyObjectId).toBe(11);
     expect(pkg.bodyPart.extruder).toBe(1);
+    expect(pkg.bodyPart.meshPath).toBe('3D/Objects/object_40.model');
+    expect(pkg.bodyPart.meshObjectId).toBe(9);
+
+    const names = pkg.parts.map((part) => part.name);
+    expect(names).toEqual([
+      'Pencil_Eraser.stl',
+      'Pencil_TIP_Body.stl',
+      'Pencil_Graphite.stl',
+      'Pencil_base_rosca_macho_reto.stl',
+      'Pencil_corpo_hexagonal_encaixe_reto.stl',
+    ]);
 
     const indices = pkg.bodyPart.geometry.getIndex();
-    expect(indices?.count).toBe(14740 * 3);
+    expect(indices?.count).toBe(5256 * 3);
   }, 60000);
 
-  it('lê o bbox do corpo (46,19 × 152,11 × 46,19) e os 5 filamentos', async () => {
+  it('lê o bbox do corpo deitado (40 × 46,19 × 126,11) e os 5 filamentos', async () => {
     const pkg = await loadModelOnce();
 
     const box = new THREE.Box3().setFromBufferAttribute(
       pkg.bodyPart.geometry.getAttribute('position') as THREE.BufferAttribute
     );
     const size = box.getSize(new THREE.Vector3());
-    expect(size.y).toBeCloseTo(152.11, 1);
-    expect(size.x).toBeCloseTo(46.19, 1);
-    expect(size.z).toBeCloseTo(46.19, 1);
+    expect(size.x).toBeCloseTo(40, 1);
+    expect(size.y).toBeCloseTo(46.19, 1);
+    expect(size.z).toBeCloseTo(126.11, 1);
 
     expect(pkg.filamentColors).toEqual(['#FFFF00', '#EC5EAF', '#000000', '#F0EEA2', '#808080']);
   }, 60000);
 
-  it('carrega os transforms de <assemble> das 6 peças', async () => {
+  it('carrega os transforms de <assemble> das 5 peças', async () => {
     const pkg = await loadModelOnce();
 
     for (const part of pkg.parts) {
       expect(part.assembleTransform).toHaveLength(12);
+      expect(part.buildTransform).toHaveLength(12);
     }
     const body = pkg.bodyPart.assembleTransform;
     expect(body.slice(0, 9)).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1]);
-    expect(body[9]).toBeCloseTo(191.099, 2);
+    expect(body[9]).toBeCloseTo(350.38, 2);
   }, 60000);
 
   it('falha com pacote sem 3D/3dmodel.model', async () => {
@@ -56,12 +68,15 @@ describe('transformMatrix', () => {
     expect(point.x).toBeCloseTo(11);
     expect(point.y).toBeCloseTo(22);
     expect(point.z).toBeCloseTo(33);
+  });
 
-    // mesmo <item> do corpo: eixo local +Y vira +Z do mundo
-    const rotation = transformMatrix([1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0]);
-    const rotated = new THREE.Vector3(0, 1, 0).applyMatrix4(rotation);
-    expect(rotated.x).toBeCloseTo(0);
-    expect(rotated.y).toBeCloseTo(0);
-    expect(rotated.z).toBeCloseTo(1);
+  it('assenta a face 3 na mesa e a face 6 no topo pelo <item> do corpo', () => {
+    const item = transformMatrix([
+      2.22044605e-16, 0, -1, 0, 1, 0, 1, 0, 2.22044605e-16, 300.454235, -133.899542, 20,
+    ]);
+    const onBed = new THREE.Vector3(20, 0, 0).applyMatrix4(item);
+    expect(onBed.z).toBeCloseTo(0, 5);
+    const onTop = new THREE.Vector3(-20, 0, 0).applyMatrix4(item);
+    expect(onTop.z).toBeCloseTo(40, 5);
   });
 });

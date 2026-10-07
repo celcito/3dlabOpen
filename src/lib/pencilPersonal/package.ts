@@ -4,6 +4,8 @@ import { MODEL_URL } from './presets';
 
 export interface PencilPart {
   objectId: number;
+  meshPath: string;
+  meshObjectId: number;
   name: string;
   extruder: number;
   geometry: THREE.BufferGeometry;
@@ -20,6 +22,8 @@ export interface PencilPackage {
   parts: PencilPart[];
   filamentColors: string[];
 }
+
+const BODY_NAME_PREFIXES = ['Pencil_Main_Body', 'Pencil_corpo_hexagonal'];
 
 const CORE_MODEL = '3D/3dmodel.model';
 const MODEL_SETTINGS = 'Metadata/model_settings.config';
@@ -40,36 +44,50 @@ export async function loadPencilPackage(buffer: ArrayBuffer): Promise<PencilPack
   if (!coreEntry) throw new Error('Pacote 3MF sem 3D/3dmodel.model');
 
   const coreDoc = parseXml(await coreEntry.async('string'), CORE_MODEL);
-  const paths = collectComponentPaths(coreDoc);
+  const components = collectComponents(coreDoc);
   const buildItems = collectBuildItems(coreDoc);
   const settings = await readModelSettings(zip);
   const filamentColors = await readFilamentColors(zip);
 
+  const xmlCache = new Map<string, string>();
   const parts: PencilPart[] = [];
   for (const item of buildItems) {
-    const path = paths.get(item.objectid);
-    if (!path) continue;
-    const entry = zip.file(path) || findEntryIgnoreCase(zip, path);
-    if (!entry) continue;
-
-    const xml = await entry.async('string');
-    const geometry = parseMesh(xml);
-    if (!geometry) continue;
-
+    const itemComponents = components.get(item.objectid);
+    if (!itemComponents) continue;
     const meta = settings.objects.get(item.objectid);
-    parts.push({
-      objectId: item.objectid,
-      name: meta?.name || `object_${item.objectid}`,
-      extruder: meta?.extruder || 1,
-      geometry,
-      assembleTransform: settings.assemble.get(item.objectid) || identityTransform(item.transform),
-      buildTransform: identityTransform(item.transform),
-    });
+
+    for (const component of itemComponents) {
+      if (settings.negativePartIds.has(component.objectid)) continue;
+
+      let xml = xmlCache.get(component.path);
+      if (xml === undefined) {
+        const entry = zip.file(component.path) || findEntryIgnoreCase(zip, component.path);
+        if (!entry) continue;
+        xml = await entry.async('string');
+        xmlCache.set(component.path, xml);
+      }
+
+      const geometry = parseMesh(xml, component.objectid);
+      if (!geometry) continue;
+
+      parts.push({
+        objectId: item.objectid,
+        meshPath: component.path,
+        meshObjectId: component.objectid,
+        name: meta?.name || `object_${item.objectid}`,
+        extruder: meta?.extruder || 1,
+        geometry,
+        assembleTransform: settings.assemble.get(item.objectid) || identityTransform(item.transform),
+        buildTransform: identityTransform(item.transform),
+      });
+    }
   }
 
   if (parts.length === 0) throw new Error('Pacote 3MF sem peças legíveis');
 
-  const bodyPart = parts.find((part) => part.name.startsWith('Pencil_Main_Body')) || parts[parts.length - 1];
+  const bodyPart =
+    parts.find((part) => BODY_NAME_PREFIXES.some((prefix) => part.name.startsWith(prefix))) ||
+    parts[parts.length - 1];
 
   return {
     source: buffer,
@@ -105,16 +123,21 @@ function parseXml(xml: string, path: string): Document {
   return doc;
 }
 
-function collectComponentPaths(doc: Document): Map<number, string> {
-  const map = new Map<number, string>();
+function collectComponents(doc: Document): Map<number, { path: string; objectid: number }[]> {
+  const map = new Map<number, { path: string; objectid: number }[]>();
   doc.querySelectorAll('object').forEach((object) => {
     const id = Number(object.getAttribute('id'));
-    const component = object.querySelector('component');
-    if (!component || Number.isNaN(id)) return;
-    const raw =
-      component.getAttribute('p:path') ||
-      component.getAttributeNS('http://schemas.microsoft.com/3dmanufacturing/production/2015/06', 'path');
-    if (raw) map.set(id, raw.replace(/^\/+/, ''));
+    if (Number.isNaN(id)) return;
+    const list: { path: string; objectid: number }[] = [];
+    object.querySelectorAll('component').forEach((component) => {
+      const raw =
+        component.getAttribute('p:path') ||
+        component.getAttributeNS('http://schemas.microsoft.com/3dmanufacturing/production/2015/06', 'path');
+      const objectid = Number(component.getAttribute('objectid'));
+      if (!raw || Number.isNaN(objectid)) return;
+      list.push({ path: raw.replace(/^\/+/, ''), objectid });
+    });
+    if (list.length > 0) map.set(id, list);
   });
   return map;
 }
@@ -130,9 +153,23 @@ function collectBuildItems(doc: Document): { objectid: number; transform?: numbe
   return items;
 }
 
-function parseMesh(xml: string): THREE.BufferGeometry | null {
-  const vertexTags = xml.match(/<vertex\b[^>]*\/>/g);
-  const triangleTags = xml.match(/<triangle\b[^>]*\/>/g);
+function isolateObject(xml: string, objectid: number): string {
+  const tag = `<object id="${objectid}"`;
+  const start = xml.indexOf(tag);
+  if (start === -1) return '';
+  const contentStart = xml.indexOf('>', start);
+  if (contentStart === -1) return '';
+  const end = xml.indexOf('</object>', contentStart);
+  if (end === -1) return '';
+  return xml.slice(contentStart + 1, end);
+}
+
+function parseMesh(xml: string, objectid: number): THREE.BufferGeometry | null {
+  const objectXml = isolateObject(xml, objectid);
+  if (!objectXml) return null;
+
+  const vertexTags = objectXml.match(/<vertex\b[^>]*\/>/g);
+  const triangleTags = objectXml.match(/<triangle\b[^>]*\/>/g);
   if (!vertexTags || !triangleTags) return null;
 
   const positions = new Float32Array(vertexTags.length * 3);
@@ -178,12 +215,14 @@ interface ObjectMeta {
 async function readModelSettings(zip: JSZip): Promise<{
   objects: Map<number, ObjectMeta>;
   assemble: Map<number, number[]>;
+  negativePartIds: Set<number>;
 }> {
   const objects = new Map<number, ObjectMeta>();
   const assemble = new Map<number, number[]>();
+  const negativePartIds = new Set<number>();
 
   const entry = zip.file(MODEL_SETTINGS);
-  if (!entry) return { objects, assemble };
+  if (!entry) return { objects, assemble, negativePartIds };
 
   const doc = parseXml(await entry.async('string'), MODEL_SETTINGS);
   doc.querySelectorAll('object').forEach((object) => {
@@ -192,11 +231,16 @@ async function readModelSettings(zip: JSZip): Promise<{
     let name = '';
     let extruder = 1;
     Array.from(object.children).forEach((child) => {
-      if (child.tagName !== 'metadata') return;
-      const key = child.getAttribute('key');
-      const value = child.getAttribute('value') || '';
-      if (key === 'name') name = value;
-      if (key === 'extruder') extruder = Number(value) || 1;
+      if (child.tagName === 'metadata') {
+        const key = child.getAttribute('key');
+        const value = child.getAttribute('value') || '';
+        if (key === 'name') name = value;
+        if (key === 'extruder') extruder = Number(value) || 1;
+      }
+      if (child.tagName === 'part' && child.getAttribute('subtype') === 'negative_part') {
+        const partId = Number(child.getAttribute('id'));
+        if (!Number.isNaN(partId)) negativePartIds.add(partId);
+      }
     });
     objects.set(id, { name, extruder });
   });
@@ -209,7 +253,7 @@ async function readModelSettings(zip: JSZip): Promise<{
     assemble.set(id, raw.trim().split(/\s+/).map(Number));
   });
 
-  return { objects, assemble };
+  return { objects, assemble, negativePartIds };
 }
 
 async function readFilamentColors(zip: JSZip): Promise<string[]> {

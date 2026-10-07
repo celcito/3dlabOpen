@@ -9,12 +9,14 @@ import {
 } from '../pencilTopper/contourExtractor';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 import {
+  BODY_AXIS,
   BODY_HALF_LENGTH,
   ENGRAVE_MAX_Y,
   ENGRAVE_MIN_Y,
   FACE_NORMAL_ANGLE_DEG,
   HEX_APOTHEM,
   HEX_FACE_WIDTH,
+  LETTER_RELIEF,
   MIN_LETTER_THICKNESS,
   WALL_RESERVE,
   WALL_THICKNESS,
@@ -34,17 +36,37 @@ export interface TextShapes {
 
 export function faceNormal(face: PencilFace): THREE.Vector3 {
   const angle = (FACE_NORMAL_ANGLE_DEG[face] * Math.PI) / 180;
-  return new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+  return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
 }
 
 export function faceTangent(face: PencilFace): THREE.Vector3 {
   const angle = (FACE_NORMAL_ANGLE_DEG[face] * Math.PI) / 180;
-  return new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle));
+  return new THREE.Vector3(Math.sin(angle), -Math.cos(angle), 0);
 }
 
-/** Centro do texto ao longo de Y no sistema local do corpo. */
+/** Centro do texto ao longo do eixo local do corpo. */
 export function axisCenterY(config: PencilPersonalConfig): number {
   return config.positionAlongAxis - BODY_HALF_LENGTH;
+}
+
+/**
+ * Matriz (corpo-local → prancha) que assenta a peça das letras sobre o bolso:
+ * `z = 0` da malha no fundo do bolso (`apotema − profundidade`), de modo que a
+ * peça se projeta `LETTER_RELIEF` acima da face.
+ */
+export function letterPlacementMatrix(config: PencilPersonalConfig, depth: number): THREE.Matrix4 {
+  const normal = faceNormal(config.face);
+  const tangent = faceTangent(config.face);
+  const translation = BODY_AXIS.clone()
+    .multiplyScalar(axisCenterY(config))
+    .addScaledVector(normal, HEX_APOTHEM - depth);
+
+  return new THREE.Matrix4().set(
+    BODY_AXIS.x, tangent.x, normal.x, translation.x,
+    BODY_AXIS.y, tangent.y, normal.y, translation.y,
+    BODY_AXIS.z, tangent.z, normal.z, translation.z,
+    0, 0, 0, 1
+  );
 }
 
 export async function buildTextShapes(config: PencilPersonalConfig): Promise<TextShapes> {
@@ -55,7 +77,6 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
     if (!config.customFontName) await ensureGoogleFont(config.fontFamily);
     if (typeof document !== 'undefined' && document.fonts) {
       await document.fonts.load(`${fontHeightPx}px "${config.fontFamily}"`);
-      await document.fonts.load(`bold ${fontHeightPx}px "${config.fontFamily}"`);
     }
   } catch {
     // fallback para a fonte do sistema
@@ -65,11 +86,7 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   const mctx = measure.getContext('2d');
   if (!mctx) throw new Error('Falha ao inicializar Canvas 2D');
 
-  const cursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers'].includes(
-    config.fontFamily
-  );
-  const fontWeight = cursiveOrDisplay ? 'normal' : 'bold';
-  const fontStyle = `${fontWeight} ${fontHeightPx}px "${config.fontFamily}", sans-serif`;
+  const fontStyle = `${fontHeightPx}px "${config.fontFamily}", sans-serif`;
   mctx.font = fontStyle;
 
   const letterSpacingPx = Math.max(0, config.letterSpacing) * PX_PER_MM;
@@ -131,7 +148,8 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
     mmPerPixel,
     canvasWidth / 2,
     canvasHeight / 2,
-    0.2
+    0.1,
+    { resimplifyMm: 0.01 }
   );
   const shapes = buildThreeShapes(contours.outer, contours.holes);
   if (shapes.length === 0) throw new Error('Não foi possível extrair os contornos do texto');
@@ -162,7 +180,7 @@ export function measureWallThickness(
     const origin = normal
       .clone()
       .multiplyScalar(HEX_APOTHEM + 20)
-      .add(new THREE.Vector3(0, yCenter + dy, 0));
+      .add(BODY_AXIS.clone().multiplyScalar(yCenter + dy));
     raycaster.set(origin, normal.clone().negate());
     const hits = raycaster.intersectObject(mesh, false);
     if (hits.length < 2) continue;
@@ -177,7 +195,7 @@ export function measureWallThickness(
 
 /**
  * Sólido de corte: Shapes na face, radialmente de `apotema − profundidade`
- * até `apotema + 1`. Shape X → eixo Y do corpo, shape Y → tangente da face.
+ * até `apotema + 1`. Shape X → eixo do corpo, shape Y → tangente da face.
  */
 function buildCutSolid(
   shapes: THREE.Shape[],
@@ -194,15 +212,16 @@ function buildCutSolid(
   geometry.computeBoundingBox();
   const center = (geometry.boundingBox || new THREE.Box3()).getCenter(new THREE.Vector3());
 
-  const translation = new THREE.Vector3(0, yCenter - center.x, 0)
+  const translation = BODY_AXIS.clone()
+    .multiplyScalar(yCenter - center.x)
     .addScaledVector(tangent, -center.y)
     .addScaledVector(normal, radiusStart);
 
   geometry.applyMatrix4(
     new THREE.Matrix4().set(
-      0, tangent.x, normal.x, translation.x,
-      1, tangent.y, normal.y, translation.y,
-      0, tangent.z, normal.z, translation.z,
+      BODY_AXIS.x, tangent.x, normal.x, translation.x,
+      BODY_AXIS.y, tangent.y, normal.y, translation.y,
+      BODY_AXIS.z, tangent.z, normal.z, translation.z,
       0, 0, 0, 1
     )
   );
@@ -226,7 +245,7 @@ export async function generatePencilPersonal(
   bodyGraved.computeVertexNormals();
   bodyGraved.computeBoundingBox();
 
-  const letterThickness = Math.max(MIN_LETTER_THICKNESS, clampedDepth - 0.2);
+  const letterThickness = clampedDepth + LETTER_RELIEF;
   const letters = new THREE.ExtrudeGeometry(text.shapes, {
     depth: letterThickness,
     bevelEnabled: false,

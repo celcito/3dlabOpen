@@ -3,8 +3,9 @@ import * as THREE from 'three';
 import { RotateCcw, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import type { GeneratedPencilPersonal, PencilPersonalConfig } from '../types/pencilPersonal';
 import { transformMatrix, type PencilPackage } from '../lib/pencilPersonal/package';
-import { axisCenterY } from '../lib/pencilPersonal/geometry';
+import { axisCenterY, letterPlacementMatrix } from '../lib/pencilPersonal/geometry';
 import {
+  BODY_AXIS,
   BODY_LENGTH,
   FACE_NORMAL_ANGLE_DEG,
   HEX_APOTHEM,
@@ -33,6 +34,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
   const pivotRef = useRef<THREE.Group | null>(null);
   const partsGroupRef = useRef<THREE.Group | null>(null);
   const overlayRef = useRef<THREE.Mesh | null>(null);
+  const lettersMeshRef = useRef<THREE.Mesh | null>(null);
   const bodyMeshRef = useRef<THREE.Mesh | null>(null);
   const gridRef = useRef<THREE.GridHelper | null>(null);
   const frameRef = useRef({ radius: 320, target: new THREE.Vector3() });
@@ -124,6 +126,23 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     pivot.add(overlay);
     overlayRef.current = overlay;
 
+    const lettersMesh = new THREE.Mesh(
+      new THREE.BufferGeometry(),
+      new THREE.MeshStandardMaterial({
+        roughness: 0.5,
+        metalness: 0.05,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      })
+    );
+    lettersMesh.matrixAutoUpdate = false;
+    lettersMesh.visible = false;
+    lettersMesh.castShadow = true;
+    lettersMesh.receiveShadow = true;
+    pivot.add(lettersMesh);
+    lettersMeshRef.current = lettersMesh;
+
     let animId = 0;
     const animate = () => {
       animId = requestAnimationFrame(animate);
@@ -153,6 +172,10 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
       pivotRef.current = null;
       partsGroupRef.current = null;
       overlayRef.current = null;
+      if (lettersMeshRef.current) {
+        (lettersMeshRef.current.material as THREE.MeshStandardMaterial).dispose();
+      }
+      lettersMeshRef.current = null;
       bodyMeshRef.current = null;
       gridRef.current = null;
     };
@@ -228,9 +251,9 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
 
     const matrix = transformMatrix(bodyPart.buildTransform);
     const angle = (FACE_NORMAL_ANGLE_DEG[config.face] * Math.PI) / 180;
-    const normal = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)).transformDirection(matrix);
-    const axis = new THREE.Vector3(0, 1, 0).transformDirection(matrix);
-    const origin = new THREE.Vector3(0, axisCenterY(config), 0)
+    const normal = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0).transformDirection(matrix);
+    const axis = BODY_AXIS.clone().transformDirection(matrix);
+    const origin = new THREE.Vector3(0, 0, axisCenterY(config))
       .applyMatrix4(matrix)
       .addScaledVector(normal, HEX_APOTHEM + OVERLAY_OFFSET);
 
@@ -245,6 +268,35 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     overlay.matrixWorldNeedsUpdate = true;
     overlay.visible = true;
   }, [pkg, config.face, config.positionAlongAxis]);
+
+  useEffect(() => {
+    const mesh = lettersMeshRef.current;
+    if (!mesh) return;
+    if (!pkg || !generated || !showNegative) {
+      mesh.visible = false;
+      return;
+    }
+
+    const bodyPart = pkg.parts.find((part) => part.objectId === pkg.bodyObjectId);
+    if (!bodyPart) {
+      mesh.visible = false;
+      return;
+    }
+
+    const previous = mesh.geometry;
+    mesh.geometry = generated.letters;
+    if (previous !== generated.letters) previous.dispose();
+
+    (mesh.material as THREE.MeshStandardMaterial).color.set(
+      pkg.filamentColors[config.filamentIndex - 1] || '#9ca3af'
+    );
+
+    mesh.matrix
+      .copy(transformMatrix(bodyPart.buildTransform))
+      .multiply(letterPlacementMatrix(config, generated.clampedDepth));
+    mesh.matrixWorldNeedsUpdate = true;
+    mesh.visible = true;
+  }, [pkg, generated, showNegative, config]);
 
   // Negativo (corpo rebaixado) × corpo sólido
   useEffect(() => {

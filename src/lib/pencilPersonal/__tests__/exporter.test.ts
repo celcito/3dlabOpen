@@ -10,11 +10,9 @@ import {
 } from '../exporter';
 import { loadModelOnce } from './helpers';
 
-const REWRITTEN = [
-  '3D/Objects/object_6.model',
-  '3D/3dmodel.model',
-  'Metadata/model_settings.config',
-];
+const BODY_MESH_PATH = '3D/Objects/object_40.model';
+const REWRITTEN = [BODY_MESH_PATH, '3D/3dmodel.model', 'Metadata/model_settings.config'];
+const DELETED = ['Metadata/plate_5.json'];
 
 async function exportSample() {
   const pkg = await loadModelOnce();
@@ -31,6 +29,9 @@ async function exportSample() {
     letters,
     filamentIndex: 3,
     text: 'Ana',
+    bodyMeshPath: pkg.bodyPart.meshPath,
+    bodyMeshObjectId: pkg.bodyPart.meshObjectId,
+    bodyObjectId: pkg.bodyPart.objectId,
   });
   const buffer = await blob.arrayBuffer();
   return {
@@ -42,13 +43,18 @@ async function exportSample() {
 }
 
 describe('exportPersonalizedPencil (copy-ZIP)', () => {
-  it('mantém byte a byte todas as entradas fora das 3 autorizadas [E1/E2]', async () => {
+  it('reescreve só as 3 entradas autorizadas e apaga o cache de fatiamento [E1/E2]', async () => {
     const { entries, source } = await exportSample();
     const original = unzipSync(new Uint8Array(source));
 
-    expect(Object.keys(entries).sort()).toEqual(Object.keys(original).sort());
+    expect(Object.keys(entries).sort()).toEqual(
+      Object.keys(original)
+        .filter((name) => !DELETED.includes(name))
+        .sort()
+    );
     for (const name of Object.keys(original)) {
       if (REWRITTEN.includes(name)) continue;
+      if (DELETED.includes(name)) continue;
       expect(Array.from(entries[name]), `entry ${name} mudou`).toEqual(
         Array.from(original[name])
       );
@@ -56,14 +62,18 @@ describe('exportPersonalizedPencil (copy-ZIP)', () => {
     for (const name of REWRITTEN) {
       expect(entries[name], `entry ${name} ausente`).toBeTruthy();
     }
+    for (const name of DELETED) {
+      expect(entries[name], `entry ${name} não foi apagada`).toBeUndefined();
+    }
   }, 60000);
 
-  it('reescreve só a malha do corpo em object_6.model', async () => {
+  it('reescreve só a malha do corpo em object_40.model e descarta o negativo', async () => {
     const { entries, bodyGraved } = await exportSample();
-    const xml = strFromU8(entries['3D/Objects/object_6.model']);
+    const xml = strFromU8(entries[BODY_MESH_PATH]);
 
     expect(xml.match(/<\?xml/g)).toHaveLength(1);
-    expect(xml).toContain('<object id="7"');
+    expect(xml).toContain('<object id="9"');
+    expect(xml).not.toContain('<object id="10"');
 
     const vertexCount = (xml.match(/<vertex /g) || []).length;
     expect(vertexCount).toBe(bodyGraved.getAttribute('position').count);
@@ -102,9 +112,10 @@ describe('exportPersonalizedPencil (copy-ZIP)', () => {
       '3D/3dmodel.model'
     ]);
     expect(originalXml).not.toContain(`id="${LETTER_OBJECT_ID}"`);
+    expect(xml).not.toContain('objectid="10"');
   }, 60000);
 
-  it('cria a placa 7 com o objeto das letras em model_settings [E5]', async () => {
+  it('cria a placa 6 e limpa o negativo nativo em model_settings [E5]', async () => {
     const { entries } = await exportSample();
     const xml = strFromU8(entries['Metadata/model_settings.config']);
 
@@ -113,8 +124,10 @@ describe('exportPersonalizedPencil (copy-ZIP)', () => {
     expect(xml).toContain(`<part id="${LETTER_PART_ID}" subtype="normal_part"`);
     expect(xml).toContain('<metadata key="extruder" value="3"/>');
     expect(xml).toContain(`<metadata key="plater_id" value="${LETTER_PLATE_ID}"/>`);
-    expect(xml).not.toContain('plate_7.png');
-    expect((xml.match(/<metadata key="plater_id"/g) || []).length).toBe(7);
+    expect((xml.match(/<metadata key="plater_id"/g) || []).length).toBe(6);
+    expect(xml).not.toContain('negative_part');
+    expect(xml).not.toContain('Mariana');
+    expect(xml).not.toContain('text_shape');
     expect(xml).toMatch(
       new RegExp(
         `<metadata key="object_id" value="${LETTER_OBJECT_ID}"/>[\\s\\S]*?<metadata key="identify_id"`

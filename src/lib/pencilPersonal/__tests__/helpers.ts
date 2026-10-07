@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadPencilPackage, type PencilPackage } from '../package';
 
-const MODEL_PATH = resolve(__dirname, '../../../../public/models/Pencil_Maglama_cortado.3mf');
+const MODEL_PATH = resolve(__dirname, '../../../../public/models/Pencil_Maglama_cortado_open.3mf');
 
 let cached: Promise<PencilPackage> | null = null;
 

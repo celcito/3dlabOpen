@@ -23,7 +23,7 @@ function checkClosedManifold(geometry: BufferGeometry): MeshReport {
   const indexed = geometry.index ? geometry.toNonIndexed() : geometry;
   const pos = indexed.getAttribute('position');
   const key = (x: number, y: number, z: number) =>
-    `${Math.round(x * 10000)},${Math.round(y * 10000)},${Math.round(z * 10000)}`;
+    `${Math.round(x * 1e6)},${Math.round(y * 1e6)},${Math.round(z * 1e6)}`;
 
   const directed = new Map<string, number>();
   const undirected = new Map<string, number>();
@@ -73,7 +73,7 @@ beforeAll(() => {
 
 describe('gate de malha (validate_mesh.py)', () => {
   it('bodyOriginal, bodyGraved e letters são fechadas, 2-manifold e com volume positivo', async () => {
-    const buffer = readFileSync('public/models/Pencil_Maglama_cortado.3mf');
+    const buffer = readFileSync('public/models/Pencil_Maglama_cortado_open.3mf');
     const pkg = await loadPencilPackage(new Uint8Array(buffer).buffer.slice(0));
     const generated = await generatePencilPersonal(
       pkg.bodyPart.geometry,

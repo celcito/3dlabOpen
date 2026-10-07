@@ -1,5 +1,11 @@
 import type { PencilPersonalConfig, PencilFace, PencilFilamentIndex } from '../../types/pencilPersonal';
-import { DEFAULT_PENCIL_PERSONAL_CONFIG, BODY_LENGTH, MAX_DEPTH } from './presets';
+import {
+  DEFAULT_PENCIL_PERSONAL_CONFIG,
+  BODY_HALF_LENGTH,
+  ENGRAVE_MAX_Y,
+  ENGRAVE_MIN_Y,
+  MAX_DEPTH,
+} from './presets';
 
 const STORAGE_KEY = 'personalizar_lapis_config_v1';
 
@@ -67,7 +73,12 @@ export function loadSavedPencilPersonalConfig(): PencilPersonalConfig {
       letterSpacing: clamp(parsed.letterSpacing, 0, 3, def.letterSpacing),
       fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
       face: readFace(parsed.face),
-      positionAlongAxis: clamp(parsed.positionAlongAxis, 0, BODY_LENGTH, def.positionAlongAxis),
+      positionAlongAxis: clamp(
+        parsed.positionAlongAxis,
+        ENGRAVE_MIN_Y + BODY_HALF_LENGTH,
+        ENGRAVE_MAX_Y + BODY_HALF_LENGTH,
+        def.positionAlongAxis
+      ),
       depth: clamp(parsed.depth, 0.4, MAX_DEPTH, def.depth),
       filamentIndex: readFilament(parsed.filamentIndex),
     };

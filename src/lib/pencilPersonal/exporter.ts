@@ -1,16 +1,17 @@
 import { unzipSync, zipSync, strToU8 } from 'fflate';
 import type { BufferGeometry } from 'three';
 
-const BODY_MESH_PATH = '3D/Objects/object_6.model';
 const ROOT_MODEL_PATH = '3D/3dmodel.model';
 const SETTINGS_PATH = 'Metadata/model_settings.config';
+const STALE_SLICE_CACHE = 'Metadata/plate_5.json';
+const SOURCE_FILE_NAME = 'Pencil_Maglama_cortado_open.3mf';
 
 export const LETTER_OBJECT_ID = 14;
 export const LETTER_PART_ID = 13;
-export const LETTER_PLATE_ID = 7;
-export const LETTER_IDENTIFY_ID = 1801;
-/** Célula livre da grade de placas (Δ ≈ 216): coluna 1, linha 3. */
-export const LETTER_ITEM_TRANSFORM = '1 0 0 0 1 0 0 0 1 90 -342 0';
+export const LETTER_PLATE_ID = 6;
+export const LETTER_IDENTIFY_ID = 2500;
+/** Célula livre da grade de placas (Δ ≈ 216): coluna 2, linha 1. */
+export const LETTER_ITEM_TRANSFORM = '1 0 0 0 1 0 0 0 1 522 -126 0';
 
 export interface PersonalizedPencilExport {
   /** pacote `.3mf` original, já carregado */
@@ -23,6 +24,12 @@ export interface PersonalizedPencilExport {
   filamentIndex: number;
   /** texto gravado, usado só como rótulo da peça */
   text: string;
+  /** entrada da malha do corpo dentro do pacote */
+  bodyMeshPath: string;
+  /** id do `<object>` do corpo dentro de `bodyMeshPath` */
+  bodyMeshObjectId: number;
+  /** id do corpo em `model_settings.config` */
+  bodyObjectId: number;
 }
 
 export function triangleCount(geometry: BufferGeometry): number {
@@ -72,11 +79,99 @@ function meshInner(geometry: BufferGeometry): string {
 }
 
 /** Troca o `<mesh>` do corpo gravado preservando o resto do documento. */
-function replaceBodyMesh(xml: string, geometry: BufferGeometry): string {
-  const start = xml.indexOf('<mesh>');
-  const end = xml.indexOf('</mesh>', start);
-  if (start === -1 || end === -1) throw new Error('object_6.model sem <mesh>');
+function replaceBodyMesh(
+  xml: string,
+  geometry: BufferGeometry,
+  meshObjectId: number
+): string {
+  const tag = `<object id="${meshObjectId}"`;
+  const objectStart = xml.indexOf(tag);
+  if (objectStart === -1) throw new Error(`malha: objeto ${meshObjectId} ausente`);
+  const start = xml.indexOf('<mesh>', objectStart);
+  const end = xml.indexOf('</mesh>', objectStart);
+  if (start === -1 || end === -1) throw new Error(`malha: objeto ${meshObjectId} sem <mesh>`);
   return `${xml.slice(0, start)}<mesh>${meshInner(geometry)}</mesh>${xml.slice(end + '</mesh>'.length)}`;
+}
+
+function removeBlock(xml: string, openTag: string, closeTag: string): string {
+  const start = xml.indexOf(openTag);
+  if (start === -1) return xml;
+  const closeStart = xml.indexOf(closeTag, start);
+  if (closeStart === -1) return xml;
+  const end = closeStart + closeTag.length;
+  let lineStart = start;
+  while (lineStart > 0 && xml[lineStart - 1] === ' ') lineStart--;
+  if (lineStart > 0 && xml[lineStart - 1] === '\n') lineStart--;
+  return xml.slice(0, lineStart) + xml.slice(end);
+}
+
+function negativePartIds(settingsXml: string, bodyObjectId: number): number[] {
+  const start = settingsXml.indexOf(`<object id="${bodyObjectId}">`);
+  if (start === -1) return [];
+  const end = settingsXml.indexOf('</object>', start);
+  if (end === -1) return [];
+  const block = settingsXml.slice(start, end);
+
+  const ids: number[] = [];
+  const re = /<part\b[^>]*>/g;
+  let match = re.exec(block);
+  while (match) {
+    if (/\bsubtype="negative_part"/.test(match[0])) {
+      const id = /\bid="(\d+)"/.exec(match[0]);
+      if (id) ids.push(Number(id[1]));
+    }
+    match = re.exec(block);
+  }
+  return ids;
+}
+
+function removeComponent(rootXml: string, objectid: number): string {
+  const needle = `objectid="${objectid}"`;
+  const at = rootXml.indexOf(needle);
+  if (at === -1) return rootXml;
+  const tagStart = rootXml.lastIndexOf('<component', at);
+  if (tagStart === -1) return rootXml;
+  const tagEnd = rootXml.indexOf('>', tagStart);
+  if (tagEnd === -1) return rootXml;
+
+  const selfClosing = rootXml[tagEnd - 1] === '/';
+  let end: number;
+  if (selfClosing) {
+    end = tagEnd + 1;
+  } else {
+    const close = rootXml.indexOf('</component>', tagEnd);
+    if (close === -1) return rootXml;
+    end = close + '</component>'.length;
+  }
+
+  let start = tagStart;
+  while (start > 0 && rootXml[start - 1] === ' ') start--;
+  if (start > 0 && rootXml[start - 1] === '\n') start--;
+  return rootXml.slice(0, start) + rootXml.slice(end);
+}
+
+/**
+ * Remove o negativo nativo do corpo das 3 entradas: o `<part subtype="negative_part">`
+ * em `model_settings.config`, o `<component>` correspondente em `3dmodel.model`
+ * e o `<object>` inteiro na malha (o `p:UUID` do corpo é preservado).
+ */
+export function stripNegativeParts(
+  settingsXml: string,
+  rootXml: string,
+  bodyMeshXml: string,
+  bodyObjectId: number
+): { settingsXml: string; rootXml: string; bodyMeshXml: string } {
+  let settings = settingsXml;
+  let root = rootXml;
+  let mesh = bodyMeshXml;
+
+  for (const id of negativePartIds(settingsXml, bodyObjectId)) {
+    settings = removeBlock(settings, `<part id="${id}"`, '</part>');
+    root = removeComponent(root, id);
+    mesh = removeBlock(mesh, `<object id="${id}"`, '</object>');
+  }
+
+  return { settingsXml: settings, rootXml: root, bodyMeshXml: mesh };
 }
 
 function buildRootModel(xml: string, letters: BufferGeometry): string {
@@ -114,7 +209,7 @@ function lettersSettingsXml(geometry: BufferGeometry, filamentIndex: number, tex
     `    <part id="${LETTER_PART_ID}" subtype="normal_part" uuid="${uuid}">\n`,
     `      <metadata key="name" value="${name}"/>\n`,
     '      <metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>\n',
-    '      <metadata key="source_file" value="Pencil_Maglama_cortado.3mf"/>\n',
+    `      <metadata key="source_file" value="${SOURCE_FILE_NAME}"/>\n`,
     '      <metadata key="source_object_id" value="0"/>\n',
     '      <metadata key="source_volume_id" value="0"/>\n',
     '      <metadata key="source_offset_x" value="0"/>\n',
@@ -144,9 +239,9 @@ function lettersPlateXml(): string {
   ].join('');
 }
 
-/** Atualiza o `face_count` do objeto do corpo (object id 8) após o CSG. */
-function updateBodyFaceCount(xml: string, faces: number): string {
-  const start = xml.indexOf('<object id="8">');
+/** Atualiza o `face_count` do objeto do corpo após o CSG. */
+function updateBodyFaceCount(xml: string, faces: number, bodyObjectId: number): string {
+  const start = xml.indexOf(`<object id="${bodyObjectId}">`);
   if (start === -1) return xml;
   const end = xml.indexOf('</object>', start);
   if (end === -1) return xml;
@@ -159,9 +254,10 @@ function injectSettings(
   bodyGraved: BufferGeometry,
   letters: BufferGeometry,
   filamentIndex: number,
-  text: string
+  text: string,
+  bodyObjectId: number
 ): string {
-  let out = updateBodyFaceCount(xml, triangleCount(bodyGraved));
+  let out = updateBodyFaceCount(xml, triangleCount(bodyGraved), bodyObjectId);
 
   const objectBlock = lettersSettingsXml(letters, filamentIndex, text);
   const plateStart = out.indexOf('  <plate>');
@@ -185,33 +281,43 @@ function injectSettings(
 }
 
 /**
- * Copy-ZIP: mudam somente `object_6.model` (malha gravada), `3dmodel.model`
- * (objeto das letras + `<item>`) e `model_settings.config` (objeto + placa 7).
- * Todo o resto é reescrito byte a byte idêntico.
+ * Copy-ZIP: mudam somente a malha do corpo (gravada), `3dmodel.model`
+ * (objeto das letras + `<item>`) e `model_settings.config` (negativo removido,
+ * `face_count` do corpo + objeto + placa 6). `Metadata/plate_5.json` é apagado
+ * por estar desatualizado. Todo o resto é reescrito byte a byte idêntico.
  */
 export function exportPersonalizedPencil(params: PersonalizedPencilExport): Blob {
   const entries = unzipSync(new Uint8Array(params.source));
 
-  const body = entries[BODY_MESH_PATH];
+  const body = entries[params.bodyMeshPath];
   const root = entries[ROOT_MODEL_PATH];
   const settings = entries[SETTINGS_PATH];
   if (!body || !root || !settings) {
-    throw new Error('Pacote 3MF sem as entradas esperadas (object_6 / 3dmodel / model_settings)');
+    throw new Error('Pacote 3MF sem as entradas esperadas (malha do corpo / 3dmodel / model_settings)');
   }
 
-  entries[BODY_MESH_PATH] = strToU8(
-    replaceBodyMesh(decodeUtf8(body), params.bodyGraved)
+  const stripped = stripNegativeParts(
+    decodeUtf8(settings),
+    decodeUtf8(root),
+    decodeUtf8(body),
+    params.bodyObjectId
   );
-  entries[ROOT_MODEL_PATH] = strToU8(buildRootModel(decodeUtf8(root), params.letters));
+
+  entries[params.bodyMeshPath] = strToU8(
+    replaceBodyMesh(stripped.bodyMeshXml, params.bodyGraved, params.bodyMeshObjectId)
+  );
+  entries[ROOT_MODEL_PATH] = strToU8(buildRootModel(stripped.rootXml, params.letters));
   entries[SETTINGS_PATH] = strToU8(
     injectSettings(
-      decodeUtf8(settings),
+      stripped.settingsXml,
       params.bodyGraved,
       params.letters,
       params.filamentIndex,
-      params.text
+      params.text,
+      params.bodyObjectId
     )
   );
+  delete entries[STALE_SLICE_CACHE];
 
   const bytes = zipSync(entries, { level: 6 });
   return new Blob([bytes as unknown as BlobPart], { type: 'model/3mf' });

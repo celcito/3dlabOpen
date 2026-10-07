@@ -92,7 +92,11 @@ function densifyClosed(points: Point2D[], maxEdge: number): Point2D[] {
  * versão anterior, que tratava o contorno como polilinha aberta e deixava um
  * buraco/chorda maior no ponto inicial do traçado.
  */
-export function chaikinSmooth(points: Point2D[], iterations: number = 2): Point2D[] {
+export function chaikinSmooth(
+  points: Point2D[],
+  iterations: number = 2,
+  resimplifyMm: number = CHAIKIN_RESIMPLIFY_MM
+): Point2D[] {
   if (points.length < 3) return points;
 
   let ring = points;
@@ -115,7 +119,7 @@ export function chaikinSmooth(points: Point2D[], iterations: number = 2): Point2
     }
     cur = next;
   }
-  const simplified = simplifyPolygon(cur, CHAIKIN_RESIMPLIFY_MM);
+  const simplified = simplifyPolygon(cur, resimplifyMm);
   return simplified.length >= 3 ? simplified : cur;
 }
 
@@ -205,6 +209,8 @@ export interface ContourExtractOptions {
   minContourLength?: number;
   /** Área mínima em mm² após simplificação. Padrão: dinâmico (0.05 / 0.2). */
   minAreaMm2?: number;
+  /** Tolerância (mm) da re-simplificação pós-Chaikin. Menor = curvas mais fiéis e menos facetadas. Padrão: 0.05. */
+  resimplifyMm?: number;
 }
 
 export function extractContoursFromImageData(
@@ -216,6 +222,7 @@ export function extractContoursFromImageData(
   options: ContourExtractOptions = {}
 ): { outer: Point2D[][]; holes: Point2D[][] } {
   const chaikin = options.chaikin ?? true;
+  const resimplifyMm = options.resimplifyMm;
   const minContourLength = options.minContourLength ?? 6;
   const fixedMinArea = options.minAreaMm2;
   const { width, height, data } = imageData;
@@ -324,13 +331,13 @@ export function extractContoursFromImageData(
         holes.push(poly);
       } else {
         const holeArea = Math.abs(polygonArea(poly));
-        holes.push(chaikinSmooth(poly, holeArea < 1.0 ? 1 : 2));
+        holes.push(chaikinSmooth(poly, holeArea < 1.0 ? 1 : 2, resimplifyMm));
       }
     } else {
       if (!chaikin) {
         outer.push(poly);
       } else {
-        outer.push(chaikinSmooth(poly, 2));
+        outer.push(chaikinSmooth(poly, 2, resimplifyMm));
       }
     }
   }

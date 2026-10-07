@@ -95,6 +95,9 @@ export default function PencilPersonalizer() {
         letters: result.letters,
         filamentIndex: config.filamentIndex,
         text: config.text.trim() || 'Nome',
+        bodyMeshPath: pkg.bodyPart.meshPath,
+        bodyMeshObjectId: pkg.bodyPart.meshObjectId,
+        bodyObjectId: pkg.bodyPart.objectId,
       });
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
       downloadBlob(blob, `Lapis_${safeName(config)}_${timestamp}.3mf`);
