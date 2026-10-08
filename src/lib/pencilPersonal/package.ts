@@ -29,16 +29,22 @@ const CORE_MODEL = '3D/3dmodel.model';
 const MODEL_SETTINGS = 'Metadata/model_settings.config';
 const PROJECT_SETTINGS = 'Metadata/project_settings.config';
 
-export async function fetchPencilPackage(): Promise<PencilPackage> {
-  const response = await fetch(MODEL_URL);
+export async function fetchPencilPackage(
+  modelUrl: string = MODEL_URL,
+  bodyNamePrefixes: string[] = BODY_NAME_PREFIXES
+): Promise<PencilPackage> {
+  const response = await fetch(modelUrl);
   if (!response.ok) {
     throw new Error(`Não foi possível carregar o modelo do lápis (HTTP ${response.status})`);
   }
   const buffer = await response.arrayBuffer();
-  return loadPencilPackage(buffer);
+  return loadPencilPackage(buffer, bodyNamePrefixes);
 }
 
-export async function loadPencilPackage(buffer: ArrayBuffer): Promise<PencilPackage> {
+export async function loadPencilPackage(
+  buffer: ArrayBuffer,
+  bodyNamePrefixes: string[] = BODY_NAME_PREFIXES
+): Promise<PencilPackage> {
   const zip = await JSZip.loadAsync(buffer);
   const coreEntry = zip.file(CORE_MODEL);
   if (!coreEntry) throw new Error('Pacote 3MF sem 3D/3dmodel.model');
@@ -86,7 +92,7 @@ export async function loadPencilPackage(buffer: ArrayBuffer): Promise<PencilPack
   if (parts.length === 0) throw new Error('Pacote 3MF sem peças legíveis');
 
   const bodyPart =
-    parts.find((part) => BODY_NAME_PREFIXES.some((prefix) => part.name.startsWith(prefix))) ||
+    parts.find((part) => bodyNamePrefixes.some((prefix) => part.name.startsWith(prefix))) ||
     parts[parts.length - 1];
 
   return {

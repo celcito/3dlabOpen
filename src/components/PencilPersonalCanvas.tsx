@@ -3,14 +3,14 @@ import * as THREE from 'three';
 import { RotateCcw, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import type { GeneratedPencilPersonal, PencilPersonalConfig } from '../types/pencilPersonal';
 import { transformMatrix, type PencilPackage } from '../lib/pencilPersonal/package';
-import { axisCenterY, letterPlacementMatrix } from '../lib/pencilPersonal/geometry';
 import {
-  BODY_AXIS,
-  BODY_LENGTH,
-  FACE_NORMAL_ANGLE_DEG,
-  HEX_APOTHEM,
-  HEX_FACE_WIDTH,
-} from '../lib/pencilPersonal/presets';
+  axisCenterY,
+  faceWidthFor,
+  letterPlacementMatrix,
+  normalAt,
+  surfaceOffset,
+} from '../lib/pencilPersonal/geometry';
+import { BODY_AXIS, VARIANTS } from '../lib/pencilPersonal/presets';
 
 interface PencilPersonalCanvasProps {
   pkg: PencilPackage | null;
@@ -44,6 +44,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
 
   const [showNegative, setShowNegative] = useState(true);
+  const variant = VARIANTS[config.variant];
 
   const updateCameraPosition = useCallback(() => {
     const camera = cameraRef.current;
@@ -112,7 +113,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     partsGroupRef.current = partsGroup;
 
     const overlay = new THREE.Mesh(
-      new THREE.PlaneGeometry(HEX_FACE_WIDTH, BODY_LENGTH),
+      new THREE.PlaneGeometry(1, 1),
       new THREE.MeshBasicMaterial({
         color: 0xf59e0b,
         transparent: true,
@@ -171,6 +172,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
       rendererRef.current = null;
       pivotRef.current = null;
       partsGroupRef.current = null;
+      if (overlayRef.current) overlayRef.current.geometry.dispose();
       overlayRef.current = null;
       if (lettersMeshRef.current) {
         (lettersMeshRef.current.material as THREE.MeshStandardMaterial).dispose();
@@ -180,6 +182,17 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
       gridRef.current = null;
     };
   }, [updateCameraPosition]);
+
+  // Plano tangente: faceWidth (corda no redondo) × altura do corpo da variante
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    const faceWidth = generated?.faceWidth ?? faceWidthFor(variant, config.depth);
+    const geometry = new THREE.PlaneGeometry(faceWidth, variant.bodyLength);
+    const previous = overlay.geometry;
+    overlay.geometry = geometry;
+    if (previous !== geometry) previous.dispose();
+  }, [variant, generated?.faceWidth, config.depth]);
 
   // Peças posicionadas pelos transforms de <build> (design.md §Viewport)
   useEffect(() => {
@@ -250,12 +263,11 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     if (!bodyPart) return;
 
     const matrix = transformMatrix(bodyPart.buildTransform);
-    const angle = (FACE_NORMAL_ANGLE_DEG[config.face] * Math.PI) / 180;
-    const normal = new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0).transformDirection(matrix);
+    const normal = normalAt(config, variant).transformDirection(matrix);
     const axis = BODY_AXIS.clone().transformDirection(matrix);
     const origin = new THREE.Vector3(0, 0, axisCenterY(config))
       .applyMatrix4(matrix)
-      .addScaledVector(normal, HEX_APOTHEM + OVERLAY_OFFSET);
+      .addScaledVector(normal, surfaceOffset(variant) + OVERLAY_OFFSET);
 
     const localX = new THREE.Vector3().crossVectors(axis, normal);
     if (localX.lengthSq() < 1e-8) return;
@@ -267,7 +279,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     overlay.matrix.setPosition(origin);
     overlay.matrixWorldNeedsUpdate = true;
     overlay.visible = true;
-  }, [pkg, config.face, config.positionAlongAxis]);
+  }, [pkg, config, variant]);
 
   useEffect(() => {
     const mesh = lettersMeshRef.current;
@@ -438,8 +450,10 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
         </div>
         <div className="w-px h-4 bg-[var(--surface-container-high)]" />
         <div className="flex items-center gap-1.5">
-          <span>Face:</span>
-          <span className="font-mono font-bold text-[var(--workbench-text)]">{config.face}</span>
+          <span>{variant.placement === 'angle' ? 'Ângulo:' : 'Face:'}</span>
+          <span className="font-mono font-bold text-[var(--workbench-text)]">
+            {variant.placement === 'angle' ? `${Math.round(config.angleDeg)}°` : config.face}
+          </span>
         </div>
       </div>
     </div>

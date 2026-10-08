@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 import { csgSubtract } from '../fastener/boolean';
-import type { GeneratedPencilPersonal, PencilPersonalConfig, PencilFace } from '../../types/pencilPersonal';
+import type {
+  GeneratedPencilPersonal,
+  PencilPersonalConfig,
+  PencilFace,
+  PencilVariant,
+} from '../../types/pencilPersonal';
 import {
   buildThreeShapes,
   computeEnclosedEmptyMask,
@@ -10,21 +15,19 @@ import {
 import { ensureGoogleFont } from '../fonts/googleFonts';
 import {
   BODY_AXIS,
-  BODY_HALF_LENGTH,
-  ENGRAVE_MAX_Y,
-  ENGRAVE_MIN_Y,
-  FACE_NORMAL_ANGLE_DEG,
-  HEX_APOTHEM,
   HEX_FACE_WIDTH,
   LETTER_RELIEF,
   MIN_LETTER_THICKNESS,
+  VARIANTS,
   WALL_RESERVE,
-  WALL_THICKNESS,
+  FACE_NORMAL_ANGLE_DEG,
 } from './presets';
 
 const PX_PER_MM = 20;
-const ENGRAVE_RANGE_MIN = ENGRAVE_MIN_Y + BODY_HALF_LENGTH;
-const ENGRAVE_RANGE_MAX = ENGRAVE_MAX_Y + BODY_HALF_LENGTH;
+
+function variantOf(config: PencilPersonalConfig): PencilVariant {
+  return VARIANTS[config.variant];
+}
 
 export interface TextShapes {
   shapes: THREE.Shape[];
@@ -44,22 +47,49 @@ export function faceTangent(face: PencilFace): THREE.Vector3 {
   return new THREE.Vector3(Math.sin(angle), -Math.cos(angle), 0);
 }
 
+/** Única fonte de orientação da superfície de gravação (`[G1]`). */
+export function normalAt(config: PencilPersonalConfig, variant: PencilVariant): THREE.Vector3 {
+  if (variant.placement === 'angle') {
+    const angle = (config.angleDeg * Math.PI) / 180;
+    return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0);
+  }
+  return faceNormal(config.face);
+}
+
+/**
+ * Tangente da superfície, na mesma convenção do hex (`faceTangent`): `normal × BODY_AXIS`.
+ * [G1] escreve `BODY_AXIS × normal`, que é o vetor oposto e deixaria as letras
+ * de cabeça para baixo — os dois operandos trocados são o desvio registrado.
+ */
+export function tangentAt(config: PencilPersonalConfig, variant: PencilVariant): THREE.Vector3 {
+  if (variant.placement === 'angle') {
+    return new THREE.Vector3().crossVectors(normalAt(config, variant), BODY_AXIS);
+  }
+  return faceTangent(config.face);
+}
+
+/** Raio/apotema da superfície de gravação (`[G2]`). */
+export function surfaceOffset(variant: PencilVariant): number {
+  return variant.surfaceRadius;
+}
+
 /** Centro do texto ao longo do eixo local do corpo. */
 export function axisCenterY(config: PencilPersonalConfig): number {
-  return config.positionAlongAxis - BODY_HALF_LENGTH;
+  return config.positionAlongAxis - variantOf(config).bodyLength / 2;
 }
 
 /**
  * Matriz (corpo-local → prancha) que assenta a peça das letras sobre o bolso:
- * `z = 0` da malha no fundo do bolso (`apotema − profundidade`), de modo que a
+ * `z = 0` da malha no fundo do bolso (`superfície − profundidade`), de modo que a
  * peça se projeta `LETTER_RELIEF` acima da face.
  */
 export function letterPlacementMatrix(config: PencilPersonalConfig, depth: number): THREE.Matrix4 {
-  const normal = faceNormal(config.face);
-  const tangent = faceTangent(config.face);
+  const variant = variantOf(config);
+  const normal = normalAt(config, variant);
+  const tangent = tangentAt(config, variant);
   const translation = BODY_AXIS.clone()
     .multiplyScalar(axisCenterY(config))
-    .addScaledVector(normal, HEX_APOTHEM - depth);
+    .addScaledVector(normal, surfaceOffset(variant) - depth);
 
   return new THREE.Matrix4().set(
     BODY_AXIS.x, tangent.x, normal.x, translation.x,
@@ -165,21 +195,28 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   return { shapes, widthMm: size.x, heightMm: size.y };
 }
 
-/** Espessura da parede ao longo da normal da face (do exterior ao interior). */
+/**
+ * Espessura da parede ao longo da normal da face (do exterior ao interior).
+ * `tangent` completa a base local (mesma tripla de `normalAt`/`tangentAt`); o
+ * raycast em si só anda pela normal, que é o suficiente em cilindro (`[G2]`).
+ */
 export function measureWallThickness(
   bodyGeometry: THREE.BufferGeometry,
-  face: PencilFace,
-  yCenter: number
+  normal: THREE.Vector3,
+  tangent: THREE.Vector3,
+  yCenter: number,
+  variant: PencilVariant
 ): number {
-  const normal = faceNormal(face);
+  const offset = surfaceOffset(variant);
   const raycaster = new THREE.Raycaster();
   const mesh = new THREE.Mesh(bodyGeometry);
   const samples: number[] = [];
+  void tangent;
 
   for (const dy of [-12, 0, 12]) {
     const origin = normal
       .clone()
-      .multiplyScalar(HEX_APOTHEM + 20)
+      .multiplyScalar(offset + 20)
       .add(BODY_AXIS.clone().multiplyScalar(yCenter + dy));
     raycaster.set(origin, normal.clone().negate());
     const hits = raycaster.intersectObject(mesh, false);
@@ -188,24 +225,24 @@ export function measureWallThickness(
     if (thickness > 0.1 && thickness < 15) samples.push(thickness);
   }
 
-  if (samples.length === 0) return WALL_THICKNESS;
+  if (samples.length === 0) return variant.wallThickness;
   samples.sort((a, b) => a - b);
   return samples[Math.floor(samples.length / 2)];
 }
 
 /**
- * Sólido de corte: Shapes na face, radialmente de `apotema − profundidade`
- * até `apotema + 1`. Shape X → eixo do corpo, shape Y → tangente da face.
+ * Sólido de corte: Shapes na face, radialmente de `superfície − profundidade`
+ * até `superfície + 1`. Shape X → eixo do corpo, shape Y → tangente da face.
  */
 function buildCutSolid(
   shapes: THREE.Shape[],
-  face: PencilFace,
+  normal: THREE.Vector3,
+  tangent: THREE.Vector3,
   yCenter: number,
-  depth: number
+  depth: number,
+  surfaceRadius: number
 ): THREE.ExtrudeGeometry {
-  const normal = faceNormal(face);
-  const tangent = faceTangent(face);
-  const radiusStart = HEX_APOTHEM - depth;
+  const radiusStart = surfaceRadius - depth;
   const extrudeDepth = depth + 1;
 
   const geometry = new THREE.ExtrudeGeometry(shapes, { depth: extrudeDepth, bevelEnabled: false });
@@ -229,17 +266,40 @@ function buildCutSolid(
   return geometry;
 }
 
+/**
+ * Largura disponível na direção tangencial: no hex é a face plana; no redondo é
+ * a corda que a profundidade permite dentro do cilindro (`[G3]`).
+ */
+export function faceWidthFor(variant: PencilVariant, depth: number): number {
+  if (variant.placement === 'angle') {
+    return 2 * Math.sqrt(2 * surfaceOffset(variant) * (depth + LETTER_RELIEF));
+  }
+  return HEX_FACE_WIDTH;
+}
+
 export async function generatePencilPersonal(
   bodyGeometry: THREE.BufferGeometry,
   config: PencilPersonalConfig
 ): Promise<GeneratedPencilPersonal> {
+  const variant = variantOf(config);
+  const normal = normalAt(config, variant);
+  const tangent = tangentAt(config, variant);
+
   const text = await buildTextShapes(config);
   const yCenter = axisCenterY(config);
-  const wallThickness = measureWallThickness(bodyGeometry, config.face, yCenter);
+  const wallThickness = measureWallThickness(bodyGeometry, normal, tangent, yCenter, variant);
   const maxDepth = Math.max(MIN_LETTER_THICKNESS, wallThickness - WALL_RESERVE);
   const clampedDepth = Math.min(Math.max(config.depth, MIN_LETTER_THICKNESS), maxDepth);
+  const faceWidth = faceWidthFor(variant, clampedDepth);
 
-  const cutGeometry = buildCutSolid(text.shapes, config.face, yCenter, clampedDepth);
+  const cutGeometry = buildCutSolid(
+    text.shapes,
+    normal,
+    tangent,
+    yCenter,
+    clampedDepth,
+    surfaceOffset(variant)
+  );
 
   const { geometry: bodyGraved } = await csgSubtract(bodyGeometry, cutGeometry);
   bodyGraved.computeVertexNormals();
@@ -264,13 +324,14 @@ export async function generatePencilPersonal(
     bodyGraved,
     letters,
     wallThickness,
-    faceWidth: HEX_FACE_WIDTH,
-    engraveRangeMin: ENGRAVE_RANGE_MIN,
-    engraveRangeMax: ENGRAVE_RANGE_MAX,
+    faceWidth,
+    engraveRangeMin: variant.engraveMinY + variant.bodyLength / 2,
+    engraveRangeMax: variant.engraveMaxY + variant.bodyLength / 2,
     clampedDepth,
     textWidth: text.widthMm,
-    textTooWide: text.heightMm > HEX_FACE_WIDTH,
+    textTooWide: text.heightMm > faceWidth,
     textTooLong:
-      yCenter - text.widthMm / 2 < ENGRAVE_MIN_Y || yCenter + text.widthMm / 2 > ENGRAVE_MAX_Y,
+      yCenter - text.widthMm / 2 < variant.engraveMinY ||
+      yCenter + text.widthMm / 2 > variant.engraveMaxY,
   };
 }

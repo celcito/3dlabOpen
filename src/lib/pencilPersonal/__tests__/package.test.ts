@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { loadPencilPackage, transformMatrix } from '../package';
-import { loadModelOnce } from './helpers';
+import { loadEstojoOnce, loadModelOnce } from './helpers';
 
 describe('loadPencilPackage', () => {
   it('extrai as 5 peças, o corpo e os transforms do pacote real', async () => {
@@ -59,6 +59,36 @@ describe('loadPencilPackage', () => {
     const buffer = new Uint8Array(empty).buffer as ArrayBuffer;
     await expect(loadPencilPackage(buffer)).rejects.toThrow('3D/3dmodel.model');
   });
+});
+
+describe('loadPencilPackage (variante estojo-giz)', () => {
+  it('extrai as 2 peças e reconhece o corpo pelo prefixo da variante', async () => {
+    const pkg = await loadEstojoOnce();
+
+    expect(pkg.parts.map((part) => part.name)).toEqual([
+      'Estojo_corpo_cilindrico.stl',
+      'Estojo_ponta_conica.stl',
+    ]);
+    expect(pkg.bodyPart.name).toBe('Estojo_corpo_cilindrico.stl');
+    expect(pkg.bodyPart.meshPath).toBe('3D/Objects/object_1.model');
+    expect(pkg.bodyPart.meshObjectId).toBe(1);
+    expect(pkg.bodyObjectId).toBe(2);
+    expect(pkg.bodyPart.buildTransform).toHaveLength(12);
+    expect(pkg.bodyPart.assembleTransform).toHaveLength(12);
+  }, 60000);
+
+  it('lê o bbox montado do conjunto (115 × 115 × 63)', async () => {
+    const pkg = await loadEstojoOnce();
+
+    const box = new THREE.Box3();
+    for (const part of pkg.parts) {
+      box.expandByObject(new THREE.Mesh(part.geometry));
+    }
+    const size = box.getSize(new THREE.Vector3());
+    expect(size.x).toBeCloseTo(115, 1);
+    expect(size.y).toBeCloseTo(115, 1);
+    expect(size.z).toBeCloseTo(63, 1);
+  }, 60000);
 });
 
 describe('transformMatrix', () => {

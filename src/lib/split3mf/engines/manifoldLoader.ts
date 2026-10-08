@@ -1,5 +1,4 @@
 import { getManifoldModule, setWasmUrl } from "manifold-3d/lib/wasm.js";
-import wasmUrl from "manifold-3d/manifold.wasm?url";
 
 type ManifoldModule = Awaited<ReturnType<typeof getManifoldModule>>;
 
@@ -7,6 +6,19 @@ let cached: ManifoldModule | null = null;
 let loadError: string | null = null;
 let loading: Promise<ManifoldModule> | null = null;
 let wasmUrlOverride: string | null = null;
+/** URL do asset `?url` do Vite; resolvida sob demanda para não quebrar Node/tsx. */
+let bundledWasmUrl: string | null = null;
+
+async function resolveBundledWasmUrl(): Promise<string | null> {
+  if (bundledWasmUrl !== null) return bundledWasmUrl || null;
+  try {
+    const mod = await import("manifold-3d/manifold.wasm?url");
+    bundledWasmUrl = mod.default;
+  } catch {
+    bundledWasmUrl = "";
+  }
+  return bundledWasmUrl || null;
+}
 
 export type { ManifoldModule };
 
@@ -33,7 +45,13 @@ export async function loadManifold(): Promise<ManifoldModule> {
   if (loading) return loading;
 
   loading = (async () => {
-    setWasmUrl(wasmUrlOverride ?? wasmUrl);
+    const url = wasmUrlOverride ?? (await resolveBundledWasmUrl());
+    if (!url) {
+      throw new Error(
+        "manifold.wasm: URL do asset indisponível neste ambiente — chame setManifoldWasmUrl() antes de loadManifold()."
+      );
+    }
+    setWasmUrl(url);
     try {
       const mod = await getManifoldModule();
       cached = mod;

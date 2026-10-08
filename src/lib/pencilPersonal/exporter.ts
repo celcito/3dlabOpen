@@ -30,6 +30,14 @@ export interface PersonalizedPencilExport {
   bodyMeshObjectId: number;
   /** id do corpo em `model_settings.config` */
   bodyObjectId: number;
+  /** nome do arquivo de origem gravado nas letras (padrão: hex) */
+  sourceFileName?: string;
+  /** cache de fatiamento obsoleto a apagar do ZIP (padrão: hex) */
+  staleSliceCache?: string;
+  /** `plater_id` criado para as letras (padrão: hex) */
+  letterPlateId?: number;
+  /** `<item>` das letras no `3dmodel.model` (padrão: hex) */
+  letterItemTransform?: string;
 }
 
 export function triangleCount(geometry: BufferGeometry): number {
@@ -174,7 +182,7 @@ export function stripNegativeParts(
   return { settingsXml: settings, rootXml: root, bodyMeshXml: mesh };
 }
 
-function buildRootModel(xml: string, letters: BufferGeometry): string {
+function buildRootModel(xml: string, letters: BufferGeometry, letterItemTransform: string): string {
   const resourceEnd = xml.lastIndexOf('</resources>');
   const buildEnd = xml.lastIndexOf('</build>');
   if (resourceEnd === -1 || buildEnd === -1) throw new Error('3dmodel.model sem resources/build');
@@ -190,14 +198,19 @@ function buildRootModel(xml: string, letters: BufferGeometry): string {
     '  </object>\n',
   ].join('');
 
-  const item = `  <item objectid="${LETTER_OBJECT_ID}" transform="${LETTER_ITEM_TRANSFORM}" printable="1"/>\n`;
+  const item = `  <item objectid="${LETTER_OBJECT_ID}" transform="${letterItemTransform}" printable="1"/>\n`;
 
   return (
     xml.slice(0, resourceEnd) + objects + xml.slice(resourceEnd, buildEnd) + item + xml.slice(buildEnd)
   );
 }
 
-function lettersSettingsXml(geometry: BufferGeometry, filamentIndex: number, text: string): string {
+function lettersSettingsXml(
+  geometry: BufferGeometry,
+  filamentIndex: number,
+  text: string,
+  sourceFileName: string
+): string {
   const faces = triangleCount(geometry);
   const name = escapeXml(`Letras_${text.trim() || 'Nome'}.stl`);
   const uuid = 'b7f3c1a9-5d24-4e18-9f06-2a8c4d6e7105';
@@ -209,7 +222,7 @@ function lettersSettingsXml(geometry: BufferGeometry, filamentIndex: number, tex
     `    <part id="${LETTER_PART_ID}" subtype="normal_part" uuid="${uuid}">\n`,
     `      <metadata key="name" value="${name}"/>\n`,
     '      <metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>\n',
-    `      <metadata key="source_file" value="${SOURCE_FILE_NAME}"/>\n`,
+    `      <metadata key="source_file" value="${escapeXml(sourceFileName)}"/>\n`,
     '      <metadata key="source_object_id" value="0"/>\n',
     '      <metadata key="source_volume_id" value="0"/>\n',
     '      <metadata key="source_offset_x" value="0"/>\n',
@@ -221,10 +234,10 @@ function lettersSettingsXml(geometry: BufferGeometry, filamentIndex: number, tex
   ].join('');
 }
 
-function lettersPlateXml(): string {
+function lettersPlateXml(letterPlateId: number): string {
   return [
     '  <plate>\n',
-    `    <metadata key="plater_id" value="${LETTER_PLATE_ID}"/>\n`,
+    `    <metadata key="plater_id" value="${letterPlateId}"/>\n`,
     '    <metadata key="plater_name" value=""/>\n',
     '    <metadata key="locked" value="false"/>\n',
     '    <metadata key="filament_map_mode" value="Auto For Flush"/>\n',
@@ -255,11 +268,13 @@ function injectSettings(
   letters: BufferGeometry,
   filamentIndex: number,
   text: string,
-  bodyObjectId: number
+  bodyObjectId: number,
+  sourceFileName: string,
+  letterPlateId: number
 ): string {
   let out = updateBodyFaceCount(xml, triangleCount(bodyGraved), bodyObjectId);
 
-  const objectBlock = lettersSettingsXml(letters, filamentIndex, text);
+  const objectBlock = lettersSettingsXml(letters, filamentIndex, text, sourceFileName);
   const plateStart = out.indexOf('  <plate>');
   if (plateStart === -1) {
     const configEnd = out.lastIndexOf('</config>');
@@ -268,7 +283,7 @@ function injectSettings(
     out = out.slice(0, plateStart) + objectBlock + out.slice(plateStart);
   }
 
-  const plateBlock = lettersPlateXml();
+  const plateBlock = lettersPlateXml(letterPlateId);
   const assembleStart = out.indexOf('  <assemble>');
   if (assembleStart === -1) {
     const configEnd = out.lastIndexOf('</config>');
@@ -283,10 +298,16 @@ function injectSettings(
 /**
  * Copy-ZIP: mudam somente a malha do corpo (gravada), `3dmodel.model`
  * (objeto das letras + `<item>`) e `model_settings.config` (negativo removido,
- * `face_count` do corpo + objeto + placa 6). `Metadata/plate_5.json` é apagado
- * por estar desatualizado. Todo o resto é reescrito byte a byte idêntico.
+ * `face_count` do corpo + objeto + placa das letras). O cache de fatiamento
+ * desatualizado da variante é apagado. Todo o resto é reescrito byte a byte
+ * idêntico.
  */
 export function exportPersonalizedPencil(params: PersonalizedPencilExport): Blob {
+  const sourceFileName = params.sourceFileName ?? SOURCE_FILE_NAME;
+  const staleSliceCache = params.staleSliceCache ?? STALE_SLICE_CACHE;
+  const letterPlateId = params.letterPlateId ?? LETTER_PLATE_ID;
+  const letterItemTransform = params.letterItemTransform ?? LETTER_ITEM_TRANSFORM;
+
   const entries = unzipSync(new Uint8Array(params.source));
 
   const body = entries[params.bodyMeshPath];
@@ -306,7 +327,9 @@ export function exportPersonalizedPencil(params: PersonalizedPencilExport): Blob
   entries[params.bodyMeshPath] = strToU8(
     replaceBodyMesh(stripped.bodyMeshXml, params.bodyGraved, params.bodyMeshObjectId)
   );
-  entries[ROOT_MODEL_PATH] = strToU8(buildRootModel(stripped.rootXml, params.letters));
+  entries[ROOT_MODEL_PATH] = strToU8(
+    buildRootModel(stripped.rootXml, params.letters, letterItemTransform)
+  );
   entries[SETTINGS_PATH] = strToU8(
     injectSettings(
       stripped.settingsXml,
@@ -314,10 +337,12 @@ export function exportPersonalizedPencil(params: PersonalizedPencilExport): Blob
       params.letters,
       params.filamentIndex,
       params.text,
-      params.bodyObjectId
+      params.bodyObjectId,
+      sourceFileName,
+      letterPlateId
     )
   );
-  delete entries[STALE_SLICE_CACHE];
+  delete entries[staleSliceCache];
 
   const bytes = zipSync(entries, { level: 6 });
   return new Blob([bytes as unknown as BlobPart], { type: 'model/3mf' });

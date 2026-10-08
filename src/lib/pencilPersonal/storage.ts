@@ -1,10 +1,10 @@
-import type { PencilPersonalConfig, PencilFace, PencilFilamentIndex } from '../../types/pencilPersonal';
+import type { PencilPersonalConfig, PencilFace, PencilFilamentIndex, PencilVariantId } from '../../types/pencilPersonal';
 import {
   DEFAULT_PENCIL_PERSONAL_CONFIG,
-  BODY_HALF_LENGTH,
-  ENGRAVE_MAX_Y,
-  ENGRAVE_MIN_Y,
+  DEFAULT_VARIANT,
   MAX_DEPTH,
+  VARIANTS,
+  isPencilVariantId,
 } from './presets';
 
 const STORAGE_KEY = 'personalizar_lapis_config_v1';
@@ -17,6 +17,17 @@ function clamp(value: number, min: number, max: number, fallback: number): numbe
 function readFace(value: unknown): PencilFace {
   const n = typeof value === 'number' ? value : Number(value);
   return n >= 1 && n <= 6 ? (n as PencilFace) : DEFAULT_PENCIL_PERSONAL_CONFIG.face;
+}
+
+/** Normaliza para uma volta inteira: `[-1, 719] → [0, 359]` (passo 1, ver [U2]). */
+function readAngleDeg(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_PENCIL_PERSONAL_CONFIG.angleDeg;
+  return ((Math.round(n) % 360) + 360) % 360;
+}
+
+function readVariant(value: unknown): PencilVariantId {
+  return isPencilVariantId(value) ? value : DEFAULT_VARIANT;
 }
 
 function readFilament(value: unknown): PencilFilamentIndex {
@@ -62,6 +73,10 @@ export function loadSavedPencilPersonalConfig(): PencilPersonalConfig {
     restoreCustomFont(parsed as Record<string, unknown>);
 
     const def = DEFAULT_PENCIL_PERSONAL_CONFIG;
+    const variant = readVariant(parsed.variant);
+    const variantDef = VARIANTS[variant];
+    const axisHalf = variantDef.bodyLength / 2;
+    const defaultAxis = (variantDef.engraveMinY + variantDef.engraveMaxY) / 2 + axisHalf;
     return {
       ...def,
       ...parsed,
@@ -72,12 +87,14 @@ export function loadSavedPencilPersonalConfig(): PencilPersonalConfig {
       letterHeight: clamp(parsed.letterHeight, 6, 24, def.letterHeight),
       letterSpacing: clamp(parsed.letterSpacing, 0, 3, def.letterSpacing),
       fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
+      variant,
       face: readFace(parsed.face),
+      angleDeg: readAngleDeg(parsed.angleDeg),
       positionAlongAxis: clamp(
         parsed.positionAlongAxis,
-        ENGRAVE_MIN_Y + BODY_HALF_LENGTH,
-        ENGRAVE_MAX_Y + BODY_HALF_LENGTH,
-        def.positionAlongAxis
+        variantDef.engraveMinY + axisHalf,
+        variantDef.engraveMaxY + axisHalf,
+        defaultAxis
       ),
       depth: clamp(parsed.depth, 0.4, MAX_DEPTH, def.depth),
       filamentIndex: readFilament(parsed.filamentIndex),

@@ -8,6 +8,7 @@ import {
 import { fetchPencilPackage, type PencilPackage } from '../lib/pencilPersonal/package';
 import { generatePencilPersonal } from '../lib/pencilPersonal/geometry';
 import { exportPersonalizedPencil } from '../lib/pencilPersonal/exporter';
+import { VARIANTS } from '../lib/pencilPersonal/presets';
 import { downloadBlob } from '../lib/pencilTopper/stlExporter';
 import { PencilPersonalCanvas } from '../components/PencilPersonalCanvas';
 import { PencilPersonalControls } from '../components/PencilPersonalControls';
@@ -26,20 +27,28 @@ export default function PencilPersonalizer() {
   const [exporting, setExporting] = useState(false);
 
   const generatedRef = useRef<GeneratedPencilPersonal | null>(null);
+  const variant = VARIANTS[config.variant];
 
+  // Re-busca o modelo da variante; o preview antigo é descartado junto [V7]
   useEffect(() => {
     let cancelled = false;
-    fetchPencilPackage()
+    setPkg(null);
+    const previous = generatedRef.current;
+    generatedRef.current = null;
+    setGenerated(null);
+    if (previous) previous.letters.dispose();
+
+    fetchPencilPackage(variant.modelUrl, variant.bodyNamePrefixes)
       .then((loaded) => {
         if (!cancelled) setPkg(loaded);
       })
       .catch((err) => {
-        console.error('Erro ao carregar o modelo do lápis:', err);
+        console.error('Erro ao carregar o modelo da peça:', err);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [variant]);
 
   const handleChange = useCallback((newConfig: PencilPersonalConfig) => {
     setConfig(newConfig);
@@ -98,6 +107,10 @@ export default function PencilPersonalizer() {
         bodyMeshPath: pkg.bodyPart.meshPath,
         bodyMeshObjectId: pkg.bodyPart.meshObjectId,
         bodyObjectId: pkg.bodyPart.objectId,
+        sourceFileName: variant.sourceFileName,
+        staleSliceCache: variant.staleSliceCache,
+        letterPlateId: variant.letterPlateId,
+        letterItemTransform: variant.letterItemTransform,
       });
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
       downloadBlob(blob, `Lapis_${safeName(config)}_${timestamp}.3mf`);

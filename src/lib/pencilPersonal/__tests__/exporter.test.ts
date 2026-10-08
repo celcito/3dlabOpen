@@ -8,7 +8,8 @@ import {
   LETTER_PLATE_ID,
   LETTER_ITEM_TRANSFORM,
 } from '../exporter';
-import { loadModelOnce } from './helpers';
+import { VARIANTS } from '../presets';
+import { loadEstojoOnce, loadModelOnce } from './helpers';
 
 const BODY_MESH_PATH = '3D/Objects/object_40.model';
 const REWRITTEN = [BODY_MESH_PATH, '3D/3dmodel.model', 'Metadata/model_settings.config'];
@@ -136,5 +137,82 @@ describe('exportPersonalizedPencil (copy-ZIP)', () => {
 
     const doc = new DOMParser().parseFromString(xml, 'application/xml');
     expect(doc.querySelector('parsererror')).toBeNull();
+  }, 60000);
+});
+
+async function exportEstojoSample() {
+  const pkg = await loadEstojoOnce();
+  const bodyGraved = new THREE.BoxGeometry(10, 20, 10).toNonIndexed();
+  const letters = new THREE.BoxGeometry(4, 6, 0.8).toNonIndexed();
+  letters.computeBoundingBox();
+  letters.translate(0, 0, -(letters.boundingBox?.min.z ?? 0));
+  letters.computeBoundingBox();
+
+  const variant = VARIANTS['estojo-giz'];
+  const blob = exportPersonalizedPencil({
+    source: pkg.source,
+    bodyGraved,
+    letters,
+    filamentIndex: 3,
+    text: 'Ana',
+    bodyMeshPath: pkg.bodyPart.meshPath,
+    bodyMeshObjectId: pkg.bodyPart.meshObjectId,
+    bodyObjectId: pkg.bodyPart.objectId,
+    sourceFileName: variant.sourceFileName,
+    staleSliceCache: variant.staleSliceCache,
+    letterPlateId: variant.letterPlateId,
+    letterItemTransform: variant.letterItemTransform,
+  });
+  const buffer = await blob.arrayBuffer();
+  return {
+    entries: unzipSync(new Uint8Array(buffer)),
+    source: pkg.source,
+    bodyGraved,
+    letters,
+  };
+}
+
+describe('exportPersonalizedPencil (variante estojo-giz)', () => {
+  it('reescreve só as 3 entradas autorizadas e não deixa plate_*.json', async () => {
+    const { entries, source } = await exportEstojoSample();
+    const original = unzipSync(new Uint8Array(source));
+    const rewritten = [
+      '3D/Objects/object_1.model',
+      '3D/3dmodel.model',
+      'Metadata/model_settings.config',
+    ];
+
+    expect(Object.keys(entries).sort()).toEqual(Object.keys(original).sort());
+    for (const name of Object.keys(original)) {
+      if (rewritten.includes(name)) continue;
+      expect(Array.from(entries[name]), `entry ${name} mudou`).toEqual(
+        Array.from(original[name])
+      );
+    }
+    expect(Object.keys(entries).filter((name) => /Metadata\/plate_.*\.json/.test(name))).toEqual(
+      []
+    );
+  }, 60000);
+
+  it('cria a placa 3 das letras em (522, 90) sem Mariana/text_shape', async () => {
+    const { entries } = await exportEstojoSample();
+    const xml = strFromU8(entries['Metadata/model_settings.config']);
+    const root = strFromU8(entries['3D/3dmodel.model']);
+
+    expect(xml.match(/<\?xml/g)).toHaveLength(1);
+    expect(xml).toContain(`<metadata key="plater_id" value="3"/>`);
+    expect((xml.match(/<metadata key="plater_id"/g) || []).length).toBe(3);
+    expect(xml).toContain('<metadata key="source_file" value="Estojo_Giz_Cera_open.3mf"/>');
+    expect(xml).toContain(`<object id="${LETTER_OBJECT_ID}">`);
+    expect(xml).not.toContain('Mariana');
+    expect(xml).not.toContain('text_shape');
+    expect(xml).not.toContain('negative_part');
+
+    expect(root).toContain(`transform="1 0 0 0 1 0 0 0 1 522 90 0"`);
+
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    expect(doc.querySelector('parsererror')).toBeNull();
+    const rootDoc = new DOMParser().parseFromString(root, 'application/xml');
+    expect(rootDoc.querySelector('parsererror')).toBeNull();
   }, 60000);
 });

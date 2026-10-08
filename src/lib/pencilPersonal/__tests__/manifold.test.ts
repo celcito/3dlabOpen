@@ -5,8 +5,9 @@ import type { BufferGeometry } from 'three';
 import { loadPencilPackage } from '../package';
 import { generatePencilPersonal } from '../geometry';
 import { setManifoldWasmUrl } from '../../split3mf/engines/manifoldLoader';
-import { signedVolume } from '../../fastener/threads';
+import { countBoundaryEdges, isWatertight, signedVolume } from '../../fastener/threads';
 import { DEFAULT_PENCIL_PERSONAL_CONFIG } from '../presets';
+import { loadEstojoOnce } from './helpers';
 
 interface MeshReport {
   triangles: number;
@@ -102,4 +103,17 @@ describe('gate de malha (validate_mesh.py)', () => {
       expect(signedVolume(geometry), `${name}: volume`).toBeGreaterThan(0);
     }
   }, 180000);
+});
+
+describe('gate de malha do estojo [AC-04]', () => {
+  it('corpo e tampa saem fechadas e 2-manifold', async () => {
+    const pkg = await loadEstojoOnce();
+    expect(pkg.parts).toHaveLength(2);
+
+    for (const part of pkg.parts) {
+      expect(countBoundaryEdges(part.geometry), `${part.name}: arestas abertas`).toBe(0);
+      expect(isWatertight(part.geometry), `${part.name}: fechada`).toBe(true);
+      expect(signedVolume(part.geometry), `${part.name}: volume`).toBeGreaterThan(0);
+    }
+  }, 120000);
 });

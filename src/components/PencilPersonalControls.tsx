@@ -1,20 +1,21 @@
 import React from 'react';
-import type { PencilFace, PencilFilamentIndex, PencilPersonalConfig } from '../types/pencilPersonal';
+import type {
+  PencilFace,
+  PencilFilamentIndex,
+  PencilPersonalConfig,
+  PencilVariantId,
+} from '../types/pencilPersonal';
 import type { GeneratedPencilPersonal } from '../types/pencilPersonal';
 import {
-  BODY_HALF_LENGTH,
-  ENGRAVE_MAX_Y,
-  ENGRAVE_MIN_Y,
   FILAMENT_COLORS,
   FILAMENT_NAMES,
   MIN_LETTER_THICKNESS,
+  VARIANTS,
   WALL_RESERVE,
 } from '../lib/pencilPersonal/presets';
 import { FontPicker } from './FontPicker';
-import { Type, Crosshair, Layers, Palette, Download, Ruler } from 'lucide-react';
+import { Type, Crosshair, Layers, Palette, Download, Ruler, Boxes } from 'lucide-react';
 
-const ENGRAVE_RANGE_MIN = ENGRAVE_MIN_Y + BODY_HALF_LENGTH;
-const ENGRAVE_RANGE_MAX = ENGRAVE_MAX_Y + BODY_HALF_LENGTH;
 const FACES: PencilFace[] = [1, 2, 3, 4, 5, 6];
 const FILAMENTS: PencilFilamentIndex[] = [1, 2, 3, 4, 5];
 
@@ -37,6 +38,23 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
   const maxDepth = wallThickness
     ? Math.max(MIN_LETTER_THICKNESS, wallThickness - WALL_RESERVE)
     : null;
+  const variant = VARIANTS[config.variant];
+  const bodyHalfLength = variant.bodyLength / 2;
+  const engraveRangeMin = variant.engraveMinY + bodyHalfLength;
+  const engraveRangeMax = variant.engraveMaxY + bodyHalfLength;
+
+  const handleVariantChange = (id: PencilVariantId) => {
+    if (id === config.variant) return;
+    const next = VARIANTS[id];
+    const half = next.bodyLength / 2;
+    const min = next.engraveMinY + half;
+    const max = next.engraveMaxY + half;
+    const fallback = (next.engraveMinY + next.engraveMaxY) / 2 + half;
+    const positionAlongAxis = Number.isFinite(config.positionAlongAxis)
+      ? Math.min(max, Math.max(min, config.positionAlongAxis))
+      : fallback;
+    onChange({ ...config, variant: id, positionAlongAxis });
+  };
 
   return (
     <aside className="w-full md:w-[400px] h-full bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto p-6 space-y-8 scrollbar-hide shrink-0 select-none">
@@ -50,9 +68,34 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
           </h1>
         </div>
         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-          Nome gravado na face hexagonal + placa nova.
+          Nome gravado no {variant.label.toLowerCase()} + placa nova.
         </p>
       </header>
+
+      {/* 00. Modelo */}
+      <section className="space-y-4">
+        <SectionTitle icon={<Boxes className="w-3.5 h-3.5 text-[#632CE5]" />}>
+          00. Modelo
+        </SectionTitle>
+
+        <div className="grid grid-cols-2 gap-1.5">
+          {Object.values(VARIANTS).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleVariantChange(item.id)}
+              className={`py-2.5 px-2 rounded-lg text-[10px] font-black uppercase leading-tight transition-colors ${
+                config.variant === item.id
+                  ? 'bg-[#632CE5] text-white'
+                  : 'bg-[var(--surface-container-high)]/60 text-zinc-500 hover:text-[var(--workbench-text)]'
+              }`}
+              title={item.label}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* 01. Nome & Tipografia */}
       <section className="space-y-4">
@@ -117,32 +160,49 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
           02. Posição
         </SectionTitle>
 
-        <div className="space-y-1.5">
-          <label className="text-[9px] uppercase font-bold text-zinc-600">Face do Hexágono</label>
-          <div className="grid grid-cols-6 gap-1.5">
-            {FACES.map((face) => (
-              <button
-                key={face}
-                type="button"
-                onClick={() => onChange({ ...config, face })}
-                className={`py-2 rounded-lg text-[11px] font-black transition-colors ${
-                  config.face === face
-                    ? 'bg-[#632CE5] text-white'
-                    : 'bg-[var(--surface-container-high)]/60 text-zinc-500 hover:text-[var(--workbench-text)]'
-                }`}
-                title={`Face ${face}`}
-              >
-                {face}
-              </button>
-            ))}
+        {variant.placement === 'face' ? (
+          <div className="space-y-1.5">
+            <label className="text-[9px] uppercase font-bold text-zinc-600">Face do Hexágono</label>
+            <div className="grid grid-cols-6 gap-1.5">
+              {FACES.map((face) => (
+                <button
+                  key={face}
+                  type="button"
+                  onClick={() => onChange({ ...config, face })}
+                  className={`py-2 rounded-lg text-[11px] font-black transition-colors ${
+                    config.face === face
+                      ? 'bg-[#632CE5] text-white'
+                      : 'bg-[var(--surface-container-high)]/60 text-zinc-500 hover:text-[var(--workbench-text)]'
+                  }`}
+                  title={`Face ${face}`}
+                >
+                  {face}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <RangeControl
+            label="Posição angular"
+            unit="°"
+            min="0"
+            max="359"
+            step="1"
+            number={config.angleDeg}
+            onChange={(value) =>
+              onChange({
+                ...config,
+                angleDeg: Math.min(359, Math.max(0, Math.round(value))),
+              })
+            }
+          />
+        )}
 
         <RangeControl
           label="Posição ao longo do eixo"
           unit="mm"
-          min={String(ENGRAVE_RANGE_MIN)}
-          max={String(ENGRAVE_RANGE_MAX)}
+          min={String(engraveRangeMin)}
+          max={String(engraveRangeMax)}
           step="0.5"
           number={config.positionAlongAxis}
           onChange={(value) => onChange({ ...config, positionAlongAxis: value })}
@@ -151,7 +211,7 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
         <div className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] text-[10px]">
           <span className="text-zinc-500 font-bold uppercase tracking-wider">Centro</span>
           <span className="font-mono font-bold text-[#632CE5]">
-            {(config.positionAlongAxis - BODY_HALF_LENGTH).toFixed(1)} mm
+            {(config.positionAlongAxis - bodyHalfLength).toFixed(1)} mm
           </span>
         </div>
       </section>
@@ -251,7 +311,7 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
 
         <p className="text-[10px] leading-relaxed text-zinc-500">
           Gera um copy do projeto com o nome gravado, letras como peça inlay e uma prancha nova
-          (id 7).
+          (id {variant.letterPlateId}).
         </p>
       </section>
     </aside>
