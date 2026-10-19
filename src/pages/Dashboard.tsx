@@ -50,6 +50,7 @@ import {
   Pencil,
   PenLine,
   NotebookPen,
+  Shapes,
 } from "lucide-react";
 import { M2crLogo } from "@/components/M2crLogo";
 
@@ -95,6 +96,7 @@ const TOOL_CATEGORIES = [
       { to: "/bin-generator", label: "Bin & Tray Generator", desc: "Stackable bins, grid trays, organizers with labels", icon: Box, featured: true },
       { to: "/flexi-creator", label: "Flexi Creator", desc: "Articulated print-in-place models with joint libraries", icon: Waves, featured: true },
       { to: "/medalha", label: "Medalhas 3D", desc: "Commemorative medals with circular text, rim & ribbon handle", icon: Award, featured: false },
+      { to: "/termoformados", label: "Kit Termoformado", desc: "Mold, press, sheet & clips kit from presets or SVG, Bambu 3MF export", icon: Shapes, featured: false },
       { to: "/chaveiro", label: "Chaveiro com Nome", desc: "Name silhouette keychains with raised text & loop", icon: KeyRound, featured: false },
       { to: "/porta-canetas", label: "Porta Canetas com Nome", desc: "Name silhouette extruded into a hollow pen holder with colored rim, 2-color", icon: PenLine, featured: false },
       { to: "/estojo-borracha", label: "Estojo Borracha com Nome", desc: "Roll-top pencil case, print-in-place door, 4 parts, personalized sliding cover", icon: NotebookPen, featured: false },
