@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, Type, BookOpen, KeyRound, FileSearch, Award } from "lucide-react";
+import { Brush, Cuboid, BoxSelect, Calculator, Megaphone, Sparkles, Scissors, ArrowRightLeft, QrCode, Palette, Gamepad2, Baseline, Waves, UserCircle2, Box, Flower, Image, ImagePlus, Layers, Camera, Settings, HelpCircle, Headset, MonitorPlay, Keyboard, Settings2, CircleDot, WrapText, Nut, Paperclip, Puzzle, Cake, Pencil, PenTool, PenLine, Type, BookOpen, KeyRound, FileSearch, Award } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { M2crLogo } from "@/components/M2crLogo";
 import Viewer3D from "./pages/Viewer3D";
@@ -40,6 +40,7 @@ const PuzzleGenerator = lazy(() => import("./pages/PuzzleGenerator"));
 const CakeTopperCreator = lazy(() => import("./pages/CakeTopperCreator"));
 const PencilTopperCreator = lazy(() => import("./pages/PencilTopperCreator"));
 const KeychainCreator = lazy(() => import("./pages/KeychainCreator"));
+const PenHolderCreator = lazy(() => import("./pages/PenHolderCreator"));
 const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
 const MedalCreator = lazy(() => import("./pages/MedalCreator"));
 const ThreeMfAnalyzer = lazy(() => import("./pages/ThreeMfAnalyzer"));
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
   { to: "/pencil-topper", icon: Pencil, label: "Ponteira de Lápis", description: "Clips 2 Cores p/ Lápis/Caneta" },
   { to: "/personalizar-lapis", icon: PenTool, label: "Personalizar Lápis", description: "Nome gravado na face hexagonal" },
   { to: "/chaveiro", icon: KeyRound, label: "Chaveiro com Nome", description: "Nome em relevo + argola" },
+  { to: "/porta-canetas", icon: PenLine, label: "Porta Canetas", description: "Silhueta do nome extrudada + aro colorido" },
   { to: "/medalha", icon: Award, label: "Medalhas 3D", description: "Texto circular, borda e passador" },
   { to: "/letra-caixa", icon: Type, label: "Letra Caixa 3D", description: "3 Camadas Multicolor" },
   { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
@@ -214,6 +216,7 @@ export default function App() {
           <Route path="/pencil-topper" element={<PencilTopperCreator />} />
           <Route path="/personalizar-lapis" element={<PencilPersonalizer />} />
           <Route path="/chaveiro" element={<KeychainCreator />} />
+          <Route path="/porta-canetas" element={<PenHolderCreator />} />
           <Route path="/medalha" element={<MedalCreator />} />
           <Route path="/letra-caixa" element={<LetterBoxCreator />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />

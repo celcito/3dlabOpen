@@ -42,7 +42,7 @@ export interface ThreeMfExportOptions {
 /**
  * Format hex color to 3MF required uppercase `#RRGGBB` or `#RRGGBBAA`
  */
-function normalizeColor(hex: string): string {
+export function normalizeColor(hex: string): string {
   let clean = hex.trim().replace("#", "");
   if (clean.length === 3) {
     clean = clean.split("").map(c => c + c).join("");
@@ -298,7 +298,7 @@ function xmlAttr(s: string): string {
  * Covers the essential ~50 settings needed for BambuStudio to recognise the
  * file as a native project with sensible defaults (PLA, 0.2mm, 15% gyroid).
  */
-function buildProjectSettingsConfig(filaments: FilamentDefinition[]): string {
+export function buildProjectSettingsConfig(filaments: FilamentDefinition[]): string {
   const filamentCount = filaments.length;
   const filamentColours = filaments.map(f => normalizeColor(f.color));
   const arr = (vals: string[]) => JSON.stringify(vals);

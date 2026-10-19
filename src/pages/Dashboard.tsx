@@ -48,6 +48,7 @@ import {
   FileSearch,
   Award,
   Pencil,
+  PenLine,
 } from "lucide-react";
 import { M2crLogo } from "@/components/M2crLogo";
 
@@ -94,6 +95,7 @@ const TOOL_CATEGORIES = [
       { to: "/flexi-creator", label: "Flexi Creator", desc: "Articulated print-in-place models with joint libraries", icon: Waves, featured: true },
       { to: "/medalha", label: "Medalhas 3D", desc: "Commemorative medals with circular text, rim & ribbon handle", icon: Award, featured: false },
       { to: "/chaveiro", label: "Chaveiro com Nome", desc: "Name silhouette keychains with raised text & loop", icon: KeyRound, featured: false },
+      { to: "/porta-canetas", label: "Porta Canetas com Nome", desc: "Name silhouette extruded into a hollow pen holder with colored rim, 2-color", icon: PenLine, featured: false },
       { to: "/personalizar-lapis", label: "Personalizar Lápis", desc: "Name engraved on the hexagonal face, inlay letters, new plate", icon: Pencil, featured: false },
       { to: "/keycap-customizer", label: "Keycap Designer", desc: "MX-compatible keycaps with legends, profiles & textures", icon: Keyboard, featured: false },
       { to: "/cookie-cutter-maker", label: "Cookie Cutter Maker", desc: "Food-safe cutters from SVG with bevel & handle options", icon: Scissors, featured: false },
