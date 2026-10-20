@@ -53,7 +53,10 @@ export async function generatePencilTopperModel(
   }
 
   const textHeightPx = targetFontHeightPx;
-  const outlinePx = Math.max(1.5, config.outlineSize * (config.fontWeightScale || 1.0)) * pxPerMm;
+  // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
+  const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  const reliefDilationMm = (fontScale - 0.5) * 0.4;
 
   const innerRadiusMm = effectiveDiameter / 2;
   const socketOuterRadiusMm = innerRadiusMm + Math.max(1.5, config.baseWallThickness);
@@ -259,13 +262,15 @@ export async function generatePencilTopperModel(
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(baseImgData, counterMask);
   const mmPerPixel = 1 / pxPerMm;
-  const baseContours = extractContoursFromImageData(baseImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.2);
+  const baseContours = extractContoursFromImageData(baseImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.07, { resimplifyMm: 0.03 });
   const baseShapes = buildThreeShapes(baseContours.outer, baseContours.holes);
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 1.0 * pxPerMm;
+  // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
+  const reliefStroke = reliefDilationMm > 0.01;
+  if (reliefStroke) ctx.lineWidth = reliefDilationMm * 2 * pxPerMm;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   ctx.font = fontStyle;
@@ -274,7 +279,7 @@ export async function generatePencilTopperModel(
 
   for (let i = 0; i < text.length; i++) {
     const cx = textStartXPx + charOffsets[i];
-    ctx.strokeText(text[i], cx, textBaselineY);
+    if (reliefStroke) ctx.strokeText(text[i], cx, textBaselineY);
     ctx.fillText(text[i], cx, textBaselineY);
   }
 
@@ -284,7 +289,7 @@ export async function generatePencilTopperModel(
 
   const reliefImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(reliefImgData, counterMask);
-  const reliefContours = extractContoursFromImageData(reliefImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.15);
+  const reliefContours = extractContoursFromImageData(reliefImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.05, { resimplifyMm: 0.02 });
   const reliefShapes = buildThreeShapes(reliefContours.outer, reliefContours.holes);
 
   const safeBaseShapes = baseShapes.length > 0 ? baseShapes : reliefShapes;
