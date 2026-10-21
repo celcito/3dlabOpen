@@ -214,7 +214,11 @@ export async function generatePencilTopperModel(
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  ctx.lineJoin = 'round';
+  // Contorno da base acompanha o desenho da fonte: quina em bissetriz (paralela ao
+  // glifo) em vez de arco, que transformava tudo em "nuvem". miterLimit corta as
+  // pontas agudas demais (bevel) para a borda não espetar.
+  ctx.lineJoin = 'miter';
+  ctx.miterLimit = 3;
   ctx.lineCap = 'round';
 
   const orientation = config.holeOrientation || 'horizontal';

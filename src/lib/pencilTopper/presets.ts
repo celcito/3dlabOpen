@@ -73,7 +73,7 @@ export const DEFAULT_PENCIL_CONFIG: PencilTopperConfig = {
   fontWeightScale: 1.0,
   symbolId: 'none',
   symbolPosition: 'left',
-  outlineSize: 2.8,
+  outlineSize: 1.6,
   baseWallThickness: 2.1,
   reliefThickness: 2.0,
   baseColor: '#111827',
