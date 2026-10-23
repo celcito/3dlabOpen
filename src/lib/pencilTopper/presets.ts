@@ -10,6 +10,14 @@ export const PENCIL_MODELS: PencilModelOption[] = [
     defaultHoleShape: 'round',
   },
   {
+    id: 'caneta-compact',
+    name: 'Caneta Compact',
+    emoji: '✒️',
+    defaultDiameter: 8.5,
+    description: 'Diâmetro padrão 8.5 mm para canetas compactas retráteis',
+    defaultHoleShape: 'round',
+  },
+  {
     id: 'lapis-redondo',
     name: 'Lápis Comum Redondo',
     emoji: '✏️',

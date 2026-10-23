@@ -1,5 +1,5 @@
 export interface PencilModelOption {
-  id: 'bic-cristal' | 'lapis-redondo' | 'lapis-hexagonal' | 'personalizado';
+  id: 'bic-cristal' | 'caneta-compact' | 'lapis-redondo' | 'lapis-hexagonal' | 'personalizado';
   name: string;
   emoji: string;
   defaultDiameter: number;
@@ -22,7 +22,7 @@ export interface PresetSymbol {
 }
 
 export interface PencilTopperConfig {
-  pencilModel: 'bic-cristal' | 'lapis-redondo' | 'lapis-hexagonal' | 'personalizado';
+  pencilModel: 'bic-cristal' | 'caneta-compact' | 'lapis-redondo' | 'lapis-hexagonal' | 'personalizado';
   pencilDiameter: number;
   clearance: number;
   holeShape: 'round' | 'hexagonal';

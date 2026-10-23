@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import type { PencilTopperConfig, Model3DDimensions } from '../../types/pencilTopper';
 import { extractContoursFromImageData, buildThreeShapes, computeEnclosedEmptyMask, punchMask } from './contourExtractor';
+import { drawSymbol } from './symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 
 export interface GeneratedPencilTopper {
@@ -64,14 +65,16 @@ export async function generatePencilTopperModel(
 
   const baseHeightMm = Math.max(config.socketHeight || 12.5, socketOuterRadiusMm * 2);
 
-  const hasSymbol = config.symbolId && config.symbolId !== 'none';
+  const hasSymbol = !!config.symbolId && config.symbolId !== 'none';
+  const symbolPosition = config.symbolPosition || 'right';
+  const showSymbolLeft = hasSymbol && (symbolPosition === 'left' || symbolPosition === 'both');
+  const showSymbolRight = hasSymbol && (symbolPosition === 'right' || symbolPosition === 'both');
+  const symbolCount = (showSymbolLeft ? 1 : 0) + (showSymbolRight ? 1 : 0);
   const symbolSizePx = targetFontHeightPx * 0.85;
   const symbolGapPx = symbolSizePx * 0.35;
+  const symbolBlockPx = symbolCount * (symbolGapPx + symbolSizePx);
 
-  let totalContentWidthPx = textWidthPx;
-  if (hasSymbol) {
-    totalContentWidthPx += symbolGapPx + symbolSizePx;
-  }
+  const totalContentWidthPx = textWidthPx + symbolBlockPx;
 
   const paddingPx = Math.ceil(Math.max(outlinePx * 2.5, socketOuterRadiusPx * 2) + 28);
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
@@ -85,115 +88,18 @@ export async function generatePencilTopperModel(
 
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
-  const textStartXPx = centerX - totalContentWidthPx / 2;
+  const contentStartXPx = centerX - totalContentWidthPx / 2;
+  const leftBlockPx = showSymbolLeft ? symbolGapPx + symbolSizePx : 0;
+  const textStartXPx = contentStartXPx + leftBlockPx;
   const textBaselineY = centerY + textHeightPx * 0.32;
-  const symbolX = textStartXPx + textWidthPx + symbolGapPx + symbolSizePx / 2;
+  const symbolLeftXPx = contentStartXPx + symbolSizePx / 2;
+  const symbolRightXPx =
+    contentStartXPx + leftBlockPx + textWidthPx + symbolGapPx + symbolSizePx / 2;
   const tunnelCenterYPx = textBaselineY - textHeightPx * 0.28;
 
-  const drawPresetSymbol = (
-    targetCtx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    size: number
-  ) => {
-    targetCtx.save();
-    targetCtx.translate(x, y);
-    const s = size / 2;
-
-    switch (config.symbolId) {
-      case 'heart': {
-        targetCtx.beginPath();
-        targetCtx.moveTo(0, s * 0.3);
-        targetCtx.bezierCurveTo(-s, -s * 0.6, -s * 1.1, s * 0.3, 0, s * 1.1);
-        targetCtx.bezierCurveTo(s * 1.1, s * 0.3, s, -s * 0.6, 0, s * 0.3);
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      case 'star': {
-        targetCtx.beginPath();
-        for (let i = 0; i < 10; i++) {
-          const r = i % 2 === 0 ? s * 1.1 : s * 0.45;
-          const angle = (i * Math.PI) / 5 - Math.PI / 2;
-          const px = Math.cos(angle) * r;
-          const py = Math.sin(angle) * r;
-          if (i === 0) targetCtx.moveTo(px, py);
-          else targetCtx.lineTo(px, py);
-        }
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      case 'crown': {
-        targetCtx.beginPath();
-        targetCtx.moveTo(-s * 0.9, s * 0.7);
-        targetCtx.lineTo(-s * 0.9, -s * 0.3);
-        targetCtx.lineTo(-s * 0.4, s * 0.1);
-        targetCtx.lineTo(0, -s * 0.7);
-        targetCtx.lineTo(s * 0.4, s * 0.1);
-        targetCtx.lineTo(s * 0.9, -s * 0.3);
-        targetCtx.lineTo(s * 0.9, s * 0.7);
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      case 'flower': {
-        targetCtx.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const angle = (i * 2 * Math.PI) / 5;
-          const px = Math.cos(angle) * s * 0.55;
-          const py = Math.sin(angle) * s * 0.55;
-          targetCtx.arc(px, py, s * 0.45, 0, Math.PI * 2);
-        }
-        targetCtx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
-        targetCtx.fill();
-        break;
-      }
-      case 'butterfly': {
-        targetCtx.beginPath();
-        targetCtx.ellipse(-s * 0.5, -s * 0.4, s * 0.45, s * 0.65, -0.4, 0, Math.PI * 2);
-        targetCtx.ellipse(s * 0.5, -s * 0.4, s * 0.45, s * 0.65, 0.4, 0, Math.PI * 2);
-        targetCtx.ellipse(-s * 0.4, s * 0.4, s * 0.35, s * 0.45, 0.3, 0, Math.PI * 2);
-        targetCtx.ellipse(s * 0.4, s * 0.4, s * 0.35, s * 0.45, -0.3, 0, Math.PI * 2);
-        targetCtx.rect(-s * 0.1, -s * 0.7, s * 0.2, s * 1.4);
-        targetCtx.fill();
-        break;
-      }
-      case 'dino': {
-        targetCtx.beginPath();
-        targetCtx.arc(s * 0.3, -s * 0.5, s * 0.4, 0, Math.PI * 2);
-        targetCtx.rect(-s * 0.5, -s * 0.2, s * 0.9, s * 0.8);
-        targetCtx.rect(-s * 0.4, s * 0.5, s * 0.2, s * 0.4);
-        targetCtx.rect(s * 0.1, s * 0.5, s * 0.2, s * 0.4);
-        targetCtx.fill();
-        break;
-      }
-      case 'gamepad': {
-        targetCtx.beginPath();
-        targetCtx.roundRect(-s * 0.9, -s * 0.4, s * 1.8, s * 0.8, s * 0.3);
-        targetCtx.fill();
-        break;
-      }
-      case 'ball': {
-        targetCtx.beginPath();
-        targetCtx.arc(0, 0, s * 0.85, 0, Math.PI * 2);
-        targetCtx.fill();
-        break;
-      }
-      case 'gradcap': {
-        targetCtx.beginPath();
-        targetCtx.moveTo(0, -s * 0.7);
-        targetCtx.lineTo(s * 0.9, -s * 0.1);
-        targetCtx.lineTo(0, s * 0.3);
-        targetCtx.lineTo(-s * 0.9, -s * 0.1);
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      default:
-        break;
-    }
-    targetCtx.restore();
+  const drawSymbols = (targetCtx: CanvasRenderingContext2D, outline = 0) => {
+    if (showSymbolLeft) drawSymbol(targetCtx, config.symbolId, symbolLeftXPx, tunnelCenterYPx, symbolSizePx, outline);
+    if (showSymbolRight) drawSymbol(targetCtx, config.symbolId, symbolRightXPx, tunnelCenterYPx, symbolSizePx, outline);
   };
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -205,7 +111,7 @@ export async function generatePencilTopperModel(
     ctx.fillText(text[i], textStartXPx + charOffsets[i], textBaselineY);
   }
   if (hasSymbol) {
-    drawPresetSymbol(ctx, symbolX, tunnelCenterYPx, symbolSizePx);
+    drawSymbols(ctx);
   }
   const counterMask = computeEnclosedEmptyMask(
     ctx.getImageData(0, 0, canvasWidth, canvasHeight)
@@ -224,8 +130,8 @@ export async function generatePencilTopperModel(
   const orientation = config.holeOrientation || 'horizontal';
 
   if (orientation === 'horizontal') {
-    const capLeft = textStartXPx - outlinePx;
-    const capRight = textStartXPx + totalContentWidthPx + outlinePx;
+    const capLeft = contentStartXPx - outlinePx;
+    const capRight = contentStartXPx + totalContentWidthPx + outlinePx;
     const capWidth = capRight - capLeft;
     const capHeight = socketOuterRadiusPx * 2;
     const capY = tunnelCenterYPx - capHeight / 2;
@@ -233,7 +139,7 @@ export async function generatePencilTopperModel(
     ctx.roundRect(capLeft, capY, capWidth, capHeight, socketOuterRadiusPx);
     ctx.fill();
   } else if (orientation === 'vertical') {
-    const textCenterX = textStartXPx + totalContentWidthPx / 2;
+    const textCenterX = contentStartXPx + totalContentWidthPx / 2;
     const capTop = centerY - textHeightPx * 0.6;
     const capBottom = centerY + textHeightPx * 0.6;
     const capWidth = socketOuterRadiusPx * 2;
@@ -242,7 +148,7 @@ export async function generatePencilTopperModel(
     ctx.roundRect(textCenterX - capWidth / 2, capTop, capWidth, capHeight, socketOuterRadiusPx);
     ctx.fill();
   } else {
-    const textCenterX = textStartXPx + totalContentWidthPx / 2;
+    const textCenterX = contentStartXPx + totalContentWidthPx / 2;
     ctx.beginPath();
     ctx.arc(textCenterX, centerY, socketOuterRadiusPx, 0, Math.PI * 2);
     ctx.fill();
@@ -260,7 +166,7 @@ export async function generatePencilTopperModel(
   }
 
   if (hasSymbol) {
-    drawPresetSymbol(ctx, symbolX, tunnelCenterYPx, symbolSizePx + outlinePx * 1.5);
+    drawSymbols(ctx, outlinePx);
   }
 
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -288,7 +194,7 @@ export async function generatePencilTopperModel(
   }
 
   if (hasSymbol) {
-    drawPresetSymbol(ctx, symbolX, tunnelCenterYPx, symbolSizePx);
+    drawSymbols(ctx, reliefStroke ? reliefDilationMm * pxPerMm : 0);
   }
 
   const reliefImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);

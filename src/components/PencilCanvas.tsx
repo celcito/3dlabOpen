@@ -410,6 +410,7 @@ export const PencilCanvas: React.FC<PencilCanvasProps> = ({
     config.letterSpacing,
     config.fontWeightScale,
     config.symbolId,
+    config.symbolPosition,
     config.outlineSize,
     config.baseWallThickness,
     config.reliefThickness,
