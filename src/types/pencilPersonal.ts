@@ -45,6 +45,10 @@ export interface PencilPersonalConfig {
   angleDeg: number;
   positionAlongAxis: number;
 
+  /** ícone vetorial junto ao nome (ids de `pencilTopper/symbols`) */
+  symbolId: string;
+  symbolPosition: 'left' | 'right' | 'both';
+
   depth: number;
   filamentIndex: PencilFilamentIndex;
 }

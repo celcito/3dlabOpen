@@ -13,6 +13,7 @@ import {
   punchMask,
 } from '../pencilTopper/contourExtractor';
 import { ensureGoogleFont } from '../fonts/googleFonts';
+import { drawSymbol } from '../pencilTopper/symbols';
 import {
   BODY_AXIS,
   HEX_FACE_WIDTH,
@@ -128,10 +129,20 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   }
   if (text.length > 0) textWidthPx -= letterSpacingPx;
 
+  const hasSymbol = !!config.symbolId && config.symbolId !== 'none';
+  const symbolPosition = config.symbolPosition || 'left';
+  const showSymbolLeft = hasSymbol && (symbolPosition === 'left' || symbolPosition === 'both');
+  const showSymbolRight = hasSymbol && (symbolPosition === 'right' || symbolPosition === 'both');
+  const symbolCount = (showSymbolLeft ? 1 : 0) + (showSymbolRight ? 1 : 0);
+  const symbolSizePx = fontHeightPx * 0.85;
+  const symbolGapPx = symbolSizePx * 0.35;
+  const symbolBlockPx = symbolCount * (symbolGapPx + symbolSizePx);
+  const totalContentWidthPx = textWidthPx + symbolBlockPx;
+
   const outlinePx = Math.max(0.6, (config.fontWeightScale || 1) * 1.2) * PX_PER_MM;
   const paddingPx = Math.ceil(outlinePx * 2 + 12);
 
-  const canvasWidth = Math.ceil(textWidthPx + paddingPx * 2);
+  const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
   const canvasHeight = Math.ceil(fontHeightPx + paddingPx * 2);
 
   const canvas = document.createElement('canvas');
@@ -142,8 +153,17 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
 
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
-  const textStartX = centerX - textWidthPx / 2;
+  const contentStartX = centerX - totalContentWidthPx / 2;
+  const leftBlockPx = showSymbolLeft ? symbolGapPx + symbolSizePx : 0;
+  const textStartX = contentStartX + leftBlockPx;
   const baselineY = centerY + fontHeightPx * 0.32;
+  const symbolLeftX = contentStartX + symbolSizePx / 2;
+  const symbolRightX = contentStartX + leftBlockPx + textWidthPx + symbolGapPx + symbolSizePx / 2;
+  const symbolCenterY = centerY + fontHeightPx * 0.04;
+  const drawSymbols = (target: CanvasRenderingContext2D, outline = 0) => {
+    if (showSymbolLeft) drawSymbol(target, config.symbolId, symbolLeftX, symbolCenterY, symbolSizePx, outline);
+    if (showSymbolRight) drawSymbol(target, config.symbolId, symbolRightX, symbolCenterY, symbolSizePx, outline);
+  };
 
   ctx.fillStyle = '#000000';
   ctx.font = fontStyle;
@@ -152,6 +172,7 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   for (let i = 0; i < text.length; i++) {
     ctx.fillText(text[i], textStartX + offsets[i], baselineY);
   }
+  if (hasSymbol) drawSymbols(ctx);
   const counterMask = computeEnclosedEmptyMask(ctx.getImageData(0, 0, canvasWidth, canvasHeight));
 
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -168,6 +189,7 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
     ctx.strokeText(text[i], cx, baselineY);
     ctx.fillText(text[i], cx, baselineY);
   }
+  if (hasSymbol) drawSymbols(ctx, outlinePx);
 
   const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(imageData, counterMask);

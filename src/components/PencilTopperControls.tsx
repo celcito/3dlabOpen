@@ -1,8 +1,8 @@
 import React from 'react';
 import type { PencilTopperConfig, Model3DDimensions } from '../types/pencilTopper';
-import { PENCIL_MODELS, PENCIL_COLOR_PALETTES, PRESET_SYMBOLS } from '../lib/pencilTopper/presets';
-import { SYMBOL_SHAPES } from '../lib/pencilTopper/symbols';
+import { PENCIL_MODELS, PENCIL_COLOR_PALETTES } from '../lib/pencilTopper/presets';
 import { FontPicker } from './FontPicker';
+import { SymbolPicker } from './SymbolPicker';
 import {
   Download,
   Sparkles,
@@ -14,9 +14,6 @@ import {
   PenTool,
   Sliders,
   Type,
-  ArrowLeft,
-  ArrowRight,
-  ArrowLeftRight,
 } from 'lucide-react';
 
 interface PencilTopperControlsProps {
@@ -233,60 +230,11 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
           03. Ícone & Posição
         </SectionTitle>
 
-        <div className="grid grid-cols-5 gap-1.5">
-          {PRESET_SYMBOLS.map((sym) => {
-            const isSelected = config.symbolId === sym.id;
-            return (
-              <button
-                key={sym.id}
-                type="button"
-                onClick={() => onChange({ ...config, symbolId: sym.id })}
-                title={sym.name}
-                className={`p-2 rounded-lg border flex flex-col items-center justify-center transition-all ${
-                  isSelected
-                    ? 'border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10'
-                    : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
-                }`}
-              >
-                <SymbolGlyph id={sym.id} fallback={sym.emoji} />
-                <span className="text-[9px] font-black uppercase truncate w-full text-center mt-0.5">
-                  {sym.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {config.symbolId !== 'none' && (
-          <div className="space-y-1.5">
-            <label className="text-[9px] uppercase font-bold text-zinc-600 block">
-              Posição do Ícone
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(
-                [
-                  { id: 'left', label: 'Início', icon: <ArrowLeft className="w-3.5 h-3.5" /> },
-                  { id: 'right', label: 'Fim', icon: <ArrowRight className="w-3.5 h-3.5" /> },
-                  { id: 'both', label: 'Ambos', icon: <ArrowLeftRight className="w-3.5 h-3.5" /> },
-                ] as const
-              ).map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => onChange({ ...config, symbolPosition: option.id })}
-                  className={`py-2.5 rounded-lg border text-[9px] font-black uppercase tracking-wide flex items-center justify-center gap-1.5 transition-all ${
-                    config.symbolPosition === option.id
-                      ? 'border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10'
-                      : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
-                  }`}
-                >
-                  {option.icon}
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <SymbolPicker
+          symbolId={config.symbolId}
+          symbolPosition={config.symbolPosition}
+          onChange={(patch) => onChange({ ...config, ...patch })}
+        />
 
         <button
           type="button"
@@ -531,39 +479,3 @@ function ColorField({
   );
 }
 
-function SymbolGlyph({ id, fallback }: { id: string; fallback: string }) {
-  const shapes = SYMBOL_SHAPES[id];
-  if (!shapes) return <span className="text-lg leading-none">{fallback}</span>;
-
-  const maskId = `pencil-sym-${id}`;
-  const hasHoles = shapes.sub.length > 0;
-
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      className="w-5 h-5"
-      fill="currentColor"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {hasHoles && (
-        <defs>
-          <mask id={maskId}>
-            <rect width="100" height="100" fill="black" />
-            {shapes.add.map((d, index) => (
-              <path key={`a${index}`} d={d} fill="white" />
-            ))}
-            {shapes.sub.map((d, index) => (
-              <path key={`s${index}`} d={d} fill="black" />
-            ))}
-          </mask>
-        </defs>
-      )}
-      <g mask={hasHoles ? `url(#${maskId})` : undefined}>
-        {shapes.add.map((d, index) => (
-          <path key={index} d={d} />
-        ))}
-      </g>
-    </svg>
-  );
-}

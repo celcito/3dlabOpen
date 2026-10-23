@@ -24,6 +24,7 @@ import {
   VARIANTS,
 } from '../presets';
 import { loadEstojoOnce, loadModelOnce } from './helpers';
+import { drawSymbol, SYMBOL_SHAPES } from '../../pencilTopper/symbols';
 import type { PencilPersonalConfig } from '../../../types/pencilPersonal';
 
 beforeAll(() => {
@@ -95,6 +96,49 @@ describe('buildTextShapes', () => {
     expect(points).toBeGreaterThan(250);
     expect(shapes.shapes.length).toBeGreaterThan(1);
   }, 60000);
+
+  it('acrescenta o ícone na largura (início, fim e ambos)', async () => {
+    const overrides = { text: 'Nome', letterSpacing: 1 } as const;
+    const base = await buildTextShapes(config({ ...overrides }));
+    const left = await buildTextShapes(
+      config({ ...overrides, symbolId: 'heart', symbolPosition: 'left' })
+    );
+    const both = await buildTextShapes(
+      config({ ...overrides, symbolId: 'star', symbolPosition: 'both' })
+    );
+
+    // ícone = 0,85 × altura da letra + gap de 0,35 × tamanho
+    expect(left.widthMm - base.widthMm).toBeGreaterThan(12);
+    expect(both.widthMm - left.widthMm).toBeGreaterThan(12);
+    expect(left.shapes.length).toBeGreaterThan(1);
+  }, 60000);
+
+  it('extrai o contorno de ícones com vazados (ball) sem quebrar', async () => {
+    const shapes = await buildTextShapes(
+      config({ text: 'Ana', symbolId: 'ball', symbolPosition: 'right' })
+    );
+    expect(shapes.shapes.length).toBeGreaterThan(1);
+  }, 60000);
+});
+
+describe('drawSymbol (jsdom)', () => {
+  it('pinta todos os ícones com ctx 2D puro (sem Path2D/DOMMatrix)', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 96;
+    canvas.height = 96;
+    const ctx = canvas.getContext('2d');
+    expect(ctx).toBeTruthy();
+    if (!ctx) return;
+
+    for (const id of Object.keys(SYMBOL_SHAPES)) {
+      ctx.clearRect(0, 0, 96, 96);
+      drawSymbol(ctx, id, 48, 48, 80, 1.5);
+      const { data } = ctx.getImageData(0, 0, 96, 96);
+      let painted = 0;
+      for (let i = 3; i < data.length; i += 4) if (data[i] > 0) painted++;
+      expect(painted, `ícone ${id}`).toBeGreaterThan(200);
+    }
+  });
 });
 
 describe('generatePencilPersonal', () => {

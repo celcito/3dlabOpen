@@ -1,4 +1,5 @@
 import type { PencilPersonalConfig, PencilFace, PencilFilamentIndex, PencilVariantId } from '../../types/pencilPersonal';
+import { SYMBOL_SHAPES } from '../pencilTopper/symbols';
 import {
   DEFAULT_PENCIL_PERSONAL_CONFIG,
   DEFAULT_VARIANT,
@@ -28,6 +29,17 @@ function readAngleDeg(value: unknown): number {
 
 function readVariant(value: unknown): PencilVariantId {
   return isPencilVariantId(value) ? value : DEFAULT_VARIANT;
+}
+
+function readSymbolId(value: unknown): string {
+  if (typeof value !== 'string' || !value) return DEFAULT_PENCIL_PERSONAL_CONFIG.symbolId;
+  return value === 'none' || SYMBOL_SHAPES[value] ? value : 'none';
+}
+
+function readSymbolPosition(value: unknown): PencilPersonalConfig['symbolPosition'] {
+  return value === 'left' || value === 'right' || value === 'both'
+    ? value
+    : DEFAULT_PENCIL_PERSONAL_CONFIG.symbolPosition;
 }
 
 function readFilament(value: unknown): PencilFilamentIndex {
@@ -96,6 +108,8 @@ export function loadSavedPencilPersonalConfig(): PencilPersonalConfig {
         variantDef.engraveMaxY + axisHalf,
         defaultAxis
       ),
+      symbolId: readSymbolId(parsed.symbolId),
+      symbolPosition: readSymbolPosition(parsed.symbolPosition),
       depth: clamp(parsed.depth, 0.4, MAX_DEPTH, def.depth),
       filamentIndex: readFilament(parsed.filamentIndex),
     };

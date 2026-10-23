@@ -14,7 +14,8 @@ import {
   WALL_RESERVE,
 } from '../lib/pencilPersonal/presets';
 import { FontPicker } from './FontPicker';
-import { Type, Crosshair, Layers, Palette, Download, Ruler, Boxes } from 'lucide-react';
+import { SymbolPicker } from './SymbolPicker';
+import { Type, Crosshair, Layers, Palette, Download, Ruler, Boxes, Sparkles } from 'lucide-react';
 
 const FACES: PencilFace[] = [1, 2, 3, 4, 5, 6];
 const FILAMENTS: PencilFilamentIndex[] = [1, 2, 3, 4, 5];
@@ -208,6 +209,20 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
           onChange={(value) => onChange({ ...config, positionAlongAxis: value })}
         />
 
+        <button
+          type="button"
+          onClick={() =>
+            onChange({
+              ...config,
+              positionAlongAxis: (engraveRangeMin + engraveRangeMax) / 2,
+            })
+          }
+          className="w-full py-2.5 rounded-lg border border-[var(--workbench-line)] text-[9px] font-black uppercase tracking-wide text-[var(--on-surface-variant)] hover:border-[#632CE5]/50 hover:text-[#632CE5] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+        >
+          <Crosshair className="w-3.5 h-3.5" />
+          Centralizar no lápis
+        </button>
+
         <div className="flex items-center justify-between px-2.5 py-2 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] text-[10px]">
           <span className="text-zinc-500 font-bold uppercase tracking-wider">Centro</span>
           <span className="font-mono font-bold text-[#632CE5]">
@@ -216,10 +231,23 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
         </div>
       </section>
 
-      {/* 03. Gravação */}
+      {/* 03. Ícone & Posição */}
+      <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+        <SectionTitle icon={<Sparkles className="w-3.5 h-3.5 text-[#632CE5]" />}>
+          03. Ícone & Posição
+        </SectionTitle>
+
+        <SymbolPicker
+          symbolId={config.symbolId}
+          symbolPosition={config.symbolPosition}
+          onChange={(patch) => onChange({ ...config, ...patch })}
+        />
+      </section>
+
+      {/* 04. Gravação */}
       <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
         <SectionTitle icon={<Ruler className="w-3.5 h-3.5 text-[#632CE5]" />}>
-          03. Gravação
+          04. Gravação
         </SectionTitle>
 
         <RangeControl
@@ -246,10 +274,10 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
         </p>
       </section>
 
-      {/* 04. Cores */}
+      {/* 05. Cores */}
       <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
         <SectionTitle icon={<Palette className="w-3.5 h-3.5 text-[#632CE5]" />}>
-          04. Cores
+          05. Cores
         </SectionTitle>
 
         <div className="space-y-1.5">
@@ -280,10 +308,10 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
         </div>
       </section>
 
-      {/* 05. Export */}
+      {/* 06. Export */}
       <section className="space-y-3 pt-4 border-t border-[var(--surface-container-high)]">
         <SectionTitle icon={<Download className="w-3.5 h-3.5 text-[#632CE5]" />}>
-          05. Export
+          06. Export
         </SectionTitle>
 
         <button

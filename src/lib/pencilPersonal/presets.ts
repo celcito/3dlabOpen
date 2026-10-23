@@ -105,6 +105,8 @@ export const DEFAULT_PENCIL_PERSONAL_CONFIG: PencilPersonalConfig = {
   face: 6,
   angleDeg: 0,
   positionAlongAxis: (ENGRAVE_MIN_Y + ENGRAVE_MAX_Y) / 2 + BODY_HALF_LENGTH,
+  symbolId: 'none',
+  symbolPosition: 'left',
   depth: 1.0,
   filamentIndex: 3,
 };
