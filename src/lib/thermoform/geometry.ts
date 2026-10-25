@@ -7,15 +7,17 @@ import type {
 } from '../../types/thermoform';
 import { fixWinding } from '../penHolder/geometry';
 import {
+  bboxOfRings,
   clampErosionMax,
   offsetOutline,
+  outlineFromPathData,
   polygonArea,
   resolveOutline,
   ringPerimeter,
   samplePerimeter,
   type ThermoformOutline,
 } from './outlines';
-import { getPreset } from './presets';
+import { activeStemPathData, getPreset } from './presets';
 
 /** EMBED casca×casca (mm) — mesmo valor do porta-canetas (STATE 2026-10-13). */
 const EMBED = 0.4;
@@ -287,11 +289,23 @@ function clipProfile(config: ThermoformConfig): number[][] {
 }
 
 /** Encaixes: clipes em U ao longo do perímetro, boca para fora, fala centrada na borda. */
-export function buildClips(outline: ThermoformOutline, config: ThermoformConfig): THREE.BufferGeometry[] {
+export function buildClips(
+  outline: ThermoformOutline,
+  config: ThermoformConfig,
+  opts?: { bottomOnly?: boolean }
+): THREE.BufferGeometry[] {
   if (config.clipCount <= 0) return [];
   const profile = clipProfile(config);
   const total = ringPerimeter(outline.outer);
-  const samples = samplePerimeter(outline.outer, Math.max(config.clipLength * 2, total / (config.clipCount + 1)));
+  let samples = samplePerimeter(
+    outline.outer,
+    Math.max(config.clipLength * 2, total / (config.clipCount + 1))
+  );
+  if (opts?.bottomOnly) {
+    const box = bboxOfRings([outline.outer]);
+    const cutoff = box.minY + 0.45 * (box.maxY - box.minY);
+    samples = samples.filter((s) => s.y < cutoff);
+  }
   if (samples.length === 0) return [];
 
   // Escolhe clipCount amostras o mais uniformes possível.
@@ -319,6 +333,72 @@ export function buildClips(outline: ThermoformOutline, config: ThermoformConfig)
   return geoms;
 }
 
+/** Altura do cabo/talo como fração do sizeMm. */
+const STEM_HEIGHT_RATIO = 0.28;
+
+/**
+ * Cabo da fruta: perfil U (mesmas dims dos clipes) ancorado no topo do perímetro
+ * + silhueta do talo extrudada para fora do U — duas cascas fechadas (EMBED).
+ */
+export function buildStem(
+  outline: ThermoformOutline,
+  config: ThermoformConfig,
+  stemPathData: string
+): THREE.BufferGeometry[] {
+  const geoms: THREE.BufferGeometry[] = [];
+  const total = ringPerimeter(outline.outer);
+  const samples = samplePerimeter(outline.outer, Math.max(config.clipLength, total / 24));
+  if (samples.length === 0) return geoms;
+
+  // Amostra mais alta (max y) = topo da fruta.
+  let top = samples[0];
+  for (const s of samples) if (s.y > top.y) top = s;
+
+  // Cascas 1: slot U idêntico aos clipes, posicionado no topo com boca para fora.
+  const profile = clipProfile(config);
+  const slotDepth = Math.max(0.2, config.clipWidth - config.clipThickness);
+  const yCenter = config.clipThickness + slotDepth / 2;
+  const slotRing = profile.map(([xl, yl]) => {
+    const y = yl - yCenter;
+    return [top.x + xl * -top.ny + y * top.nx, top.y + xl * top.nx + y * top.ny];
+  });
+  const slotGeom = extrudeOutline({ outer: slotRing, holes: [] }, config.clipThickness);
+  if (slotGeom) geoms.push(slotGeom);
+
+  // Cascas 2: silhueta do talo, ponta alinhada à normal externa do topo.
+  const stemSpan = config.sizeMm * STEM_HEIGHT_RATIO;
+  const stemOutline = outlineFromPathData(stemPathData, stemSpan);
+  if (stemOutline) {
+    const stemBox = bboxOfRings([stemOutline.outer]);
+    const stemHeight = stemBox.maxY - stemBox.minY;
+    if (stemHeight > 1e-6) {
+      const cx = (stemBox.minX + stemBox.maxX) / 2;
+      const cy = (stemBox.minY + stemBox.maxY) / 2;
+
+      // Base do talo: face externa do U menos EMBED (talo embutido no U).
+      const outerFace = config.clipWidth - yCenter;
+      const baseX = top.x + (outerFace - EMBED) * top.nx;
+      const baseY = top.y + (outerFace - EMBED) * top.ny;
+      const centerX = baseX + (stemHeight / 2) * top.nx;
+      const centerY = baseY + (stemHeight / 2) * top.ny;
+
+      // Rotação que leva (0,1) do talo (ponta pós y-flip) para n̂ do topo.
+      const theta = Math.atan2(-top.nx, top.ny);
+      const cos = Math.cos(theta);
+      const sin = Math.sin(theta);
+      const stemRing = stemOutline.outer.map(([x, y]) => {
+        const lx = x - cx;
+        const ly = y - cy;
+        return [centerX + lx * cos - ly * sin, centerY + lx * sin + ly * cos];
+      });
+      // Extrusão em flangeThickness (não clipThickness) para rigidez do talo.
+      const stemGeom = extrudeOutline({ outer: stemRing, holes: [] }, config.flangeThickness);
+      if (stemGeom) geoms.push(stemGeom);
+    }
+  }
+  return geoms;
+}
+
 function unionBBox(geoms: THREE.BufferGeometry[]): { minX: number; minY: number; maxX: number; maxY: number; minZ: number; maxZ: number } {
   const box = new THREE.Box3();
   for (const g of geoms) {
@@ -341,6 +421,9 @@ export function generateThermoformKit(config: ThermoformConfig): GeneratedThermo
   const outline = resolveOutline(config);
   if (!outline) return null;
 
+  const stemPathData = activeStemPathData(config);
+  const isFruit = Boolean(stemPathData);
+
   const builds: { id: ThermoformPartId; geoms: THREE.BufferGeometry[] }[] = [];
   if (config.parts.mold) {
     const geoms = buildMold(outline, config);
@@ -355,8 +438,12 @@ export function generateThermoformKit(config: ThermoformConfig): GeneratedThermo
     if (geoms.length) builds.push({ id: 'folha', geoms });
   }
   if (config.parts.encaixe) {
-    const geoms = buildClips(outline, config);
+    const geoms = buildClips(outline, config, isFruit ? { bottomOnly: true } : undefined);
     if (geoms.length) builds.push({ id: 'encaixe', geoms });
+  }
+  if (isFruit && stemPathData && config.parts.cabo) {
+    const geoms = buildStem(outline, config, stemPathData);
+    if (geoms.length) builds.push({ id: 'cabo', geoms });
   }
   if (builds.length === 0) return null;
 

@@ -214,6 +214,7 @@ export const ThermoformCanvas: React.FC<ThermoformCanvasProps> = ({
           press: config.pressColor,
           folha: config.folhaColor,
           encaixe: config.clipColor,
+          cabo: config.caboColor,
         };
 
         for (const part of kit.parts) {
@@ -267,10 +268,12 @@ export const ThermoformCanvas: React.FC<ThermoformCanvasProps> = ({
     config.parts.press,
     config.parts.folha,
     config.parts.encaixe,
+    config.parts.cabo,
     config.moldColor,
     config.pressColor,
     config.folhaColor,
     config.clipColor,
+    config.caboColor,
     onDimensionsChange,
   ]);
 

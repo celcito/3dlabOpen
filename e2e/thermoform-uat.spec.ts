@@ -18,9 +18,10 @@ test('kit termoformado: preset, escala, toggle de peça e export sem erros', asy
   await expect(page.getByText('Peças geradas')).toBeVisible();
   await expect(partCount).toHaveText('4', { timeout: 60000 });
 
-  // Troca de preset re-renderiza sem exceção
+  // Troca de preset re-renderiza sem exceção (morango é fruta: 5 peças com cabo)
   await page.getByRole('button', { name: 'Morango' }).click();
   await expect(page.getByRole('button', { name: 'Morango' })).toHaveClass(/border-\[#632CE5\]/);
+  await expect(partCount).toHaveText('5', { timeout: 60000 });
 
   // Escala: muda o tamanho e o readout do layout reage
   const layoutValue = aside.locator('span.font-mono.font-black').first();
@@ -34,9 +35,9 @@ test('kit termoformado: preset, escala, toggle de peça e export sem erros', asy
   });
   await expect.poll(async () => layoutValue.innerText(), { timeout: 60000 }).not.toBe(before);
 
-  // Toggle "Encaixes": partCount 4 → 3
+  // Toggle "Encaixes" (fruta): partCount 5 → 4
   await page.getByRole('button', { name: 'Encaixes' }).click();
-  await expect(partCount).toHaveText('3', { timeout: 60000 });
+  await expect(partCount).toHaveText('4', { timeout: 60000 });
 
   expect(pageErrors, `exceções: ${pageErrors.join(' | ')}`).toEqual([]);
 });

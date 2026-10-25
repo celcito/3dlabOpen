@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { countBoundaryEdges, isWatertight, signedVolume } from '../../fastener/threads';
 import { DEFAULT_THERMOFORM_CONFIG, THERMOFORM_PRESETS } from '../presets';
-import { buildClips, buildMold, buildPress, buildSheet, generateThermoformKit } from '../geometry';
+import { buildClips, buildMold, buildPress, buildSheet, buildStem, generateThermoformKit } from '../geometry';
 import { resolveOutline } from '../outlines';
 import type { ThermoformConfig } from '../../../types/thermoform';
 
@@ -16,14 +16,21 @@ function expectShell(geom: THREE.BufferGeometry, label: string): void {
   expect(signedVolume(geom), `${label}: volume`).toBeGreaterThan(0);
 }
 
+const FRUIT_IDS = new Set(['morango', 'maca', 'banana', 'cacho']);
+
 describe('thermoform/geometry — kit por preset', () => {
-  it('todos os 5 presets geram kit completo com cascas fechadas e volume > 0', () => {
+  it('todos os presets geram kit completo com cascas fechadas e volume > 0', () => {
     for (const preset of THERMOFORM_PRESETS) {
       const kit = generateThermoformKit(cfg({ preset: preset.id }));
       expect(kit, `kit ${preset.id}`).not.toBeNull();
       const ids = kit!.parts.map((p) => p.id);
-      expect(ids, `peças do preset ${preset.id}`).toEqual(['mold', 'press', 'folha', 'encaixe']);
-      expect(kit!.dimensions.partCount).toBe(4);
+      if (FRUIT_IDS.has(preset.id)) {
+        expect(ids, `peças do preset ${preset.id}`).toEqual(['mold', 'press', 'folha', 'encaixe', 'cabo']);
+        expect(kit!.dimensions.partCount).toBe(5);
+      } else {
+        expect(ids, `peças do preset ${preset.id}`).toEqual(['mold', 'press', 'folha', 'encaixe']);
+        expect(kit!.dimensions.partCount).toBe(4);
+      }
       expect(kit!.dimensions.dimX).toBeGreaterThan(50);
       expect(kit!.dimensions.dimZ).toBeGreaterThan(5);
 
@@ -33,6 +40,34 @@ describe('thermoform/geometry — kit por preset', () => {
       }
     }
   }, 120_000);
+
+  it('clipes de fruta ficam só na borda inferior (y < 0, outline centrado)', () => {
+    for (const id of ['morango', 'banana'] as const) {
+      const config = cfg({ preset: id, clipCount: 3 });
+      const outline = resolveOutline(config)!;
+      const clips = buildClips(outline, config, { bottomOnly: true });
+      expect(clips.length, `clips de ${id}`).toBeGreaterThan(0);
+      for (const g of clips) {
+        g.computeBoundingBox();
+        expect(g.boundingBox!.max.y, `clip de ${id} deve estar abaixo do centro`).toBeLessThan(0);
+      }
+    }
+  }, 60_000);
+
+  it('cabo: cascas fechadas (slot U + talo)', () => {
+    for (const id of ['morango', 'banana'] as const) {
+      const config = cfg({ preset: id });
+      const outline = resolveOutline(config)!;
+      const stem = buildStem(outline, config, THERMOFORM_PRESETS.find((p) => p.id === id)!.stemPathData!);
+      expect(stem.length, `cascas do cabo ${id}`).toBe(2);
+      stem.forEach((g, i) => expectShell(g, `cabo ${id}[${i}]`));
+    }
+  }, 60_000);
+
+  it('parts.cabo false remove a peça (fruta volta a 4 peças)', () => {
+    const kit = generateThermoformKit(cfg({ preset: 'morango', parts: { mold: true, press: true, folha: true, encaixe: true, cabo: false } }));
+    expect(kit!.parts.map((p) => p.id)).toEqual(['mold', 'press', 'folha', 'encaixe']);
+  }, 60_000);
 
   it('mold do coração: 2 cascas (laje + domo) e largura ≈ sizeMm [AC-01]', () => {
     const outline = resolveOutline(cfg({ preset: 'coracao' }))!;
@@ -65,13 +100,13 @@ describe('thermoform/geometry — kit por preset', () => {
   }, 60_000);
 
   it('toggles por peça desligam geração; tudo off = null [K5]', () => {
-    const noClips = generateThermoformKit(cfg({ parts: { mold: true, press: true, folha: true, encaixe: false } }));
+    const noClips = generateThermoformKit(cfg({ parts: { mold: true, press: true, folha: true, encaixe: false, cabo: false } }));
     expect(noClips!.parts.map((p) => p.id)).toEqual(['mold', 'press', 'folha']);
 
-    const onlyMold = generateThermoformKit(cfg({ parts: { mold: true, press: false, folha: false, encaixe: false } }));
+    const onlyMold = generateThermoformKit(cfg({ parts: { mold: true, press: false, folha: false, encaixe: false, cabo: false } }));
     expect(onlyMold!.parts.map((p) => p.id)).toEqual(['mold']);
 
-    expect(generateThermoformKit(cfg({ parts: { mold: false, press: false, folha: false, encaixe: false } }))).toBeNull();
+    expect(generateThermoformKit(cfg({ parts: { mold: false, press: false, folha: false, encaixe: false, cabo: false } }))).toBeNull();
   }, 60_000);
 
   it('SVG custom gera kit (outline resolvido do markup)', () => {

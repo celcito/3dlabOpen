@@ -44,11 +44,12 @@ export interface ThermoformConfig {
   pressColor: string;
   folhaColor: string;
   clipColor: string;
+  caboColor: string;
 }
 
-export type ThermoformPresetId = 'coracao' | 'morango' | 'maca' | 'roda' | 'estrela';
+export type ThermoformPresetId = 'coracao' | 'morango' | 'maca' | 'roda' | 'estrela' | 'banana' | 'cacho';
 
-export type ThermoformPartId = 'mold' | 'press' | 'folha' | 'encaixe';
+export type ThermoformPartId = 'mold' | 'press' | 'folha' | 'encaixe' | 'cabo';
 
 export type ThermoformPartsToggle = Record<ThermoformPartId, boolean>;
 

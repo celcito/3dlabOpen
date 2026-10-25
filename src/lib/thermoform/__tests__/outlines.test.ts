@@ -13,7 +13,7 @@ import {
 } from '../outlines';
 
 describe('thermoform/outlines — presets', () => {
-  it('todos os 5 presets normalizam com maior lado = sizeMm, centrados e com área > 0', () => {
+  it('todos os presets normalizam com maior lado = sizeMm, centrados e com área > 0', () => {
     for (const preset of THERMOFORM_PRESETS) {
       const outline = outlineFromPathData(preset.pathData, 100);
       expect(outline, `preset ${preset.id}`).not.toBeNull();
@@ -33,6 +33,19 @@ describe('thermoform/outlines — presets', () => {
     const box = bboxOfRings([outline.outer]);
     const area = Math.abs(polygonArea(outline.outer));
     expect(area).toBeLessThan((box.maxX - box.minX) * (box.maxY - box.minY));
+  });
+
+  it('presets com stemPathData normalizam o talo (span = sizeMm, área > 0)', () => {
+    const stems = THERMOFORM_PRESETS.filter((p) => p.stemPathData);
+    expect(stems.length).toBeGreaterThanOrEqual(4);
+    for (const preset of stems) {
+      const outline = outlineFromPathData(preset.stemPathData!, 40);
+      expect(outline, `stem do preset ${preset.id}`).not.toBeNull();
+      const box = bboxOfRings([outline!.outer]);
+      const span = Math.max(box.maxX - box.minX, box.maxY - box.minY);
+      expect(span, `span do stem ${preset.id}`).toBeCloseTo(40, 1);
+      expect(Math.abs(polygonArea(outline!.outer)), `área do stem ${preset.id}`).toBeGreaterThan(10);
+    }
   });
 
   it('resolveOutline usa o preset e o svgPathData substitui', () => {

@@ -83,11 +83,13 @@ export function loadSavedThermoformConfig(): ThermoformConfig {
         press: isBool(parsed.parts?.press, def.parts.press),
         folha: isBool(parsed.parts?.folha, def.parts.folha),
         encaixe: isBool(parsed.parts?.encaixe, def.parts.encaixe),
+        cabo: isBool(parsed.parts?.cabo, def.parts.cabo),
       },
       moldColor: isColor(parsed.moldColor, def.moldColor),
       pressColor: isColor(parsed.pressColor, def.pressColor),
       folhaColor: isColor(parsed.folhaColor, def.folhaColor),
       clipColor: isColor(parsed.clipColor, def.clipColor),
+      caboColor: isColor(parsed.caboColor, def.caboColor),
     };
   } catch (err) {
     console.warn('Erro ao carregar termoformado do localStorage:', err);

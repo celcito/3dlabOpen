@@ -30,6 +30,7 @@ import {
   SIZE_MAX,
   SIZE_MIN,
   THERMOFORM_PRESETS,
+  activeStemPathData,
 } from '../lib/thermoform/presets';
 import { Download, Shapes, Ruler, Layers, Palette, Upload, X } from 'lucide-react';
 
@@ -51,6 +52,7 @@ export const ThermoformControls: React.FC<ThermoformControlsProps> = ({
   exporting = null,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasStem = Boolean(activeStemPathData(config));
 
   const handleSvgFile = (file: File) => {
     const reader = new FileReader();
@@ -73,7 +75,7 @@ export const ThermoformControls: React.FC<ThermoformControlsProps> = ({
           </h1>
         </div>
         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-          Molde + prensa + folha + encaixes, a partir de um contorno.
+          Molde + prensa + folha + encaixes + cabo (frutas), a partir de um contorno.
         </p>
       </header>
 
@@ -260,6 +262,13 @@ export const ThermoformControls: React.FC<ThermoformControlsProps> = ({
             checked={config.parts.encaixe}
             onChange={(checked) => onChange({ ...config, parts: { ...config.parts, encaixe: checked } })}
           />
+          {hasStem && (
+            <ToggleField
+              label="Cabo"
+              checked={config.parts.cabo}
+              onChange={(checked) => onChange({ ...config, parts: { ...config.parts, cabo: checked } })}
+            />
+          )}
         </div>
 
         {config.parts.encaixe && (
@@ -340,6 +349,13 @@ export const ThermoformControls: React.FC<ThermoformControlsProps> = ({
             value={config.clipColor}
             onChange={(color) => onChange({ ...config, clipColor: color })}
           />
+          {hasStem && (
+            <ColorField
+              label="5. Cabo"
+              value={config.caboColor}
+              onChange={(color) => onChange({ ...config, caboColor: color })}
+            />
+          )}
         </div>
       </section>
 

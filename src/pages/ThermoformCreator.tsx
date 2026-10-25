@@ -14,6 +14,7 @@ const PART_LABELS: Record<string, string> = {
   press: 'Prensa',
   folha: 'Folha',
   encaixe: 'Encaixe',
+  cabo: 'Cabo',
 };
 
 function partColor(config: ThermoformConfig, partId: string): string {
@@ -24,6 +25,8 @@ function partColor(config: ThermoformConfig, partId: string): string {
       return config.pressColor;
     case 'folha':
       return config.folhaColor;
+    case 'cabo':
+      return config.caboColor;
     default:
       return config.clipColor;
   }

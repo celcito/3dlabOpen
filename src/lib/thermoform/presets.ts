@@ -37,6 +37,11 @@ export interface ThermoformPreset {
   /** Path data em convenção SVG (y-down), qualquer escala — normalizado em `outlines.ts`. */
   pathData: string;
   /**
+   * Path data do cabo/talo da fruta (y-down, ponta para cima), qualquer escala.
+   * Presente ⇒ preset de fruta: gera peça `cabo` separada e restringe encaixes à borda inferior.
+   */
+  stemPathData?: string;
+  /**
    * Fração do `sizeMm` que o erode do domo do mold pode alcançar no máximo.
    * Clamp extra (distância local) é aplicado em `outlines.ts`.
    */
@@ -55,7 +60,8 @@ export const THERMOFORM_PRESETS: ThermoformPreset[] = [
     id: 'morango',
     label: 'Morango',
     pathData:
-      'M 50 96 C 34 84 12 62 12 40 C 12 22 28 10 44 10 L 47 4 L 53 4 L 56 10 C 72 10 88 22 88 40 C 88 62 66 84 50 96 Z',
+      'M 50 96 C 34 84 12 62 12 40 C 12 22 28 10 44 10 C 48 10 52 10 56 10 C 72 10 88 22 88 40 C 88 62 66 84 50 96 Z',
+    stemPathData: 'M 35 88 C 40 60 42 40 50 22 C 58 40 60 60 65 88 C 58 94 42 94 35 88 Z',
     maxErosionRatio: 0.1,
   },
   {
@@ -63,6 +69,7 @@ export const THERMOFORM_PRESETS: ThermoformPreset[] = [
     label: 'Maçã',
     pathData:
       'M 50 14 C 44 6 32 4 24 10 C 12 18 8 34 10 50 C 13 74 30 96 44 96 C 48 96 49 93 50 93 C 51 93 52 96 56 96 C 70 96 87 74 90 50 C 92 34 88 18 76 10 C 68 4 56 6 50 14 Z',
+    stemPathData: 'M 47 90 C 47 50 48 30 52 12 C 56 30 55 50 55 90 C 52 95 50 95 47 90 Z',
     maxErosionRatio: 0.1,
   },
   {
@@ -79,10 +86,33 @@ export const THERMOFORM_PRESETS: ThermoformPreset[] = [
       'M 50 4 L 61.76 33.82 L 93.75 35.79 L 69.02 56.18 L 77.04 87.21 L 50 70 L 22.96 87.21 L 30.98 56.18 L 6.25 35.79 L 38.24 33.82 Z',
     maxErosionRatio: 0.06,
   },
+  {
+    id: 'banana',
+    label: 'Banana',
+    pathData:
+      'M 10 48 C 18 15 65 5 88 28 C 102 45 96 75 75 85 C 85 70 82 48 68 38 C 50 25 25 32 22 55 C 20 68 10 62 10 48 Z',
+    stemPathData: 'M 38 90 C 40 50 42 30 50 15 C 58 30 60 50 62 90 C 58 96 42 96 38 90 Z',
+    maxErosionRatio: 0.08,
+  },
+  {
+    id: 'cacho',
+    label: 'Cacho de uvas',
+    pathData:
+      'M 50 20 C 58 14 68 18 68 28 C 78 30 84 42 76 50 C 82 62 72 74 60 70 C 54 82 46 82 40 70 C 28 74 18 62 24 50 C 16 42 22 30 32 28 C 32 18 42 14 50 20 Z',
+    stemPathData:
+      'M 45 95 C 45 60 46 35 50 12 C 56 16 58 26 54 32 C 60 28 68 32 66 40 C 60 42 56 38 54 34 C 52 55 51 75 52 95 C 50 99 47 99 45 95 Z',
+    maxErosionRatio: 0.1,
+  },
 ];
 
 export function getPreset(id: ThermoformPresetId): ThermoformPreset {
   return THERMOFORM_PRESETS.find((p) => p.id === id) ?? THERMOFORM_PRESETS[0];
+}
+
+/** Path do cabo quando o preset ativo é fruta (senão null). */
+export function activeStemPathData(config: ThermoformConfig): string | null {
+  if (config.svgPathData?.trim()) return null;
+  return getPreset(config.preset).stemPathData ?? null;
 }
 
 export const DEFAULT_THERMOFORM_CONFIG: ThermoformConfig = {
@@ -102,9 +132,10 @@ export const DEFAULT_THERMOFORM_CONFIG: ThermoformConfig = {
   clipWidth: 5.2,
   clipGap: 6,
   clipThickness: 1.4,
-  parts: { mold: true, press: true, folha: true, encaixe: true },
+  parts: { mold: true, press: true, folha: true, encaixe: true, cabo: true },
   moldColor: '#111827',
   pressColor: '#FBBF24',
   folhaColor: '#3B82F6',
   clipColor: '#EF4444',
+  caboColor: '#78350F',
 };
