@@ -15,6 +15,8 @@ interface SymbolPickerProps {
   symbolId: string;
   symbolPosition: SymbolPosition;
   onChange: (patch: { symbolId: string } | { symbolPosition: SymbolPosition }) => void;
+  /** Mostra o seletor de posição mesmo sem símbolo preset (ex: ícone customizado). */
+  showPosition?: boolean;
 }
 
 /** Grade de ícones + seletor de posição (início / fim / ambos). */
@@ -22,6 +24,7 @@ export const SymbolPicker: React.FC<SymbolPickerProps> = ({
   symbolId,
   symbolPosition,
   onChange,
+  showPosition,
 }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-5 gap-1.5">
@@ -48,7 +51,7 @@ export const SymbolPicker: React.FC<SymbolPickerProps> = ({
       })}
     </div>
 
-    {symbolId !== 'none' && (
+    {(showPosition ?? symbolId !== 'none') && (
       <div className="space-y-1.5">
         <label className="text-[9px] uppercase font-bold text-zinc-600 block">
           Posição do Ícone

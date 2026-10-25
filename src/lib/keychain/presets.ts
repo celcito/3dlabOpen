@@ -14,6 +14,7 @@ export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   letterSpacing: 1.8,
   fontWeightScale: 1.0,
   symbolId: 'none',
+  symbolPosition: 'right',
   outlineSize: 2.8,
   bodyThickness: 3.0,
   reliefThickness: 2.0,

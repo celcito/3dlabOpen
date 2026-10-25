@@ -1,6 +1,7 @@
 import React from 'react';
 import type { LetterBoxConfig, Model3DDimensions } from '../types/letterBox';
 import { COLOR_PALETTES, DEFAULT_CONFIG } from '../lib/letterBox/presets';
+import { TEXT_STYLE_PRESETS, stylePatchLetterBox } from '../lib/textStyles';
 import { clearSavedConfig } from '../lib/letterBox/storage';
 import { FontPicker } from './FontPicker';
 import { Type, Sliders, Palette, Download, RotateCcw, Box } from 'lucide-react';
@@ -76,6 +77,55 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
           customFontName={config.customFontName}
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
+
+        <div className="space-y-2">
+          <label className="text-[9px] uppercase font-bold text-zinc-600 block">
+            Estilos Prontos
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {TEXT_STYLE_PRESETS.map((style) => {
+              const isSelected =
+                config.fontFamily === style.fontFamily &&
+                config.backColor.toLowerCase() === style.backColor.toLowerCase() &&
+                config.midColor.toLowerCase() === style.midColor.toLowerCase() &&
+                config.frontColor.toLowerCase() === style.frontColor.toLowerCase() &&
+                config.backContour === style.backContour &&
+                config.midContour === style.midContour;
+
+              return (
+                <button
+                  key={style.id}
+                  type="button"
+                  title={style.description}
+                  onClick={() => onChange({ ...config, ...stylePatchLetterBox(style) })}
+                  className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#632CE5] bg-[#632CE5]/10'
+                      : 'border-[var(--workbench-line)] hover:border-[#632CE5]/40'
+                  }`}
+                >
+                  <span className="text-[9px] font-black uppercase text-[var(--on-surface-variant)] truncate">
+                    {style.emoji} {style.name}
+                  </span>
+                  <div className="flex -space-x-1.5 shrink-0">
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.backColor }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.midColor }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.frontColor }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <RangeControl
           label="Tamanho da Letra"

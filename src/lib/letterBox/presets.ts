@@ -12,6 +12,8 @@ export const FONT_CATALOG: FontOption[] = [
   { id: 'Titan One', name: 'Titan One', category: 'bold', description: 'Divertida, bojuda e macia' },
   { id: 'Bowlby One SC', name: 'Bowlby One SC', category: 'bold', description: 'Pôster rústico e marcante' },
   { id: 'Luckiest Guy', name: 'Luckiest Guy', category: 'fun', description: 'Quadrinhos clássicos dos anos 50' },
+  { id: 'Pokemon Solid', name: 'Pokémon Solid', category: 'fun', description: 'Logo Pokémon clássica, letra preenchida' },
+  { id: 'Pokemon Hollow', name: 'Pokémon Hollow', category: 'fun', description: 'Logo Pokémon, letra vazada de contorno' },
   { id: 'Bangers', name: 'Bangers', category: 'fun', description: 'Estilo HQ e gibi de super-heróis' },
   { id: 'Fjalla One', name: 'Fjalla One', category: 'condensed', description: 'Display nórdica condensada' },
   { id: 'Kanit', name: 'Kanit', category: 'geom', description: 'Curvas geométricas modernas' },

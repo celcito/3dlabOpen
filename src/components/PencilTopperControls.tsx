@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PencilTopperConfig, Model3DDimensions } from '../types/pencilTopper';
 import { PENCIL_MODELS, PENCIL_COLOR_PALETTES } from '../lib/pencilTopper/presets';
+import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
 import { FontPicker } from './FontPicker';
 import { SymbolPicker } from './SymbolPicker';
 import {
@@ -192,6 +193,50 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
           customFontName={config.customFontName}
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
+
+        <div className="space-y-2">
+          <label className="text-[9px] uppercase font-bold text-zinc-600 block">
+            Estilos Prontos
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {TEXT_STYLE_PRESETS.map((style) => {
+              const isSelected =
+                config.fontFamily === style.fontFamily &&
+                config.fontWeightScale === style.fontWeightScale &&
+                config.outlineSize === style.outlineSize &&
+                config.baseColor.toLowerCase() === style.baseColor.toLowerCase() &&
+                config.reliefColor.toLowerCase() === style.reliefColor.toLowerCase();
+
+              return (
+                <button
+                  key={style.id}
+                  type="button"
+                  title={style.description}
+                  onClick={() => onChange({ ...config, ...stylePatch2Camadas(style) })}
+                  className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#632CE5] bg-[#632CE5]/10'
+                      : 'border-[var(--workbench-line)] hover:border-[#632CE5]/40'
+                  }`}
+                >
+                  <span className="text-[9px] font-black uppercase text-[var(--on-surface-variant)] truncate">
+                    {style.emoji} {style.name}
+                  </span>
+                  <div className="flex -space-x-1.5 shrink-0">
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.baseColor }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.reliefColor }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <RangeControl
           label="Tamanho da Letra"

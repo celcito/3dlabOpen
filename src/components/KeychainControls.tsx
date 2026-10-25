@@ -2,10 +2,11 @@ import React from 'react';
 import type { KeychainConfig, Model3DDimensions } from '../types/keychain';
 import {
   PENCIL_COLOR_PALETTES,
-  PRESET_SYMBOLS,
   LOOP_WALL_MIN,
 } from '../lib/keychain/presets';
+import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
 import { FontPicker } from './FontPicker';
+import { SymbolPicker } from './SymbolPicker';
 import {
   Check,
   Download,
@@ -90,6 +91,50 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
 
+        <div className="space-y-2">
+          <label className="text-[9px] uppercase font-bold text-zinc-600 block">
+            Estilos Prontos
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {TEXT_STYLE_PRESETS.map((style) => {
+              const isSelected =
+                config.fontFamily === style.fontFamily &&
+                config.fontWeightScale === style.fontWeightScale &&
+                config.outlineSize === style.outlineSize &&
+                config.baseColor.toLowerCase() === style.baseColor.toLowerCase() &&
+                config.reliefColor.toLowerCase() === style.reliefColor.toLowerCase();
+
+              return (
+                <button
+                  key={style.id}
+                  type="button"
+                  title={style.description}
+                  onClick={() => onChange({ ...config, ...stylePatch2Camadas(style) })}
+                  className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#632CE5] bg-[#632CE5]/10'
+                      : 'border-[var(--workbench-line)] hover:border-[#632CE5]/40'
+                  }`}
+                >
+                  <span className="text-[9px] font-black uppercase text-[var(--on-surface-variant)] truncate">
+                    {style.emoji} {style.name}
+                  </span>
+                  <div className="flex -space-x-1.5 shrink-0">
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.baseColor }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: style.reliefColor }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <RangeControl
           label="Tamanho da Letra"
           unit="mm"
@@ -124,32 +169,15 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
       {/* 02. Ícone / Símbolo */}
       <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
         <SectionTitle icon={<Sparkles className="w-3.5 h-3.5 text-[#632CE5]" />}>
-          02. Ícone / Símbolo
+          02. Ícone & Posição
         </SectionTitle>
 
-        <div className="grid grid-cols-5 gap-1.5">
-          {PRESET_SYMBOLS.map((sym) => {
-            const isSelected = !config.customIconUrl && config.symbolId === sym.id;
-            return (
-              <button
-                key={sym.id}
-                type="button"
-                onClick={() => onChange({ ...config, symbolId: sym.id })}
-                title={sym.name}
-                className={`p-2 rounded-lg border flex flex-col items-center justify-center transition-all ${
-                  isSelected
-                    ? 'border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10'
-                    : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
-                }`}
-              >
-                <span className="text-lg">{sym.emoji}</span>
-                <span className="text-[9px] font-black uppercase truncate w-full text-center mt-0.5">
-                  {sym.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <SymbolPicker
+          symbolId={config.symbolId}
+          symbolPosition={config.symbolPosition}
+          showPosition={config.symbolId !== 'none' || !!config.customIconUrl}
+          onChange={(patch) => onChange({ ...config, ...patch })}
+        />
 
         <button
           type="button"

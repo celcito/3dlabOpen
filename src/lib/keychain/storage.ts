@@ -18,6 +18,12 @@ function readLoopSide(value: unknown): KeychainConfig['loopSide'] {
   return value === 'right' ? 'right' : 'left';
 }
 
+function readSymbolPosition(value: unknown): KeychainConfig['symbolPosition'] {
+  return value === 'left' || value === 'right' || value === 'both'
+    ? value
+    : DEFAULT_KEYCHAIN_CONFIG.symbolPosition;
+}
+
 function restoreCustomFont(parsed: Record<string, unknown>): void {
   const base64 = parsed.customFontBase64;
   const fontName = parsed.customFontName;
@@ -68,6 +74,7 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       letterSpacing: clamp(parsed.letterSpacing, 0, 2.5, def.letterSpacing),
       fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
       symbolId: typeof parsed.symbolId === 'string' ? parsed.symbolId : def.symbolId,
+      symbolPosition: readSymbolPosition(parsed.symbolPosition),
       outlineSize: clamp(parsed.outlineSize, 1.0, 6.0, def.outlineSize),
       bodyThickness: clamp(parsed.bodyThickness, 1.5, 6.0, def.bodyThickness),
       reliefThickness: clamp(parsed.reliefThickness, 0.8, 4.0, def.reliefThickness),

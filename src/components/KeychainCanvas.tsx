@@ -396,6 +396,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
     config.letterSpacing,
     config.fontWeightScale,
     config.symbolId,
+    config.symbolPosition,
     config.customIconUrl,
     config.outlineSize,
     config.bodyThickness,

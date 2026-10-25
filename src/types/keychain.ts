@@ -10,6 +10,7 @@ export interface KeychainConfig {
   fontWeightScale: number;
 
   symbolId: string;
+  symbolPosition: 'left' | 'right' | 'both';
   customIconUrl?: string;
 
   outlineSize: number;

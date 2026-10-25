@@ -7,6 +7,7 @@ import {
   computeEnclosedEmptyMask,
   punchMask,
 } from '../pencilTopper/contourExtractor';
+import { drawSymbol } from '../pencilTopper/symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 
 const pxPerMm = 20;
@@ -194,7 +195,10 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   if (text.length > 0) textWidthPx -= letterSpacingPx;
 
   const textHeightPx = targetFontHeightPx;
-  const outlinePx = Math.max(1.5, config.outlineSize * (config.fontWeightScale || 1.0)) * pxPerMm;
+  // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
+  const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  const reliefDilationMm = (fontScale - 0.5) * 0.4;
 
   let iconImage: CanvasImageSource | null = null;
   let iconNaturalWidth = 256;
@@ -212,7 +216,12 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   }
 
   const hasCustomIcon = !!iconImage;
-  const hasSymbol = !hasCustomIcon && !!config.symbolId && config.symbolId !== 'none';
+  const hasPresetSymbol = !hasCustomIcon && !!config.symbolId && config.symbolId !== 'none';
+  const hasIcon = hasCustomIcon || hasPresetSymbol;
+  const symbolPosition = config.symbolPosition || 'right';
+  const showIconLeft = hasIcon && (symbolPosition === 'left' || symbolPosition === 'both');
+  const showIconRight = hasIcon && (symbolPosition === 'right' || symbolPosition === 'both');
+  const iconCount = (showIconLeft ? 1 : 0) + (showIconRight ? 1 : 0);
   const symbolSizePx = targetFontHeightPx * 0.85;
   const symbolGapPx = Math.min(symbolSizePx * 0.35, outlinePx);
   const iconGapPx = Math.min(symbolGapPx, outlinePx);
@@ -224,10 +233,11 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     iconWidthPx = iconNaturalWidth * scale;
     iconHeightPx = iconNaturalHeight * scale;
   }
+  const iconBlockWidthPx = hasCustomIcon ? iconWidthPx : symbolSizePx;
+  const iconBlockGapPx = hasCustomIcon ? iconGapPx : symbolGapPx;
+  const iconBlockPx = iconCount * (iconBlockGapPx + iconBlockWidthPx);
 
-  let totalContentWidthPx = textWidthPx;
-  if (hasCustomIcon) totalContentWidthPx += iconGapPx + iconWidthPx;
-  else if (hasSymbol) totalContentWidthPx += symbolGapPx + symbolSizePx;
+  const totalContentWidthPx = textWidthPx + iconBlockPx;
 
   const loopOuterRadiusPx =
     (config.loopHoleDiameter / 2 + config.loopWallThickness) * pxPerMm;
@@ -245,7 +255,9 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
 
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
-  const textStartXPx = centerX - totalContentWidthPx / 2;
+  const contentStartXPx = centerX - totalContentWidthPx / 2;
+  const leftBlockPx = showIconLeft ? iconBlockGapPx + iconBlockWidthPx : 0;
+  const textStartXPx = contentStartXPx + leftBlockPx;
   const textBaselineY = centerY + textHeightPx * 0.32;
   const contentCenterYPx = textBaselineY - textHeightPx * 0.28;
   // Fim real da tinta do último caractere (sem side bearing) — sem isso o gap
@@ -255,113 +267,30 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     ? charOffsets[text.length - 1] + Math.max(lastCharMeasure.actualBoundingBoxRight ?? lastCharMeasure.width, 0)
     : textWidthPx;
   const textInkEndPx = textStartXPx + lastCharInkRightPx;
-  const symbolX = textInkEndPx + symbolGapPx + symbolSizePx / 2;
-  const iconCenterX = textInkEndPx + iconGapPx + iconWidthPx / 2;
+  const iconLeftCenterX = contentStartXPx + iconBlockWidthPx / 2;
+  const iconRightCenterX = textInkEndPx + iconBlockGapPx + iconBlockWidthPx / 2;
 
-  const drawPresetSymbol = (
-    targetCtx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    size: number
-  ) => {
-    targetCtx.save();
-    targetCtx.translate(x, y);
-    const s = size / 2;
-
-    switch (config.symbolId) {
-      case 'heart': {
-        targetCtx.beginPath();
-        targetCtx.moveTo(0, s * 0.3);
-        targetCtx.bezierCurveTo(-s, -s * 0.6, -s * 1.1, s * 0.3, 0, s * 1.1);
-        targetCtx.bezierCurveTo(s * 1.1, s * 0.3, s, -s * 0.6, 0, s * 0.3);
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      case 'star': {
-        targetCtx.beginPath();
-        for (let i = 0; i < 10; i++) {
-          const r = i % 2 === 0 ? s * 1.1 : s * 0.45;
-          const angle = (i * Math.PI) / 5 - Math.PI / 2;
-          const px = Math.cos(angle) * r;
-          const py = Math.sin(angle) * r;
-          if (i === 0) targetCtx.moveTo(px, py);
-          else targetCtx.lineTo(px, py);
-        }
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      case 'crown': {
-        targetCtx.beginPath();
-        targetCtx.moveTo(-s * 0.9, s * 0.7);
-        targetCtx.lineTo(-s * 0.9, -s * 0.3);
-        targetCtx.lineTo(-s * 0.4, s * 0.1);
-        targetCtx.lineTo(0, -s * 0.7);
-        targetCtx.lineTo(s * 0.4, s * 0.1);
-        targetCtx.lineTo(s * 0.9, -s * 0.3);
-        targetCtx.lineTo(s * 0.9, s * 0.7);
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      case 'flower': {
-        targetCtx.beginPath();
-        for (let i = 0; i < 5; i++) {
-          const angle = (i * 2 * Math.PI) / 5;
-          const px = Math.cos(angle) * s * 0.55;
-          const py = Math.sin(angle) * s * 0.55;
-          targetCtx.arc(px, py, s * 0.45, 0, Math.PI * 2);
-        }
-        targetCtx.arc(0, 0, s * 0.35, 0, Math.PI * 2);
-        targetCtx.fill();
-        break;
-      }
-      case 'butterfly': {
-        targetCtx.beginPath();
-        targetCtx.ellipse(-s * 0.5, -s * 0.4, s * 0.45, s * 0.65, -0.4, 0, Math.PI * 2);
-        targetCtx.ellipse(s * 0.5, -s * 0.4, s * 0.45, s * 0.65, 0.4, 0, Math.PI * 2);
-        targetCtx.ellipse(-s * 0.4, s * 0.4, s * 0.35, s * 0.45, 0.3, 0, Math.PI * 2);
-        targetCtx.ellipse(s * 0.4, s * 0.4, s * 0.35, s * 0.45, -0.3, 0, Math.PI * 2);
-        targetCtx.rect(-s * 0.1, -s * 0.7, s * 0.2, s * 1.4);
-        targetCtx.fill();
-        break;
-      }
-      case 'dino': {
-        targetCtx.beginPath();
-        targetCtx.arc(s * 0.3, -s * 0.5, s * 0.4, 0, Math.PI * 2);
-        targetCtx.rect(-s * 0.5, -s * 0.2, s * 0.9, s * 0.8);
-        targetCtx.rect(-s * 0.4, s * 0.5, s * 0.2, s * 0.4);
-        targetCtx.rect(s * 0.1, s * 0.5, s * 0.2, s * 0.4);
-        targetCtx.fill();
-        break;
-      }
-      case 'gamepad': {
-        targetCtx.beginPath();
-        targetCtx.roundRect(-s * 0.9, -s * 0.4, s * 1.8, s * 0.8, s * 0.3);
-        targetCtx.fill();
-        break;
-      }
-      case 'ball': {
-        targetCtx.beginPath();
-        targetCtx.arc(0, 0, s * 0.85, 0, Math.PI * 2);
-        targetCtx.fill();
-        break;
-      }
-      case 'gradcap': {
-        targetCtx.beginPath();
-        targetCtx.moveTo(0, -s * 0.7);
-        targetCtx.lineTo(s * 0.9, -s * 0.1);
-        targetCtx.lineTo(0, s * 0.3);
-        targetCtx.lineTo(-s * 0.9, -s * 0.1);
-        targetCtx.closePath();
-        targetCtx.fill();
-        break;
-      }
-      default:
-        break;
+  const drawIconBlock = (targetCtx: CanvasRenderingContext2D, x: number, outline = 0) => {
+    if (hasCustomIcon) {
+      if (outline > 0) drawIconDilated(targetCtx, x, contentCenterYPx);
+      else drawIcon(targetCtx, x, contentCenterYPx);
+    } else if (hasPresetSymbol) {
+      drawSymbol(targetCtx, config.symbolId, x, contentCenterYPx, symbolSizePx, outline);
     }
-    targetCtx.restore();
+  };
+
+  const drawIcons = (targetCtx: CanvasRenderingContext2D, outline = 0) => {
+    if (showIconLeft) drawIconBlock(targetCtx, iconLeftCenterX, outline);
+    if (showIconRight) drawIconBlock(targetCtx, iconRightCenterX, outline);
+  };
+
+  const drawText = (targetCtx: CanvasRenderingContext2D) => {
+    targetCtx.font = fontStyle;
+    targetCtx.textBaseline = 'alphabetic';
+    targetCtx.textAlign = 'left';
+    for (let i = 0; i < text.length; i++) {
+      targetCtx.fillText(text[i], textStartXPx + charOffsets[i], textBaselineY);
+    }
   };
 
   const drawIcon = (targetCtx: CanvasRenderingContext2D, x: number, y: number) => {
@@ -391,28 +320,22 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     targetCtx.restore();
   };
 
-  const drawText = (targetCtx: CanvasRenderingContext2D) => {
-    targetCtx.font = fontStyle;
-    targetCtx.textBaseline = 'alphabetic';
-    targetCtx.textAlign = 'left';
-    for (let i = 0; i < text.length; i++) {
-      targetCtx.fillText(text[i], textStartXPx + charOffsets[i], textBaselineY);
-    }
-  };
-
   // 1) Máscara dos contadores (sem dilatação) — mantém buracos de letras/ícone abertos.
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   drawText(ctx);
-  if (hasCustomIcon) drawIcon(ctx, iconCenterX, contentCenterYPx);
-  else if (hasSymbol) drawPresetSymbol(ctx, symbolX, contentCenterYPx, symbolSizePx);
+  drawIcons(ctx);
   const counterMask = computeEnclosedEmptyMask(ctx.getImageData(0, 0, canvasWidth, canvasHeight));
 
-  // 2) Passo base: silhueta do texto com contorno grosso + símbolo/ícone dilatado.
+  // 2) Passo base: silhueta do texto com contorno grosso + ícone dilatado.
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  ctx.lineJoin = 'round';
+  // Contorno da base acompanha o desenho da fonte: quina em bissetriz (paralela ao
+  // glifo) em vez de arco, que transformava tudo em "nuvem". miterLimit corta as
+  // pontas agudas demais (bevel) para a borda não espetar.
+  ctx.lineJoin = 'miter';
+  ctx.miterLimit = 3;
   ctx.lineCap = 'round';
   ctx.lineWidth = outlinePx * 2;
   ctx.font = fontStyle;
@@ -423,8 +346,7 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     ctx.strokeText(text[i], cx, textBaselineY);
     ctx.fillText(text[i], cx, textBaselineY);
   }
-  if (hasCustomIcon) drawIconDilated(ctx, iconCenterX, contentCenterYPx);
-  else if (hasSymbol) drawPresetSymbol(ctx, symbolX, contentCenterYPx, symbolSizePx + outlinePx * 1.5);
+  drawIcons(ctx, outlinePx);
 
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(baseImgData, counterMask);
@@ -434,14 +356,23 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   if (config.loopEnabled) drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config);
   const baseAfterLoop = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
 
-  const baseContours = extractContoursFromImageData(baseAfterLoop, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.2);
+  const baseContours = extractContoursFromImageData(
+    baseAfterLoop,
+    mmPerPixel,
+    canvasWidth / 2,
+    canvasHeight / 2,
+    0.07,
+    { resimplifyMm: 0.03 }
+  );
   const baseShapes = buildThreeShapes(baseContours.outer, baseContours.holes);
 
-  // 4) Relevo: mesmo conteúdo sem dilatação.
+  // 4) Relevo: texto com dilatação controlada pela "Espessura da Fonte" + ícone sem dilatação.
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 1.0 * pxPerMm;
+  // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
+  const reliefStroke = reliefDilationMm > 0.01;
+  if (reliefStroke) ctx.lineWidth = reliefDilationMm * 2 * pxPerMm;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   ctx.font = fontStyle;
@@ -449,15 +380,21 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   ctx.textAlign = 'left';
   for (let i = 0; i < text.length; i++) {
     const cx = textStartXPx + charOffsets[i];
-    ctx.strokeText(text[i], cx, textBaselineY);
+    if (reliefStroke) ctx.strokeText(text[i], cx, textBaselineY);
     ctx.fillText(text[i], cx, textBaselineY);
   }
-  if (hasCustomIcon) drawIcon(ctx, iconCenterX, contentCenterYPx);
-  else if (hasSymbol) drawPresetSymbol(ctx, symbolX, contentCenterYPx, symbolSizePx);
+  drawIcons(ctx, reliefStroke ? reliefDilationMm * pxPerMm : 0);
 
   const reliefImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(reliefImgData, counterMask);
-  const reliefContours = extractContoursFromImageData(reliefImgData, mmPerPixel, canvasWidth / 2, canvasHeight / 2, 0.15);
+  const reliefContours = extractContoursFromImageData(
+    reliefImgData,
+    mmPerPixel,
+    canvasWidth / 2,
+    canvasHeight / 2,
+    0.05,
+    { resimplifyMm: 0.02 }
+  );
   const reliefShapes = buildThreeShapes(reliefContours.outer, reliefContours.holes);
 
   const safeBaseShapes = baseShapes.length > 0 ? baseShapes : reliefShapes;

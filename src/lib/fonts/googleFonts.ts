@@ -1,3 +1,5 @@
+import { isLocalFont, ensureLocalFont } from './localFonts';
+
 const SYSTEM_FONTS = new Set([
   'Arial',
   'Helvetica',
@@ -68,6 +70,7 @@ async function registerFontFace(family: string): Promise<void> {
  */
 export function ensureGoogleFont(family: string): Promise<void> {
   if (!family || SYSTEM_FONTS.has(family)) return Promise.resolve();
+  if (isLocalFont(family)) return ensureLocalFont(family);
 
   const cached = singleFontPromises.get(family);
   if (cached) return cached;
@@ -87,9 +90,13 @@ export function ensureGoogleFont(family: string): Promise<void> {
  * O navegador só baixa os arquivos de fonte que realmente forem renderizados.
  */
 export async function ensureGoogleFonts(families: string[]): Promise<void> {
-  const pending = [
-    ...new Set(families),
-  ].filter((family) => family && !SYSTEM_FONTS.has(family) && !requestedFamilies.has(family));
+  const unique = [...new Set(families)];
+  await Promise.all(unique.filter(isLocalFont).map(ensureLocalFont));
+
+  const pending = unique.filter(
+    (family) =>
+      family && !SYSTEM_FONTS.has(family) && !isLocalFont(family) && !requestedFamilies.has(family)
+  );
 
   for (let i = 0; i < pending.length; i += BATCH_SIZE) {
     const batch = pending.slice(i, i + BATCH_SIZE);
