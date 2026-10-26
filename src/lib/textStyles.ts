@@ -105,6 +105,22 @@ export const TEXT_STYLE_PRESETS: TextStylePreset[] = [
     backContour: 12,
     midContour: 5,
   },
+  {
+    id: 'sega',
+    name: 'SEGA',
+    emoji: '🎮',
+    description: 'Azul SEGA sobre prata, retrô dos anos 90',
+    fontFamily: 'SEGA LOGO FONT',
+    fontWeightScale: 1.2,
+    outlineSize: 3.8,
+    baseColor: '#C9D0DC',
+    reliefColor: '#0033A0',
+    backColor: '#0A1B3D',
+    midColor: '#C9D0DC',
+    frontColor: '#0033A0',
+    backContour: 12,
+    midContour: 5,
+  },
 ];
 
 type TwoLayerStylePatch = Pick<

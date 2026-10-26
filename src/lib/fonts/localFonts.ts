@@ -6,6 +6,7 @@ const LOCAL_FONT_FILES: Record<string, string> = {
   'Pokemon Solid': '/fonts/Pokemon Solid.ttf',
   'Pokemon Hollow': '/fonts/Pokemon Hollow.ttf',
   'Super Mario 256': '/fonts/Super Mario 256.ttf',
+  'SEGA LOGO FONT': '/fonts/SEGA Logo Font.ttf',
 };
 
 const localFontPromises = new Map<string, Promise<void>>();
