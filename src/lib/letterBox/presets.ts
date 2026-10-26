@@ -14,6 +14,7 @@ export const FONT_CATALOG: FontOption[] = [
   { id: 'Luckiest Guy', name: 'Luckiest Guy', category: 'fun', description: 'Quadrinhos clássicos dos anos 50' },
   { id: 'Pokemon Solid', name: 'Pokémon Solid', category: 'fun', description: 'Logo Pokémon clássica, letra preenchida' },
   { id: 'Pokemon Hollow', name: 'Pokémon Hollow', category: 'fun', description: 'Logo Pokémon, letra vazada de contorno' },
+  { id: 'Super Mario 256', name: 'Super Mario 256', category: 'fun', description: 'Pixel art do Super Mario Bros' },
   { id: 'Bangers', name: 'Bangers', category: 'fun', description: 'Estilo HQ e gibi de super-heróis' },
   { id: 'Fjalla One', name: 'Fjalla One', category: 'condensed', description: 'Display nórdica condensada' },
   { id: 'Kanit', name: 'Kanit', category: 'geom', description: 'Curvas geométricas modernas' },

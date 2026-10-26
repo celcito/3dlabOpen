@@ -89,6 +89,22 @@ export const TEXT_STYLE_PRESETS: TextStylePreset[] = [
     backContour: 9.5,
     midContour: 4,
   },
+  {
+    id: 'super-mario',
+    name: 'Super Mario',
+    emoji: '🍄',
+    description: 'Vermelho Mario, filete branco e fundo azul, estilo logo',
+    fontFamily: 'Super Mario 256',
+    fontWeightScale: 1.3,
+    outlineSize: 4,
+    baseColor: '#1E3A8A',
+    reliefColor: '#E52521',
+    backColor: '#1E3A8A',
+    midColor: '#FFFFFF',
+    frontColor: '#E52521',
+    backContour: 12,
+    midContour: 5,
+  },
 ];
 
 type TwoLayerStylePatch = Pick<
