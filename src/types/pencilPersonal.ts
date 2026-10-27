@@ -61,6 +61,8 @@ export interface GeneratedPencilPersonal {
   engraveRangeMin: number;
   engraveRangeMax: number;
   clampedDepth: number;
+  /** centro do texto já contido na área de gravação (eixo do corpo) */
+  yCenter: number;
   textWidth: number;
   textTooWide: boolean;
   textTooLong: boolean;

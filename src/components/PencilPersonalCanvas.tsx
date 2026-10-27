@@ -265,7 +265,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     const matrix = transformMatrix(bodyPart.buildTransform);
     const normal = normalAt(config, variant).transformDirection(matrix);
     const axis = BODY_AXIS.clone().transformDirection(matrix);
-    const origin = new THREE.Vector3(0, 0, axisCenterY(config))
+    const origin = new THREE.Vector3(0, 0, generated?.yCenter ?? axisCenterY(config))
       .applyMatrix4(matrix)
       .addScaledVector(normal, surfaceOffset(variant) + OVERLAY_OFFSET);
 
@@ -279,7 +279,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
     overlay.matrix.setPosition(origin);
     overlay.matrixWorldNeedsUpdate = true;
     overlay.visible = true;
-  }, [pkg, config, variant]);
+  }, [pkg, config, variant, generated]);
 
   useEffect(() => {
     const mesh = lettersMeshRef.current;
@@ -305,7 +305,7 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
 
     mesh.matrix
       .copy(transformMatrix(bodyPart.buildTransform))
-      .multiply(letterPlacementMatrix(config, generated.clampedDepth));
+      .multiply(letterPlacementMatrix(config, generated.clampedDepth, generated.yCenter));
     mesh.matrixWorldNeedsUpdate = true;
     mesh.visible = true;
   }, [pkg, generated, showNegative, config]);
@@ -408,8 +408,8 @@ export const PencilPersonalCanvas: React.FC<PencilPersonalCanvasProps> = ({
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           <span>
             {generated.textTooWide
-              ? 'Texto mais largo que a face — reduza a altura ou o espaçamento.'
-              : 'Texto excede a área de gravação — reduza o texto.'}
+              ? 'Letra maior que a face — reduzida para caber no lápis.'
+              : 'Texto maior que a área de gravação — ajustado para caber no lápis.'}
           </span>
         </div>
       )}

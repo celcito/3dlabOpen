@@ -25,7 +25,11 @@ import {
 } from '../presets';
 import { loadEstojoOnce, loadModelOnce } from './helpers';
 import { drawSymbol, SYMBOL_SHAPES } from '../../pencilTopper/symbols';
-import type { PencilPersonalConfig } from '../../../types/pencilPersonal';
+import type {
+  GeneratedPencilPersonal,
+  PencilPersonalConfig,
+  PencilVariant,
+} from '../../../types/pencilPersonal';
 
 beforeAll(() => {
   // Node/vitest can't resolve the Vite ?url WASM asset; point at the real file.
@@ -50,6 +54,20 @@ function signedVolume(geometry: THREE.BufferGeometry): number {
     volume += a.dot(b.clone().cross(c)) / 6;
   }
   return Math.abs(volume);
+}
+
+/** O texto precisa caber na peça: dentro da faixa de gravação (eixo) e na face. */
+function expectContained(generated: GeneratedPencilPersonal, variant: PencilVariant): void {
+  const box = new THREE.Box3().setFromBufferAttribute(
+    generated.letters.getAttribute('position') as THREE.BufferAttribute
+  );
+  const size = box.getSize(new THREE.Vector3());
+  const engraveLength = variant.engraveMaxY - variant.engraveMinY;
+
+  expect(size.x).toBeLessThanOrEqual(engraveLength + 1e-6);
+  expect(size.y).toBeLessThanOrEqual(generated.faceWidth + 1e-6);
+  expect(generated.yCenter - size.x / 2).toBeGreaterThanOrEqual(variant.engraveMinY - 1e-6);
+  expect(generated.yCenter + size.x / 2).toBeLessThanOrEqual(variant.engraveMaxY + 1e-6);
 }
 
 function config(overrides: Partial<PencilPersonalConfig> = {}): PencilPersonalConfig {
@@ -183,6 +201,7 @@ describe('generatePencilPersonal', () => {
       config({ text: 'Nome', letterHeight: 24, positionAlongAxis: 10 })
     );
     expect(generated.textTooWide || generated.textTooLong).toBe(true);
+    expectContained(generated, VARIANTS['lapis-hex']);
   }, 120000);
 });
 
@@ -290,5 +309,6 @@ describe('generatePencilPersonal (variante estojo-giz)', () => {
     );
     expect(generated.faceWidth).toBeLessThan(30);
     expect(generated.textTooWide).toBe(true);
+    expectContained(generated, VARIANTS['estojo-giz']);
   }, 180000);
 });

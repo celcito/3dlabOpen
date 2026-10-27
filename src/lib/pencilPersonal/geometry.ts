@@ -84,12 +84,17 @@ export function axisCenterY(config: PencilPersonalConfig): number {
  * `z = 0` da malha no fundo do bolso (`superfície − profundidade`), de modo que a
  * peça se projeta `LETTER_RELIEF` acima da face.
  */
-export function letterPlacementMatrix(config: PencilPersonalConfig, depth: number): THREE.Matrix4 {
+export function letterPlacementMatrix(
+  config: PencilPersonalConfig,
+  depth: number,
+  /** centro efetivo já contido na área de gravação (padrão: o pedido em config) */
+  yCenter: number = axisCenterY(config)
+): THREE.Matrix4 {
   const variant = variantOf(config);
   const normal = normalAt(config, variant);
   const tangent = tangentAt(config, variant);
   const translation = BODY_AXIS.clone()
-    .multiplyScalar(axisCenterY(config))
+    .multiplyScalar(yCenter)
     .addScaledVector(normal, surfaceOffset(variant) - depth);
 
   return new THREE.Matrix4().set(
@@ -299,6 +304,27 @@ export function faceWidthFor(variant: PencilVariant, depth: number): number {
   return HEX_FACE_WIDTH;
 }
 
+/**
+ * Escala os Shapes do texto pelo plano da face. Os contornos vêm como polígonos
+ * (`LineCurve`, montados em `buildThreeShapes`), então escala os pontos das retas
+ * — inclusive os dos vazados — mantendo a forma intacta.
+ */
+function scaleShapes(shapes: THREE.Shape[], scale: number): void {
+  if (scale >= 1) return;
+  const scalePath = (path: THREE.Path) => {
+    for (const curve of path.curves) {
+      if (curve instanceof THREE.LineCurve) {
+        curve.v1.multiplyScalar(scale);
+        curve.v2.multiplyScalar(scale);
+      }
+    }
+  };
+  for (const shape of shapes) {
+    scalePath(shape);
+    for (const hole of shape.holes) scalePath(hole);
+  }
+}
+
 export async function generatePencilPersonal(
   bodyGeometry: THREE.BufferGeometry,
   config: PencilPersonalConfig
@@ -308,11 +334,27 @@ export async function generatePencilPersonal(
   const tangent = tangentAt(config, variant);
 
   const text = await buildTextShapes(config);
-  const yCenter = axisCenterY(config);
-  const wallThickness = measureWallThickness(bodyGeometry, normal, tangent, yCenter, variant);
+  const requestedCenter = axisCenterY(config);
+  const wallThickness = measureWallThickness(bodyGeometry, normal, tangent, requestedCenter, variant);
   const maxDepth = Math.max(MIN_LETTER_THICKNESS, wallThickness - WALL_RESERVE);
   const clampedDepth = Math.min(Math.max(config.depth, MIN_LETTER_THICKNESS), maxDepth);
   const faceWidth = faceWidthFor(variant, clampedDepth);
+
+  // Contém o texto na peça: reduz a escala até caber na face e na área de
+  // gravação, e trava o centro para que as extremidades não saiam do corpo.
+  const engraveLength = variant.engraveMaxY - variant.engraveMinY;
+  const requestedWidth = text.widthMm;
+  const requestedHeight = text.heightMm;
+  const fitScale = Math.min(1, faceWidth / requestedHeight, engraveLength / requestedWidth);
+  scaleShapes(text.shapes, fitScale);
+  const textWidth = requestedWidth * fitScale;
+
+  const minCenter = variant.engraveMinY + textWidth / 2;
+  const maxCenter = variant.engraveMaxY - textWidth / 2;
+  const yCenter =
+    minCenter <= maxCenter
+      ? Math.min(Math.max(requestedCenter, minCenter), maxCenter)
+      : (variant.engraveMinY + variant.engraveMaxY) / 2;
 
   const cutGeometry = buildCutSolid(
     text.shapes,
@@ -350,10 +392,12 @@ export async function generatePencilPersonal(
     engraveRangeMin: variant.engraveMinY + variant.bodyLength / 2,
     engraveRangeMax: variant.engraveMaxY + variant.bodyLength / 2,
     clampedDepth,
-    textWidth: text.widthMm,
-    textTooWide: text.heightMm > faceWidth,
+    yCenter,
+    textWidth,
+    textTooWide: requestedHeight > faceWidth,
     textTooLong:
-      yCenter - text.widthMm / 2 < variant.engraveMinY ||
-      yCenter + text.widthMm / 2 > variant.engraveMaxY,
+      requestedWidth > engraveLength ||
+      requestedCenter - requestedWidth / 2 < variant.engraveMinY ||
+      requestedCenter + requestedWidth / 2 > variant.engraveMaxY,
   };
 }

@@ -41,8 +41,11 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
     : null;
   const variant = VARIANTS[config.variant];
   const bodyHalfLength = variant.bodyLength / 2;
-  const engraveRangeMin = variant.engraveMinY + bodyHalfLength;
-  const engraveRangeMax = variant.engraveMaxY + bodyHalfLength;
+  // A posição varia para o centro do texto, não para a sua borda: meia largura
+  // em cada ponta mantém o texto inteiro dentro da área de gravação.
+  const halfTextWidth = (generated?.textWidth ?? 0) / 2;
+  const engraveRangeMin = variant.engraveMinY + bodyHalfLength + halfTextWidth;
+  const engraveRangeMax = variant.engraveMaxY + bodyHalfLength - halfTextWidth;
 
   const handleVariantChange = (id: PencilVariantId) => {
     if (id === config.variant) return;
