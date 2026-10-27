@@ -11,10 +11,11 @@ export const PENCIL_MODELS: PencilModelOption[] = [
   },
   {
     id: 'caneta-compact',
-    name: 'Caneta Compact',
+    name: 'Caneta Compactor',
     emoji: '✒️',
-    defaultDiameter: 8.5,
-    description: 'Diâmetro padrão 8.5 mm para canetas compactas retráteis',
+    defaultDiameter: 8.6
+    ,
+    description: 'Diâmetro padrão 8.6 mm para canetas compactas retráteis',
     defaultHoleShape: 'round',
   },
   {
