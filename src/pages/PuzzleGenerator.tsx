@@ -34,6 +34,7 @@ import {
   seededRandom
 } from "../lib/puzzleUtils";
 import { generate3MfBlob, ThreeMfMeshItem, FilamentDefinition } from "../lib/threeMfExporter";
+import { generatePuzzleGlbBlob } from "../lib/puzzleGlbExporter";
 
 export interface FilamentSlot {
   id: string;
@@ -1439,6 +1440,50 @@ export default function PuzzleGenerator() {
     }
   };
 
+  // GLB texturizado: formato que o Bambu Studio (2.7.1+) importa e converte em
+  // pintura de cores. O 3MF padrão não mostra a imagem — ele ignora textura.
+  const exportTexturedGlb = async () => {
+    if (finalPieces3D.length === 0) return;
+    setIsExporting3MF(true);
+    try {
+      const isMemory = gameType === "memory";
+      const items = finalPieces3D.map((p) => ({
+        geometry: p.geom,
+        name: isMemory
+          ? `Ficha_${p.index + 1}_Par_${(p.pairIndex ?? 0) + 1}`
+          : `Peca_Linha${p.row + 1}_Col${p.col + 1}`,
+        image: isMemory ? memoryCards[p.pairIndex ?? p.index] : currentImage,
+      }));
+
+      const title = isMemory
+        ? `Jogo da Memoria ${finalPieces3D.length} Fichas Texturizadas`
+        : `Quebra-Cabeca ${config3D.columns}x${config3D.rows} Texturizado`;
+
+      const blob = await generatePuzzleGlbBlob({
+        title,
+        items,
+        baseColor: config3D.pieceColor,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = isMemory
+        ? `jogomemoria_glb_bambu_${finalPieces3D.length}fichas.glb`
+        : `quebracabeca_glb_bambu_${config3D.columns}x${config3D.rows}.glb`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Erro exportando GLB texturizado:", err);
+    } finally {
+      setIsExporting3MF(false);
+    }
+  };
+
+  const hasTexturedArt =
+    shadingMode3D === "textured" &&
+    (gameType === "memory" ? memoryCards.length > 0 : !!currentImage);
+
   return (
     <div className="h-full flex flex-col bg-[var(--workbench-viewport)] text-[var(--workbench-text)] font-sans overflow-hidden">
       
@@ -1820,7 +1865,7 @@ export default function PuzzleGenerator() {
                   onClick={export3MFPiecesOnly}
                   disabled={isProcessing3D || isExporting3MF || finalPieces3D.length === 0}
                   className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#632CE5] to-[#7C4DFF] hover:brightness-110 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-[#632CE5]/20"
-                  title="Exporta todas as peças/fichas com metadados de cor de filamento e tags AMS compatíveis com Bambu Studio, OrcaSlicer e PrusaSlicer"
+                  title="Exporta todas as peças/fichas com metadados de cor de filamento e tags AMS compatíveis com Bambu Studio, OrcaSlicer e PrusaSlicer. A imagem vai embutida como textura 3MF (m:texture2d), que o Bambu Studio não renderiza — para ver a arte lá, use o .GLB."
                 >
                   {isExporting3MF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Palette className="w-3.5 h-3.5" />}
                   <span>{gameType === "memory" ? "Exportar Fichas (.3MF Multi-Cor)" : "Exportar Peças (.3MF Multi-Cor)"}</span>
@@ -1849,6 +1894,17 @@ export default function PuzzleGenerator() {
                     <span>{gameType === "memory" ? "Estojo (.3MF)" : "Bandeja (.3MF)"}</span>
                   </button>
                 )}
+
+                {/* GLB texturizado — caminho oficial do Bambu Studio para a arte */}
+                <button
+                  onClick={exportTexturedGlb}
+                  disabled={isProcessing3D || isExporting3MF || finalPieces3D.length === 0 || !hasTexturedArt}
+                  className="px-3 py-2.5 rounded-xl bg-[#632CE5]/15 hover:bg-[#632CE5]/25 text-[#632CE5] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-[#632CE5]/30"
+                  title="Exporta as peças em .GLB com a imagem embutida. No Bambu Studio 2.7.1+ use Adicionar → arquivo .glb: ele abre a janela Texture to Color Painting e converte a arte em pintura de cores. Requer a Arte Real (textura) ativa."
+                >
+                  <FileImage className="w-3.5 h-3.5" />
+                  <span>Arte (.GLB)</span>
+                </button>
 
                 <div className="h-5 w-px bg-[var(--surface-container-high)] mx-1 hidden sm:block" />
 
