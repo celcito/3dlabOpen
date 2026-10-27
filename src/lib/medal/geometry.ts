@@ -451,7 +451,8 @@ function punchHandleOpening(ctx: CanvasRenderingContext2D, cx: number, cy: numbe
 }
 
 function fontWeightFor(family: string): 'bold' | 'normal' {
-  return ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers'].includes(family) ? 'normal' : 'bold';
+  // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
+  return ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(family) ? 'normal' : 'bold';
 }
 
 function fontString(sizePx: number, family: string, weight: 'bold' | 'normal'): string {

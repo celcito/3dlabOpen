@@ -44,7 +44,8 @@ export async function buildTextExtrusion(
   const mctx = measureCanvas.getContext('2d');
   if (!mctx) return null;
 
-  const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers'].includes(
+  // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
+  const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(
     opts.fontFamily
   );
   const fontWeight = isCursiveOrDisplay ? 'normal' : 'bold';

@@ -240,7 +240,8 @@ export async function buildPenHolderShellGeometries(
   const mctx = measureCanvas.getContext('2d');
   if (!mctx) throw new Error('Falha ao inicializar Canvas 2D');
 
-  const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers'].includes(config.fontFamily);
+  // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
+  const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
   const fontWeight = isCursiveOrDisplay ? 'normal' : 'bold';
   const fontStyle = `${fontWeight} ${targetFontHeightPx}px "${config.fontFamily}", sans-serif`;
   mctx.font = fontStyle;

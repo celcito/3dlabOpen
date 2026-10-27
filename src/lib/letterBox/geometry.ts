@@ -19,10 +19,14 @@ export async function generateLetterBoxModel(
   const pxPerMm = 16;
   const targetFontHeightPx = Math.max(20, config.letterHeight) * pxPerMm;
 
+  // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
+  const isSingleWeightDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
+  const fontWeight = isSingleWeightDisplay ? 'normal' : 'bold';
+
   try {
     if (!config.customFontName) await ensureGoogleFont(config.fontFamily);
     if (document.fonts) {
-      await document.fonts.load(`bold ${targetFontHeightPx}px "${config.fontFamily}"`);
+      await document.fonts.load(`${fontWeight} ${targetFontHeightPx}px "${config.fontFamily}"`);
     }
   } catch {
     // fallback
@@ -32,7 +36,7 @@ export async function generateLetterBoxModel(
   const mctx = measureCanvas.getContext('2d');
   if (!mctx) throw new Error('Falha ao inicializar Canvas 2D');
 
-  const fontStyle = `bold ${targetFontHeightPx}px "${config.fontFamily}", "Poppins", sans-serif`;
+  const fontStyle = `${fontWeight} ${targetFontHeightPx}px "${config.fontFamily}", "Poppins", sans-serif`;
   mctx.font = fontStyle;
 
   const letterSpacingPx = config.letterSpacing * pxPerMm;
