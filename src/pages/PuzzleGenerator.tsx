@@ -34,7 +34,7 @@ import {
   seededRandom
 } from "../lib/puzzleUtils";
 import { generate3MfBlob, ThreeMfMeshItem, FilamentDefinition } from "../lib/threeMfExporter";
-import { generatePuzzleGlbBlob } from "../lib/puzzleGlbExporter";
+import { generatePuzzleGlbBlob, GlbTextureDetail } from "../lib/puzzleGlbExporter";
 
 export interface FilamentSlot {
   id: string;
@@ -469,6 +469,7 @@ export default function PuzzleGenerator() {
   const [viewMode3D, setViewMode3D] = useState<"both" | "pieces" | "tray">("pieces");
   const [shadingMode3D, setShadingMode3D] = useState<"textured" | "solid">("textured");
   const [puzzleTexture, setPuzzleTexture] = useState<THREE.Texture | null>(null);
+  const [glbTextureDetail, setGlbTextureDetail] = useState<GlbTextureDetail>("medium");
 
   // Multi-Filament 3MF configuration
   const [colorDistributionMode, setColorDistributionMode] = useState<ColorDistributionMode>("uniform");
@@ -1463,6 +1464,7 @@ export default function PuzzleGenerator() {
         title,
         items,
         baseColor: config3D.pieceColor,
+        textureDetail: glbTextureDetail,
       });
 
       const url = URL.createObjectURL(blob);
@@ -1900,11 +1902,27 @@ export default function PuzzleGenerator() {
                   onClick={exportTexturedGlb}
                   disabled={isProcessing3D || isExporting3MF || finalPieces3D.length === 0 || !hasTexturedArt}
                   className="px-3 py-2.5 rounded-xl bg-[#632CE5]/15 hover:bg-[#632CE5]/25 text-[#632CE5] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-[#632CE5]/30"
-                  title="Exporta as peças em .GLB com a imagem embutida. No Bambu Studio 2.7.1+ use Adicionar → arquivo .glb: ele abre a janela Texture to Color Painting e converte a arte em pintura de cores. Requer a Arte Real (textura) ativa."
+                  title="Exporta as peças em .GLB com a imagem embutida. No Bambu Studio 2.7.1+ use Adicionar → arquivo .glb: ele abre a janela Texture to Color Painting e converte a arte em pintura de cores. Requer a Arte Real (textura) ativa. O controle de Detalhe da Textura abaixo ajusta a densidade da malha frontal para o Texture-to-Color do Bambu."
                 >
                   <FileImage className="w-3.5 h-3.5" />
                   <span>Arte (.GLB)</span>
                 </button>
+
+                {/* Detalhe da textura para o export GLB (densidade do Texture-to-Color) */}
+                <div className="flex items-center gap-1.5">
+                  {[("low" as const, "Baixo"), ("medium" as const, "Médio"), ("high" as const, "Alto"), ("ultra" as const, "Ultra")].map(([v, label]) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setGlbTextureDetail(v)}
+                      disabled={!hasTexturedArt}
+                      className={`px-1.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer border transition-all disabled:opacity-40 disabled:cursor-not-allowed \${glbTextureDetail === v ? "bg-[#632CE5] text-white border-[#632CE5] shadow-sm" : "bg-white/95 text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#632CE5]/40"}`}
+                      title={`Detalhe: ${label} — ${v === "low" ? "1 iteração, ~gyro menor" : v === "medium" ? "2 iterações, equilíbrio" : v === "high" ? "3 iterações, arte mais fiel" : "4 iterações, máxima fidelidade (arquivo maior)"}.`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
 
                 <div className="h-5 w-px bg-[var(--surface-container-high)] mx-1 hidden sm:block" />
 

@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { generateProceduralPuzzleArtwork } from "./ProceduralArt";
+import { subdivideFrontFaces } from "./puzzleSubdivideFront";
+
+export type GlbTextureDetail = "low" | "medium" | "high" | "ultra";
 
 export interface PuzzleGlbMeshItem {
   geometry: THREE.BufferGeometry;
@@ -13,7 +17,18 @@ export interface PuzzleGlbExportOptions {
   items: PuzzleGlbMeshItem[];
   /** Cor das laterais/fundo (e da frente quando a peça não tem imagem). */
   baseColor: string;
+  /** Quando as peças não têm imagem individual, buscar uma arte pr procedural a partir deste prompt. */
+  fallbackPrompt?: string;
+  /** Detalhe da textura: mais iterações = malha mais fina na face frontal = arte mais fiel no Texture-to-Color do Bambu. */
+  textureDetail?: GlbTextureDetail;
 }
+
+const TEXTURE_DETAIL_OPTIONS: Map<GlbTextureDetail, Parameters<typeof subdivideFrontFaces>[1]> = new Map([
+  ["low",    { maxIterations: 1, maxFrontTriangles: 1500 }],
+  ["medium", { maxIterations: 2, maxFrontTriangles: 4000 }],
+  ["high",   { maxIterations: 3, maxFrontTriangles: 12000 }],
+  ["ultra",  { maxIterations: 4, maxFrontTriangles: 30000 }],
+]);
 
 /**
  * Exporta as peças como .GLB binário com a imagem embutida.
@@ -46,20 +61,43 @@ export async function generatePuzzleGlbBlob(options: PuzzleGlbExportOptions): Pr
   const root = new THREE.Group();
   root.name = options.title;
 
+  const subdivideOpts = TEXTURE_DETAIL_OPTIONS.get(options.textureDetail ?? "medium")!;
+
   for (const item of options.items) {
-    const geometry = item.geometry.clone();
+    let geometry = item.geometry.clone();
     if (!geometry.getAttribute("normal")) geometry.computeVertexNormals();
 
     const hasUV = !!geometry.getAttribute("uv");
-    const texture = hasUV && item.image ? await loadTexture(item.image) : null;
-    const front = texture
-      ? new THREE.MeshBasicMaterial({ map: texture })
-      : new THREE.MeshBasicMaterial({ color: options.baseColor });
-    const side = new THREE.MeshBasicMaterial({ color: options.baseColor });
+    let texture = hasUV && item.image ? await loadTexture(item.image) : null;
 
-    // `preparePieceGeometryWithMaterials` define o grupo 0 = face frontal (arte)
-    // e o grupo 1 = laterais/fundo; sem grupos a peça foi gerada toda plana.
-    const material = geometry.groups.length > 0 ? [front, side] : front;
+    let imageLabel: string;
+    if (!texture && options.fallbackPrompt) {
+      const art = generateProceduralPuzzleArtwork(options.fallbackPrompt, "Desenho infantil");
+      texture = await loadTexture(art);
+      imageLabel = `procedural_${options.fallbackPrompt.slice(0, 40).replace(/[^a-zA-Z0-9 ]/g, " ").trim()}`;
+    } else {
+      imageLabel = item.image ? `puzzle_artwork` : "base_color";
+    }
+
+    // Subdivide only the front (textured shell) so Bambu's Texture-to-Color
+    // per-triangle color sampling resolves the artwork instead of a coarse blob.
+    if (hasUV && (texture || options.fallbackPrompt)) {
+      geometry = subdivideFrontFaces(geometry, subdivideOpts);
+    } else {
+      geometry.computeVertexNormals();
+    }
+
+    const front = texture
+      ? new THREE.MeshBasicMaterial({ map: texture, name: imageLabel })
+      : new THREE.MeshBasicMaterial({ color: options.baseColor, name: "base_color" });
+    const side = new THREE.MeshBasicMaterial({ color: options.baseColor, name: "base_color" });
+
+    // Após subdivisão a geometria não mantém grupos; usa material único no plano
+    // quando não há front/back distinguível, duas materiais quando o grupo 0/1 subsiste.
+    const material =
+      geometry.groups.length > 0 && geometry.groups[0]?.material === 0
+        ? [front, side]
+        : front;
     const mesh = new THREE.Mesh(geometry, material);
     mesh.name = item.name;
     root.add(mesh);
