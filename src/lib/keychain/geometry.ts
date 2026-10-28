@@ -14,6 +14,13 @@ const pxPerMm = 20;
 const mmPerPixel = 1 / pxPerMm;
 const CANVAS_ALPHA_THRESHOLD = 120;
 
+/**
+ * Altura de letra de referência (mm): nela a borda vale exatamente o valor do slider,
+ * reproduzindo o resultado padrão que já funcionava. Abaixo dela a dilatação escala
+ * junto com a letra — em mm absolutos ela engolia o glifo e a base perdia o contorno.
+ */
+const REF_LETTER_HEIGHT_MM = 16;
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -196,12 +203,14 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   if (text.length > 0) textWidthPx -= letterSpacingPx;
 
   const textHeightPx = targetFontHeightPx;
-  // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
-  const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
+  // Borda da base = outlineSize proporcional à altura da letra (16 mm ⇒ valor puro do
+  // slider); "Espessura da Fonte" engorda só as letras em relevo, na mesma proporção.
+  const sizeRatio = targetFontHeightPx / pxPerMm / REF_LETTER_HEIGHT_MM;
+  const outlinePx = Math.max(1.5, config.outlineSize) * sizeRatio * pxPerMm;
   const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
   // SEGA: os filetes internos do logo têm 0,25–0,65 mm e estão abertos nas pontas —
   // qualquer dilatação os fecha (o punchMask só restaura contadores fechados). Sem dilatação.
-  const reliefDilationMm = config.fontFamily === 'SEGA LOGO FONT' ? 0 : (fontScale - 0.5) * 0.4;
+  const reliefDilationMm = config.fontFamily === 'SEGA LOGO FONT' ? 0 : (fontScale - 0.5) * 0.4 * sizeRatio;
 
   let iconImage: CanvasImageSource | null = null;
   let iconNaturalWidth = 256;
