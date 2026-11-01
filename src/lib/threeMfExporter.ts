@@ -4,6 +4,7 @@
  */
 import JSZip from "jszip";
 import * as THREE from "three";
+import type { PaletteSlot } from "./puzzlePalette";
 
 export interface FilamentDefinition {
   name: string;
@@ -23,6 +24,13 @@ export interface ThreeMfMeshItem {
   textureFormat?: "png" | "jpg";
   /** Texture name for reference */
   textureName?: string;
+  /**
+   * Per-triangle paint sampler (Bambu `paint_color` color painting). Called
+   * once per triangle in serialization order (degenerate triangles included);
+   * return 0 for "not painted" or the 1-based palette slot (1..16).
+   * When set, the mesh is serialized without `m:texture2dgroup` / UV-weld.
+   */
+  paintSampler?: (cx: number, cy: number, cz: number, u: number, v: number) => number;
 }
 
 export interface ThreeMfExportOptions {
@@ -37,6 +45,12 @@ export interface ThreeMfExportOptions {
     format: "png" | "jpg";
     name: string;
   };
+  /**
+   * Merged paint palette (user slots + Auto_N extras). When present it drives
+   * `basematerials`, `filament_colour` and `filament_list`, and each object's
+   * `extruder` metadata points at its base slot.
+   */
+  palette?: PaletteSlot[];
 }
 
 /**
@@ -57,6 +71,27 @@ export function normalizeColor(hex: string): string {
 }
 
 /**
+ * Encode a Bambu Studio color-painting state (1..16 filament slots) into the
+ * `paint_color` triangle attribute (bbs_3mf.cpp TriangleSelector bitstream).
+ *
+ * The bitstream is read RIGHT-TO-LEFT, one 4-bit nibble at a time, so the
+ * FIRST token read is the LAST character of the string:
+ *   - leaf token `code`: split_sides = code & 3; state marker when code >> 2.
+ *   - slots 1-2 encode directly as a single nibble: "4" = slot 1, "8" = slot 2.
+ *   - slots 3-16 write the marker nibble C (12) LAST, preceded by the value
+ *     nibble (state - 3): slot 3 = "0C", slot 4 = "1C", ... slot 16 = "DC".
+ * State 0 means "no painting" and is omitted entirely.
+ */
+export function paintStateToHex(state: number): string {
+  if (!Number.isInteger(state) || state < 1 || state > 16) {
+    throw new RangeError(`paint_state out of range (1..16): ${state}`);
+  }
+  if (state === 1) return "4";
+  if (state === 2) return "8";
+  return `${(state - 3).toString(16).toUpperCase()}C`;
+}
+
+/**
  * Converts THREE.BufferGeometry into 3MF mesh XML string.
  * When texturing, UV indices are aligned with vertex indices and
  * triangles reference an m:texture2dgroup (3MF Material Extension).
@@ -65,7 +100,7 @@ function geometryTo3MfMesh(
   geometry: THREE.BufferGeometry,
   defaultColorIndex: number,
   colorgroupId: number = 1,
-  options?: { textureGroupId?: number }
+  options?: { textureGroupId?: number; paintSampler?: ThreeMfMeshItem["paintSampler"] }
 ): { verticesXml: string; trianglesXml: string; tex2coordsXml?: string } {
   const geom = geometry.index ? geometry.toNonIndexed() : geometry.clone();
   geom.computeVertexNormals();
@@ -75,14 +110,17 @@ function geometryTo3MfMesh(
     return { verticesXml: "", trianglesXml: "" };
   }
 
-  const useTexture = options?.textureGroupId !== undefined;
+  const paintSampler = options?.paintSampler;
+  // Painting replaces the UV texture path: Bambu reads paint_color per
+  // triangle and ignores 3MF texture2d, so no texture group is emitted.
+  const useTexture = options?.textureGroupId !== undefined && paintSampler === undefined;
   const uvAttr = geom.getAttribute("uv");
   let readUV: (i: number) => readonly [number, number] | null = () => null;
 
-  if (useTexture) {
+  if (useTexture || paintSampler) {
     if (uvAttr && uvAttr.count === posAttr.count) {
       readUV = (i) => [uvAttr.getX(i), uvAttr.getY(i)] as const;
-    } else {
+    } else if (useTexture) {
       // Planar UV fallback from bounding box when geometry has no UVs
       geom.computeBoundingBox();
       const bb = geom.boundingBox;
@@ -121,10 +159,12 @@ function geometryTo3MfMesh(
       vIdx = vertices.length;
       vertexMap.set(key, vIdx);
       vertices.push(`<vertex x="${x.toFixed(precision)}" y="${y.toFixed(precision)}" z="${z.toFixed(precision)}" />`);
-      if (uv) {
-        tex2coords.push(`<m:tex2coord u="${uv[0].toFixed(4)}" v="${uv[1].toFixed(4)}" />`);
-      } else if (useTexture) {
-        tex2coords.push(`<m:tex2coord u="0" v="0" />`);
+      if (useTexture) {
+        tex2coords.push(
+          uv
+            ? `<m:tex2coord u="${uv[0].toFixed(4)}" v="${uv[1].toFixed(4)}" />`
+            : `<m:tex2coord u="0" v="0" />`
+        );
       }
     }
     triangleIndices.push(vIdx);
@@ -137,10 +177,30 @@ function geometryTo3MfMesh(
     const v2 = triangleIndices[i + 1];
     const v3 = triangleIndices[i + 2];
 
+    // The sampler runs for every triangle (degenerates included) so its call
+    // order/count matches the pre-baked states array exactly.
+    let paintState = 0;
+    if (paintSampler) {
+      const uv0 = readUV(i);
+      const uv1 = readUV(i + 1);
+      const uv2 = readUV(i + 2);
+      const cx = (posAttr.getX(i) + posAttr.getX(i + 1) + posAttr.getX(i + 2)) / 3;
+      const cy = (posAttr.getY(i) + posAttr.getY(i + 1) + posAttr.getY(i + 2)) / 3;
+      const cz = (posAttr.getZ(i) + posAttr.getZ(i + 1) + posAttr.getZ(i + 2)) / 3;
+      const u = uv0 && uv1 && uv2 ? (uv0[0] + uv1[0] + uv2[0]) / 3 : 0;
+      const v = uv0 && uv1 && uv2 ? (uv0[1] + uv1[1] + uv2[1]) / 3 : 0;
+      paintState = paintSampler(cx, cy, cz, u, v);
+    }
+
     if (v1 !== v2 && v2 !== v3 && v1 !== v3) {
       if (useTexture) {
         triangles.push(
           `<triangle v1="${v1}" v2="${v2}" v3="${v3}" pid="${options!.textureGroupId}" p1="${v1}" p2="${v2}" p3="${v3}" />`
+        );
+      } else if (paintSampler) {
+        const paint = paintState > 0 ? ` paint_color="${paintStateToHex(paintState)}"` : "";
+        triangles.push(
+          `<triangle v1="${v1}" v2="${v2}" v3="${v3}" pid="${colorgroupId}" p1="${defaultColorIndex}"${paint} />`
         );
       } else {
         triangles.push(
@@ -215,7 +275,7 @@ function dataUrlToBytes(dataUrl: string): Uint8Array | null {
 }
 
 /** Rasterize SVG (or any non-raster data URL) to a base64 PNG via canvas. */
-async function rasterizeToPngDataUrl(dataUrl: string): Promise<string | null> {
+export async function rasterizeToPngDataUrl(dataUrl: string): Promise<string | null> {
   try {
     // Prefer a base64 form — browsers are pickier about `data:...;utf8,` payloads
     let src = dataUrl;
@@ -518,7 +578,7 @@ export function buildProjectSettingsConfig(filaments: FilamentDefinition[]): str
  * Defines object metadata and plate layout.
  */
 function buildModelSettingsConfig(
-  items: Array<{ name: string; objId: number }>,
+  items: Array<{ name: string; objId: number; extruder?: number }>,
   filaments: FilamentDefinition[]
 ): string {
   const filCount = filaments.length;
@@ -527,7 +587,7 @@ function buildModelSettingsConfig(
     const safeName = xmlAttr(item.name);
     return `  <object id="${item.objId}">
     <metadata key="name" value="${safeName}"/>
-    <metadata key="extruder" value="1"/>
+    <metadata key="extruder" value="${item.extruder ?? 1}"/>
     <part id="1" subtype="normal_part">
       <metadata key="name" value="${safeName}"/>
       <metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
@@ -564,9 +624,12 @@ ${modelInstances}
 export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Blob> {
   const zip = new JSZip();
   const title = options.title || "Puzzle 3D Multi-Color";
-  const filaments = options.filaments && options.filaments.length > 0
-    ? options.filaments
-    : [{ name: "Filamento 1", color: "#00E5FF" }];
+  const palette = options.palette && options.palette.length > 0 ? options.palette : undefined;
+  const filaments: FilamentDefinition[] = palette
+    ? palette.map(p => ({ name: p.name, color: p.color }))
+    : options.filaments && options.filaments.length > 0
+      ? options.filaments
+      : [{ name: "Filamento 1", color: "#00E5FF" }];
   const unit = options.unit || "millimeter";
 
   // Single ID space for all resources + objects (required by 3MF core)
@@ -599,6 +662,7 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     await registerTexture(options.globalTexture.name, options.globalTexture.image, options.globalTexture.format);
   }
   for (const item of options.items) {
+    if (item.paintSampler) continue; // painted mesh: no texture embedded
     if (item.textureImage && item.textureName) {
       await registerTexture(item.textureName, item.textureImage, item.textureFormat);
     }
@@ -641,14 +705,15 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
   const objectsXmlList: string[] = [];
   const buildItemsList: string[] = [];
   const textureGroupElements: string[] = [];
-  const settingsObjects: Array<{ name: string; objId: number }> = [];
+  const settingsObjects: Array<{ name: string; objId: number; extruder?: number }> = [];
 
   options.items.forEach((item, idx) => {
     const objId = nextResourceId++;
     const safeName = (item.name || `Object_${idx + 1}`).replace(/[<>&"]/g, "_");
     const filIdx = Math.max(0, Math.min(item.filamentIndex ?? 0, filaments.length - 1));
 
-    const textureInfo = item.textureImage && item.textureName
+    const usePaint = item.paintSampler !== undefined;
+    const textureInfo = !usePaint && item.textureImage && item.textureName
       ? textureMap.get(item.textureName)
       : null;
 
@@ -665,7 +730,7 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
       item.geometry,
       filIdx,
       basematerialsId,
-      { textureGroupId }
+      { textureGroupId, paintSampler: item.paintSampler }
     );
 
     if (textureGroupId !== undefined && tex2coordsXml) {
@@ -689,7 +754,12 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     </object>`;
 
     objectsXmlList.push(objXml);
-    settingsObjects.push({ name: safeName, objId });
+    settingsObjects.push({
+      name: safeName,
+      objId,
+      // With a paint palette the object prints on its base-color slot
+      ...(palette ? { extruder: filIdx + 1 } : {}),
+    });
 
     let transformAttr = "";
     if (item.position || item.rotation) {

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
-import { generateProceduralPuzzleArtwork } from "./ProceduralArt";
+import { generateProceduralPuzzleArtwork } from "../server/ProceduralArt";
 import { subdivideFrontFaces } from "./puzzleSubdivideFront";
 
 export type GlbTextureDetail = "low" | "medium" | "high" | "ultra";
@@ -23,7 +23,7 @@ export interface PuzzleGlbExportOptions {
   textureDetail?: GlbTextureDetail;
 }
 
-const TEXTURE_DETAIL_OPTIONS: Map<GlbTextureDetail, Parameters<typeof subdivideFrontFaces>[1]> = new Map([
+export const TEXTURE_DETAIL_OPTIONS: Map<GlbTextureDetail, Parameters<typeof subdivideFrontFaces>[1]> = new Map([
   ["low",    { maxIterations: 1, maxFrontTriangles: 1500 }],
   ["medium", { maxIterations: 2, maxFrontTriangles: 4000 }],
   ["high",   { maxIterations: 3, maxFrontTriangles: 12000 }],

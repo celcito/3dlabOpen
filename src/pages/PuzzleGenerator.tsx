@@ -7,7 +7,6 @@ import React, { useState, useRef, useEffect, useMemo, ChangeEvent, DragEvent } f
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Center, ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { 
   Download, Puzzle, Settings, Sliders, Box, Grid3X3, 
   Image as ImageIcon, Upload, Trash2, Loader2, Shapes, 
@@ -34,7 +33,10 @@ import {
   seededRandom
 } from "../lib/puzzleUtils";
 import { generate3MfBlob, ThreeMfMeshItem, FilamentDefinition } from "../lib/threeMfExporter";
-import { generatePuzzleGlbBlob, GlbTextureDetail } from "../lib/puzzleGlbExporter";
+import { GlbTextureDetail, TEXTURE_DETAIL_OPTIONS } from "../lib/puzzleGlbExporter";
+import { subdivideFrontFaces } from "../lib/puzzleSubdivideFront";
+import { bakePaintForGeometry, loadImagePixels, ImagePixels } from "../lib/puzzlePaintBake";
+import { kmeansPalette, mergePalette, PaletteSlot, Rgb } from "../lib/puzzlePalette";
 
 export interface FilamentSlot {
   id: string;
@@ -470,6 +472,9 @@ export default function PuzzleGenerator() {
   const [shadingMode3D, setShadingMode3D] = useState<"textured" | "solid">("textured");
   const [puzzleTexture, setPuzzleTexture] = useState<THREE.Texture | null>(null);
   const [glbTextureDetail, setGlbTextureDetail] = useState<GlbTextureDetail>("medium");
+  // Pintura pronta (Bambu): assa a arte como paint_color por triângulo no .3MF
+  const [paintReady, setPaintReady] = useState(true);
+  const [autoColors, setAutoColors] = useState<0 | 4 | 8 | 12 | 16>(8);
 
   // Multi-Filament 3MF configuration
   const [colorDistributionMode, setColorDistributionMode] = useState<ColorDistributionMode>("uniform");
@@ -1235,17 +1240,136 @@ export default function PuzzleGenerator() {
     }
   };
 
-  const exportMesh = (targetGroup: THREE.Group | null, filename: string) => {
-    if (!targetGroup) return;
-    const exporter = new STLExporter();
-    const stlString = exporter.parse(targetGroup);
-    const blob = new Blob([stlString], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+  // ---- Pintura pronta (Bambu): assa a arte como paint_color por triângulo ----
+
+  interface PaintPlan {
+    palette: PaletteSlot[];
+    loadImage: (url: string) => Promise<ImagePixels | null>;
+    subdivideOpts: Parameters<typeof subdivideFrontFaces>[1];
+  }
+
+  /** Consome os estados pré-assados na ordem exata de serialização do exporter. */
+  const counterPaintSampler = (states: Uint8Array): ThreeMfMeshItem["paintSampler"] => {
+    let t = 0;
+    return () => states[t++];
+  };
+
+  /** Arte por peça: quebra-cabeça = imagem atual; memória = arte do par. */
+  const resolvePieceImage = (
+    p: (typeof finalPieces3D)[number],
+    isMemory: boolean
+  ): string | undefined =>
+    isMemory ? memoryCards[p.pairIndex ?? p.index] : currentImage || undefined;
+
+  /**
+   * Prepara a paleta de pintura (slots do usuário + extras k-means) e o cache
+   * de pixels da arte. Retorna null quando a pintura está desligada ou nenhuma
+   * arte pôde ser lida → o export segue pelo caminho atual (textura UV).
+   */
+  const buildPaintPlan = async (isMemory: boolean): Promise<PaintPlan | null> => {
+    if (!paintReady || !hasTexturedArt) return null;
+
+    const images: string[] = [];
+    const pushImage = (url?: string | null) => {
+      if (url && !images.includes(url)) images.push(url);
+    };
+    if (isMemory) memoryCards.forEach(pushImage);
+    else pushImage(currentImage);
+    if (images.length === 0) return null;
+
+    const cache = new Map<string, ImagePixels | null>();
+    const loadImage = async (url: string): Promise<ImagePixels | null> => {
+      const cached = cache.get(url);
+      if (cached !== undefined) return cached;
+      try {
+        const pixels = await loadImagePixels(url);
+        cache.set(url, pixels);
+        return pixels;
+      } catch (err) {
+        console.warn("Pintura 3MF: arte não pôde ser lida", err);
+        cache.set(url, null);
+        return null;
+      }
+    };
+
+    const auto: Rgb[] = [];
+    for (const url of images) {
+      const pixels = await loadImage(url);
+      if (pixels && autoColors > 0) auto.push(...kmeansPalette(pixels, autoColors));
+    }
+    if (!images.some(url => cache.get(url) !== null)) {
+      console.warn("Pintura 3MF: nenhuma arte pôde ser lida — exportando pelo caminho atual");
+      return null;
+    }
+
+    const userSlots: PaletteSlot[] = filaments.map((f, i) => ({
+      name: f.name,
+      color: f.color,
+      base: i === 0,
+    }));
+    return {
+      palette: mergePalette(userSlots, auto),
+      loadImage,
+      subdivideOpts: TEXTURE_DETAIL_OPTIONS.get(glbTextureDetail)!,
+    };
+  };
+
+  /** Monta o item 3MF de uma peça: pintura assada, fallback UV ou cor base. */
+  const buildPieceItem = async (
+    p: (typeof finalPieces3D)[number],
+    plan: PaintPlan | null,
+    isMemory: boolean,
+    filIdx: number,
+    name: string
+  ): Promise<ThreeMfMeshItem> => {
+    const image = resolvePieceImage(p, isMemory);
+
+    if (!plan) {
+      // Caminho atual intacto (zero regressão quando a pintura está fora)
+      const textureDataUrl = shadingMode3D === "textured" && currentImage
+        ? currentImage
+        : undefined;
+      return {
+        geometry: p.geom,
+        name,
+        filamentIndex: filIdx,
+        textureImage: textureDataUrl,
+        textureName: textureDataUrl ? "puzzle_artwork" : undefined,
+      };
+    }
+
+    if (image && p.geom.getAttribute("uv")) {
+      try {
+        const pixels = await plan.loadImage(image);
+        if (pixels) {
+          // Subdivisão (mesma tabela do GLB) antecede o assamento
+          const geometry = subdivideFrontFaces(p.geom, plan.subdivideOpts);
+          const states = bakePaintForGeometry(geometry, pixels, plan.palette);
+          if (states.some(s => s > 0)) {
+            return {
+              geometry,
+              name,
+              filamentIndex: filIdx,
+              paintSampler: counterPaintSampler(states),
+            };
+          }
+          // Sem triângulos frontais detectados → peça sólida na cor base
+          return { geometry, name, filamentIndex: filIdx };
+        }
+      } catch (err) {
+        // Nunca bloqueia o download: segue com a textura UV da própria arte
+        console.warn("Pintura 3MF: falha ao assar a peça, exportando sem pintura", err);
+      }
+      return {
+        geometry: p.geom,
+        name,
+        filamentIndex: filIdx,
+        textureImage: image,
+        textureName: "puzzle_artwork",
+      };
+    }
+
+    return { geometry: p.geom, name, filamentIndex: filIdx };
   };
 
   // 3MF Multi-Color Export Handlers
@@ -1254,7 +1378,15 @@ export default function PuzzleGenerator() {
     setIsExporting3MF(true);
     try {
       const isMemory = gameType === "memory";
-      const items: ThreeMfMeshItem[] = finalPieces3D.map((p) => {
+      let plan: PaintPlan | null = null;
+      try {
+        plan = await buildPaintPlan(isMemory);
+      } catch (err) {
+        console.warn("Pintura 3MF: preparação falhou, exportando sem pintura", err);
+      }
+
+      const items: ThreeMfMeshItem[] = [];
+      for (const p of finalPieces3D) {
         const filIdx = getPieceFilamentSlotIndex(
           p.col,
           p.row,
@@ -1266,19 +1398,8 @@ export default function PuzzleGenerator() {
           ? `Ficha_${p.index + 1}_Par_${(p.pairIndex !== undefined ? p.pairIndex + 1 : 1)}`
           : `Peca_Linha${p.row + 1}_Col${p.col + 1}`;
 
-        // Texture is resolved (data:/blob:/http) inside generate3MfBlob
-        const textureDataUrl = (shadingMode3D === "textured" && currentImage)
-          ? currentImage
-          : undefined;
-
-        return {
-          geometry: p.geom,
-          name,
-          filamentIndex: filIdx,
-          textureImage: textureDataUrl,
-          textureName: textureDataUrl ? "puzzle_artwork" : undefined,
-        };
-      });
+        items.push(await buildPieceItem(p, plan, isMemory, filIdx, name));
+      }
 
       const title = isMemory
         ? `Jogo da Memoria ${finalPieces3D.length} Fichas Multi-Color`
@@ -1288,8 +1409,9 @@ export default function PuzzleGenerator() {
         title,
         designer: "Puzzle Studio 3D",
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
+        palette: plan?.palette,
         items,
-        globalTexture: (shadingMode3D === "textured" && currentImage) ? {
+        globalTexture: !plan && shadingMode3D === "textured" && currentImage ? {
           image: currentImage,
           format: currentImage.toLowerCase().includes("jpeg") ? "jpg" as const : "png" as const,
           name: "puzzle_artwork"
@@ -1363,10 +1485,17 @@ export default function PuzzleGenerator() {
     setIsExporting3MF(true);
     try {
       const isMemory = gameType === "memory";
+      let plan: PaintPlan | null = null;
+      try {
+        plan = await buildPaintPlan(isMemory);
+      } catch (err) {
+        console.warn("Pintura 3MF: preparação falhou, exportando sem pintura", err);
+      }
+
       const items: ThreeMfMeshItem[] = [];
 
       // Add each piece with its assigned filament
-      finalPieces3D.forEach((p) => {
+      for (const p of finalPieces3D) {
         const filIdx = getPieceFilamentSlotIndex(
           p.col,
           p.row,
@@ -1378,19 +1507,8 @@ export default function PuzzleGenerator() {
           ? `Ficha_${p.index + 1}_Par_${(p.pairIndex !== undefined ? p.pairIndex + 1 : 1)}`
           : `Peca_Linha${p.row + 1}_Col${p.col + 1}`;
 
-        // Texture is resolved (data:/blob:/http) inside generate3MfBlob
-        const textureDataUrl = (shadingMode3D === "textured" && currentImage)
-          ? currentImage
-          : undefined;
-
-        items.push({
-          geometry: p.geom,
-          name,
-          filamentIndex: filIdx,
-          textureImage: textureDataUrl,
-          textureName: textureDataUrl ? "puzzle_artwork" : undefined,
-        });
-      });
+        items.push(await buildPieceItem(p, plan, isMemory, filIdx, name));
+      }
 
       // Add tray elements if enabled
       if (config3D.generateTray) {
@@ -1418,8 +1536,9 @@ export default function PuzzleGenerator() {
         title,
         designer: "Puzzle Studio 3D",
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
+        palette: plan?.palette,
         items,
-        globalTexture: (shadingMode3D === "textured" && currentImage) ? {
+        globalTexture: !plan && shadingMode3D === "textured" && currentImage ? {
           image: currentImage,
           format: currentImage.toLowerCase().includes("jpeg") ? "jpg" as const : "png" as const,
           name: "puzzle_artwork"
@@ -1436,47 +1555,6 @@ export default function PuzzleGenerator() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Erro exportando 3MF Completo:", err);
-    } finally {
-      setIsExporting3MF(false);
-    }
-  };
-
-  // GLB texturizado: formato que o Bambu Studio (2.7.1+) importa e converte em
-  // pintura de cores. O 3MF padrão não mostra a imagem — ele ignora textura.
-  const exportTexturedGlb = async () => {
-    if (finalPieces3D.length === 0) return;
-    setIsExporting3MF(true);
-    try {
-      const isMemory = gameType === "memory";
-      const items = finalPieces3D.map((p) => ({
-        geometry: p.geom,
-        name: isMemory
-          ? `Ficha_${p.index + 1}_Par_${(p.pairIndex ?? 0) + 1}`
-          : `Peca_Linha${p.row + 1}_Col${p.col + 1}`,
-        image: isMemory ? memoryCards[p.pairIndex ?? p.index] : currentImage,
-      }));
-
-      const title = isMemory
-        ? `Jogo da Memoria ${finalPieces3D.length} Fichas Texturizadas`
-        : `Quebra-Cabeca ${config3D.columns}x${config3D.rows} Texturizado`;
-
-      const blob = await generatePuzzleGlbBlob({
-        title,
-        items,
-        baseColor: config3D.pieceColor,
-        textureDetail: glbTextureDetail,
-      });
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = isMemory
-        ? `jogomemoria_glb_bambu_${finalPieces3D.length}fichas.glb`
-        : `quebracabeca_glb_bambu_${config3D.columns}x${config3D.rows}.glb`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Erro exportando GLB texturizado:", err);
     } finally {
       setIsExporting3MF(false);
     }
@@ -1867,7 +1945,7 @@ export default function PuzzleGenerator() {
                   onClick={export3MFPiecesOnly}
                   disabled={isProcessing3D || isExporting3MF || finalPieces3D.length === 0}
                   className="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#632CE5] to-[#7C4DFF] hover:brightness-110 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-md shadow-[#632CE5]/20"
-                  title="Exporta todas as peças/fichas com metadados de cor de filamento e tags AMS compatíveis com Bambu Studio, OrcaSlicer e PrusaSlicer. A imagem vai embutida como textura 3MF (m:texture2d), que o Bambu Studio não renderiza — para ver a arte lá, use o .GLB."
+                  title="Exporta todas as peças/fichas com metadados de cor de filamento e tags AMS compatíveis com Bambu Studio, OrcaSlicer e PrusaSlicer. Com 'Pintura pronta (Bambu)' ligado, a arte já sai pintada por triângulo (paint_color) e o Bambu abre sem passos extras. Desligue o toggle para embutir como textura 3MF (m:texture2d) no formato antigo."
                 >
                   {isExporting3MF ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Palette className="w-3.5 h-3.5" />}
                   <span>{gameType === "memory" ? "Exportar Fichas (.3MF Multi-Cor)" : "Exportar Peças (.3MF Multi-Cor)"}</span>
@@ -1897,50 +1975,52 @@ export default function PuzzleGenerator() {
                   </button>
                 )}
 
-                {/* GLB texturizado — caminho oficial do Bambu Studio para a arte */}
-                <button
-                  onClick={exportTexturedGlb}
-                  disabled={isProcessing3D || isExporting3MF || finalPieces3D.length === 0 || !hasTexturedArt}
-                  className="px-3 py-2.5 rounded-xl bg-[#632CE5]/15 hover:bg-[#632CE5]/25 text-[#632CE5] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-[#632CE5]/30"
-                  title="Exporta as peças em .GLB com a imagem embutida. No Bambu Studio 2.7.1+ use Adicionar → arquivo .glb: ele abre a janela Texture to Color Painting e converte a arte em pintura de cores. Requer a Arte Real (textura) ativa. O controle de Detalhe da Textura abaixo ajusta a densidade da malha frontal para o Texture-to-Color do Bambu."
-                >
-                  <FileImage className="w-3.5 h-3.5" />
-                  <span>Arte (.GLB)</span>
-                </button>
-
-                {/* Detalhe da textura para o export GLB (densidade do Texture-to-Color) */}
+                {/* Detalhe da textura: densidade da subdivisão frontal da pintura no .3MF */}
                 <div className="flex items-center gap-1.5">
-                  {[("low" as const, "Baixo"), ("medium" as const, "Médio"), ("high" as const, "Alto"), ("ultra" as const, "Ultra")].map(([v, label]) => (
+                  {([["low", "Baixo"], ["medium", "Médio"], ["high", "Alto"], ["ultra", "Ultra"]] as const).map(([v, label]) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => setGlbTextureDetail(v)}
                       disabled={!hasTexturedArt}
-                      className={`px-1.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer border transition-all disabled:opacity-40 disabled:cursor-not-allowed \${glbTextureDetail === v ? "bg-[#632CE5] text-white border-[#632CE5] shadow-sm" : "bg-white/95 text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#632CE5]/40"}`}
-                      title={`Detalhe: ${label} — ${v === "low" ? "1 iteração, ~gyro menor" : v === "medium" ? "2 iterações, equilíbrio" : v === "high" ? "3 iterações, arte mais fiel" : "4 iterações, máxima fidelidade (arquivo maior)"}.`}
+                      className={`px-1.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${glbTextureDetail === v ? "bg-[#632CE5] text-white border-[#632CE5] shadow-sm" : "bg-white/95 text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#632CE5]/40"}`}
+                      title={`Detalhe: ${label} — ${v === "low" ? "1 iteração, ~gyro menor" : v === "medium" ? "2 iterações, equilíbrio" : v === "high" ? "3 iterações, arte mais fiel" : "4 iterações, máxima fidelidade (arquivo maior)"}. Aplica na subdivisão da pintura do .3MF.`}
                     >
                       {label}
                     </button>
                   ))}
                 </div>
 
-                <div className="h-5 w-px bg-[var(--surface-container-high)] mx-1 hidden sm:block" />
-
-                {/* STL Fallbacks */}
-                <button
-                  onClick={() => exportMesh(
-                    piecesGroupRef.current, 
-                    gameType === "memory"
-                      ? `jogomemoria_3d_fichas_${finalPieces3D.length}pecas.stl`
-                      : `quebracabeca_3d_pecas_${config3D.columns}x${config3D.rows}.stl`
-                  )}
-                  disabled={isProcessing3D || finalPieces3D.length === 0}
-                  className="px-2.5 py-2 rounded-xl bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] font-semibold text-xs flex items-center gap-1.5 transition-all cursor-pointer border border-[var(--surface-container-high)] disabled:opacity-50"
-                  title="Exporta em formato STL clássico (monocromático)"
-                >
-                  <Download className="w-3 h-3" />
-                  <span>STL</span>
-                </button>
+                {/* Pintura pronta: o .3MF abre no Bambu já com a arte pintada (paint_color) */}
+                {hasTexturedArt && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPaintReady(v => !v)}
+                      className={`px-1.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer border transition-all ${paintReady ? "bg-[#16A34A] text-white border-[#16A34A] shadow-sm" : "bg-white/95 text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#16A34A]/40"}`}
+                      title="Pintura pronta (Bambu): o .3MF abre já com a arte pintada por triângulo (paint_color) — sem usar Texture to Color Painting. Desligue para voltar ao export atual com textura UV."
+                    >
+                      Pintura pronta (Bambu)
+                    </button>
+                    {paintReady && (
+                      <div className="flex items-center gap-1">
+                        {([0, 4, 8, 12, 16] as const).map(k => (
+                          <button
+                            key={k}
+                            type="button"
+                            onClick={() => setAutoColors(k)}
+                            className={`px-1.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider cursor-pointer border transition-all ${autoColors === k ? "bg-[#632CE5] text-white border-[#632CE5] shadow-sm" : "bg-white/95 text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:border-[#632CE5]/40"}`}
+                            title={k === 0
+                              ? "Nenhuma cor automática: pinta apenas com os seus 5 filamentos."
+                              : `Extrai até ${k} cores dominantes da arte (k-means) como filamentos extras Auto_1…Auto_${k} e pinta com eles.`}
+                          >
+                            {k === 0 ? "Auto 0" : `Auto ${k}`}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
