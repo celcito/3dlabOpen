@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
+import { parseSvgShapes } from "../svgToShapes";
 
 export const TOPPER_FONTS = [
   { name: "Impact (Grossa)", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/helvetiker_bold.typeface.json" },
@@ -49,6 +50,14 @@ export interface TopperConfig {
   plateWidth: number;
   plateHeight: number;
   plateCornerRadius: number;
+  /**
+   * Forma da placa: `"retangulo"` (default), id de `SHAPE_PRESETS` ou `"svg"`
+   * (upload personalizado em `plateShapeSvg`). O formato sempre preenche a
+   * caixa Largura × Altura (bbox = caixa — borda/hastes/validação consistentes).
+   */
+  plateShape: string;
+  /** Markup SVG usado quando `plateShape === "svg"` (maior forma preenchida). */
+  plateShapeSvg: string | null;
   plateColor: string;
   textColor: string;
   borderColor: string;
@@ -59,6 +68,16 @@ export interface TopperConfig {
   stickThickness: number;
   stickWidth: number;
   stickColor: string;
+  /**
+   * Deslocamento vertical da haste (subir/descer, mm). No código move o eixo Y
+   * do modelo — o "eixo Z" é a convenção de subir/descer usada na UI.
+   */
+  stickZOffset: number;
+  /**
+   * Espaçamento X explícito entre hastes vizinhas (mm, centradas).
+   * `null` = automático (distribuição proporcional à placa, comportamento antigo).
+   */
+  stickSpacing: number | null;
   elements: TopperElement[];
   sticks: TopperStick[];
   totalHeight: number;
@@ -70,6 +89,80 @@ export interface TopperConfig {
   subtitle: string;
   theme: string;
 }
+
+export function defaultSticks(
+  count: number,
+  plateWidth: number,
+  stickHeight: number,
+  stickThickness: number,
+  stickWidth: number,
+  spacing?: number | null
+): TopperStick[] {
+  const sticks: TopperStick[] = [];
+  const half = Math.max(0, plateWidth / 2 - stickWidth / 2);
+  if (spacing != null && Number.isFinite(spacing)) {
+    // Espaçamento explícito (Espaçamento X): centradas, com clamp dentro da placa.
+    for (let i = 0; i < count; i++) {
+      const x = spacing * (i - (count - 1) / 2);
+      sticks.push({
+        id: Math.random().toString(36).slice(2, 10),
+        x: Math.min(half, Math.max(-half, x)),
+        height: stickHeight,
+        thickness: stickThickness,
+        width: stickWidth,
+      });
+    }
+    return sticks;
+  }
+  const auto = plateWidth / (count + 1);
+  for (let i = 0; i < count; i++) {
+    sticks.push({
+      id: Math.random().toString(36).slice(2, 10),
+      x: -plateWidth / 2 + auto * (i + 1),
+      height: stickHeight,
+      thickness: stickThickness,
+      width: stickWidth,
+    });
+  }
+  return sticks;
+}
+
+export const DEFAULT_TOPPER_CONFIG: TopperConfig = {
+  text: "Feliz Aniversário",
+  fontFamily: TOPPER_FONTS[0].url,
+  fontSize: 14,
+  textThickness: 2,
+  letterSpacing: 0.5,
+  alignment: "center",
+  plateThickness: 2,
+  plateWidth: 120,
+  plateHeight: 60,
+  plateCornerRadius: 5,
+  plateShape: "retangulo",
+  plateShapeSvg: null,
+  plateColor: "#FF6B9D",
+  textColor: "#FFFFFF",
+  borderColor: "#FF1A6D",
+  borderWidth: 2,
+  showBorder: true,
+  stickCount: 2,
+  stickHeight: 80,
+  stickThickness: 2,
+  stickWidth: 4,
+  stickColor: "#FF6B9D",
+  stickZOffset: 0,
+  stickSpacing: null,
+  elements: [],
+  sticks: defaultSticks(2, 120, 80, 2, 4),
+  totalHeight: 140,
+  totalWidth: 120,
+  smoothEdges: true,
+  addReinforcement: false,
+  reinforcementThickness: 2,
+  age: "",
+  subtitle: "",
+  theme: "aniversario",
+};
 
 export const THEMES: Record<string, { plateColor: string; textColor: string; borderColor: string; elements: Partial<TopperConfig> }> = {
   aniversario: { plateColor: "#FF6B9D", textColor: "#FFFFFF", borderColor: "#FF1A6D", elements: { borderWidth: 2, showBorder: true } },
@@ -103,11 +196,12 @@ export const SHAPE_PRESETS: Record<string, (cx: number, cy: number, size: number
   coracao: (cx, cy, s) => {
     const shape = new THREE.Shape();
     const r = s / 4;
-    shape.moveTo(cx, cy - r * 0.5);
-    shape.bezierCurveTo(cx, cy - r * 1.5, cx - r * 2, cy - r * 1.5, cx - r * 2, cy - r * 0.5);
-    shape.bezierCurveTo(cx - r * 2, cy + r * 0.5, cx, cy + r * 1.2, cx, cy + r * 1.8);
-    shape.bezierCurveTo(cx, cy + r * 1.2, cx + r * 2, cy + r * 0.5, cx + r * 2, cy - r * 0.5);
-    shape.bezierCurveTo(cx + r * 2, cy - r * 1.5, cx, cy - r * 1.5, cx, cy - r * 0.5);
+    // Espelho em y do caminho do canvas (three é y-up): ponta em baixo, lobos em cima.
+    shape.moveTo(cx, cy + r * 0.5);
+    shape.bezierCurveTo(cx, cy + r * 1.5, cx - r * 2, cy + r * 1.5, cx - r * 2, cy + r * 0.5);
+    shape.bezierCurveTo(cx - r * 2, cy - r * 0.5, cx, cy - r * 1.2, cx, cy - r * 1.8);
+    shape.bezierCurveTo(cx, cy - r * 1.2, cx + r * 2, cy - r * 0.5, cx + r * 2, cy + r * 0.5);
+    shape.bezierCurveTo(cx + r * 2, cy + r * 1.5, cx, cy + r * 1.5, cx, cy + r * 0.5);
     return shape;
   },
   flor: (cx, cy, s) => {
@@ -241,6 +335,140 @@ function roundedRectShape(w: number, h: number, r: number): THREE.Shape {
   return shape;
 }
 
+/**
+ * Formas de placa aceitas (whitelist de UI e storage). `"svg"` = upload
+ * personalizado (`plateShapeSvg`). Exclui `balao`/`nuvem` (geometria enganosa).
+ */
+export const PLATE_SHAPE_IDS = [
+  "retangulo",
+  "circulo",
+  "coracao",
+  "estrela",
+  "estrela6",
+  "flor",
+  "coroa",
+  "losango",
+  "triangulo",
+  "quadrado",
+  "svg",
+] as const;
+
+export function isPlateShapeId(id: unknown): id is (typeof PLATE_SHAPE_IDS)[number] {
+  return typeof id === "string" && (PLATE_SHAPE_IDS as readonly string[]).includes(id);
+}
+
+function polygonShape(pts: THREE.Vector2[]): THREE.Shape {
+  const shape = new THREE.Shape();
+  shape.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i].x, pts[i].y);
+  shape.closePath();
+  return shape;
+}
+
+function polygonPath(pts: THREE.Vector2[]): THREE.Path {
+  const path = new THREE.Path();
+  path.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) path.lineTo(pts[i].x, pts[i].y);
+  path.closePath();
+  return path;
+}
+
+/**
+ * Reamostra `src` como polígono (64 segs/curva) e aplica escala+translação
+ * afim para o bbox preencher exatamente `width × height` centrado na origem.
+ * `flipY` inverte o eixo (SVG y-down → three y-up); furos são transformados junto.
+ */
+function fitShapeToBox(src: THREE.Shape, width: number, height: number, flipY: boolean): THREE.Shape {
+  const outer = src.getPoints(64);
+  if (outer.length < 3) return src;
+  const box = new THREE.Box2().setFromPoints(outer);
+  const bw = box.max.x - box.min.x;
+  const bh = box.max.y - box.min.y;
+  const sx = bw > 1e-9 ? width / bw : 1;
+  const sy = bh > 1e-9 ? height / bh : 1;
+  const cx = (box.min.x + box.max.x) / 2;
+  const cy = (box.min.y + box.max.y) / 2;
+  const map = (p: THREE.Vector2) =>
+    new THREE.Vector2((p.x - cx) * sx, (flipY ? -(p.y - cy) : p.y - cy) * sy);
+  const out = polygonShape(outer.map(map));
+  for (const hole of src.holes) {
+    const hpts = hole.getPoints(64);
+    if (hpts.length >= 3) out.holes.push(polygonPath(hpts.map(map)));
+  }
+  return out;
+}
+
+/**
+ * Maior forma preenchida de um markup SVG → `THREE.Shape` centrada preenchendo
+ * `width × height` (y invertido p/ three y-up). `null` se o SVG não parsear
+ * ou não tiver nenhuma forma preenchida — usado também para validar o upload.
+ */
+export function svgPlateShape(svgMarkup: string, width: number, height: number): THREE.Shape | null {
+  if (!svgMarkup || !svgMarkup.trim()) return null;
+  let shapes: THREE.Shape[];
+  try {
+    shapes = parseSvgShapes(svgMarkup);
+  } catch {
+    return null;
+  }
+  if (shapes.length === 0) return null;
+  let best = shapes[0];
+  let bestArea = 0;
+  for (const s of shapes) {
+    const box = new THREE.Box2().setFromPoints(s.getPoints(32));
+    const sz = box.getSize(new THREE.Vector2());
+    const area = sz.x * sz.y;
+    if (area > bestArea) {
+      bestArea = area;
+      best = s;
+    }
+  }
+  if (bestArea <= 0) return null;
+  return fitShapeToBox(best, width, height, true);
+}
+
+/**
+ * Contorno da placa em unidades arbitradas (mm na exportação, /10 no preview 3D).
+ * `retangulo` → canto arredondado; preset → `SHAPE_PRESETS` esticado na caixa;
+ * `svg` → maior forma preenchida (fallback ao retângulo se inválido).
+ * Nunca retorna `null`.
+ */
+export function plateShapeShape(
+  width: number,
+  height: number,
+  cornerRadius: number,
+  shapeId: string,
+  svgMarkup: string | null
+): THREE.Shape {
+  if (shapeId === "svg" && svgMarkup) {
+    const fromSvg = svgPlateShape(svgMarkup, width, height);
+    if (fromSvg) return fromSvg;
+  } else if (shapeId !== "retangulo" && shapeId !== "svg" && SHAPE_PRESETS[shapeId]) {
+    return fitShapeToBox(SHAPE_PRESETS[shapeId](0, 0, 1), width, height, false);
+  }
+  return roundedRectShape(width, height, cornerRadius);
+}
+
+/**
+ * Y da borda **inferior** da forma na vertical `x` (menor cruzamento do
+ * contorno externo — material acima). `null` quando `x` está fora da forma;
+ * o chamador então usa a âncora padrão (fundo da caixa).
+ */
+export function plateShapeBottomYAt(shape: THREE.Shape, x: number): number | null {
+  const pts = shape.getPoints(128);
+  if (pts.length < 3) return null;
+  let minY: number | null = null;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % pts.length];
+    if (a.x === b.x) continue; // vertical: extremos cobertos pelos segmentos vizinhos
+    if (x < Math.min(a.x, b.x) || x > Math.max(a.x, b.x)) continue;
+    const y = a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+    if (minY === null || y < minY) minY = y;
+  }
+  return minY;
+}
+
 const fontCache = new Map<string, any>();
 const fontLoadPromises = new Map<string, Promise<any>>();
 
@@ -282,14 +510,23 @@ export async function createTextGeometry(
       });
       geom.computeBoundingBox();
       const bb = geom.boundingBox!;
-      const charWidth = bb.max.x - bb.min.x;
-      geom.translate(totalWidth, 0, 0);
-      letters.push(geom);
+      const posCount = geom.getAttribute("position")?.count ?? 0;
+      // Glifo vazio (ex.: espaço) tem bbox ±Infinity — sem o guard, totalWidth
+      // vira -Infinity e o translate final envenena TODAS as letras com NaN.
+      const valid = posCount > 0 && Number.isFinite(bb.min.x) && Number.isFinite(bb.max.x);
+      const charWidth = valid ? bb.max.x - bb.min.x : size * 0.35;
+      if (valid) {
+        geom.translate(totalWidth, 0, 0);
+        letters.push(geom);
+      }
       totalWidth += charWidth + letterSpacing;
     }
     totalWidth -= letterSpacing; // Remove last spacing
 
     const merged = mergeGeoms(letters);
+    if (letters.length === 0) {
+      return { geometry: merged, width: 0, height: 0 };
+    }
     merged.computeBoundingBox();
     const bb = merged.boundingBox!;
     // Center horizontally
@@ -373,10 +610,11 @@ export function createPlateGeometry(
   height: number,
   thickness: number,
   cornerRadius: number,
-  color: string
+  color: string,
+  shape?: THREE.Shape | null
 ): THREE.Mesh {
-  const shape = roundedRectShape(width, height, cornerRadius);
-  const geom = new THREE.ExtrudeGeometry(shape, {
+  const finalShape = shape ?? roundedRectShape(width, height, cornerRadius);
+  const geom = new THREE.ExtrudeGeometry(finalShape, {
     depth: thickness,
     bevelEnabled: false,
   });

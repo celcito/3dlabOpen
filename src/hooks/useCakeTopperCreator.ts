@@ -1,75 +1,25 @@
 import { useState, useCallback, useRef } from "react";
 import * as THREE from "three";
-import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { traceImage } from "../lib/imageTools/traceImage";
 import {
   TopperConfig,
   TopperElement,
-  TopperStick,
   THEMES,
-  createTextGeometry,
-  createPlateGeometry,
-  createStickGeometry,
-  createShapeElement,
   validateForPrint,
   PrintIssue,
-  loadTopperFont,
-  TOPPER_FONTS,
+  defaultSticks,
+  DEFAULT_TOPPER_CONFIG,
 } from "../lib/cakeTopper/cakeTopperGeometry";
+import { validatePlaqueForPrint } from "../lib/cakeTopper/plaqueGeometry";
+import type { PlaqueStyle } from "../lib/cakeTopper/plaque";
+import type { KeychainConfig } from "../types/keychain";
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function defaultSticks(count: number, plateWidth: number, stickHeight: number, stickThickness: number, stickWidth: number): TopperStick[] {
-  const sticks: TopperStick[] = [];
-  const spacing = plateWidth / (count + 1);
-  for (let i = 0; i < count; i++) {
-    sticks.push({
-      id: uid(),
-      x: -plateWidth / 2 + spacing * (i + 1),
-      height: stickHeight,
-      thickness: stickThickness,
-      width: stickWidth,
-    });
-  }
-  return sticks;
-}
-
-const defaultConfig: TopperConfig = {
-  text: "Feliz Aniversário",
-  fontFamily: TOPPER_FONTS[0].url,
-  fontSize: 14,
-  textThickness: 2,
-  letterSpacing: 0.5,
-  alignment: "center",
-  plateThickness: 2,
-  plateWidth: 120,
-  plateHeight: 60,
-  plateCornerRadius: 5,
-  plateColor: "#FF6B9D",
-  textColor: "#FFFFFF",
-  borderColor: "#FF1A6D",
-  borderWidth: 2,
-  showBorder: true,
-  stickCount: 2,
-  stickHeight: 80,
-  stickThickness: 2,
-  stickWidth: 4,
-  stickColor: "#FF6B9D",
-  elements: [],
-  sticks: defaultSticks(2, 120, 80, 2, 4),
-  totalHeight: 140,
-  totalWidth: 120,
-  smoothEdges: true,
-  addReinforcement: false,
-  reinforcementThickness: 2,
-  age: "",
-  subtitle: "",
-  theme: "aniversario",
-};
+const defaultConfig: TopperConfig = DEFAULT_TOPPER_CONFIG;
 
 interface HistoryEntry {
   config: TopperConfig;
@@ -79,7 +29,6 @@ interface HistoryEntry {
 export function useCakeTopperCreator() {
   const [config, setConfig] = useState<TopperConfig>(defaultConfig);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [printIssues, setPrintIssues] = useState<PrintIssue[]>([]);
   const [showIssues, setShowIssues] = useState(false);
   const [viewMode, setViewMode] = useState<"2d" | "3d">("3d");
@@ -108,13 +57,14 @@ export function useCakeTopperCreator() {
   const updateConfig = useCallback((patch: Partial<TopperConfig>) => {
     setConfig((prev) => {
       const next = { ...prev, ...patch };
-      if (patch.plateWidth !== undefined || patch.stickCount !== undefined || patch.stickHeight !== undefined || patch.stickThickness !== undefined || patch.stickWidth !== undefined) {
+      if (patch.plateWidth !== undefined || patch.stickCount !== undefined || patch.stickHeight !== undefined || patch.stickThickness !== undefined || patch.stickWidth !== undefined || patch.stickSpacing !== undefined) {
         next.sticks = defaultSticks(
           patch.stickCount ?? prev.stickCount,
           patch.plateWidth ?? prev.plateWidth,
           patch.stickHeight ?? prev.stickHeight,
           patch.stickThickness ?? prev.stickThickness,
-          patch.stickWidth ?? prev.stickWidth
+          patch.stickWidth ?? prev.stickWidth,
+          patch.stickSpacing !== undefined ? patch.stickSpacing : prev.stickSpacing
         );
       }
       next.totalHeight = (patch.plateHeight ?? prev.plateHeight) + (patch.stickHeight ?? prev.stickHeight);
@@ -358,160 +308,22 @@ export function useCakeTopperCreator() {
   const canUndo = historyIndexRef.current > 0;
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
-  const runValidation = useCallback(() => {
-    const issues = validateForPrint(config);
-    setPrintIssues(issues);
-    setShowIssues(true);
-    return issues;
-  }, [config]);
-
-  const exportSTL = useCallback(async () => {
-    setIsExporting(true);
-    try {
-      const group = new THREE.Group();
-      const plateMesh = createPlateGeometry(config.plateWidth, config.plateHeight, config.plateThickness, config.plateCornerRadius, config.plateColor);
-      group.add(plateMesh);
-
-      // Text
-      if (config.text) {
-        try {
-          const { geometry: textGeom } = await createTextGeometry(
-            config.text,
-            config.fontFamily,
-            config.fontSize / 10,
-            config.textThickness / 10,
-            config.letterSpacing / 10
-          );
-          textGeom.translate(0, 0, config.plateThickness / 10);
-          const textMesh = new THREE.Mesh(textGeom, new THREE.MeshStandardMaterial({ color: config.textColor }));
-          group.add(textMesh);
-        } catch { /* font load failed */ }
-      }
-
-      // Subtitle
-      if (config.subtitle) {
-        try {
-          const { geometry: subGeom } = await createTextGeometry(
-            config.subtitle,
-            config.fontFamily,
-            (config.fontSize * 0.6) / 10,
-            config.textThickness / 10,
-            config.letterSpacing / 10
-          );
-          subGeom.translate(0, -config.plateHeight / 20, config.plateThickness / 10);
-          const subMesh = new THREE.Mesh(subGeom, new THREE.MeshStandardMaterial({ color: config.textColor }));
-          group.add(subMesh);
-        } catch { /* font load failed */ }
-      }
-
-      // Elements
-      for (const el of config.elements) {
-        if (el.type === "shape" && el.shapeType) {
-          const mesh = createShapeElement(el.shapeType, el.fontSize || 10, config.textThickness / 10, el.color);
-          if (mesh) {
-            mesh.position.set(el.x / 10, el.y / 10, config.plateThickness / 10);
-            mesh.scale.setScalar(el.scale);
-            mesh.rotation.z = (el.rotation * Math.PI) / 180;
-            group.add(mesh);
-          }
-        } else if (el.type === "text" || el.type === "number") {
-          try {
-            const { geometry: elGeom } = await createTextGeometry(
-              el.content,
-              el.fontFamily || config.fontFamily,
-              (el.fontSize || config.fontSize) / 10,
-              config.textThickness / 10,
-              0
-            );
-            elGeom.translate(el.x / 10, el.y / 10, config.plateThickness / 10);
-            const elMesh = new THREE.Mesh(elGeom, new THREE.MeshStandardMaterial({ color: el.color }));
-            elMesh.rotation.z = (el.rotation * Math.PI) / 180;
-            elMesh.scale.setScalar(el.scale);
-            group.add(elMesh);
-          } catch { /* font load failed */ }
-        } else if (el.type === "image" && el.svgData) {
-          try {
-            const parser = new SVGLoader();
-            const svgData = parser.parse(el.svgData);
-            const allPoints: THREE.Vector2[] = [];
-            for (const path of svgData.paths) {
-              for (const sub of path.subPaths) {
-                const pts = sub.getPoints(20);
-                pts.forEach((p) => allPoints.push(p));
-              }
-            }
-            if (allPoints.length > 0) {
-              const box = new THREE.Box2();
-              allPoints.forEach((p) => box.expandByPoint(p));
-              const sizeX = box.max.x - box.min.x;
-              const sizeY = box.max.y - box.min.y;
-              const maxDim = Math.max(sizeX, sizeY) || 1;
-              const targetSize = (el.widthMm || 30) / 10;
-              const sc = targetSize / maxDim;
-              const centerX = (box.min.x + box.max.x) / 2;
-              const centerY = (box.min.y + box.max.y) / 2;
-
-              let bestShape: THREE.Shape | null = null;
-              let bestArea = 0;
-              for (const path of svgData.paths) {
-                const isFilled = !!(path.userData as any)?.style?.fill;
-                if (!isFilled) continue;
-                for (const sub of path.subPaths) {
-                  const pts = sub.getPoints(20);
-                  if (pts.length < 3) continue;
-                  const shape = new THREE.Shape();
-                  shape.moveTo((pts[0].x - centerX) * sc, -(pts[0].y - centerY) * sc);
-                  for (let i = 1; i < pts.length; i++) {
-                    shape.lineTo((pts[i].x - centerX) * sc, -(pts[i].y - centerY) * sc);
-                  }
-                  shape.closePath();
-                  const bbox = new THREE.Box2();
-                  shape.getPoints().forEach((p) => bbox.expandByPoint(p));
-                  const sz = new THREE.Vector2();
-                  bbox.getSize(sz);
-                  const area = sz.x * sz.y;
-                  if (area > bestArea) { bestArea = area; bestShape = shape; }
-                }
-              }
-              if (bestShape) {
-                const geom = new THREE.ExtrudeGeometry(bestShape, {
-                  depth: config.textThickness / 10,
-                  bevelEnabled: false,
-                });
-                geom.computeVertexNormals();
-                geom.translate(el.x / 10, el.y / 10, config.plateThickness / 10);
-                const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: el.color, side: THREE.DoubleSide }));
-                mesh.rotation.z = (el.rotation * Math.PI) / 180;
-                mesh.scale.setScalar(el.scale);
-                group.add(mesh);
-              }
-            }
-          } catch { /* SVG parse failed */ }
-        }
-      }
-
-      // Sticks
-      for (const stick of config.sticks) {
-        const stickMesh = createStickGeometry(stick.height, stick.thickness, stick.width, config.stickColor);
-        stickMesh.position.set(stick.x / 10, -config.plateHeight / 20, 0);
-        stickMesh.rotation.x = -Math.PI / 2;
-        group.add(stickMesh);
-      }
-
-      // Export
-      const exporter = new STLExporter();
-      const result = exporter.parse(group, { binary: true });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(new Blob([result], { type: "application/octet-stream" }));
-      link.download = `topper-${config.text.toLowerCase().replace(/\s+/g, "-").slice(0, 30) || "custom"}.stl`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-    } catch (err) {
-      console.error("Export error:", err);
-    } finally {
-      setIsExporting(false);
-    }
-  }, [config]);
+  /**
+   * Contexto por estilo da plaquinha (T6): estilos de nome validam pelo ramo
+   * do chaveiro + fit check; `placa` mantém o `validateForPrint` original.
+   */
+  const runValidation = useCallback(
+    (ctx?: { style?: PlaqueStyle; name?: KeychainConfig; nameWidthMm?: number | null }) => {
+      const issues =
+        ctx?.style && ctx.style !== "placa" && ctx.name
+          ? validatePlaqueForPrint(ctx.style, config, ctx.name, ctx.nameWidthMm)
+          : validateForPrint(config);
+      setPrintIssues(issues);
+      setShowIssues(true);
+      return issues;
+    },
+    [config]
+  );
 
   const resetConfig = useCallback(() => {
     setConfig(defaultConfig);
@@ -522,6 +334,15 @@ export function useCakeTopperCreator() {
 
   const loadTemplate = useCallback((template: Partial<TopperConfig>) => {
     const next = { ...defaultConfig, ...template, sticks: defaultSticks(template.stickCount ?? 2, template.plateWidth ?? 120, template.stickHeight ?? 80, template.stickThickness ?? 2, template.stickWidth ?? 4) };
+    setConfig(next);
+    setSelectedElementId(null);
+    historyRef.current = [];
+    historyIndexRef.current = -1;
+    pushHistory(next, null);
+  }, [pushHistory]);
+
+  /** Substituição completa (carregar plaquinha da coleção). */
+  const replaceConfig = useCallback((next: TopperConfig) => {
     setConfig(next);
     setSelectedElementId(null);
     historyRef.current = [];
@@ -542,8 +363,6 @@ export function useCakeTopperCreator() {
     removeElement,
     duplicateElement,
     groupElements,
-    isExporting,
-    exportSTL,
     printIssues,
     showIssues,
     setShowIssues,
@@ -564,6 +383,7 @@ export function useCakeTopperCreator() {
     canRedo,
     resetConfig,
     loadTemplate,
+    replaceConfig,
     applyTheme,
     uploadImageFile,
     uploadSvgFile,
