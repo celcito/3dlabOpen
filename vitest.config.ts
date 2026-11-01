@@ -22,6 +22,7 @@ export default defineConfig({
       "src/lib/estojoBorracha/**/*.test.ts",
       "src/lib/thermoform/**/*.test.ts",
       "src/lib/cakeTopper/**/*.test.ts",
+      "src/lib/lithophane/**/*.test.ts",
       "src/lib/__tests__/paintEncoding.test.ts",
       "src/lib/__tests__/puzzlePaintBake.test.ts",
       "src/lib/__tests__/puzzlePalette.test.ts",

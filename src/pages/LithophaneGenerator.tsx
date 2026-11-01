@@ -1,12 +1,13 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
-import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle, Loader2 } from "lucide-react";
+import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle, Loader2, Frame } from "lucide-react";
 import { useLithophaneGenerator, type ImagePixels } from "../hooks/useLithophaneGenerator";
+import { CUSTOM_PRESET_ID, PORTRAIT_PRESETS } from "../lib/lithophane/frame";
 
 export default function LithophaneGenerator() {
   const generator = useLithophaneGenerator(createLithophaneGeometry);
-  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, isImageLoading, geometry, handleImageUpload, handleExportSTL } = generator;
+  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, setHeight, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, isImageLoading, geometry, handleImageUpload, handleExportSTL, frameEnabled, setFrameEnabled, framePreset, applyFramePreset, frameBorder, setFrameBorder, frameDepth, setFrameDepth, frameRadius, setFrameRadius, frameGeometry } = generator;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
@@ -45,7 +46,10 @@ export default function LithophaneGenerator() {
 
             <Center>
               {imagePixels && (
-                 <LithophanePreview geometry={geometry} />
+                <group>
+                  <LithophanePreview geometry={geometry} />
+                  {frameGeometry && <FramePreview geometry={frameGeometry} />}
+                </group>
               )}
             </Center>
           </Canvas>
@@ -127,7 +131,15 @@ export default function LithophaneGenerator() {
               <label className="text-[9px] uppercase font-bold text-zinc-600">Largura Máx.</label>
               <span className="text-[10px] font-mono text-[#632CE5]">{width}mm</span>
             </div>
-            <input type="range" min="50" max="250" value={width} onChange={(e) => setWidth(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+            <input type="range" min="50" max="400" value={width} onChange={(e) => setWidth(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <label className="text-[9px] uppercase font-bold text-zinc-600">Altura Máx.</label>
+              <span className="text-[10px] font-mono text-[#632CE5]">{height}mm</span>
+            </div>
+            <input type="range" min="50" max="400" value={height} onChange={(e) => setHeight(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
           </div>
           
           {shape === "curved" && (
@@ -164,6 +176,75 @@ export default function LithophaneGenerator() {
           </div>
         </section>
 
+        <section className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+          <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+            <Frame className="w-3.5 h-3.5 text-[#632CE5]" />
+            04. Moldura
+          </h3>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setFrameEnabled(false)}
+              className={`py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${!frameEnabled ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"}`}
+            >
+              Sem moldura
+            </button>
+            <button
+              onClick={() => setFrameEnabled(true)}
+              className={`py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${frameEnabled ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"}`}
+            >
+              Com moldura
+            </button>
+          </div>
+
+          {frameEnabled && (
+            <>
+              <div className="space-y-2">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Presets de Porta-Retrato</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PORTRAIT_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      onClick={() => applyFramePreset(preset.id)}
+                      className={`py-2 rounded-lg border text-[9px] font-bold transition-all ${framePreset === preset.id ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"}`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[9px] font-mono text-zinc-500">
+                  Abertura: {width} × {height} mm
+                  {framePreset === CUSTOM_PRESET_ID ? " · personalizada" : ""}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <label className="text-[9px] uppercase font-bold text-zinc-600">Largura da Borda</label>
+                  <span className="text-[10px] font-mono text-[#632CE5]">{frameBorder}mm</span>
+                </div>
+                <input type="range" min="4" max="30" value={frameBorder} onChange={(e) => setFrameBorder(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <label className="text-[9px] uppercase font-bold text-zinc-600">Profundidade</label>
+                  <span className="text-[10px] font-mono text-[#632CE5]">{frameDepth.toFixed(1)}mm</span>
+                </div>
+                <input type="range" min="4" max="20" step="0.5" value={frameDepth} onChange={(e) => setFrameDepth(parseFloat(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <label className="text-[9px] uppercase font-bold text-zinc-600">Raio do Canto</label>
+                  <span className="text-[10px] font-mono text-[#632CE5]">{frameRadius}mm</span>
+                </div>
+                <input type="range" min="0" max="25" value={frameRadius} onChange={(e) => setFrameRadius(parseInt(e.target.value))} className="w-full accent-[#632CE5] h-1.5 bg-[var(--workbench-viewport)] rounded-lg appearance-none cursor-pointer" />
+              </div>
+            </>
+          )}
+        </section>
+
         <section className="pt-6 border-t border-[var(--surface-container-high)]">
           <button 
             onClick={handleExportSTL}
@@ -189,6 +270,14 @@ function LithophanePreview({ geometry }: { geometry: THREE.BufferGeometry | null
   return (
     <mesh geometry={geometry ?? undefined} castShadow receiveShadow>
       <meshStandardMaterial color="#ffffff" roughness={0.7} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function FramePreview({ geometry }: { geometry: THREE.BufferGeometry }) {
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial color="#B08968" roughness={0.85} side={THREE.DoubleSide} />
     </mesh>
   );
 }
