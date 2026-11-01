@@ -42,8 +42,9 @@ function roundedRectShape(w: number, h: number, radius: number): THREE.Shape {
 function addWallHoles(shape: THREE.Shape, w: number, h: number, widthMm: number) {
   const hr = wallHoleRadius(widthMm) / 10;
   const margin = hr + 0.2; // 2mm de material além do furo
-  const cx = w / 2 - margin;
-  const cy = h / 2 - margin;
+  const effectiveR = Math.min(margin, Math.min(w, h) / 2);
+  const cx = w / 2 - effectiveR - hr;
+  const cy = h / 2 - effectiveR - hr;
   if (cx <= hr || cy <= hr) return;
   for (const x of [-cx, cx]) {
     const hole = new THREE.Path();
