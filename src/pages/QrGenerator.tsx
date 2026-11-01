@@ -4,15 +4,18 @@ import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
-import { useQrGenerator, type QrConfig } from "../hooks/useQrGenerator";
+import { useQrGenerator, LOGO_DEPTH, type QrConfig, type QrSupportModel, type SupportParts, wallHoleRadius } from "../hooks/useQrGenerator";
+import { parseSvgShapes, svgToExtrudedGeometry } from "../lib/svgToShapes";
+import { toastInvalidFormat, toastParseError } from "@/lib/toast";
 import {
   QrCode, Download, Sliders, Type, Layers, Palette,
-  Move, Check, ZoomIn, AlertTriangle
+  Move, Check, ZoomIn, AlertTriangle, Square, ArrowDownToLine, PanelTop, Tag, Frame, RotateCcw, Upload,
+  type LucideIcon
 } from "lucide-react";
 
 export default function QrGenerator() {
   const generator = useQrGenerator();
-  const { config, setConfig, qrMatrix, plateDimensions, previewGeometry, successMsg } = generator;
+  const { config, setConfig, qrMatrix, plateDimensions, previewGeometry, supportParts, successMsg } = generator;
   const exportSTL = generator.handleExportSTL;
 
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
@@ -28,6 +31,33 @@ export default function QrGenerator() {
   });
 
   const hasQuietZone = config.padding >= config.size * 4;
+  const wallMinPadding = Math.round(wallHoleRadius(plateDimensions.width) * 2 + 2);
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite reenviar o mesmo arquivo
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".svg")) {
+      toastInvalidFormat(["SVG"]);
+      return;
+    }
+    const svg = await file.text();
+    let ok = false;
+    try {
+      ok = parseSvgShapes(svg).length > 0;
+    } catch {
+      ok = false;
+    }
+    if (!ok) {
+      toastParseError("SVG");
+      return;
+    }
+    setConfig((c) => ({ ...c, logoSvg: svg, icon: "logo" }));
+  };
+
+  const handleRemoveLogo = () => setConfig((c) => ({ ...c, logoSvg: null, icon: "none" }));
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
@@ -188,7 +218,8 @@ export default function QrGenerator() {
                 <label className="text-[9px] uppercase font-bold text-zinc-600 block">Ícone</label>
                 <select value={config.icon} onChange={(e) => setConfig({ ...config, icon: e.target.value })}
                   className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold">
-                  {ICON_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                  {(config.logoSvg ? [...ICON_OPTIONS, { id: "logo", label: "Logomarca (SVG)" }] : ICON_OPTIONS)
+                    .map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
               </div>
               {config.icon !== "none" && (
@@ -208,7 +239,69 @@ export default function QrGenerator() {
                   </div>
                 </>
               )}
+              {/* Logomarca — ocupa o slot do ícone (mesmo lado, tamanho e cor) */}
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold text-zinc-600 block">Logomarca (SVG)</label>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => logoInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--surface-container-high)] bg-white text-[10px] font-black uppercase tracking-wider text-zinc-500 hover:border-[#632CE5]/40 hover:text-[#632CE5] transition-colors cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
+                    Enviar SVG
+                  </button>
+                  {config.logoSvg && (
+                    <button type="button" onClick={handleRemoveLogo}
+                      className="px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-[10px] font-black uppercase tracking-wider text-red-500 hover:bg-red-100 transition-colors cursor-pointer">
+                      Remover
+                    </button>
+                  )}
+                </div>
+                <input ref={logoInputRef} type="file" accept=".svg,image/svg+xml" className="hidden"
+                  onChange={handleLogoFile} />
+                {config.logoSvg && config.icon === "logo" && (
+                  <p className="text-[8px] text-zinc-600 leading-relaxed px-1">
+                    Logomarca no lugar do ícone: mesma linha do texto, no lado e no tamanho definidos acima.
+                  </p>
+                )}
+              </div>
             </div>
+          </div>
+
+          {/* 05. Suporte */}
+          <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 font-black flex items-center gap-2">
+              <Frame className="w-3.5 h-3.5 text-[#632CE5]" />
+              05. Suporte da Plaquinha
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {SUPPORT_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setConfig({ ...config, support: opt.id })}
+                  aria-pressed={config.support === opt.id}
+                  className={`flex flex-col items-start gap-1 p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                    config.support === opt.id
+                      ? "border-[#632CE5] bg-[#632CE5]/5 text-[#632CE5]"
+                      : "border-[var(--surface-container-high)] bg-white text-zinc-500 hover:border-[#632CE5]/30"
+                  }`}
+                >
+                  <opt.icon className="w-4 h-4" />
+                  <span className="text-[9px] font-black uppercase tracking-wider">{opt.label}</span>
+                  <span className="text-[7.5px] leading-tight font-bold text-zinc-500 normal-case">{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+            {config.support === "wall" && plateDimensions.width > 0 && config.padding < wallMinPadding && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                <span className="text-[9px] text-amber-700 leading-tight">
+                  Padding insuficiente para os furos de parede: aumente para ≥ {wallMinPadding}mm para não atravessar o QR.
+                </span>
+              </div>
+            )}
+            <p className="text-[8px] text-zinc-600 leading-relaxed px-1">
+              {SUPPORT_OPTIONS.find(o => o.id === config.support)?.note}
+            </p>
           </div>
 
           {/* Export */}
@@ -252,7 +345,7 @@ export default function QrGenerator() {
               sectionSize={50}
               position={[0, -0.1, 0]}
             />
-            <Scene config={config} qrMatrix={qrMatrix} plateDimensions={plateDimensions} previewGeometry={previewGeometry} />
+            <Scene config={config} qrMatrix={qrMatrix} plateDimensions={plateDimensions} previewGeometry={previewGeometry} supportParts={supportParts} />
           </Canvas>
         </div>
 
@@ -493,6 +586,22 @@ const ICON_OPTIONS = [
   { id: "email", label: "E-mail" },
 ];
 
+/* ─── SUPORTES / PLAQUINHAS ─── */
+const SUPPORT_OPTIONS: { id: QrSupportModel; label: string; desc: string; note: string; icon: LucideIcon }[] = [
+  { id: "flat", label: "Placa Reta", desc: "Sem suporte", icon: Square,
+    note: "Sem peça extra: use em moldura, adesivo ou encaixe em perfil." },
+  { id: "desk", label: "Base de Mesa", desc: "Pé fixo em T", icon: ArrowDownToLine,
+    note: "Peça única com pé em T: a placa fica em pé sobre a mesa, sem apoio removível." },
+  { id: "slot", label: "Encaixe", desc: "2 peças", icon: Layers,
+    note: "Placa com tenon + base com fenda (folga de 0,3mm). Exporta as duas peças — imprima separadas." },
+  { id: "easel", label: "Cavalete", desc: "Perna retrátil", icon: RotateCcw,
+    note: "Perna com gancho em C que se encaixa na barra traseira e articula sem parafuso. Imprima a placa em pé e a perna à parte." },
+  { id: "wall", label: "Parede", desc: "2 furos de parafuso", icon: PanelTop,
+    note: "Furos nos cantos superiores, fora da área do QR. Fixe com parafuso ou bucha." },
+  { id: "hang", label: "Pendurado", desc: "Ilhós no topo", icon: Tag,
+    note: "Abertura no topo para prego ou cordão; a placa fica suspensa." },
+];
+
 /* ─── ICON 3D ─── */
 function Icon3D({ iconName, iconSize, color, position }: {
   iconName: string; iconSize: number; color: string; position: [number, number, number];
@@ -503,6 +612,26 @@ function Icon3D({ iconName, iconSize, color, position }: {
     const shape = shapeFn(iconSize / 10);
     return new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: false });
   }, [iconName, iconSize]);
+
+  useEffect(() => () => { geometry?.dispose(); }, [geometry]);
+
+  if (!geometry) return null;
+
+  return (
+    <mesh geometry={geometry} position={position}>
+      <meshStandardMaterial color={color} roughness={0.8} />
+    </mesh>
+  );
+}
+
+/* ─── LOGO 3D (SVG enviado pelo usuário) ─── */
+function Logo3D({ svg, size, color, position }: {
+  svg: string; size: number; color: string; position: [number, number, number];
+}) {
+  const geometry = useMemo(
+    () => svgToExtrudedGeometry(svg, { depth: LOGO_DEPTH, targetSize: size / 10, bevelEnabled: false }),
+    [svg, size]
+  );
 
   useEffect(() => () => { geometry?.dispose(); }, [geometry]);
 
@@ -564,10 +693,11 @@ function QrModules({ qrMatrix, moduleSize, qrOffset, yShift, config }: {
 }
 
 /* ─── SCENE ─── */
-function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
+function Scene({ config, qrMatrix, plateDimensions, previewGeometry, supportParts }: {
   config: QrConfig; qrMatrix: number[][];
   plateDimensions: { width: number; height: number; qrDim: number };
   previewGeometry: { shape: THREE.Shape; extrudeSettings: THREE.ExtrudeGeometryOptions };
+  supportParts: SupportParts;
 }) {
   const { shape: plateShape, extrudeSettings } = previewGeometry;
   const moduleSize = config.size / 10;
@@ -599,6 +729,13 @@ function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
         <meshStandardMaterial color={config.baseColor} roughness={0.8} />
       </mesh>
 
+      {/* SUPORTE */}
+      {[...supportParts.attached, ...supportParts.separate].map((geom, i) => (
+        <mesh key={`support-${i}`} geometry={geom}>
+          <meshStandardMaterial color={config.baseColor} roughness={0.8} />
+        </mesh>
+      ))}
+
       {/* QR MODULES */}
       <QrModules
         qrMatrix={qrMatrix}
@@ -619,15 +756,20 @@ function Scene({ config, qrMatrix, plateDimensions, previewGeometry }: {
         />
       )}
 
-      {/* ICON */}
-      {config.icon !== "none" && (
+      {/* ICON / LOGOMARCA */}
+      {config.icon === "logo" ? (
+        config.logoSvg ? (
+          <Logo3D svg={config.logoSvg} size={config.iconSize} color={config.labelColor}
+            position={[iconX, labelAreaCenter, iconZ]} />
+        ) : null
+      ) : config.icon !== "none" ? (
         <Icon3D
           iconName={config.icon}
           iconSize={config.iconSize}
           color={config.labelColor}
           position={[iconX, labelAreaCenter, iconZ]}
         />
-      )}
+      ) : null}
     </group>
   );
 }

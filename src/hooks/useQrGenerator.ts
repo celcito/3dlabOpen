@@ -4,6 +4,184 @@ import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUti
 import JSZip from "jszip";
 import QRCode from "qrcode";
 import { toastExportError } from "@/lib/toast";
+import { svgToExtrudedGeometry } from "../lib/svgToShapes";
+
+export type QrSupportModel = "flat" | "desk" | "slot" | "easel" | "wall" | "hang";
+
+export interface SupportParts {
+  /** Geometrias acopladas à placa (viram a mesma peça na exportação). */
+  attached: THREE.BufferGeometry[];
+  /** Peças independentes (ex.: base com encaixe). */
+  separate: THREE.BufferGeometry[];
+}
+
+/** Profundidade do relevo da logomarca em unidades de cena (0.05 = 0,5mm). */
+export const LOGO_DEPTH = 0.05;
+
+/** Raio do furo de parede em mm, escalado pela largura da placa (1.5–2.5mm). */
+export function wallHoleRadius(widthMm: number) {
+  return Math.min(Math.max(widthMm * 0.025, 1.5), 2.5);
+}
+
+function roundedRectShape(w: number, h: number, radius: number): THREE.Shape {
+  const r = Math.min(radius, Math.min(w, h) / 2);
+  const shape = new THREE.Shape();
+  shape.moveTo(-w / 2 + r, -h / 2);
+  shape.lineTo(w / 2 - r, -h / 2);
+  shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+  shape.lineTo(w / 2, h / 2 - r);
+  shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
+  shape.lineTo(-w / 2 + r, h / 2);
+  shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
+  shape.lineTo(-w / 2, -h / 2 + r);
+  shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+  return shape;
+}
+
+/** Furos de parafuso nos cantos superiores (suporte "wall"). */
+function addWallHoles(shape: THREE.Shape, w: number, h: number, widthMm: number) {
+  const hr = wallHoleRadius(widthMm) / 10;
+  const margin = hr + 0.2; // 2mm de material além do furo
+  const effectiveR = Math.min(margin, Math.min(w, h) / 2);
+  const cx = w / 2 - effectiveR - hr;
+  const cy = h / 2 - effectiveR - hr;
+  if (cx <= hr || cy <= hr) return;
+  for (const x of [-cx, cx]) {
+    const hole = new THREE.Path();
+    hole.absarc(x, cy, hr, 0, Math.PI * 2, true);
+    shape.holes.push(hole);
+  }
+}
+
+/** Constrói a geometria do suporte escolhido. Todas as medidas em unidades de cena (mm/10). */
+function buildSupportParts(config: QrConfig, dims: { width: number; height: number }): SupportParts {
+  const parts: SupportParts = { attached: [], separate: [] };
+  if (!dims.width) return parts;
+  if (config.support !== "desk" && config.support !== "slot" && config.support !== "easel" && config.support !== "hang") return parts;
+
+  const W = dims.width / 10;
+  const H = dims.height / 10;
+  const t = config.thickness / 10;
+  const bottom = -H / 2;
+  const baseDepth = Math.min(Math.max(dims.width * 0.55, 25), 60) / 10;
+
+  if (config.support === "desk") {
+    // Pé em T sob a placa: imprime na mesma orientação da placa.
+    const footH = Math.max(dims.height * 0.08, 6) / 10;
+    const foot = new THREE.BoxGeometry(W * 0.9, footH, baseDepth);
+    foot.translate(0, bottom - footH / 2, t / 2);
+    parts.attached.push(foot);
+    return parts;
+  }
+
+  if (config.support === "slot") {
+    // Tenon sob a placa + base separada com fenda (2 peças).
+    const tenonH = 0.8; // 8mm
+    const tenonW = W * 0.5;
+    const tenon = new THREE.BoxGeometry(tenonW, tenonH, t * 0.6);
+    tenon.translate(0, bottom - tenonH / 2, t * 0.2);
+    parts.attached.push(tenon);
+
+    const baseH = 1; // 10mm
+    const notchW = tenonW + 0.06; // folga de 0.3mm por lado
+    const notchD = 0.9;
+    const bw = W / 2;
+    const nb = notchW / 2;
+    const shape = new THREE.Shape();
+    shape.moveTo(-bw, 0);
+    shape.lineTo(bw, 0);
+    shape.lineTo(bw, baseH);
+    shape.lineTo(nb, baseH);
+    shape.lineTo(nb, baseH - notchD);
+    shape.lineTo(-nb, baseH - notchD);
+    shape.lineTo(-nb, baseH);
+    shape.lineTo(-bw, baseH);
+    shape.closePath();
+    const base = new THREE.ExtrudeGeometry(shape, { depth: baseDepth, bevelEnabled: false, steps: 1 });
+    base.translate(0, bottom - baseH, t / 2 - baseDepth / 2);
+    parts.separate.push(base);
+    return parts;
+  }
+
+  if (config.support === "easel") {
+    // Cavalete retrátil: barra de eixo na traseira (acoplada à placa) + perna
+    // com gancho em C que se clica sobre a barra e gira sem parafuso.
+    const rodR = 0.2;                                              // barra Ø4mm
+    const rodZ = -0.5;                                             // eixo 5mm atrás da placa
+    const rodY = H / 2 - Math.min(Math.max(H * 0.28, 0.8), 1.8);  // ~18mm abaixo do topo
+    const hookW = 0.8;                                             // perna com 8mm (X)
+    const rodHalf = Math.min(Math.max(W * 0.3, 1.05), W / 2 - 0.1);
+
+    const rod = new THREE.CylinderGeometry(rodR, rodR, rodHalf * 2, 20);
+    rod.rotateZ(Math.PI / 2);
+    rod.translate(0, rodY, rodZ);
+    parts.attached.push(rod);
+
+    const postW = 0.6, postH = 0.6, postD = 0.55;
+    for (const sx of [-1, 1]) {
+      const post = new THREE.BoxGeometry(postW, postH, postD);
+      post.translate(sx * (rodHalf - postW / 2), rodY, -postD / 2 + 0.05);
+      parts.attached.push(post);
+    }
+
+    const rI = rodR + 0.02;                                       // folga de 0,2mm
+    const rO = rI + 0.2;                                          // parede de 2mm
+    const beta = Math.asin(0.36 / (2 * rI));                      // abertura 3,6mm: clica na barra Ø4
+    const t1 = Math.PI / 2 + beta;
+    const t2 = Math.PI / 2 - beta + Math.PI * 2;
+    const hookShape = new THREE.Shape();
+    hookShape.absarc(0, 0, rO, t1, t2, false);
+    hookShape.absarc(0, 0, rI, t2, t1, true);
+    hookShape.closePath();
+
+    // Perfil no plano (Y,Z), extrudado ao longo de X.
+    const hookGeo = new THREE.ExtrudeGeometry(hookShape, { depth: hookW, bevelEnabled: false, steps: 1 });
+    hookGeo.translate(0, 0, -hookW / 2);
+    hookGeo.applyMatrix4(
+      new THREE.Matrix4().makeBasis(
+        new THREE.Vector3(0, 1, 0), // x local → eixo Y do modelo
+        new THREE.Vector3(0, 0, 1), // y local → eixo Z do modelo
+        new THREE.Vector3(1, 0, 0)  // z local (extrusão) → eixo X do modelo
+      )
+    );
+    hookGeo.translate(0, rodY, rodZ);
+
+    const legLen = rodY + H / 2 + 0.6;                            // chega 6mm abaixo da placa
+    const bodyTop = rodY - rI - 0.02;
+    const bodyGeo = new THREE.BoxGeometry(hookW, bodyTop - (rodY - legLen), 0.3);
+    bodyGeo.translate(0, (bodyTop + rodY - legLen) / 2, rodZ);
+    const bodyNI = bodyGeo.toNonIndexed();
+    const legMerged = BufferGeometryUtils.mergeGeometries([hookGeo, bodyNI]);
+    bodyGeo.dispose();
+    bodyNI.dispose();
+    if (legMerged) hookGeo.dispose();
+    const leg = legMerged ?? hookGeo;
+
+    // Aberta a 25°, girada em torno da própria barra.
+    const open = THREE.MathUtils.degToRad(25);
+    leg.applyMatrix4(
+      new THREE.Matrix4()
+        .makeTranslation(0, rodY, rodZ)
+        .multiply(new THREE.Matrix4().makeRotationX(open))
+        .multiply(new THREE.Matrix4().makeTranslation(0, -rodY, -rodZ))
+    );
+    parts.separate.push(leg);
+    return parts;
+  }
+
+  // hang: ilhós no topo para prego ou cordão
+  const tabR = Math.min(Math.max(dims.width * 0.12, 6), 14) / 10;
+  const holeR = Math.min(Math.max(tabR * 0.4, 0.2), 0.45);
+  const tab = new THREE.Shape();
+  tab.absarc(0, 0, tabR, 0, Math.PI * 2, false);
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, holeR, 0, Math.PI * 2, true);
+  tab.holes.push(hole);
+  const geom = new THREE.ExtrudeGeometry(tab, { depth: t, bevelEnabled: false, steps: 1 });
+  geom.translate(0, H / 2 + tabR * 0.6, 0);
+  parts.attached.push(geom);
+  return parts;
+}
 
 export interface QrConfig {
   text: string;
@@ -23,6 +201,9 @@ export interface QrConfig {
   icon: string;
   iconSize: number;
   iconPosition: string;
+  /** SVG bruto enviado pelo usuário como logomarca (null = sem logo). */
+  logoSvg: string | null;
+  support: QrSupportModel;
 }
 
 export function useQrGenerator() {
@@ -44,6 +225,8 @@ export function useQrGenerator() {
     icon: "none",
     iconSize: 3.2,
     iconPosition: "below",
+    logoSvg: null,
+    support: "flat",
   });
 
   const [qrMatrix, setQrMatrix] = useState<number[][]>([]);
@@ -83,18 +266,8 @@ export function useQrGenerator() {
     if (!width) return { shape: new THREE.Shape(), extrudeSettings: {} as THREE.ExtrudeGeometryOptions };
     const w = width / 10;
     const h = height / 10;
-    const maxR = Math.min(w, h) / 2;
-    const r = Math.min(config.borderRadius / 10, maxR);
-    const shape = new THREE.Shape();
-    shape.moveTo(-w / 2 + r, -h / 2);
-    shape.lineTo(w / 2 - r, -h / 2);
-    shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-    shape.lineTo(w / 2, h / 2 - r);
-    shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-    shape.lineTo(-w / 2 + r, h / 2);
-    shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-    shape.lineTo(-w / 2, -h / 2 + r);
-    shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+    const shape = roundedRectShape(w, h, config.borderRadius / 10);
+    if (config.support === "wall") addWallHoles(shape, w, h, width);
     return {
       shape,
       extrudeSettings: {
@@ -106,7 +279,17 @@ export function useQrGenerator() {
         bevelSegments: 3,
       },
     };
-  }, [plateDimensions, config.borderRadius, config.thickness]);
+  }, [plateDimensions, config.borderRadius, config.thickness, config.support]);
+
+  const supportParts = useMemo(
+    () => buildSupportParts(config, plateDimensions),
+    [config.support, config.thickness, plateDimensions]
+  );
+
+  useEffect(() => () => {
+    supportParts.attached.forEach(g => g.dispose());
+    supportParts.separate.forEach(g => g.dispose());
+  }, [supportParts]);
 
   const showNotification = (msg: string) => {
     setSuccessMsg(msg);
@@ -116,11 +299,7 @@ export function useQrGenerator() {
   const handleExportSTL = async () => {
     if (!qrMatrix.length) return;
     try {
-      const { width, height } = plateDimensions;
-      const w = width / 10;
-      const h = height / 10;
-      const maxR = Math.min(w, h) / 2;
-      const r = Math.min(config.borderRadius / 10, maxR);
+      const { width } = plateDimensions;
       const t = config.thickness / 10;
       const qh = config.qrHeight / 10;
       const module = config.size / 10;
@@ -155,21 +334,20 @@ export function useQrGenerator() {
       const objects: { id: number; xml: string; matIndex: number }[] = [];
       let nextId = 2;
 
-      // 1. Plate
-      const plateShape = new THREE.Shape();
-      plateShape.moveTo(-w / 2 + r, -h / 2);
-      plateShape.lineTo(w / 2 - r, -h / 2);
-      plateShape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-      plateShape.lineTo(w / 2, h / 2 - r);
-      plateShape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-      plateShape.lineTo(-w / 2 + r, h / 2);
-      plateShape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-      plateShape.lineTo(-w / 2, -h / 2 + r);
-      plateShape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-
-      const plateGeom = new THREE.ExtrudeGeometry(plateShape, {
+      // 1. Plate (+ suporte acoplado: pé, tenon ou ilhós)
+      const plateShape = previewGeometry.shape;
+      let plateGeom: THREE.BufferGeometry = new THREE.ExtrudeGeometry(plateShape, {
         steps: 1, depth: t, bevelEnabled: false,
       });
+      if (supportParts.attached.length) {
+        const pieces = supportParts.attached.map(g => (g.index ? g.toNonIndexed() : g));
+        const merged = BufferGeometryUtils.mergeGeometries([plateGeom, ...pieces]);
+        if (merged) {
+          plateGeom.dispose();
+          plateGeom = merged;
+        }
+        pieces.forEach((g, i) => { if (g !== supportParts.attached[i]) g.dispose(); });
+      }
       objects.push({ id: nextId++, xml: geomTo3mf(plateGeom), matIndex: 0 });
       plateGeom.dispose();
 
@@ -211,7 +389,7 @@ export function useQrGenerator() {
         labelGeom.dispose();
       }
 
-      // 4. Icon (box placeholder)
+      // 4. Ícone (box placeholder) ou logomarca SVG enviada (relevo real, não placeholder)
       if (config.icon !== "none") {
         const iconS = config.iconSize / 10;
         const labelHalfW = config.includeText ? config.label.length * config.labelSize / 20 : 0;
@@ -221,11 +399,25 @@ export function useQrGenerator() {
             : (labelHalfW + iconS / 2 + 0.3);
         const labelY = -(width / 20 + config.padding / 10 + config.labelSize / 20) - config.labelOffset / 10;
         const iconZ = config.includeText ? t + config.labelDepth / 20 : t + qh / 2 + 0.05;
-        const iconGeom = new THREE.BoxGeometry(iconS, iconS, 0.05);
-        iconGeom.translate(iconX, labelY, iconZ);
-        objects.push({ id: nextId++, xml: geomTo3mf(iconGeom), matIndex: 2 });
-        iconGeom.dispose();
+        const logoGeom = config.icon === "logo" && config.logoSvg
+          ? svgToExtrudedGeometry(config.logoSvg, { depth: LOGO_DEPTH, targetSize: iconS, bevelEnabled: false })
+          : null;
+        if (logoGeom) {
+          logoGeom.translate(iconX, labelY, iconZ);
+          objects.push({ id: nextId++, xml: geomTo3mf(logoGeom), matIndex: 2 });
+          logoGeom.dispose();
+        } else if (config.icon !== "logo") {
+          const iconGeom = new THREE.BoxGeometry(iconS, iconS, 0.05);
+          iconGeom.translate(iconX, labelY, iconZ);
+          objects.push({ id: nextId++, xml: geomTo3mf(iconGeom), matIndex: 2 });
+          iconGeom.dispose();
+        }
       }
+
+      // 5. Suporte independente (base com encaixe)
+      supportParts.separate.forEach(geom => {
+        objects.push({ id: nextId++, xml: geomTo3mf(geom), matIndex: 0 });
+      });
 
       // Build3MF model XML
       const colors = [
@@ -282,6 +474,7 @@ ${objects.map(o => `    <item objectid="${o.id}" pid="1" pindex="${o.matIndex}" 
     successMsg,
     plateDimensions,
     previewGeometry,
+    supportParts,
     handleExportSTL,
   };
 }
