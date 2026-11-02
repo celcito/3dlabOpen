@@ -45,6 +45,11 @@ export interface ThreeMFMeta {
   application?: string;
   baseObjectName?: string;
   reliefObjectName?: string;
+  /**
+   * Um único material para corpo e relevo. Sem segunda cor o slicer não faz
+   * troca de filamento — e portanto não gera torre de purga.
+   */
+  singleColor?: boolean;
 }
 
 const DEFAULT_APPLICATION = '3D Lab Open Ponteira de Lapis 3D Parametrico';
@@ -80,19 +85,24 @@ export async function exportPencilTopper3MF(
   const baseMeshXml = geometryToXmlMesh(baseGeom);
   const reliefMeshXml = geometryToXmlMesh(reliefGeom);
 
+  const singleColor = meta?.singleColor ?? false;
+  const colorgroupXml = singleColor
+    ? `<m:color color="${cleanColor1}"/>`
+    : `<m:color color="${cleanColor1}"/>\n      <m:color color="${cleanColor2}"/>`;
+  const reliefColorIndex = singleColor ? 0 : 1;
+
   const modelXml = `<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xml:lang="pt-BR" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">
   <metadata name="Title">${modelName}</metadata>
   <metadata name="Application">${application}</metadata>
   <resources>
     <m:colorgroup id="1">
-      <m:color color="${cleanColor1}"/>
-      <m:color color="${cleanColor2}"/>
+      ${colorgroupXml}
     </m:colorgroup>
     <object id="2" type="model" pid="1" pindex="0" name="${baseObjectName}">
       ${baseMeshXml}
     </object>
-    <object id="3" type="model" pid="1" pindex="1" name="${reliefObjectName}">
+    <object id="3" type="model" pid="1" pindex="${reliefColorIndex}" name="${reliefObjectName}">
       ${reliefMeshXml}
     </object>
   </resources>

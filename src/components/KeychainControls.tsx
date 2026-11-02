@@ -61,7 +61,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           </h1>
         </div>
         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-          Nome em relevo + argola em 2 cores.
+          Nome em relevo + argola, em uma cor só na impressão.
         </p>
       </header>
 
@@ -468,7 +468,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           className="btn-primary"
         >
           <Download className="w-4 h-4" />
-          {exporting === '3mf' ? 'Gerando 3MF…' : 'Baixar 3MF (Multicolor)'}
+          {exporting === '3mf' ? 'Gerando 3MF…' : 'Baixar 3MF (cor única)'}
         </button>
       </section>
     </aside>

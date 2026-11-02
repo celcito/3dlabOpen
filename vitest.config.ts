@@ -18,6 +18,7 @@ export default defineConfig({
       "src/lib/threeMfAnalyzer/**/*.test.ts",
       "src/lib/medal/**/*.test.ts",
       "src/lib/pencilPersonal/**/*.test.ts",
+      "src/lib/pencilTopper/**/*.test.ts",
       "src/lib/penHolder/**/*.test.ts",
       "src/lib/estojoBorracha/**/*.test.ts",
       "src/lib/thermoform/**/*.test.ts",

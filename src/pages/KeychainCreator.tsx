@@ -13,6 +13,7 @@ const KEYCHAIN_3MF_META = {
   application: '3D Lab Open Chaveiro Personalizado 3D Parametrico',
   baseObjectName: '1_Corpo_do_Chaveiro',
   reliefObjectName: '2_Nome_em_Relevo',
+  singleColor: true,
 };
 
 function safeName(config: KeychainConfig): string {
@@ -66,7 +67,7 @@ export default function KeychainCreator() {
     });
     try {
       const model = await generateKeychainModel(config);
-      const filename = `Chaveiro_${safeName(config)}_Multicolor.3mf`;
+      const filename = `Chaveiro_${safeName(config)}.3mf`;
 
       const blob = await exportPencilTopper3MF(
         model.baseMesh.geometry,
