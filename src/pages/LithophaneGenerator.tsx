@@ -3,11 +3,11 @@ import { OrbitControls, Grid, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { Download, Upload, Sliders, Image as ImageIcon, Box, Cylinder, AlertCircle, Loader2, Frame } from "lucide-react";
 import { useLithophaneGenerator, type ImagePixels } from "../hooks/useLithophaneGenerator";
-import { CUSTOM_PRESET_ID, PORTRAIT_PRESETS } from "../lib/lithophane/frame";
+import { CUSTOM_PRESET_ID, FRAME_TEXTURES, PORTRAIT_PRESETS } from "../lib/lithophane/frame";
 
 export default function LithophaneGenerator() {
   const generator = useLithophaneGenerator(createLithophaneGeometry);
-  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, setHeight, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, isImageLoading, geometry, handleImageUpload, handleExportSTL, frameEnabled, setFrameEnabled, framePreset, applyFramePreset, frameBorder, setFrameBorder, frameDepth, setFrameDepth, frameRadius, setFrameRadius, frameGeometry } = generator;
+  const { imageUrl, imagePixels, shape, setShape, width, setWidth, height, setHeight, minThick, setMinThick, maxThick, setMaxThick, curveAngle, setCurveAngle, isLoading, isImageLoading, geometry, handleImageUpload, handleExportSTL, frameEnabled, setFrameEnabled, framePreset, applyFramePreset, frameBorder, setFrameBorder, frameDepth, setFrameDepth, frameRadius, setFrameRadius, frameTexture, setFrameTexture, frameGeometry, standEnabled, setStandEnabled, standGeometry } = generator;
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
@@ -49,6 +49,7 @@ export default function LithophaneGenerator() {
                 <group>
                   <LithophanePreview geometry={geometry} />
                   {frameGeometry && <FramePreview geometry={frameGeometry} />}
+                  {standGeometry && <StandPreview geometry={standGeometry} />}
                 </group>
               )}
             </Center>
@@ -218,6 +219,41 @@ export default function LithophaneGenerator() {
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-[9px] uppercase font-bold text-zinc-600">Textura da Moldura</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {FRAME_TEXTURES.map((texture) => (
+                    <button
+                      key={texture.id}
+                      onClick={() => setFrameTexture(texture.id)}
+                      className={`py-2 rounded-lg border text-[9px] font-bold transition-all ${frameTexture === texture.id ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"}`}
+                    >
+                      {texture.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setStandEnabled(false)}
+                  className={`py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${!standEnabled ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"}`}
+                >
+                  Sem cavalete
+                </button>
+                <button
+                  onClick={() => setStandEnabled(true)}
+                  className={`py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all ${standEnabled ? "border-[#632CE5] bg-[#632CE5]/10 text-[var(--workbench-text)]" : "border-[var(--surface-container-high)] bg-[var(--surface-container-high)] text-zinc-500"}`}
+                >
+                  Com cavalete
+                </button>
+              </div>
+
+              <p className="text-[9px] font-mono text-zinc-500 leading-relaxed">
+                No STL as peças saem separadas: a litofania encaixa por trás da moldura
+                e o cavalete segura o conjunto de pé.
+              </p>
+
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <label className="text-[9px] uppercase font-bold text-zinc-600">Largura da Borda</label>
@@ -278,6 +314,14 @@ function FramePreview({ geometry }: { geometry: THREE.BufferGeometry }) {
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
       <meshStandardMaterial color="#B08968" roughness={0.85} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function StandPreview({ geometry }: { geometry: THREE.BufferGeometry }) {
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial color="#8C8477" roughness={0.9} side={THREE.DoubleSide} />
     </mesh>
   );
 }

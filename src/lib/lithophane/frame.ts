@@ -24,6 +24,15 @@ export const PORTRAIT_PRESETS: PortraitPreset[] = [
 /** Id usado quando a medida não vem de um preset. */
 export const CUSTOM_PRESET_ID = "custom";
 
+/** Acabamento da frente do aro. */
+export type FrameTexture = "smooth" | "molded" | "carved";
+
+export const FRAME_TEXTURES: { id: FrameTexture; label: string }[] = [
+  { id: "smooth", label: "Liso" },
+  { id: "molded", label: "Moldado" },
+  { id: "carved", label: "Entalhado" },
+];
+
 export interface FrameOptions {
   /** Abertura da moldura (mm) — o tamanho da litofania. */
   openingWidth: number;
@@ -40,6 +49,8 @@ export interface FrameOptions {
   panelThickness?: number;
   /** Largura do batente que segura a litofania no rebaixo (mm). */
   lip?: number;
+  /** Acabamento da frente do aro. */
+  texture?: FrameTexture;
 }
 
 /** Contorno retangular arredondado, centrado na origem. */
@@ -69,12 +80,15 @@ export interface FrameParts {
   /** Externos da moldura (mm). */
   outerWidth: number;
   outerHeight: number;
+  border: number;
   depth: number;
+  radius: number;
   /** Profundidade do rebaixo traseiro (mm). */
   rebate: number;
   /** Folga usada no encaixe (mm). */
   clearance: number;
   lip: number;
+  texture: FrameTexture;
 }
 
 /**
@@ -92,6 +106,7 @@ export function buildFrameParts(opts: FrameOptions): FrameParts | null {
     clearance = 0.3,
     panelThickness = 1,
     lip: lipOpt,
+    texture = "smooth",
   } = opts;
 
   if (
@@ -148,7 +163,69 @@ export function buildFrameParts(opts: FrameOptions): FrameParts | null {
   front.translate(0, 0, rebate);
   const recess = extrude(recessShape, rebate);
 
-  return { front, recess, outerWidth, outerHeight, depth, rebate, clearance, lip };
+  return {
+    front,
+    recess,
+    outerWidth,
+    outerHeight,
+    border,
+    depth,
+    radius,
+    rebate,
+    clearance,
+    lip,
+    texture,
+  };
+}
+
+/**
+ * Relevo na frente do aro. "Moldado" levanta uma faixa larga junto à abertura;
+ * "Entalhado" desenha filetes finos no meio do aro. Sempre dentro do aro, para
+ * não mudar a medida externa da moldura.
+ */
+function faceRelief(parts: FrameParts): THREE.BufferGeometry[] {
+  if (parts.texture === "smooth") return [];
+  const { outerWidth, outerHeight, border, lip, radius, depth } = parts;
+  const band = border - lip;
+
+  const rings: { dist: number; width: number }[] = [];
+  if (parts.texture === "molded") {
+    rings.push({ dist: lip + band * 0.5, width: Math.max(1.5, band * 0.55) });
+  } else {
+    const count = Math.max(1, Math.min(3, Math.floor(band / 5)));
+    for (let i = 0; i < count; i++) {
+      rings.push({ dist: lip + (band * (i + 1)) / (count + 1), width: 1.2 });
+    }
+  }
+
+  const relief = parts.texture === "molded" ? 1.2 : 0.6;
+  const geoms: THREE.BufferGeometry[] = [];
+  for (const ring of rings) {
+    const outerInset = Math.max(0, border - ring.dist - ring.width / 2);
+    const innerInset = Math.max(0.2, border - ring.dist + ring.width / 2);
+    if (outerInset >= innerInset) continue;
+
+    const shape = roundedRect(
+      outerWidth - 2 * outerInset,
+      outerHeight - 2 * outerInset,
+      radius - outerInset
+    );
+    shape.holes.push(
+      new THREE.Path(
+        roundedRect(
+          outerWidth - 2 * innerInset,
+          outerHeight - 2 * innerInset,
+          radius - innerInset
+        ).getPoints()
+      )
+    );
+
+    const geom = new THREE.ExtrudeGeometry(shape, { depth: relief, bevelEnabled: false, curveSegments: 12 });
+    geom.translate(0, 0, depth);
+    geom.computeVertexNormals();
+    geoms.push(geom);
+  }
+  return geoms;
 }
 
 /**
@@ -159,12 +236,75 @@ export function buildFrameGeometry(opts: FrameOptions): THREE.BufferGeometry | n
   const parts = buildFrameParts(opts);
   if (!parts) return null;
 
-  const merged = BufferGeometryUtils.mergeGeometries([parts.front, parts.recess], false);
-  parts.front.dispose();
-  parts.recess.dispose();
+  const pieces = [parts.front, parts.recess, ...faceRelief(parts)];
+
+  const merged = BufferGeometryUtils.mergeGeometries(pieces, false);
+  pieces.forEach((g) => g.dispose());
   if (!merged) return null;
 
   merged.computeVertexNormals();
   merged.computeBoundingBox();
   return merged;
+}
+
+export interface StandOptions {
+  /** Largura externa da moldura (mm). */
+  frameWidth: number;
+  /** Altura externa da moldura (mm). */
+  frameHeight: number;
+  /** Profundidade da moldura (mm) — define a largura do encaixe. */
+  frameDepth: number;
+  /** Folga do encaixe (mm). */
+  clearance?: number;
+}
+
+/**
+ * Cavalete impresso à parte: base com encaixe vertical onde a moldura entra de
+ * pé. O fundo do encaixe fica na altura da base da moldura, então as duas peças
+ * se alinham sem colisão.
+ */
+export function buildStandGeometry(opts: StandOptions): THREE.BufferGeometry | null {
+  const { frameWidth, frameHeight, frameDepth, clearance = 0.6 } = opts;
+  if (
+    !Number.isFinite(frameWidth) ||
+    !Number.isFinite(frameHeight) ||
+    !Number.isFinite(frameDepth) ||
+    frameWidth <= 10 ||
+    frameHeight <= 10 ||
+    frameDepth <= 0
+  ) {
+    return null;
+  }
+
+  const width = Math.min(frameWidth, 200);
+  const groove = frameDepth + clearance;
+  const foot = 18;
+  const baseDepth = groove + 2 * foot;
+  const wall = Math.min(18, Math.max(8, frameHeight * 0.12));
+  const floor = 3;
+
+  const d = baseDepth / 2;
+  const g = groove / 2;
+  const profile = new THREE.Shape();
+  profile.moveTo(-d, 0);
+  profile.lineTo(d, 0);
+  profile.lineTo(d, wall);
+  profile.lineTo(g, wall);
+  profile.lineTo(g, floor);
+  profile.lineTo(-g, floor);
+  profile.lineTo(-g, wall);
+  profile.lineTo(-d, wall);
+  profile.closePath();
+
+  const geom = new THREE.ExtrudeGeometry(profile, {
+    depth: width,
+    bevelEnabled: false,
+    curveSegments: 8,
+  });
+  // Perfil (profundidade × altura) extrudado na largura: x → z, z → x.
+  geom.rotateY(Math.PI / 2);
+  geom.translate(-width / 2, -frameHeight / 2 - floor, frameDepth / 2);
+  geom.computeVertexNormals();
+  geom.computeBoundingBox();
+  return geom;
 }

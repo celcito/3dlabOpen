@@ -3,7 +3,9 @@ import * as THREE from "three";
 import {
   buildFrameGeometry,
   buildFrameParts,
+  buildStandGeometry,
   CUSTOM_PRESET_ID,
+  FRAME_TEXTURES,
   PORTRAIT_PRESETS,
 } from "../frame";
 
@@ -92,6 +94,17 @@ describe("buildFrameGeometry", () => {
     expect(buildFrameGeometry({ ...base, openingHeight: Number.NaN })).toBeNull();
   });
 
+  it("a litofania entra por trás e é segurada pelo batente", () => {
+    const panelThickness = 3;
+    const parts = buildFrameParts({ ...base, panelThickness })!;
+    // Abertura frontal tem folga em relação à litofania...
+    expect(base.openingWidth + 2 * parts.clearance).toBeGreaterThan(base.openingWidth);
+    // ...o rebaixo é mais fundo que o painel, e o batente sobra na frente.
+    expect(parts.rebate).toBeGreaterThan(panelThickness);
+    expect(parts.lip).toBeGreaterThan(0);
+    expect(parts.lip).toBeLessThanOrEqual(parts.border);
+  });
+
   it("a moldura abre para o tamanho da foto do preset (13 × 18)", () => {
     const preset = PORTRAIT_PRESETS.find((p) => p.id === "13x18")!;
     const geom = buildFrameGeometry({
@@ -104,5 +117,87 @@ describe("buildFrameGeometry", () => {
     expect(box.max.x - box.min.x).toBeCloseTo(130 + 24, 3);
     expect(box.max.y - box.min.y).toBeCloseTo(180 + 24, 3);
     expect(geom).toBeInstanceOf(THREE.BufferGeometry);
+  });
+});
+
+describe("texturas da moldura", () => {
+  const base = {
+    openingWidth: 100,
+    openingHeight: 150,
+    border: 12,
+    depth: 6,
+    radius: 6,
+    panelThickness: 3,
+  };
+
+  it("toda textura lista gera moldura com o mesmo aro externo", () => {
+    for (const texture of FRAME_TEXTURES) {
+      const geom = buildFrameGeometry({ ...base, texture: texture.id })!;
+      geom.computeBoundingBox();
+      const box = geom.boundingBox!;
+      expect(box.max.x - box.min.x).toBeCloseTo(124, 3);
+      expect(box.max.y - box.min.y).toBeCloseTo(174, 3);
+      expect(geom.attributes.position.count).toBeGreaterThan(0);
+    }
+  });
+
+  it("o relevo das texturas fica só na frente, sem mudar o aro", () => {
+    const smooth = buildFrameGeometry({ ...base, texture: "smooth" })!;
+    for (const id of ["molded", "carved"] as const) {
+      const textured = buildFrameGeometry({ ...base, texture: id })!;
+      expect(textured.attributes.position.count).toBeGreaterThan(smooth.attributes.position.count);
+      expect(textured.boundingBox!.min.z).toBeCloseTo(0, 3);
+      expect(textured.boundingBox!.max.z).toBeGreaterThan(base.depth);
+      expect(textured.boundingBox!.max.z).toBeLessThanOrEqual(base.depth + 1.3);
+    }
+  });
+});
+
+describe("buildStandGeometry (cavalete)", () => {
+  const base = { frameWidth: 200, frameHeight: 150, frameDepth: 6 };
+  const floor = 3;
+  const foot = 18;
+  const clearance = 0.6;
+  const groove = 6 + clearance;
+  const standHeight = 18;
+
+  it("apoia a moldura com o encaixe na espessura dela", () => {
+    const geom = buildStandGeometry(base)!;
+    geom.computeBoundingBox();
+    const box = geom.boundingBox!;
+    // Largura = largura da moldura, base mais funda para não tombar.
+    expect(box.max.x - box.min.x).toBeCloseTo(200, 3);
+    expect(box.max.z - box.min.z).toBeCloseTo(groove + 2 * foot, 3);
+    // O fundo do encaixe fica na base da moldura.
+    expect(box.min.y).toBeCloseTo(-base.frameHeight / 2 - floor, 3);
+    expect(box.max.y).toBeCloseTo(-base.frameHeight / 2 - floor + standHeight, 3);
+  });
+
+  it("deixa o encaixe livre para a moldura entrar", () => {
+    const geom = buildStandGeometry(base)!;
+    const pos = geom.attributes.position;
+    const centerZ = base.frameDepth / 2;
+    const halfGroove = groove / 2;
+    const bottom = -base.frameHeight / 2 + 0.5;
+    const top = -base.frameHeight / 2 - floor + standHeight - 0.5;
+    for (let i = 0; i < pos.count; i++) {
+      const z = pos.getZ(i);
+      const y = pos.getY(i);
+      const insideGroove =
+        y > bottom && y < top && Math.abs(z - centerZ) < halfGroove - 1e-6;
+      expect(insideGroove).toBe(false);
+    }
+  });
+
+  it("moldura larga não gera base gigante", () => {
+    const geom = buildStandGeometry({ ...base, frameWidth: 324 })!;
+    geom.computeBoundingBox();
+    expect(geom.boundingBox!.max.x - geom.boundingBox!.min.x).toBeCloseTo(200, 3);
+  });
+
+  it("medidas inválidas devolvem null", () => {
+    expect(buildStandGeometry({ ...base, frameWidth: 0 })).toBeNull();
+    expect(buildStandGeometry({ ...base, frameHeight: Number.NaN })).toBeNull();
+    expect(buildStandGeometry({ ...base, frameDepth: 0 })).toBeNull();
   });
 });
