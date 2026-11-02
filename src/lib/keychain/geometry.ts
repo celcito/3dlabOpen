@@ -9,6 +9,7 @@ import {
 } from '../pencilTopper/contourExtractor';
 import { drawSymbol } from '../pencilTopper/symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
+import { flattenBottomBevel } from './bevel';
 
 const pxPerMm = 20;
 const mmPerPixel = 1 / pxPerMm;
@@ -407,22 +408,34 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const reliefThickness = Math.max(0.8, config.reliefThickness);
   const avgLetterHeight = config.letterHeight || 15;
 
+  // O ExtrudeGeometry com bevel ocupa [-bevelThickness, depth + bevelThickness] em Z.
+  const baseBevelThickness = Math.min(0.4, avgLetterHeight * 0.025);
+  const reliefBevelThickness = Math.min(0.3, avgLetterHeight * 0.02);
+
   const baseGeom = new THREE.ExtrudeGeometry(safeBaseShapes, {
     depth: bodyThickness,
     bevelEnabled: true,
-    bevelThickness: Math.min(0.4, avgLetterHeight * 0.025),
+    bevelThickness: baseBevelThickness,
     bevelSize: Math.min(0.3, avgLetterHeight * 0.02),
     bevelSegments: 4,
   });
+  // Corpo apoiado na mesa: z mínimo = 0 (antes ficava em -bevelThickness, abaixo da mesa).
+  baseGeom.translate(0, 0, baseBevelThickness);
+  const bodyTopZ = bodyThickness + 2 * baseBevelThickness;
 
+  // Relevo: a altura total (topo) é a mesma de antes, mas o fundo é reto e começa
+  // exatamente no topo do corpo — sem a parte enterrada que sobrepunha as duas cores.
+  // Mantém o topo em bodyThickness + baseBevelThickness + reliefThickness.
+  const reliefDepth = Math.max(0.2, reliefThickness - baseBevelThickness);
   const reliefGeom = new THREE.ExtrudeGeometry(safeReliefShapes, {
-    depth: reliefThickness,
+    depth: reliefDepth,
     bevelEnabled: true,
-    bevelThickness: Math.min(0.3, avgLetterHeight * 0.02),
+    bevelThickness: reliefBevelThickness,
     bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
     bevelSegments: 4,
   });
-  reliefGeom.translate(0, 0, bodyThickness);
+  flattenBottomBevel(reliefGeom);
+  reliefGeom.translate(0, 0, bodyTopZ);
 
   baseGeom.computeBoundingBox();
   const bbBase = baseGeom.boundingBox || new THREE.Box3();
