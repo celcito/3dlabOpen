@@ -3,6 +3,7 @@ import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
 import type { PencilTopperConfig, Model3DDimensions } from '../../types/pencilTopper';
 import { extractContoursFromImageData, buildThreeShapes, computeEnclosedEmptyMask, punchMask } from './contourExtractor';
 import { drawSymbol } from './symbols';
+import { autoSymbolGapMm } from './presets';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 import { flattenBottomBevel } from '../keychain/bevel';
 
@@ -75,7 +76,11 @@ export async function generatePencilTopperModel(
   const showSymbolRight = hasSymbol && (symbolPosition === 'right' || symbolPosition === 'both');
   const symbolCount = (showSymbolLeft ? 1 : 0) + (showSymbolRight ? 1 : 0);
   const symbolSizePx = targetFontHeightPx * 0.85;
-  const symbolGapPx = symbolSizePx * 0.35;
+  // Espaço letra↔ícone configurável (mm); mesmo valor em início, fim ou ambos.
+  const symbolGapMm = Number.isFinite(config.symbolGap)
+    ? Math.max(0, config.symbolGap)
+    : autoSymbolGapMm(config.letterHeight || 15);
+  const symbolGapPx = symbolGapMm * pxPerMm;
   const symbolBlockPx = symbolCount * (symbolGapPx + symbolSizePx);
 
   const totalContentWidthPx = textWidthPx + symbolBlockPx;

@@ -68,6 +68,14 @@ export const PRESET_SYMBOLS: PresetSymbol[] = [
   { id: 'gradcap', name: 'Formatura', emoji: '🎓' },
 ];
 
+export const SYMBOL_GAP_MIN = 0;
+export const SYMBOL_GAP_MAX = 15;
+
+/** Espaço letra↔ícone que o gerador usava antes do slider: 35% do tamanho do ícone (85% da letra). */
+export function autoSymbolGapMm(letterHeight: number): number {
+  return Number((letterHeight * 0.85 * 0.35).toFixed(1));
+}
+
 export const DEFAULT_PENCIL_CONFIG: PencilTopperConfig = {
   pencilModel: 'bic-cristal',
   pencilDiameter: 8.3,
@@ -82,6 +90,7 @@ export const DEFAULT_PENCIL_CONFIG: PencilTopperConfig = {
   fontWeightScale: 1.0,
   symbolId: 'none',
   symbolPosition: 'left',
+  symbolGap: autoSymbolGapMm(16),
   outlineSize: 1.6,
   baseWallThickness: 2.1,
   reliefThickness: 2.0,

@@ -39,6 +39,8 @@ export interface PencilTopperConfig {
 
   symbolId: string;
   symbolPosition: 'left' | 'right' | 'both';
+  /** Espaço (mm) entre a letra e o ícone — vale para início, fim ou ambos. */
+  symbolGap: number;
   customSvgData?: string;
   customIconUrl?: string;
 

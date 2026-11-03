@@ -1,6 +1,6 @@
 import React from 'react';
 import type { PencilTopperConfig, Model3DDimensions } from '../types/pencilTopper';
-import { PENCIL_MODELS, PENCIL_COLOR_PALETTES } from '../lib/pencilTopper/presets';
+import { PENCIL_MODELS, PENCIL_COLOR_PALETTES, SYMBOL_GAP_MAX, SYMBOL_GAP_MIN } from '../lib/pencilTopper/presets';
 import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
 import { FontPicker } from './FontPicker';
 import { SymbolPicker } from './SymbolPicker';
@@ -280,6 +280,23 @@ export const PencilTopperControls: React.FC<PencilTopperControlsProps> = ({
           symbolPosition={config.symbolPosition}
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
+
+        {config.symbolId !== 'none' && (
+          <div className="space-y-1.5">
+            <RangeControl
+              label="Espaço Letra ↔ Ícone"
+              unit="mm"
+              min={String(SYMBOL_GAP_MIN)}
+              max={String(SYMBOL_GAP_MAX)}
+              step="0.5"
+              number={config.symbolGap}
+              onChange={(value) => onChange({ ...config, symbolGap: value })}
+            />
+            <p className="text-[9px] text-zinc-600 leading-snug">
+              Vale para ícone no início, no fim ou nos dois lados.
+            </p>
+          </div>
+        )}
 
         <button
           type="button"

@@ -1,5 +1,5 @@
 import type { PencilTopperConfig } from '../../types/pencilTopper';
-import { DEFAULT_PENCIL_CONFIG } from './presets';
+import { DEFAULT_PENCIL_CONFIG, SYMBOL_GAP_MAX, SYMBOL_GAP_MIN, autoSymbolGapMm } from './presets';
 
 const STORAGE_KEY = 'ponteira_lapis_3d_config_v1';
 
@@ -42,6 +42,11 @@ export function loadSavedPencilConfig(): PencilTopperConfig {
       pencilDiameter: typeof parsed.pencilDiameter === 'number' ? parsed.pencilDiameter : DEFAULT_PENCIL_CONFIG.pencilDiameter,
       clearance: typeof parsed.clearance === 'number' ? parsed.clearance : DEFAULT_PENCIL_CONFIG.clearance,
       letterSpacing: typeof parsed.letterSpacing === 'number' && parsed.letterSpacing >= 0.5 ? parsed.letterSpacing : DEFAULT_PENCIL_CONFIG.letterSpacing,
+      // Configs salvas antes do slider: mantém o espaço que o gerador usava (proporcional à letra).
+      symbolGap:
+        typeof parsed.symbolGap === 'number' && Number.isFinite(parsed.symbolGap)
+          ? Math.min(SYMBOL_GAP_MAX, Math.max(SYMBOL_GAP_MIN, parsed.symbolGap))
+          : autoSymbolGapMm(typeof parsed.letterHeight === 'number' ? parsed.letterHeight : DEFAULT_PENCIL_CONFIG.letterHeight),
       holeShape: parsed.holeShape || DEFAULT_PENCIL_CONFIG.holeShape,
       holeOrientation: 'horizontal',
       baseColor: typeof parsed.baseColor === 'string' && parsed.baseColor.startsWith('#') ? parsed.baseColor : DEFAULT_PENCIL_CONFIG.baseColor,
