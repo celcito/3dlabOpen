@@ -51,7 +51,9 @@ function readRimCoverage(value: unknown): MedalConfig['rimCoverage'] {
 }
 
 function readRimHandleStyle(value: unknown): MedalConfig['rimHandleStyle'] {
-  return value === 'macica' || value === 'contorno' ? value : 'canal-duplo';
+  return value === 'macica' || value === 'contorno' || value === 'canal-duplo'
+    ? value
+    : DEFAULT_MEDAL_CONFIG.rimHandleStyle;
 }
 
 function readRibbonWidth(value: unknown, fallback: number): number {
@@ -141,6 +143,8 @@ export function loadSavedMedalConfig(): MedalConfig {
       handleThicknessZ: clamp(parsed.handleThicknessZ, HANDLE_THICKNESS_MIN, HANDLE_THICKNESS_MAX, def.handleThicknessZ),
       handleColor: readColor(parsed.handleColor, def.handleColor),
       handleColorSync: synced,
+      handleUseBodyColor:
+        typeof parsed.handleUseBodyColor === 'boolean' ? parsed.handleUseBodyColor : def.handleUseBodyColor,
 
       innerRingCount: Math.round(clamp(parsed.innerRingCount, 0, INNER_RING_MAX, def.innerRingCount)),
       innerRingRadiusPct: clamp(parsed.innerRingRadiusPct, INNER_RING_RADIUS_MIN, INNER_RING_RADIUS_MAX, def.innerRingRadiusPct),

@@ -396,6 +396,7 @@ export const MedalCanvas: React.FC<MedalCanvasProps> = ({ config, onDimensionsCh
     config.handleThicknessZ,
     config.handleColor,
     config.handleColorSync,
+    config.handleUseBodyColor,
     config.innerRingCount,
     config.innerRingRadiusPct,
     config.innerRingWidth,

@@ -11,6 +11,7 @@ import {
 } from '../pencilTopper/contourExtractor';
 import type { Point2D } from '../pencilTopper/contourExtractor';
 import { ensureGoogleFont } from '../fonts/googleFonts';
+import { resolveHandleColor } from './handleColor';
 
 const pxPerMm = 20;
 const mmPerPixel = 1 / pxPerMm;
@@ -974,7 +975,7 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
     printTimeMinutes,
   };
 
-  const handleColor = config.handleColorSync ? config.rimColor : config.handleColor;
+  const handleColor = resolveHandleColor(config);
 
   // Guarda: base vazia é impossível pela UI, mas cai num disco mínimo (design.md).
   const safeBaseGeom =

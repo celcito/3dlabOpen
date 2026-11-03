@@ -5,6 +5,7 @@ import { loadSavedMedalConfig, saveMedalConfigToStorage } from '../lib/medal/sto
 import { exportMedal3MF } from '../lib/medal/threeMfExporter';
 import { downloadBlob } from '../lib/pencilTopper/stlExporter';
 import { generateMedalModel } from '../lib/medal/geometry';
+import { resolveHandleColor } from '../lib/medal/handleColor';
 import { MedalCanvas } from '../components/MedalCanvas';
 import { MedalControls } from '../components/MedalControls';
 import { SvgConverterModal } from '../components/SvgConverterModal';
@@ -39,7 +40,7 @@ export default function MedalCreator() {
     });
     try {
       const model = await generateMedalModel(config);
-      const handleColor = config.handleColorSync ? config.rimColor : config.handleColor;
+      const handleColor = resolveHandleColor(config);
       const items = [
         model.baseMesh
           ? { geom: model.baseMesh.geometry, color: config.backgroundColor, name: '1_Base_da_Medalha' }

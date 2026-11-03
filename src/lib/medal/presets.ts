@@ -78,7 +78,7 @@ export const DEFAULT_MEDAL_CONFIG: MedalConfig = {
   rimHeight: 1.2,
   rimColor: '#E2A829',
   rimCoverage: 'geral',
-  rimHandleStyle: 'canal-duplo',
+  rimHandleStyle: 'macica',
 
   handleMode: 'passante',
   ribbonWidth: 25,
@@ -88,6 +88,7 @@ export const DEFAULT_MEDAL_CONFIG: MedalConfig = {
   handleThicknessZ: 3.5,
   handleColor: '#E2A829',
   handleColorSync: true,
+  handleUseBodyColor: false,
 
   innerRingCount: 1,
   innerRingRadiusPct: 62,

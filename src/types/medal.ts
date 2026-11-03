@@ -42,6 +42,8 @@ export interface MedalConfig {
   handleThicknessZ: number;
   handleColor: string;
   handleColorSync: boolean;
+  /** Alça na cor do corpo: evita 2 cores por camada na base (menos purga). */
+  handleUseBodyColor: boolean;
 
   innerRingCount: number;
   innerRingRadiusPct: number;
