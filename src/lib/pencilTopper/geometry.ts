@@ -4,6 +4,7 @@ import type { PencilTopperConfig, Model3DDimensions } from '../../types/pencilTo
 import { extractContoursFromImageData, buildThreeShapes, computeEnclosedEmptyMask, punchMask } from './contourExtractor';
 import { drawSymbol } from './symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
+import { flattenBottomBevel } from '../keychain/bevel';
 
 export interface GeneratedPencilTopper {
   baseMesh: THREE.Mesh;
@@ -211,10 +212,13 @@ export async function generatePencilTopperModel(
   const avgLetterHeight = config.letterHeight || 15;
   const bevelScale = Math.min(1.0, avgLetterHeight / 15);
 
+  // O ExtrudeGeometry com bevel ocupa [-bevelThickness, depth + bevelThickness] em Z.
+  const baseBevelThickness = Math.min(0.4, avgLetterHeight * 0.025);
+
   const baseExtrudeGeom = new THREE.ExtrudeGeometry(safeBaseShapes, {
     depth: baseHeightMm,
     bevelEnabled: true,
-    bevelThickness: Math.min(0.4, avgLetterHeight * 0.025),
+    bevelThickness: baseBevelThickness,
     bevelSize: Math.min(0.3, avgLetterHeight * 0.02),
     bevelSegments: 4,
   });
@@ -262,21 +266,27 @@ export async function generatePencilTopperModel(
     finalBaseGeom = baseExtrudeGeom;
   }
 
+  // Relevo com fundo reto, começando exatamente no topo da base (sem a parte enterrada
+  // que sobrepunha as duas cores). O topo continua em baseHeightMm + baseBevelThickness
+  // + reliefThickness, como antes — por isso a profundidade desconta o bevel da base.
+  const baseTopZ = baseHeightMm + 2 * baseBevelThickness;
   const reliefGeom = new THREE.ExtrudeGeometry(safeReliefShapes, {
-    depth: Math.max(0.8, config.reliefThickness),
+    depth: Math.max(0.2, Math.max(0.8, config.reliefThickness) - baseBevelThickness),
     bevelEnabled: true,
     bevelThickness: Math.min(0.3, avgLetterHeight * 0.02),
     bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
     bevelSegments: 4,
   });
-  reliefGeom.translate(0, 0, baseHeightMm);
+  flattenBottomBevel(reliefGeom);
+  reliefGeom.translate(0, 0, baseTopZ);
 
   finalBaseGeom.computeBoundingBox();
   const bbFinal = finalBaseGeom.boundingBox || new THREE.Box3();
   const midX = (bbFinal.min.x + bbFinal.max.x) / 2;
   const midY = (bbFinal.min.y + bbFinal.max.y) / 2;
 
-  finalBaseGeom.translate(-midX, -midY, 0);
+  // Base apoiada na mesa: z mínimo = 0 (o bevel inferior ficava abaixo da mesa).
+  finalBaseGeom.translate(-midX, -midY, baseBevelThickness);
   reliefGeom.translate(-midX, -midY, 0);
 
   finalBaseGeom.computeBoundingBox();
