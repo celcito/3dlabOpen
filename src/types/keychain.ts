@@ -24,6 +24,8 @@ export interface KeychainConfig {
   loopSide: 'left' | 'right';
   loopHoleDiameter: number;
   loopWallThickness: number;
+  /** Folga (mm) entre a borda do furo da argola e a letra mais próxima. */
+  loopLetterGap: number;
 }
 
 export interface GeneratedKeychain {

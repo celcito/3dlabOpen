@@ -2,8 +2,10 @@ import React from 'react';
 import type { KeychainConfig, Model3DDimensions } from '../types/keychain';
 import {
   PENCIL_COLOR_PALETTES,
+  LOOP_GAP_MAX,
   LOOP_WALL_MIN,
 } from '../lib/keychain/presets';
+import { resolveLoopGapMm } from '../lib/keychain/loop';
 import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
 import { FontPicker } from './FontPicker';
 import { SymbolPicker } from './SymbolPicker';
@@ -47,6 +49,8 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
   };
 
   const loopOuterDiameter = Number((config.loopHoleDiameter + 2 * config.loopWallThickness).toFixed(1));
+  // Limite real da folga: acima dele a aba se soltaria do corpo (depende de outline e parede).
+  const loopGapMax = Number(resolveLoopGapMm({ ...config, loopLetterGap: LOOP_GAP_MAX }).toFixed(1));
   const loopMinOuterDiameter = Number((config.loopHoleDiameter + 2 * LOOP_WALL_MIN).toFixed(1));
 
   return (
@@ -61,7 +65,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           </h1>
         </div>
         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-          Nome em relevo + argola, em uma cor só na impressão.
+          Nome em relevo + argola em 2 cores.
         </p>
       </header>
 
@@ -339,6 +343,19 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
               onChange={(value) => onChange({ ...config, loopWallThickness: value })}
             />
 
+            <RangeControl
+              label="Folga até a Letra"
+              unit="mm"
+              min="0"
+              max={String(loopGapMax)}
+              step="0.1"
+              number={Math.min(config.loopLetterGap, loopGapMax)}
+              onChange={(value) => onChange({ ...config, loopLetterGap: value })}
+            />
+            <p className="text-[9px] text-zinc-600 leading-snug -mt-2">
+              Distância entre a borda do furo e a letra mais próxima. Aumente para afastar a argola do nome.
+            </p>
+
             <div className="p-3 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[9px] uppercase font-bold text-zinc-600">
@@ -468,7 +485,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           className="btn-primary"
         >
           <Download className="w-4 h-4" />
-          {exporting === '3mf' ? 'Gerando 3MF…' : 'Baixar 3MF (cor única)'}
+          {exporting === '3mf' ? 'Gerando 3MF…' : 'Baixar 3MF (Multicolor)'}
         </button>
       </section>
     </aside>

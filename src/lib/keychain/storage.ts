@@ -1,6 +1,8 @@
 import type { KeychainConfig } from '../../types/keychain';
 import {
   DEFAULT_KEYCHAIN_CONFIG,
+  LOOP_GAP_MAX,
+  LOOP_GAP_MIN,
   LOOP_HOLE_MAX,
   LOOP_HOLE_MIN,
   LOOP_WALL_MAX,
@@ -84,6 +86,7 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       loopSide: readLoopSide(parsed.loopSide),
       loopHoleDiameter: clamp(parsed.loopHoleDiameter, LOOP_HOLE_MIN, LOOP_HOLE_MAX, def.loopHoleDiameter),
       loopWallThickness: clamp(parsed.loopWallThickness, LOOP_WALL_MIN, LOOP_WALL_MAX, def.loopWallThickness),
+      loopLetterGap: clamp(parsed.loopLetterGap, LOOP_GAP_MIN, LOOP_GAP_MAX, def.loopLetterGap),
     };
   } catch (err) {
     console.warn('Erro ao carregar chaveiro do localStorage:', err);

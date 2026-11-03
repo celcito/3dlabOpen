@@ -10,6 +10,7 @@ import {
 import { drawSymbol } from '../pencilTopper/symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 import { flattenBottomBevel } from './bevel';
+import { loopCenterInsetMm, resolveLoopGapMm } from './loop';
 
 const pxPerMm = 20;
 const mmPerPixel = 1 / pxPerMm;
@@ -133,7 +134,10 @@ function drawLoopTab(
       }
       if (solidX === -1) continue;
 
-      const offsetX = fromLeft ? 0.45 * outerRadiusPx : -0.45 * outerRadiusPx;
+      // Centro do furo: a `loopLetterGap` mm da letra (antes era fixo em 0,45·raio, o que
+      // deixava o furo colado — ou até invadindo — a inicial).
+      const insetPx = loopCenterInsetMm(config) * pxPerMm;
+      const offsetX = fromLeft ? insetPx : -insetPx;
       const cx = solidX + offsetX;
       const cy = y;
       if (
@@ -245,8 +249,14 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
 
   const loopOuterRadiusPx =
     (config.loopHoleDiameter / 2 + config.loopWallThickness) * pxPerMm;
+  // Alcance da aba além da letra: furo + parede + folga (a aba pode sair do corpo).
+  const loopReachPx =
+    (config.loopHoleDiameter + config.loopWallThickness + resolveLoopGapMm(config)) * pxPerMm;
   const paddingPx = Math.ceil(
-    Math.max(outlinePx * 2.5, config.loopEnabled ? loopOuterRadiusPx * 1.5 : 0) + 28
+    Math.max(
+      outlinePx * 2.5,
+      config.loopEnabled ? Math.max(loopOuterRadiusPx * 1.5, loopReachPx) : 0
+    ) + 28
   );
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
   const canvasHeight = Math.ceil(textHeightPx + paddingPx * 2);

@@ -6,6 +6,8 @@ export const LOOP_HOLE_MIN = 3;
 export const LOOP_HOLE_MAX = 10;
 export const LOOP_WALL_MIN = 1.2;
 export const LOOP_WALL_MAX = 4;
+export const LOOP_GAP_MIN = 0;
+export const LOOP_GAP_MAX = 4;
 
 export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   text: 'Nome',
@@ -24,4 +26,5 @@ export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   loopSide: 'left',
   loopHoleDiameter: 5,
   loopWallThickness: 2,
+  loopLetterGap: 1.5,
 };
