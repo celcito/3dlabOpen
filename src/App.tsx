@@ -47,6 +47,7 @@ const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
 const MedalCreator = lazy(() => import("./pages/MedalCreator"));
 const ThreeMfAnalyzer = lazy(() => import("./pages/ThreeMfAnalyzer"));
 const PencilPersonalizer = lazy(() => import("./pages/PencilPersonalizer"));
+const LowPolyMaker = lazy(() => import("./pages/LowPolyMaker"));
 
 const NAV_ITEMS = [
   { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
@@ -70,6 +71,7 @@ const NAV_ITEMS = [
   { to: "/name-sign", icon: Baseline, label: "Gerador de Placas", description: "Placas e Letreiros" },
   { to: "/fidget-clicker", icon: Gamepad2, label: "Clicker Maker", description: "Fidget Chaveiro 3D" },
   { to: "/clip-maker", icon: Paperclip, label: "Clip Maker", description: "Clipes Decorativos 3D" },
+  { to: "/low-poly-maker", icon: Box, label: "Low Poly 3D", description: "Modelos Multifacetados" },
   { to: "/cake-topper", icon: Cake, label: "Criador de Topo de Bolo", description: "Topper 3D Personalizado" },
   { to: "/puzzle-generator", icon: Puzzle, label: "Puzzle Generator", description: "Quebra-Cabeça Paramétrico" },
   { to: "/design-editor", icon: Palette, label: "Editor de Design", description: "Criação de Layouts" },
@@ -253,6 +255,7 @@ export default function App() {
           <Route path="/can-opener" element={<CanOpener />} />
           <Route path="/fidget-maker" element={<FidgetMaker />} />
           <Route path="/clip-maker" element={<ClipMaker />} />
+          <Route path="/low-poly-maker" element={<LowPolyMaker />} />
           <Route path="/cake-topper" element={<CakeTopperCreator />} />
           <Route path="/puzzle-generator" element={<PuzzleGenerator />} />
         </Routes>
