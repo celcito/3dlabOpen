@@ -3,13 +3,15 @@
  * `paint_color` attribute (3MF color painting), replacing the UV texture
  * path that Bambu ignores on 3MF files.
  *
- * Front triangles are detected with the same UV-span heuristic used by
- * `subdivideFrontFaces` (span > 0.02); sides/back have degenerate UVs and
- * stay on the base color (state 0 = no `paint_color`).
+ * Front triangles are the ones carrying real UVs (see `hasArtworkUV`); sides/back
+ * have UVs pinned to (0,0) and stay on the base color (state 0 = no `paint_color`).
+ * The UV *span* can't be used for this: fine triangles have a tiny span but are
+ * still artwork.
  */
 
 import * as THREE from "three";
 import { rasterizeToPngDataUrl } from "./threeMfExporter";
+import { hasArtworkUV } from "./puzzleSubdivideFront";
 
 export interface ImagePixels {
   width: number;
@@ -21,9 +23,6 @@ export interface ImagePixels {
 export interface PaintColor {
   color: string;
 }
-
-/** UV span above this threshold = front face carrying the artwork. */
-const FRONT_UV_SPAN = 0.02;
 
 /**
  * Load an image (PNG/JPEG/SVG data URL, blob or http) and rasterize it to
@@ -81,7 +80,13 @@ export function bakePaintForGeometry(
     return states;
   }
 
-  const colors = palette.map(p => hexToRgb(p.color));
+  const labs = palette.map(p => rgbToLab(hexToRgb(p.color)));
+  const sample = (u: number, v: number): [number, number, number] => {
+    const x = clampInt(Math.floor(u * pixels.width), 0, pixels.width - 1);
+    const y = clampInt(Math.floor((1 - v) * pixels.height), 0, pixels.height - 1);
+    const idx = (y * pixels.width + x) * 4;
+    return [pixels.data[idx], pixels.data[idx + 1], pixels.data[idx + 2]];
+  };
 
   for (let t = 0; t < triCount; t++) {
     const i0 = t * 3;
@@ -92,24 +97,33 @@ export function bakePaintForGeometry(
     const u2 = uvAttr.getX(i0 + 2);
     const v2 = uvAttr.getY(i0 + 2);
 
-    const uvSpan =
-      Math.max(u0, u1, u2) - Math.min(u0, u1, u2) +
-      Math.max(v0, v1, v2) - Math.min(v0, v1, v2);
-    if (uvSpan <= FRONT_UV_SPAN) continue; // side/back shell → base color
+    if (!hasArtworkUV(u0, v0, u1, v1, u2, v2)) continue; // side/back shell → base color
 
-    const u = (u0 + u1 + u2) / 3;
-    const v = (v0 + v1 + v2) / 3;
-    const x = clampInt(Math.floor(u * pixels.width), 0, pixels.width - 1);
-    const y = clampInt(Math.floor((1 - v) * pixels.height), 0, pixels.height - 1);
-    const idx = (y * pixels.width + x) * 4;
+    // Cor do triângulo = média de 4 amostras (centróide + 3 pontos a meio caminho
+    // dos vértices): menos ruído que um único pixel quando o triângulo cobre vários.
+    const cu = (u0 + u1 + u2) / 3;
+    const cv = (v0 + v1 + v2) / 3;
+    const pts: Array<[number, number]> = [
+      [cu, cv],
+      [(cu + u0) / 2, (cv + v0) / 2],
+      [(cu + u1) / 2, (cv + v1) / 2],
+      [(cu + u2) / 2, (cv + v2) / 2],
+    ];
+    let r = 0, g = 0, b = 0;
+    for (const [u, v] of pts) {
+      const px = sample(u, v);
+      r += px[0]; g += px[1]; b += px[2];
+    }
+    const lab = rgbToLab([r / pts.length, g / pts.length, b / pts.length]);
 
+    // Slot mais próximo em CIE Lab (distância perceptual, melhor que RGB).
     let best = 0;
     let bestDist = Infinity;
-    for (let c = 0; c < colors.length; c++) {
-      const dr = pixels.data[idx] - colors[c][0];
-      const dg = pixels.data[idx + 1] - colors[c][1];
-      const db = pixels.data[idx + 2] - colors[c][2];
-      const dist = dr * dr + dg * dg + db * db;
+    for (let c = 0; c < labs.length; c++) {
+      const dl = lab[0] - labs[c][0];
+      const da = lab[1] - labs[c][1];
+      const db = lab[2] - labs[c][2];
+      const dist = dl * dl + da * da + db * db;
       if (dist < bestDist) {
         bestDist = dist;
         best = c;
@@ -129,6 +143,21 @@ function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(full.slice(0, 6), 16);
   if (Number.isNaN(n)) return [0, 0, 0];
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** sRGB (0..255) → CIE Lab (D65). */
+function rgbToLab([r, g, b]: [number, number, number]): [number, number, number] {
+  const lin = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  const R = lin(r), G = lin(g), B = lin(b);
+  const X = (R * 0.4124564 + G * 0.3575761 + B * 0.1804375) / 0.95047;
+  const Y = R * 0.2126729 + G * 0.7151522 + B * 0.072175;
+  const Z = (R * 0.0193339 + G * 0.119192 + B * 0.9503041) / 1.08883;
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const fx = f(X), fy = f(Y), fz = f(Z);
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
 }
 
 function clampInt(value: number, min: number, max: number): number {

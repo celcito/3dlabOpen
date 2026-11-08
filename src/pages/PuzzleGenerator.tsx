@@ -471,7 +471,7 @@ export default function PuzzleGenerator() {
   const [viewMode3D, setViewMode3D] = useState<"both" | "pieces" | "tray">("pieces");
   const [shadingMode3D, setShadingMode3D] = useState<"textured" | "solid">("textured");
   const [puzzleTexture, setPuzzleTexture] = useState<THREE.Texture | null>(null);
-  const [glbTextureDetail, setGlbTextureDetail] = useState<GlbTextureDetail>("medium");
+  const [glbTextureDetail, setGlbTextureDetail] = useState<GlbTextureDetail>("high");
   // Pintura pronta (Bambu): assa a arte como paint_color por triângulo no .3MF
   const [paintReady, setPaintReady] = useState(true);
   const [autoColors, setAutoColors] = useState<0 | 4 | 8 | 12 | 16>(8);
@@ -1372,6 +1372,10 @@ export default function PuzzleGenerator() {
     return { geometry: p.geom, name, filamentIndex: filIdx };
   };
 
+  /** Capa do .3mf no Bambu Studio: a arte do quebra-cabeça (ou a 1ª ficha da memória). */
+  const coverImageForExport = (isMemory: boolean): string | undefined =>
+    (isMemory ? memoryCards[0] : currentImage) || undefined;
+
   // 3MF Multi-Color Export Handlers
   const export3MFPiecesOnly = async () => {
     if (finalPieces3D.length === 0) return;
@@ -1411,6 +1415,7 @@ export default function PuzzleGenerator() {
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
         palette: plan?.palette,
         items,
+        coverImage: coverImageForExport(isMemory),
         globalTexture: !plan && shadingMode3D === "textured" && currentImage ? {
           image: currentImage,
           format: currentImage.toLowerCase().includes("jpeg") ? "jpg" as const : "png" as const,
@@ -1463,6 +1468,7 @@ export default function PuzzleGenerator() {
         designer: "Puzzle Studio 3D",
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
         items,
+        coverImage: coverImageForExport(isMemory),
       });
 
       const url = URL.createObjectURL(blob);
@@ -1538,6 +1544,7 @@ export default function PuzzleGenerator() {
         filaments: filaments.map(f => ({ name: f.name, color: f.color })),
         palette: plan?.palette,
         items,
+        coverImage: coverImageForExport(isMemory),
         globalTexture: !plan && shadingMode3D === "textured" && currentImage ? {
           image: currentImage,
           format: currentImage.toLowerCase().includes("jpeg") ? "jpg" as const : "png" as const,

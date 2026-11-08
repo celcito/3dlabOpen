@@ -24,10 +24,10 @@ export interface PuzzleGlbExportOptions {
 }
 
 export const TEXTURE_DETAIL_OPTIONS: Map<GlbTextureDetail, Parameters<typeof subdivideFrontFaces>[1]> = new Map([
-  ["low",    { maxIterations: 1, maxFrontTriangles: 1500 }],
-  ["medium", { maxIterations: 2, maxFrontTriangles: 4000 }],
-  ["high",   { maxIterations: 3, maxFrontTriangles: 12000 }],
-  ["ultra",  { maxIterations: 4, maxFrontTriangles: 30000 }],
+  ["low",    { maxIterations: 1, maxFrontTriangles: 3000, targetEdgeMm: 1.0 }],
+  ["medium", { maxIterations: 2, maxFrontTriangles: 8000, targetEdgeMm: 0.7 }],
+  ["high",   { maxIterations: 3, maxFrontTriangles: 16000, targetEdgeMm: 0.5 }],
+  ["ultra",  { maxIterations: 4, maxFrontTriangles: 30000, targetEdgeMm: 0.4 }],
 ]);
 
 /**

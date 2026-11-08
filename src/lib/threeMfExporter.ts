@@ -51,6 +51,11 @@ export interface ThreeMfExportOptions {
    * `extruder` metadata points at its base slot.
    */
   palette?: PaletteSlot[];
+  /**
+   * Imagem de capa do projeto (data:, blob: ou http). Vira a miniatura que o Bambu
+   * Studio mostra para o .3mf (Metadata/plate_1.png + relações cover-thumbnail).
+   */
+  coverImage?: string;
 }
 
 /**
@@ -270,6 +275,56 @@ function dataUrlToBytes(dataUrl: string): Uint8Array | null {
   try {
     return new TextEncoder().encode(decodeURIComponent(payload));
   } catch {
+    return null;
+  }
+}
+
+const COVER_MIDDLE_SIZE = 512;
+const COVER_SMALL_SIZE = 128;
+
+/**
+ * Gera as miniaturas de capa que o Bambu Studio lê do .3mf: `plate_1.png` (512 px)
+ * e `plate_1_small.png` (128 px). A imagem inteira é mantida (sem cortar), centralizada
+ * num quadrado transparente. Retorna null se a imagem não puder ser lida/rasterizada.
+ */
+export async function buildCoverThumbnails(
+  image: string
+): Promise<{ middle: Uint8Array; small: Uint8Array } | null> {
+  try {
+    const dataUrl = await normalizeTextureFor3Mf(image);
+    if (!dataUrl) return null;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("cover image load failed"));
+      img.src = dataUrl;
+    });
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+    if (!iw || !ih) return null;
+
+    const render = (size: number): Uint8Array | null => {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      const scale = Math.min(size / iw, size / ih);
+      const w = Math.max(1, Math.round(iw * scale));
+      const h = Math.max(1, Math.round(ih * scale));
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, Math.round((size - w) / 2), Math.round((size - h) / 2), w, h);
+      return dataUrlToBytes(canvas.toDataURL("image/png"));
+    };
+
+    const middle = render(COVER_MIDDLE_SIZE);
+    const small = render(COVER_SMALL_SIZE);
+    return middle && small ? { middle, small } : null;
+  } catch (err) {
+    console.warn("3MF export: não foi possível gerar a capa", err);
     return null;
   }
 }
@@ -579,7 +634,8 @@ export function buildProjectSettingsConfig(filaments: FilamentDefinition[]): str
  */
 function buildModelSettingsConfig(
   items: Array<{ name: string; objId: number; extruder?: number }>,
-  filaments: FilamentDefinition[]
+  filaments: FilamentDefinition[],
+  hasCover = false
 ): string {
   const filCount = filaments.length;
 
@@ -607,7 +663,8 @@ ${objectEntries}
   <plate>
     <metadata key="plater_id" value="1"/>
     <metadata key="plater_name" value="Plate 1"/>
-    <metadata key="locked" value="false"/>
+    <metadata key="locked" value="false"/>${hasCover ? `
+    <metadata key="thumbnail_file" value="Metadata/plate_1.png"/>` : ""}
     <metadata key="print_sequence" value="by layer"/>
     <filament_list>
       ${Array.from({ length: filCount }, (_, i) => `<metadata key="filament_id" value="${i + 1}"/>`).join("\n      ")}
@@ -668,6 +725,9 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
     }
   }
 
+  // Capa do projeto (miniatura que o Bambu Studio mostra para o .3mf)
+  const cover = options.coverImage ? await buildCoverThumbnails(options.coverImage) : null;
+
   // 1. [Content_Types].xml
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -683,7 +743,10 @@ export async function generate3MfBlob(options: ThreeMfExportOptions): Promise<Bl
   // 2. _rels/.rels
   const relsXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Target="/3D/3dmodel.model" Id="rel1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+  <Relationship Target="/3D/3dmodel.model" Id="rel1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>${cover ? `
+  <Relationship Target="/Metadata/plate_1.png" Id="rel2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"/>
+  <Relationship Target="/Metadata/plate_1.png" Id="rel3" Type="http://schemas.bambulab.com/package/2021/cover-thumbnail-middle"/>
+  <Relationship Target="/Metadata/plate_1_small.png" Id="rel4" Type="http://schemas.bambulab.com/package/2021/cover-thumbnail-small"/>` : ""}
 </Relationships>`;
   zip.file("_rels/.rels", relsXml);
 
@@ -807,8 +870,14 @@ ${buildItemsList.join("\n")}
   zip.file("Metadata/project_settings.config", projectSettings);
 
   // 5. Metadata/model_settings.config — object placement and plate info
-  const modelSettings = buildModelSettingsConfig(settingsObjects, filaments);
+  const modelSettings = buildModelSettingsConfig(settingsObjects, filaments, !!cover);
   zip.file("Metadata/model_settings.config", modelSettings);
+
+  // 6. Capa: Metadata/plate_1.png (512 px) e plate_1_small.png (128 px)
+  if (cover) {
+    zip.file("Metadata/plate_1.png", cover.middle);
+    zip.file("Metadata/plate_1_small.png", cover.small);
+  }
 
   return await zip.generateAsync({
     type: "blob",
