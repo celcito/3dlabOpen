@@ -408,6 +408,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
     config.loopHoleDiameter,
     config.loopWallThickness,
     config.loopLetterGap,
+    config.symbolGapFactor,
     onDimensionsChange,
     resetHoverState,
   ]);

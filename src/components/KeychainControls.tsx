@@ -5,6 +5,7 @@ import {
   LOOP_GAP_MAX,
   LOOP_WALL_MIN,
 } from '../lib/keychain/presets';
+import { SYMBOL_GAP_FACTOR_MIN, SYMBOL_GAP_FACTOR_MAX } from '../lib/keychain/storage';
 import { resolveLoopGapMm } from '../lib/keychain/loop';
 import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
 import { FontPicker } from './FontPicker';
@@ -211,6 +212,16 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
             </button>
           </div>
         )}
+
+        <RangeControl
+          label="Espaço do Ícone"
+          unit="x"
+          min={String(SYMBOL_GAP_FACTOR_MIN)}
+          max={String(SYMBOL_GAP_FACTOR_MAX)}
+          step="0.05"
+          number={config.symbolGapFactor}
+          onChange={(value) => onChange({ ...config, symbolGapFactor: value })}
+        />
 
         <div className="p-3 rounded-lg bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent border border-orange-500/30 space-y-2">
           <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wide text-orange-500">

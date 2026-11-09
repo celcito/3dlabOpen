@@ -9,6 +9,9 @@ import {
   LOOP_WALL_MIN,
 } from './presets';
 
+export const SYMBOL_GAP_FACTOR_MIN = 0.05;
+export const SYMBOL_GAP_FACTOR_MAX = 1.2;
+
 const STORAGE_KEY = 'chaveiro_nome_3d_config_v1';
 
 function clamp(value: number, min: number, max: number, fallback: number): number {
@@ -85,8 +88,18 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       loopEnabled: typeof parsed.loopEnabled === 'boolean' ? parsed.loopEnabled : def.loopEnabled,
       loopSide: readLoopSide(parsed.loopSide),
       loopHoleDiameter: clamp(parsed.loopHoleDiameter, LOOP_HOLE_MIN, LOOP_HOLE_MAX, def.loopHoleDiameter),
-      loopWallThickness: clamp(parsed.loopWallThickness, LOOP_WALL_MIN, LOOP_WALL_MAX, def.loopWallThickness),
-      loopLetterGap: clamp(parsed.loopLetterGap, LOOP_GAP_MIN, LOOP_GAP_MAX, def.loopLetterGap),
+      loopWallThickness: clamp(parsed.loopWallThickness, LOOP_WALL_MIN, LOOP_WALL_MAX, def.loopWallThickness),      loopLetterGap: clamp(
+        parsed.loopLetterGap,
+        LOOP_GAP_MIN,
+        LOOP_GAP_MAX,
+        def.loopLetterGap
+      ),
+      symbolGapFactor: clamp(
+        parsed.symbolGapFactor,
+        SYMBOL_GAP_FACTOR_MIN,
+        SYMBOL_GAP_FACTOR_MAX,
+        def.symbolGapFactor
+      ),
     };
   } catch (err) {
     console.warn('Erro ao carregar chaveiro do localStorage:', err);

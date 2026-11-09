@@ -26,6 +26,8 @@ export interface KeychainConfig {
   loopWallThickness: number;
   /** Folga (mm) entre a borda do furo da argola e a letra mais próxima. */
   loopLetterGap: number;
+  /** Fator de folga do ícone em relação ao tamanho da letra (1 = ícone muito afastado). */
+  symbolGapFactor: number;
 }
 
 export interface GeneratedKeychain {

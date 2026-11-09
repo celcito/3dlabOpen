@@ -11,6 +11,7 @@ import { drawSymbol } from '../pencilTopper/symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 import { flattenBottomBevel } from './bevel';
 import { loopCenterInsetMm, resolveLoopGapMm } from './loop';
+import { SYMBOL_GAP_FACTOR_MIN, SYMBOL_GAP_FACTOR_MAX } from './storage';
 
 const pxPerMm = 20;
 const mmPerPixel = 1 / pxPerMm;
@@ -231,7 +232,8 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const showIconRight = hasIcon && (symbolPosition === 'right' || symbolPosition === 'both');
   const iconCount = (showIconLeft ? 1 : 0) + (showIconRight ? 1 : 0);
   const symbolSizePx = targetFontHeightPx * 0.85;
-  const symbolGapPx = Math.min(symbolSizePx * 0.35, outlinePx);
+  const symbolGapFactor = Math.max(SYMBOL_GAP_FACTOR_MIN, config.symbolGapFactor ?? SYMBOL_GAP_FACTOR_MIN);
+  const symbolGapPx = Math.min(symbolSizePx * symbolGapFactor, outlinePx);
   const iconGapPx = Math.min(symbolGapPx, outlinePx);
 
   let iconWidthPx = symbolSizePx;
