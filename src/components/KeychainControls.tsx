@@ -180,7 +180,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
         <SymbolPicker
           symbolId={config.symbolId}
           symbolPosition={config.symbolPosition}
-          showPosition={config.symbolId !== 'none' || !!config.customIconUrl}
+          showPosition={(config.symbolId !== 'none' || !!config.customIconUrl) && !config.symbolSeparated}
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
 
@@ -188,7 +188,14 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           <>
             <button
               type="button"
-              onClick={() => onChange({ ...config, symbolSeparated: !config.symbolSeparated })}
+              onClick={() =>
+                onChange({
+                  ...config,
+                  symbolSeparated: !config.symbolSeparated,
+                  // Separado, o ícone vira a peça do início (argola à esquerda).
+                  ...(config.symbolSeparated ? {} : { symbolPosition: 'left' as const }),
+                })
+              }
               className="w-full flex items-center justify-between p-3 rounded-lg border border-[var(--surface-container-high)] bg-[var(--surface-container-high)]/50 hover:border-[#632CE5]/40 transition-all cursor-pointer"
             >
               <span className="text-[9px] uppercase font-bold text-zinc-600">Ícone separado do nome</span>
@@ -204,8 +211,8 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
             </button>
             {config.symbolSeparated && (
               <p className="text-[9px] text-zinc-600 leading-snug -mt-2">
-                O ícone vira uma peça própria e cada peça ganha a sua argola (início do ícone e fim
-                do nome).
+                O ícone vira a peça do início, com argola à esquerda, e o nome termina com argola à
+                direita.
               </p>
             )}
           </>

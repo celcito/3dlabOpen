@@ -229,12 +229,18 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const hasPresetSymbol = !hasCustomIcon && !!config.symbolId && config.symbolId !== 'none';
   const hasIcon = hasCustomIcon || hasPresetSymbol;
   const symbolPosition = config.symbolPosition || 'right';
-  const showIconLeft = hasIcon && (symbolPosition === 'left' || symbolPosition === 'both');
-  const showIconRight = hasIcon && (symbolPosition === 'right' || symbolPosition === 'both');
+  // Separado, o ícone é sempre a peça do início (esquerda) e o nome termina à direita,
+  // com uma argola em cada ponta — por isso a posição escolhida não se aplica aqui.
+  const wantsSeparated =
+    !!config.symbolSeparated && hasIcon && (symbolPosition === 'left' || symbolPosition === 'right');
+  const showIconLeft =
+    hasIcon && (wantsSeparated || symbolPosition === 'left' || symbolPosition === 'both');
+  const showIconRight =
+    hasIcon && !wantsSeparated && (symbolPosition === 'right' || symbolPosition === 'both');
   const iconCount = (showIconLeft ? 1 : 0) + (showIconRight ? 1 : 0);
   // Ícone separado: vira peça própria, com folga de impressão até o nome, e cada
   // peça recebe a sua argola (início do ícone e fim do nome).
-  const symbolSeparated = !!config.symbolSeparated && hasIcon && iconCount === 1;
+  const symbolSeparated = wantsSeparated && iconCount === 1;
   const separationGapPx = 1.2 * pxPerMm;
   const symbolSizePx = targetFontHeightPx * 0.85;
   const symbolGapFactor = Math.max(SYMBOL_GAP_FACTOR_MIN, config.symbolGapFactor ?? SYMBOL_GAP_FACTOR_MIN);
