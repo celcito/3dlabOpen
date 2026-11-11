@@ -184,6 +184,33 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
 
+        {(config.symbolId !== 'none' || !!config.customIconUrl) && config.symbolPosition !== 'both' && (
+          <>
+            <button
+              type="button"
+              onClick={() => onChange({ ...config, symbolSeparated: !config.symbolSeparated })}
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-[var(--surface-container-high)] bg-[var(--surface-container-high)]/50 hover:border-[#632CE5]/40 transition-all cursor-pointer"
+            >
+              <span className="text-[9px] uppercase font-bold text-zinc-600">Ícone separado do nome</span>
+              <div
+                className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                  config.symbolSeparated
+                    ? 'bg-[#632CE5] border-[#632CE5]'
+                    : 'border-[var(--surface-container-high)]'
+                }`}
+              >
+                {config.symbolSeparated && <Check className="w-3 h-3 text-black" />}
+              </div>
+            </button>
+            {config.symbolSeparated && (
+              <p className="text-[9px] text-zinc-600 leading-snug -mt-2">
+                O ícone vira uma peça própria e cada peça ganha a sua argola (início do ícone e fim
+                do nome).
+              </p>
+            )}
+          </>
+        )}
+
         <button
           type="button"
           onClick={onOpenSvgConverter}

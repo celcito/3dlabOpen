@@ -28,6 +28,8 @@ export interface KeychainConfig {
   loopLetterGap: number;
   /** Fator de folga do ícone em relação ao tamanho da letra (1 = ícone muito afastado). */
   symbolGapFactor: number;
+  /** Ícone como peça separada do nome, com argola no início do ícone e no fim do nome. */
+  symbolSeparated: boolean;
 }
 
 export interface GeneratedKeychain {

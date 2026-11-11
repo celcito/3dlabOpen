@@ -86,7 +86,8 @@ function drawLoopTab(
   pixels: Uint8ClampedArray,
   width: number,
   height: number,
-  config: KeychainConfig
+  config: KeychainConfig,
+  side: KeychainConfig['loopSide']
 ): boolean {
   const holeRadiusMm = config.loopHoleDiameter / 2;
   const outerRadiusMm = holeRadiusMm + config.loopWallThickness;
@@ -109,7 +110,7 @@ function drawLoopTab(
 
   const centerRow = Math.round((minY + maxY) / 2);
   const maxDistance = Math.max(centerRow - minY, maxY - centerRow);
-  const fromLeft = config.loopSide === 'left';
+  const fromLeft = side === 'left';
 
   for (let distance = 0; distance <= maxDistance; distance++) {
     const rows = distance === 0 ? [centerRow] : [centerRow - distance, centerRow + distance];
@@ -231,6 +232,10 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const showIconLeft = hasIcon && (symbolPosition === 'left' || symbolPosition === 'both');
   const showIconRight = hasIcon && (symbolPosition === 'right' || symbolPosition === 'both');
   const iconCount = (showIconLeft ? 1 : 0) + (showIconRight ? 1 : 0);
+  // Ícone separado: vira peça própria, com folga de impressão até o nome, e cada
+  // peça recebe a sua argola (início do ícone e fim do nome).
+  const symbolSeparated = !!config.symbolSeparated && hasIcon && iconCount === 1;
+  const separationGapPx = 1.2 * pxPerMm;
   const symbolSizePx = targetFontHeightPx * 0.85;
   const symbolGapFactor = Math.max(SYMBOL_GAP_FACTOR_MIN, config.symbolGapFactor ?? SYMBOL_GAP_FACTOR_MIN);
   const symbolGapPx = Math.min(symbolSizePx * symbolGapFactor, outlinePx);
@@ -244,7 +249,11 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     iconHeightPx = iconNaturalHeight * scale;
   }
   const iconBlockWidthPx = hasCustomIcon ? iconWidthPx : symbolSizePx;
-  const iconBlockGapPx = hasCustomIcon ? iconGapPx : symbolGapPx;
+  const iconBlockGapBasePx = hasCustomIcon ? iconGapPx : symbolGapPx;
+  // Separado, a folga precisa vencer os dois contornos (nome + ícone) para as peças não fundirem.
+  const iconBlockGapPx = symbolSeparated
+    ? Math.max(iconBlockGapBasePx, outlinePx * 2 + separationGapPx)
+    : iconBlockGapBasePx;
   const iconBlockPx = iconCount * (iconBlockGapPx + iconBlockWidthPx);
 
   const totalContentWidthPx = textWidthPx + iconBlockPx;
@@ -369,7 +378,14 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   ctx.putImageData(baseImgData, 0, 0);
 
   // 3) Argola opcional (sem CSG): disco grudado ao corpo + furo passante.
-  if (config.loopEnabled) drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config);
+  if (config.loopEnabled) {
+    if (symbolSeparated) {
+      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'left');
+      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'right');
+    } else {
+      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, config.loopSide);
+    }
+  }
   const baseAfterLoop = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
 
   const baseContours = extractContoursFromImageData(

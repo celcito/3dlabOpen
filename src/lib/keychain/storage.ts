@@ -100,6 +100,10 @@ export function loadSavedKeychainConfig(): KeychainConfig {
         SYMBOL_GAP_FACTOR_MAX,
         def.symbolGapFactor
       ),
+      symbolSeparated:
+        typeof parsed.symbolSeparated === 'boolean'
+          ? parsed.symbolSeparated
+          : def.symbolSeparated,
     };
   } catch (err) {
     console.warn('Erro ao carregar chaveiro do localStorage:', err);
