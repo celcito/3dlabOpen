@@ -211,8 +211,8 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
             </button>
             {config.symbolSeparated && (
               <p className="text-[9px] text-zinc-600 leading-snug -mt-2">
-                O ícone vira a peça do início, com argola à esquerda, e o nome termina com argola à
-                direita.
+                O ícone vira a peça do início, com argola à esquerda; o nome ganha argola no começo
+                e no fim.
               </p>
             )}
           </>

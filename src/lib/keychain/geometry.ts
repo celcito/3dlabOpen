@@ -87,7 +87,9 @@ function drawLoopTab(
   width: number,
   height: number,
   config: KeychainConfig,
-  side: KeychainConfig['loopSide']
+  side: KeychainConfig['loopSide'],
+  rangeMinX = 0,
+  rangeMaxX = width - 1
 ): boolean {
   const holeRadiusMm = config.loopHoleDiameter / 2;
   const outerRadiusMm = holeRadiusMm + config.loopWallThickness;
@@ -111,6 +113,9 @@ function drawLoopTab(
   const centerRow = Math.round((minY + maxY) / 2);
   const maxDistance = Math.max(centerRow - minY, maxY - centerRow);
   const fromLeft = side === 'left';
+  // Limita a busca a uma peça (no modo separado, ícone e nome dividem o canvas).
+  const searchMinX = Math.max(0, Math.floor(rangeMinX));
+  const searchMaxX = Math.min(width - 1, Math.ceil(rangeMaxX));
 
   for (let distance = 0; distance <= maxDistance; distance++) {
     const rows = distance === 0 ? [centerRow] : [centerRow - distance, centerRow + distance];
@@ -120,14 +125,14 @@ function drawLoopTab(
       let solidX = -1;
       const rowOffset = y * width * 4;
       if (fromLeft) {
-        for (let x = 0; x < width; x++) {
+        for (let x = searchMinX; x <= searchMaxX; x++) {
           if (pixels[rowOffset + x * 4 + 3] > CANVAS_ALPHA_THRESHOLD) {
             solidX = x;
             break;
           }
         }
       } else {
-        for (let x = width - 1; x >= 0; x--) {
+        for (let x = searchMaxX; x >= searchMinX; x--) {
           if (pixels[rowOffset + x * 4 + 3] > CANVAS_ALPHA_THRESHOLD) {
             solidX = x;
             break;
@@ -254,18 +259,22 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     iconWidthPx = iconNaturalWidth * scale;
     iconHeightPx = iconNaturalHeight * scale;
   }
+  const loopOuterRadiusPx =
+    (config.loopHoleDiameter / 2 + config.loopWallThickness) * pxPerMm;
+  // Quanto a aba da argola avança para fora da borda do corpo.
+  const loopProtrusionPx = config.loopEnabled
+    ? Math.max(0, loopCenterInsetMm(config) * pxPerMm + loopOuterRadiusPx)
+    : 0;
   const iconBlockWidthPx = hasCustomIcon ? iconWidthPx : symbolSizePx;
   const iconBlockGapBasePx = hasCustomIcon ? iconGapPx : symbolGapPx;
-  // Separado, a folga precisa vencer os dois contornos (nome + ícone) para as peças não fundirem.
+  // Separado, a folga precisa vencer os dois contornos (nome + ícone) e a aba da
+  // argola do começo do nome, que aponta para o ícone.
   const iconBlockGapPx = symbolSeparated
-    ? Math.max(iconBlockGapBasePx, outlinePx * 2 + separationGapPx)
+    ? Math.max(iconBlockGapBasePx, outlinePx * 2 + loopProtrusionPx + separationGapPx)
     : iconBlockGapBasePx;
   const iconBlockPx = iconCount * (iconBlockGapPx + iconBlockWidthPx);
 
   const totalContentWidthPx = textWidthPx + iconBlockPx;
-
-  const loopOuterRadiusPx =
-    (config.loopHoleDiameter / 2 + config.loopWallThickness) * pxPerMm;
   // Alcance da aba além da letra: furo + parede + folga (a aba pode sair do corpo).
   const loopReachPx =
     (config.loopHoleDiameter + config.loopWallThickness + resolveLoopGapMm(config)) * pxPerMm;
@@ -300,6 +309,10 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const textInkEndPx = textStartXPx + lastCharInkRightPx;
   const iconLeftCenterX = contentStartXPx + iconBlockWidthPx / 2;
   const iconRightCenterX = textInkEndPx + iconBlockGapPx + iconBlockWidthPx / 2;
+  // Fronteira entre a peça do ícone (início) e a do nome — delimita onde cada argola pode nascer.
+  const iconPieceRightPx = contentStartXPx + iconBlockWidthPx + outlinePx;
+  const namePieceLeftPx = textStartXPx - outlinePx;
+  const pieceSplitXPx = (iconPieceRightPx + namePieceLeftPx) / 2;
 
   const drawIconBlock = (targetCtx: CanvasRenderingContext2D, x: number, outline = 0) => {
     if (hasCustomIcon) {
@@ -386,8 +399,10 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   // 3) Argola opcional (sem CSG): disco grudado ao corpo + furo passante.
   if (config.loopEnabled) {
     if (symbolSeparated) {
-      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'left');
-      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'right');
+      // Ícone: argola na ponta esquerda. Nome: argola no começo e no fim.
+      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'left', 0, pieceSplitXPx);
+      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'left', pieceSplitXPx, canvasWidth - 1);
+      drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'right', pieceSplitXPx, canvasWidth - 1);
     } else {
       drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, config.loopSide);
     }
