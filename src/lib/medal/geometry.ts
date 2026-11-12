@@ -569,6 +569,32 @@ function cleanLoop(pts: Point2D[]): Point2D[] {
   return kept.length >= 3 ? kept : out;
 }
 
+/** Área e centro do contorno — usados para reconhecer laços duplicados. */
+function loopInfo(pts: Point2D[]): { area: number; cx: number; cy: number } {
+  const n = Math.max(1, pts.length);
+  let sx = 0;
+  let sy = 0;
+  for (const p of pts) {
+    sx += p.x;
+    sy += p.y;
+  }
+  return { area: Math.abs(polygonArea(pts)), cx: sx / n, cy: sy / n };
+}
+
+/**
+ * Mesmo laço rastreado duas vezes. Faixas abertas (a borda recortada pela alça)
+ * podem sair duplicadas do extrator, e a cópia acaba classificada como furo —
+ * os pedaços do anel se cancelavam na triangulação e a borda ficava irregular.
+ */
+function sameLoop(a: Point2D[], b: Point2D[]): boolean {
+  const ia = loopInfo(a);
+  const ib = loopInfo(b);
+  const bigger = Math.max(ia.area, ib.area);
+  if (bigger <= 1e-6) return true;
+  if (Math.abs(ia.area - ib.area) > bigger * 0.05 + 0.05) return false;
+  return Math.hypot(ia.cx - ib.cx, ia.cy - ib.cy) <= 0.4;
+}
+
 /**
  * Constrói shapes a partir dos contornos, atribuindo cada furo apenas ao outer
  * imediatamente contido (menor área). Diferente de buildThreeShapes, que adiciona
@@ -576,8 +602,20 @@ function cleanLoop(pts: Point2D[]): Point2D[] {
  * quando há anéis concêntricos (ex.: passador de fita com canal duplo).
  */
 function buildMedalShapes(outerContours: Point2D[][], holesContours: Point2D[][]): THREE.Shape[] {
-  const outers = outerContours.map(cleanLoop).filter((o) => o.length >= 3);
-  const holes = holesContours.map(cleanLoop).filter((h) => h.length >= 3);
+  const outers: Point2D[][] = [];
+  for (const loop of outerContours.map(cleanLoop)) {
+    if (loop.length < 3) continue;
+    if (outers.some((o) => sameLoop(o, loop))) continue;
+    outers.push(loop);
+  }
+  const holes: Point2D[][] = [];
+  for (const loop of holesContours.map(cleanLoop)) {
+    if (loop.length < 3) continue;
+    // Cópia de um outer não pode ser furo: cancelaria o próprio shape.
+    if (outers.some((o) => sameLoop(o, loop))) continue;
+    if (holes.some((h) => sameLoop(h, loop))) continue;
+    holes.push(loop);
+  }
   const areas = outers.map((o) => Math.abs(polygonArea(o)));
 
   const shapes: THREE.Shape[] = outers.map((outer) => {
@@ -592,6 +630,7 @@ function buildMedalShapes(outerContours: Point2D[][], holesContours: Point2D[][]
     let best = -1;
     for (let i = 0; i < outers.length; i++) {
       if (!isPointInsidePolygon(hole[0], outers[i])) continue;
+      if (areas[i] <= Math.abs(polygonArea(hole)) * 1.02) continue;
       if (best === -1 || areas[i] < areas[best]) best = i;
     }
     if (best === -1) continue;
