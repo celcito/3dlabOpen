@@ -144,7 +144,15 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   const symbolBlockPx = symbolCount * (symbolGapPx + symbolSizePx);
   const totalContentWidthPx = textWidthPx + symbolBlockPx;
 
-  const outlinePx = Math.max(0.6, (config.fontWeightScale || 1) * 1.2) * PX_PER_MM;
+  // Espessura extra em mm: positiva engrossa (contorno), negativa afina
+  // (erosão da própria silhueta). Abaixo de 0.5x a escala passa a afinar — é o
+  // que salva as fontes gordinhas, que antes ficavam com as letras coladas e os
+  // vazados fechados, sem controle para reduzir.
+  // 0.2x é o piso: abaixo disso a erosão come as hastes das fontes normais.
+  const weightScale = Math.min(2, Math.max(0.2, config.fontWeightScale || 1));
+  const offsetMm =
+    weightScale >= 0.5 ? weightScale * 1.2 : 0.6 - (0.5 - weightScale) * 3;
+  const outlinePx = Math.abs(offsetMm) * PX_PER_MM;
   const paddingPx = Math.ceil(outlinePx * 2 + 12);
 
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
@@ -189,12 +197,23 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   ctx.font = fontStyle;
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
-  for (let i = 0; i < text.length; i++) {
-    const cx = textStartX + offsets[i];
-    ctx.strokeText(text[i], cx, baselineY);
-    ctx.fillText(text[i], cx, baselineY);
+  if (offsetMm >= 0) {
+    for (let i = 0; i < text.length; i++) {
+      const cx = textStartX + offsets[i];
+      ctx.strokeText(text[i], cx, baselineY);
+      ctx.fillText(text[i], cx, baselineY);
+    }
+    if (hasSymbol) drawSymbols(ctx, outlinePx);
+  } else {
+    // Erosão: pinta todo o texto e depois apaga uma faixa na borda de cada
+    // letra. Metade da faixa cai fora (onde não há tinta), então a silhueta
+    // encolhe `offsetPx` para dentro — e os vazados abrem no mesmo passo.
+    for (let i = 0; i < text.length; i++) ctx.fillText(text[i], textStartX + offsets[i], baselineY);
+    if (hasSymbol) drawSymbols(ctx);
+    ctx.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i < text.length; i++) ctx.strokeText(text[i], textStartX + offsets[i], baselineY);
+    ctx.globalCompositeOperation = 'source-over';
   }
-  if (hasSymbol) drawSymbols(ctx, outlinePx);
 
   const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(imageData, counterMask);
