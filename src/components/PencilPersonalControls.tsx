@@ -150,7 +150,7 @@ export const PencilPersonalControls: React.FC<PencilPersonalControlsProps> = ({
         <RangeControl
           label="Espessura da Fonte"
           unit="x"
-          min="0.5"
+          min="0.2"
           max="2.0"
           step="0.1"
           number={config.fontWeightScale}
