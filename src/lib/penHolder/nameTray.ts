@@ -37,27 +37,32 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
     // fallback
   }
 
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Falha ao inicializar Canvas 2D');
+  const measureCanvas = document.createElement('canvas');
+  const mctx = measureCanvas.getContext('2d');
+  if (!mctx) throw new Error('Falha ao inicializar Canvas 2D');
 
   const isDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
   const fontStyle = `${isDisplay ? 'normal' : 'bold'} ${fontPx}px "${config.fontFamily}", sans-serif`;
-  ctx.font = fontStyle;
+  mctx.font = fontStyle;
 
   const spacingPx = Math.max(0, config.letterSpacing ?? 1.8) * pxPerMm;
   const offsets: number[] = [];
   let textWidthPx = 0;
   for (const ch of text) {
     offsets.push(textWidthPx);
-    textWidthPx += ctx.measureText(ch).width + spacingPx;
+    textWidthPx += mctx.measureText(ch).width + spacingPx;
   }
   textWidthPx -= spacingPx;
 
   const outlinePx = metrics.outlineMm * pxPerMm;
   const pad = Math.ceil(outlinePx * 2.5 + 28);
+
+  const canvas = document.createElement('canvas');
   canvas.width = Math.ceil(textWidthPx + pad * 2);
   canvas.height = Math.ceil(fontPx + pad * 2);
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('Falha ao inicializar Canvas 2D');
+
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
   const startX = cx - textWidthPx / 2;
@@ -82,30 +87,44 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const n = Math.max(1, Math.round(config.compartments ?? 4));
 
   // Placa do nome e relevo: extrude em Z e depois deitado (rotateX) para o nome ficar de pé, lendo de -Y.
-  const plate = new THREE.ExtrudeGeometry(buildThreeShapes(footprint.outer, []), {
-    depth: plateDepth, bevelEnabled: false, curveSegments: 12,
-  });
-  const relief = new THREE.ExtrudeGeometry(buildThreeShapes(name.outer, name.holes), {
-    depth: rim + EMBED, bevelEnabled: false, curveSegments: 12,
-  });
-  relief.translate(0, 0, plateDepth - EMBED);
-  fixWinding(relief);
-  plate.rotateX(Math.PI / 2);
-  relief.rotateX(Math.PI / 2);
+  // Berço no contorno das letras: a face frontal da placa é rebaixada seguindo a letra erodida
+  // por dentro (cavidade), e o nome em relevo (cor 2) sobe acima da moldura — a caneta assenta
+  // no desenho das letras, não num retângulo. Mesma técnica de dilatação do layout 'cup'.
+  const cavityStrokePx = Math.max(0.4, metrics.cavityDilation * 2 * pxPerMm);
+  const cradle = read(cavityStrokePx); // letra erodida por dentro = contorno da cavidade
+  const back = Math.max(wall, Math.min(floor, plateDepth - wall)); // fundo do berço (mm)
 
-  plate.computeBoundingBox();
-  const pb = plate.boundingBox as THREE.Box3;
+  const basePlate = new THREE.ExtrudeGeometry(buildThreeShapes(footprint.outer, []), {
+    depth: back, bevelEnabled: false, curveSegments: 12,
+  });
+  if (cradle.outer.length === 0) throw new Error('Cavidade do nome vazia');
+  // Moldura frontal rebaixada: anel entre o footprint e a cavidade no contorno das letras.
+  const rimPlate = new THREE.ExtrudeGeometry(buildThreeShapes(footprint.outer, cradle.outer), {
+    depth: plateDepth - back + EMBED, bevelEnabled: false, curveSegments: 12,
+  });
+  rimPlate.translate(0, 0, back - EMBED);
+  fixWinding(rimPlate);
+  // Nome em relevo no fundo do berço: sobe rim acima da superfície frontal.
+  const relief = new THREE.ExtrudeGeometry(buildThreeShapes(name.outer, name.holes), {
+    depth: back + rim + EMBED, bevelEnabled: false, curveSegments: 12,
+  });
+  relief.translate(0, 0, -EMBED);
+  fixWinding(relief);
+  for (const g of [basePlate, rimPlate, relief]) g.rotateX(Math.PI / 2);
+
+  basePlate.computeBoundingBox();
+  const pb = basePlate.boundingBox as THREE.Box3;
   const dx = -(pb.min.x + pb.max.x) / 2;
   const dz = -pb.min.z;
-  plate.translate(dx, 0, dz);
-  relief.translate(dx, 0, dz);
+  for (const g of [basePlate, rimPlate, relief]) g.translate(dx, 0, dz);
   const width = pb.max.x - pb.min.x;
   const x0 = -width / 2;
   const x1 = width / 2;
 
   const inner = width - 2 * wall;
   const parts: THREE.BufferGeometry[] = [
-    plate,
+    basePlate,
+    rimPlate,
     box(x0, x1, -EMBED, trayDepth, 0, floor), // fundo
     box(x0, x1, -EMBED, wall, floor - EMBED, frontH), // parede frontal baixa
     box(x0, x1, trayDepth - wall, trayDepth, floor - EMBED, trayHeight), // parede traseira
