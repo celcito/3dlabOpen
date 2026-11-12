@@ -7,7 +7,7 @@ import {
   computeEnclosedEmptyMask,
   punchMask,
 } from '../pencilTopper/contourExtractor';
-import { drawSymbol } from '../pencilTopper/symbols';
+import { drawSymbol, drawSymbolSized } from '../pencilTopper/symbols';
 import { ensureGoogleFont } from '../fonts/googleFonts';
 import { flattenBottomBevel } from './bevel';
 import { loopCenterInsetMm, resolveLoopGapMm } from './loop';
@@ -174,6 +174,100 @@ function drawLoopTab(
   return false;
 }
 
+/**
+ * Mede a tinta real do nome rasterizando as letras: a largura de avanço da fonte
+ * não bate com o desenho (side bearings negativos), e na tag isso encostaria o
+ * relevo na borda.
+ */
+function measureTextInk(
+  fontStyle: string,
+  text: string,
+  charOffsets: number[],
+  width: number,
+  height: number,
+  baseline: number
+): { minX: number; maxX: number; ascent: number; descent: number } | null {
+  const probe = document.createElement('canvas');
+  probe.width = Math.max(8, Math.ceil(width));
+  probe.height = Math.max(8, Math.ceil(height));
+  const pctx = probe.getContext('2d', { willReadFrequently: true });
+  if (!pctx) return null;
+
+  pctx.font = fontStyle;
+  pctx.textBaseline = 'alphabetic';
+  pctx.textAlign = 'left';
+  pctx.fillStyle = '#000000';
+  for (let i = 0; i < text.length; i++) {
+    pctx.fillText(text[i], charOffsets[i] + 2, baseline);
+  }
+
+  const data = pctx.getImageData(0, 0, probe.width, probe.height).data;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let y = 0; y < probe.height; y++) {
+    const row = y * probe.width * 4;
+    for (let x = 0; x < probe.width; x++) {
+      if (data[row + x * 4 + 3] > 20) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (!isFinite(minX)) return null;
+  return { minX, maxX, ascent: baseline - minY, descent: maxY - baseline };
+}
+
+/** Aba de argola no topo central (tags em formato de osso/peixinho). */
+function drawTopLoopTab(
+  ctx: CanvasRenderingContext2D,
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  config: KeychainConfig
+): boolean {
+  const holeRadiusPx = (config.loopHoleDiameter / 2) * pxPerMm;
+  const wallPx = config.loopWallThickness * pxPerMm;
+  const outerRadiusPx = holeRadiusPx + wallPx;
+  const centerX = Math.round(width / 2);
+
+  let topY = -1;
+  for (let y = 0; y < height && topY === -1; y++) {
+    const rowOffset = y * width * 4;
+    for (let dx = -2; dx <= 2; dx++) {
+      const x = centerX + dx;
+      if (x >= 0 && x < width && pixels[rowOffset + x * 4 + 3] > CANVAS_ALPHA_THRESHOLD) {
+        topY = y;
+        break;
+      }
+    }
+  }
+  if (topY === -1) return false;
+
+  const cx = centerX;
+  // Furo inteiro acima da borda, com a parede da aba em volta.
+  const cy = topY - holeRadiusPx;
+  if (cy - outerRadiusPx < 0 || cx - outerRadiusPx < 0 || cx + outerRadiusPx > width - 1) {
+    return false;
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerRadiusPx, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(cx, cy, holeRadiusPx, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  return true;
+}
+
 export async function generateKeychainModel(config: KeychainConfig): Promise<GeneratedKeychain> {
   const text = config.text.trim() || 'Nome';
   const targetFontHeightPx = Math.max(10, config.letterHeight) * pxPerMm;
@@ -230,8 +324,12 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     }
   }
 
-  const hasCustomIcon = !!iconImage;
-  const hasPresetSymbol = !hasCustomIcon && !!config.symbolId && config.symbolId !== 'none';
+  // Tag (medalha de identificação): a própria borda é o osso/peixinho e o nome fica dentro.
+  const tagShape: 'bone' | 'fish' | null =
+    config.tagShape === 'bone' || config.tagShape === 'fish' ? config.tagShape : null;
+  const hasCustomIcon = !!iconImage && !tagShape;
+  const hasPresetSymbol =
+    !tagShape && !hasCustomIcon && !!config.symbolId && config.symbolId !== 'none';
   const hasIcon = hasCustomIcon || hasPresetSymbol;
   const symbolPosition = config.symbolPosition || 'right';
   // Separado, o ícone é sempre a peça do início (esquerda) e o nome termina à direita,
@@ -274,18 +372,58 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     : iconBlockGapBasePx;
   const iconBlockPx = iconCount * (iconBlockGapPx + iconBlockWidthPx);
 
-  const totalContentWidthPx = textWidthPx + iconBlockPx;
+  // Proporção interna de cada tag: o nome precisa caber dentro da silhueta.
+  // A tinta das maiúsculas ocupa ~74% da caixa da fonte; a folga é a margem até a borda.
+  // fx/fy = fração da caixa desenhada que é segura para o nome (haste do osso / corpo do peixe).
+  const TAG_FIT = { bone: { fx: 0.74, fy: 0.56 }, fish: { fx: 0.62, fy: 0.48 } } as const;
+  const TAG_TOP = { bone: 0.35, fish: 0.32 } as const;
+  const tagMarginPx = Math.max(2 * pxPerMm, outlinePx);
+  // Na tag o nome é dimensionado pela tinta real das letras, não pelo avanço da fonte.
+  const tagInk = tagShape
+    ? measureTextInk(
+        fontStyle,
+        text,
+        charOffsets,
+        textWidthPx + textHeightPx * 2,
+        textHeightPx * 2,
+        textHeightPx
+      )
+    : null;
+  const tagInkLeftPx = tagInk ? tagInk.minX - 2 : 0;
+  const tagInkWidthPx = tagInk ? tagInk.maxX - tagInk.minX : textWidthPx;
+  const tagInkHeightPx = tagInk ? tagInk.ascent + tagInk.descent : textHeightPx * 0.74;
+  const tagInkCenterOffsetPx = tagInk ? (tagInk.ascent - tagInk.descent) / 2 : 0;
+  const tagInnerWidthPx = tagInkWidthPx + tagMarginPx * 2;
+  const tagInnerHeightPx = tagInkHeightPx + tagMarginPx * 2;
+  const tagLayout = tagShape
+    ? {
+        w: tagInnerWidthPx / TAG_FIT[tagShape].fx,
+        h: tagInnerHeightPx / TAG_FIT[tagShape].fy,
+      }
+    : null;
+  const totalContentWidthPx = tagLayout ? tagLayout.w : textWidthPx + iconBlockPx;
+  const contentHeightPx = tagLayout ? tagLayout.h : textHeightPx;
   // Alcance da aba além da letra: furo + parede + folga (a aba pode sair do corpo).
   const loopReachPx =
     (config.loopHoleDiameter + config.loopWallThickness + resolveLoopGapMm(config)) * pxPerMm;
+  // Na tag a argola fica no topo central e avança acima da borda.
+  const tagLoopProtrusionPx =
+    tagLayout && config.loopEnabled
+      ? (config.loopHoleDiameter / 2) * pxPerMm + loopOuterRadiusPx
+      : 0;
+  // Da borda superior do desenho até o topo da tela + a aba da argola.
+  const tagTopReachPx = tagLayout
+    ? TAG_TOP[tagShape as 'bone' | 'fish'] * tagLayout.h + tagLoopProtrusionPx
+    : 0;
   const paddingPx = Math.ceil(
     Math.max(
       outlinePx * 2.5,
-      config.loopEnabled ? Math.max(loopOuterRadiusPx * 1.5, loopReachPx) : 0
+      config.loopEnabled ? Math.max(loopOuterRadiusPx * 1.5, loopReachPx) : 0,
+      tagTopReachPx
     ) + 28
   );
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
-  const canvasHeight = Math.ceil(textHeightPx + paddingPx * 2);
+  const canvasHeight = Math.ceil(contentHeightPx + paddingPx * 2);
 
   const drawCanvas = document.createElement('canvas');
   drawCanvas.width = canvasWidth;
@@ -297,8 +435,11 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const centerY = canvasHeight / 2;
   const contentStartXPx = centerX - totalContentWidthPx / 2;
   const leftBlockPx = showIconLeft ? iconBlockGapPx + iconBlockWidthPx : 0;
-  const textStartXPx = contentStartXPx + leftBlockPx;
-  const textBaselineY = centerY + textHeightPx * 0.32;
+  const textStartXPx = tagLayout
+    ? centerX - tagInkWidthPx / 2 - tagInkLeftPx
+    : contentStartXPx + leftBlockPx;
+  // Na tag o nome é centralizado pela tinta das letras, não pela caixa da fonte.
+  const textBaselineY = tagLayout ? centerY + tagInkCenterOffsetPx : centerY + textHeightPx * 0.32;
   const contentCenterYPx = textBaselineY - textHeightPx * 0.28;
   // Fim real da tinta do último caractere (sem side bearing) — sem isso o gap
   // ganha a entreletra e o símbolo/ícone acaba descolado do corpo.
@@ -371,34 +512,49 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   drawIcons(ctx);
   const counterMask = computeEnclosedEmptyMask(ctx.getImageData(0, 0, canvasWidth, canvasHeight));
 
-  // 2) Passo base: silhueta do texto com contorno grosso + ícone dilatado.
+  // 2) Passo base: na tag é a silhueta do osso/peixinho; senão, texto + ícone dilatados.
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  // Contorno da base acompanha o desenho da fonte: quina em bissetriz (paralela ao
-  // glifo) em vez de arco, que transformava tudo em "nuvem". miterLimit corta as
-  // pontas agudas demais (bevel) para a borda não espetar.
-  ctx.lineJoin = 'miter';
-  ctx.miterLimit = 3;
-  ctx.lineCap = 'round';
-  ctx.lineWidth = outlinePx * 2;
-  ctx.font = fontStyle;
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-  for (let i = 0; i < text.length; i++) {
-    const cx = textStartXPx + charOffsets[i];
-    ctx.strokeText(text[i], cx, textBaselineY);
-    ctx.fillText(text[i], cx, textBaselineY);
+  if (tagLayout) {
+    drawSymbolSized(
+      ctx,
+      tagShape === 'bone' ? 'tagBone' : 'tagFish',
+      centerX,
+      centerY,
+      tagLayout.w,
+      tagLayout.h,
+      0
+    );
+  } else {
+    // Contorno da base acompanha o desenho da fonte: quina em bissetriz (paralela ao
+    // glifo) em vez de arco, que transformava tudo em "nuvem". miterLimit corta as
+    // pontas agudas demais (bevel) para a borda não espetar.
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 3;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = outlinePx * 2;
+    ctx.font = fontStyle;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    for (let i = 0; i < text.length; i++) {
+      const cx = textStartXPx + charOffsets[i];
+      ctx.strokeText(text[i], cx, textBaselineY);
+      ctx.fillText(text[i], cx, textBaselineY);
+    }
+    drawIcons(ctx, outlinePx);
   }
-  drawIcons(ctx, outlinePx);
 
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-  punchMask(baseImgData, counterMask);
+  // Na tag o corpo não tem letra: os contadores do nome só valem para o relevo.
+  if (!tagLayout) punchMask(baseImgData, counterMask);
   ctx.putImageData(baseImgData, 0, 0);
 
   // 3) Argola opcional (sem CSG): disco grudado ao corpo + furo passante.
   if (config.loopEnabled) {
-    if (symbolSeparated) {
+    if (tagLayout) {
+      drawTopLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config);
+    } else if (symbolSeparated) {
       // Ícone: argola na ponta esquerda. Nome: argola no começo e no fim.
       drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'left', 0, pieceSplitXPx);
       drawLoopTab(ctx, baseImgData.data, canvasWidth, canvasHeight, config, 'left', pieceSplitXPx, canvasWidth - 1);

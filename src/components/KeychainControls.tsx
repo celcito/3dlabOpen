@@ -115,7 +115,9 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
                   key={style.id}
                   type="button"
                   title={style.description}
-                  onClick={() => onChange({ ...config, ...stylePatch2Camadas(style) })}
+                  onClick={() =>
+                    onChange({ ...config, tagShape: undefined, ...stylePatch2Camadas(style) })
+                  }
                   className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
                     isSelected
                       ? 'border-[#632CE5] bg-[#632CE5]/10'

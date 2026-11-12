@@ -30,6 +30,8 @@ export interface KeychainConfig {
   symbolGapFactor: number;
   /** Ícone como peça separada do nome, com argola no início do ícone e no fim do nome. */
   symbolSeparated: boolean;
+  /** Corpo em formato de tag (osso ou peixinho) com o nome dentro e argola no topo. */
+  tagShape?: 'bone' | 'fish';
 }
 
 export interface GeneratedKeychain {

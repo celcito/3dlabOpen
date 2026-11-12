@@ -104,6 +104,8 @@ export function loadSavedKeychainConfig(): KeychainConfig {
         typeof parsed.symbolSeparated === 'boolean'
           ? parsed.symbolSeparated
           : def.symbolSeparated,
+      tagShape:
+        parsed.tagShape === 'bone' || parsed.tagShape === 'fish' ? parsed.tagShape : undefined,
     };
   } catch (err) {
     console.warn('Erro ao carregar chaveiro do localStorage:', err);
