@@ -62,6 +62,7 @@ export default function PencilTopperCreator() {
       <div className="flex-1 min-w-0">
         <PencilCanvas
           config={config}
+          dimensions={dimensions}
           onDimensionsChange={setDimensions}
         />
       </div>

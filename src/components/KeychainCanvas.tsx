@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import type { KeychainConfig, GeneratedKeychain, Model3DDimensions } from '../types/keychain';
 import { generateKeychainModel } from '../lib/keychain/geometry';
+import { ViewportDimensions } from './ViewportDimensions';
 import {
   RotateCcw,
   RotateCw,
@@ -13,11 +14,13 @@ import {
 
 interface KeychainCanvasProps {
   config: KeychainConfig;
+  dimensions: Model3DDimensions;
   onDimensionsChange: (dims: Model3DDimensions) => void;
 }
 
 export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
   config,
+  dimensions,
   onDimensionsChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -549,7 +552,9 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
       </div>
 
       {/* Dimensões em Tempo Real (Canto Inferior Direito) */}
-      <div className="absolute bottom-5 right-5 z-20 hidden sm:flex items-center gap-3 px-3.5 py-2 rounded-2xl bg-[var(--workbench-panel)]/90 border-[var(--surface-container-high)] backdrop-blur-md shadow-xl text-xs text-[var(--on-surface-variant)]">
+      <div className="absolute bottom-5 right-5 z-20 hidden sm:flex flex-col items-end gap-2">
+        <ViewportDimensions dimX={dimensions.dimX} dimY={dimensions.dimY} dimZ={dimensions.dimZ} />
+        <div className="flex items-center gap-3 px-3.5 py-2 rounded-2xl bg-[var(--workbench-panel)]/90 border-[var(--surface-container-high)] backdrop-blur-md shadow-xl text-xs text-[var(--on-surface-variant)]">
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--on-surface-variant)]">Argola:</span>
           <span className="font-mono font-bold text-amber-400">{loopReadout}</span>
@@ -560,6 +565,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
           <span className="font-mono font-bold text-[var(--workbench-text)]">
             {config.text || 'Nome'}
           </span>
+        </div>
         </div>
       </div>
     </div>
