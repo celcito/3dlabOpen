@@ -80,6 +80,24 @@ export const SYMBOL_SHAPES: Record<string, SymbolShapes> = {
     add: [{ kind: 'path', d: starPath(50, 50, 46, 20) }],
     sub: [],
   },
+  bone: {
+    add: [
+      rect(18, 38, 64, 24, 12),
+      ellipse(24, 32, 14, 12),
+      ellipse(24, 68, 14, 12),
+      ellipse(76, 32, 14, 12),
+      ellipse(76, 68, 14, 12),
+    ],
+    sub: [],
+  },
+  fish: {
+    add: [
+      ellipse(44, 50, 32, 19),
+      { kind: 'path', d: 'M72 50 L96 28 L96 72 Z' },
+      { kind: 'path', d: 'M38 34 L52 16 L62 34 Z' },
+    ],
+    sub: [ellipse(30, 44, 4.5, 4.5)],
+  },
   crown: {
     add: [
       { kind: 'path', d: 'M9 68 L13 20 L32 44 L50 12 L68 44 L87 20 L91 68 Z' },

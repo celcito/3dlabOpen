@@ -8,6 +8,7 @@ import {
 import { SYMBOL_GAP_FACTOR_MIN, SYMBOL_GAP_FACTOR_MAX } from '../lib/keychain/storage';
 import { resolveLoopGapMm } from '../lib/keychain/loop';
 import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
+import { KEYCHAIN_THEME_PRESETS } from '../lib/keychain/themePresets';
 import { FontPicker } from './FontPicker';
 import { SymbolPicker } from './SymbolPicker';
 import {
@@ -132,6 +133,41 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
                     <div
                       className="w-4 h-4 rounded-full border border-white shadow-sm"
                       style={{ backgroundColor: style.reliefColor }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+            {KEYCHAIN_THEME_PRESETS.map((theme) => {
+              const isSelected =
+                config.symbolId === theme.patch.symbolId &&
+                config.symbolPosition === theme.patch.symbolPosition &&
+                config.baseColor.toLowerCase() === theme.patch.baseColor.toLowerCase() &&
+                config.reliefColor.toLowerCase() === theme.patch.reliefColor.toLowerCase();
+
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  title={theme.description}
+                  onClick={() => onChange({ ...config, ...theme.patch })}
+                  className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#632CE5] bg-[#632CE5]/10'
+                      : 'border-[var(--workbench-line)] hover:border-[#632CE5]/40'
+                  }`}
+                >
+                  <span className="text-[9px] font-black uppercase text-[var(--on-surface-variant)] truncate">
+                    {theme.emoji} {theme.name}
+                  </span>
+                  <div className="flex -space-x-1.5 shrink-0">
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: theme.patch.baseColor }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: theme.patch.reliefColor }}
                     />
                   </div>
                 </button>
