@@ -4,6 +4,7 @@ import { COLOR_PALETTES, DEFAULT_CONFIG } from '../lib/letterBox/presets';
 import { TEXT_STYLE_PRESETS, stylePatchLetterBox } from '../lib/textStyles';
 import { clearSavedConfig } from '../lib/letterBox/storage';
 import { FontPicker } from './FontPicker';
+import { DimensionRows } from './DimensionRows';
 import { Type, Sliders, Palette, Download, RotateCcw, Box } from 'lucide-react';
 
 interface SidebarControlsProps {
@@ -308,13 +309,9 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
 
       {/* Dimensões & Exportação */}
       <section className="space-y-3 pt-4 border-t border-[var(--surface-container-high)]">
-        <div className="p-3 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] flex items-center justify-between">
-          <span className="text-[9px] uppercase font-bold text-zinc-600">Dimensões 3D</span>
-          <span className="text-[14px] font-black text-[#632CE5] tracking-tighter font-mono">
-            {dimensions.dimX} <span className="text-[10px] text-zinc-600 font-bold">×</span>{' '}
-            {dimensions.dimY} <span className="text-[10px] text-zinc-600 font-bold">×</span>{' '}
-            {dimensions.dimZ} <span className="text-[10px] text-zinc-600 font-bold">mm</span>
-          </span>
+        <div className="p-3 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] space-y-1.5">
+          <span className="text-[9px] uppercase font-bold text-zinc-600 block">Dimensões 3D</span>
+          <DimensionRows dimX={dimensions.dimX} dimY={dimensions.dimY} dimZ={dimensions.dimZ} />
         </div>
 
         <button id="btn-main-download-3mf" type="button" onClick={onQuickDownload3MF} className="btn-primary">

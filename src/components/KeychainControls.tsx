@@ -10,6 +10,7 @@ import { resolveLoopGapMm } from '../lib/keychain/loop';
 import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
 import { KEYCHAIN_THEME_PRESETS } from '../lib/keychain/themePresets';
 import { FontPicker } from './FontPicker';
+import { DimensionRows } from './DimensionRows';
 import { SymbolPicker } from './SymbolPicker';
 import {
   Check,
@@ -553,14 +554,8 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
       {/* Dimensões & Exportação */}
       <section className="space-y-3 pt-4 border-t border-[var(--surface-container-high)]">
         <div className="p-3 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase font-bold text-zinc-600">Dimensões 3D</span>
-            <span className="text-[14px] font-black text-[#632CE5] tracking-tighter font-mono">
-              {dimensions.dimX} <span className="text-[10px] text-zinc-600 font-bold">×</span>{' '}
-              {dimensions.dimY} <span className="text-[10px] text-zinc-600 font-bold">×</span>{' '}
-              {dimensions.dimZ} <span className="text-[10px] text-zinc-600 font-bold">mm</span>
-            </span>
-          </div>
+          <span className="text-[9px] uppercase font-bold text-zinc-600 block">Dimensões 3D</span>
+          <DimensionRows dimX={dimensions.dimX} dimY={dimensions.dimY} dimZ={dimensions.dimZ} />
           <div className="flex items-center justify-between">
             <span className="text-[9px] uppercase font-bold text-zinc-600">
               Volume & Peso estimado
