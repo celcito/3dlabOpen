@@ -74,6 +74,11 @@ export function loadSavedPenHolderConfig(): PenHolderConfig {
         RIM_MAX,
         def.rimThickness
       ),
+      compartments: clamp(parsed.compartments, 1, 8, def.compartments ?? 4),
+      trayDepth: clamp(parsed.trayDepth, 20, 80, def.trayDepth ?? 40),
+      trayHeight: clamp(parsed.trayHeight, 40, 140, def.trayHeight ?? 90),
+      frontWallHeight: clamp(parsed.frontWallHeight, 8, 60, def.frontWallHeight ?? 20),
+      plateDepth: clamp(parsed.plateDepth, 4, 16, def.plateDepth ?? 8),
       cupHeight: clamp(parsed.cupHeight, CUP_HEIGHT_MIN, CUP_HEIGHT_MAX, def.cupHeight),
       wallThickness: clamp(parsed.wallThickness, CUP_WALL_MIN, CUP_WALL_MAX, def.wallThickness),
       floorThickness: clamp(parsed.floorThickness, CUP_FLOOR_MIN, CUP_FLOOR_MAX, def.floorThickness),

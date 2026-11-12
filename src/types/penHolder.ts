@@ -20,6 +20,19 @@ export interface PenHolderConfig {
   wallThickness: number;
   floorThickness: number;
 
+  /** 'tray' (padrão) = nome na frente + bandeja com divisórias; 'cup' = copo no formato do nome. */
+  layout?: 'tray' | 'cup';
+  /** Profundidade (Y) da placa do nome (mm). */
+  plateDepth?: number;
+  /** Profundidade da bandeja atrás do nome (mm). */
+  trayDepth?: number;
+  /** Altura da parede traseira/laterais da bandeja (mm). */
+  trayHeight?: number;
+  /** Altura da parede frontal da bandeja (mm). */
+  frontWallHeight?: number;
+  /** Nº de compartimentos. */
+  compartments?: number;
+
   baseColor: string;
   reliefColor: string;
 }

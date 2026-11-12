@@ -55,7 +55,7 @@ export function computeHolderMetrics(config: PenHolderConfig): HolderMetrics {
   };
 }
 
-function drawSilhouette(
+export function drawSilhouette(
   ctx: CanvasRenderingContext2D,
   text: string,
   fontStyle: string,

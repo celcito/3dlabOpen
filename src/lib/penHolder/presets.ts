@@ -22,6 +22,12 @@ export const DEFAULT_PEN_HOLDER_CONFIG: PenHolderConfig = {
   cupHeight: 100,
   wallThickness: 2.0,
   floorThickness: 3,
+  layout: 'tray',
+  plateDepth: 8,
+  trayDepth: 40,
+  trayHeight: 90,
+  frontWallHeight: 20,
+  compartments: 4,
   baseColor: '#111827',
   reliefColor: '#FBBF24',
 };
