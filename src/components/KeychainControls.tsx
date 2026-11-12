@@ -143,6 +143,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
             {KEYCHAIN_THEME_PRESETS.map((theme) => {
               const isSelected =
                 config.symbolId === theme.patch.symbolId &&
+                (config.symbolIdRight ?? 'none') === (theme.patch.symbolIdRight ?? 'none') &&
                 config.symbolPosition === theme.patch.symbolPosition &&
                 config.baseColor.toLowerCase() === theme.patch.baseColor.toLowerCase() &&
                 config.reliefColor.toLowerCase() === theme.patch.reliefColor.toLowerCase();
@@ -221,6 +222,33 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           showPosition={(config.symbolId !== 'none' || !!config.customIconUrl) && !config.symbolSeparated}
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
+
+        {config.symbolPosition === 'both' && config.symbolId !== 'none' && (
+          <div className="space-y-2 p-3 rounded-lg border border-[var(--surface-container-high)] bg-[var(--surface-container-high)]/30">
+            <label className="text-[9px] uppercase font-bold text-zinc-600 block">
+              Ícone do Fim
+            </label>
+            <SymbolPicker
+              symbolId={config.symbolIdRight ?? config.symbolId}
+              symbolPosition={config.symbolPosition}
+              showPosition={false}
+              onChange={(patch) =>
+                onChange({
+                  ...config,
+                  symbolIdRight:
+                    'symbolId' in patch
+                      ? patch.symbolId === 'none'
+                        ? undefined
+                        : patch.symbolId
+                      : config.symbolIdRight,
+                })
+              }
+            />
+            <p className="text-[9px] text-zinc-600 leading-snug">
+              Escolha um ícone diferente do início. O mesmo ícone repete nas duas pontas.
+            </p>
+          </div>
+        )}
 
         {(config.symbolId !== 'none' || !!config.customIconUrl) && config.symbolPosition !== 'both' && (
           <>

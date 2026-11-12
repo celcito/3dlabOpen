@@ -455,18 +455,26 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const namePieceLeftPx = textStartXPx - outlinePx;
   const pieceSplitXPx = (iconPieceRightPx + namePieceLeftPx) / 2;
 
-  const drawIconBlock = (targetCtx: CanvasRenderingContext2D, x: number, outline = 0) => {
+  // "Ambos" aceita ícones diferentes: início usa symbolId, fim usa symbolIdRight.
+  const symbolIdRight = config.symbolIdRight || config.symbolId;
+
+  const drawIconBlock = (
+    targetCtx: CanvasRenderingContext2D,
+    x: number,
+    symbolId: string,
+    outline = 0
+  ) => {
     if (hasCustomIcon) {
       if (outline > 0) drawIconDilated(targetCtx, x, contentCenterYPx);
       else drawIcon(targetCtx, x, contentCenterYPx);
     } else if (hasPresetSymbol) {
-      drawSymbol(targetCtx, config.symbolId, x, contentCenterYPx, symbolSizePx, outline);
+      drawSymbol(targetCtx, symbolId, x, contentCenterYPx, symbolSizePx, outline);
     }
   };
 
   const drawIcons = (targetCtx: CanvasRenderingContext2D, outline = 0) => {
-    if (showIconLeft) drawIconBlock(targetCtx, iconLeftCenterX, outline);
-    if (showIconRight) drawIconBlock(targetCtx, iconRightCenterX, outline);
+    if (showIconLeft) drawIconBlock(targetCtx, iconLeftCenterX, config.symbolId, outline);
+    if (showIconRight) drawIconBlock(targetCtx, iconRightCenterX, symbolIdRight, outline);
   };
 
   const drawText = (targetCtx: CanvasRenderingContext2D) => {

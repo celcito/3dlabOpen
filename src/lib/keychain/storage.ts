@@ -79,6 +79,10 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       letterSpacing: clamp(parsed.letterSpacing, 0, 2.5, def.letterSpacing),
       fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
       symbolId: typeof parsed.symbolId === 'string' ? parsed.symbolId : def.symbolId,
+      symbolIdRight:
+        typeof parsed.symbolIdRight === 'string' && parsed.symbolIdRight !== 'none'
+          ? parsed.symbolIdRight
+          : undefined,
       symbolPosition: readSymbolPosition(parsed.symbolPosition),
       outlineSize: clamp(parsed.outlineSize, 1.0, 6.0, def.outlineSize),
       bodyThickness: clamp(parsed.bodyThickness, 1.5, 6.0, def.bodyThickness),

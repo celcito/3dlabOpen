@@ -11,6 +11,8 @@ export interface KeychainConfig {
 
   symbolId: string;
   symbolPosition: 'left' | 'right' | 'both';
+  /** Ícone do fim quando a posição é "ambos"; vazio = o mesmo do início. */
+  symbolIdRight?: string;
   customIconUrl?: string;
 
   outlineSize: number;

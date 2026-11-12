@@ -10,6 +10,7 @@ type KeychainThemeVisual = Pick<
   | 'baseColor'
   | 'reliefColor'
   | 'symbolId'
+  | 'symbolIdRight'
   | 'symbolPosition'
   | 'symbolSeparated'
 >;
@@ -34,6 +35,7 @@ export const KEYCHAIN_THEME_PRESETS: KeychainThemePreset[] = [
     description: 'Osso nas duas pontas com o nome no meio',
     patch: {
       symbolId: 'bone',
+      symbolIdRight: undefined,
       symbolPosition: 'both',
       symbolSeparated: false,
       tagShape: undefined,
@@ -53,6 +55,7 @@ export const KEYCHAIN_THEME_PRESETS: KeychainThemePreset[] = [
     description: 'Peixinho nas duas pontas com o nome no meio',
     patch: {
       symbolId: 'fish',
+      symbolIdRight: undefined,
       symbolPosition: 'both',
       symbolSeparated: false,
       tagShape: undefined,
@@ -73,6 +76,7 @@ export const KEYCHAIN_THEME_PRESETS: KeychainThemePreset[] = [
     patch: {
       tagShape: 'bone',
       symbolId: 'none',
+      symbolIdRight: undefined,
       symbolPosition: 'left',
       symbolSeparated: false,
       fontFamily: 'Fredoka',
@@ -95,6 +99,7 @@ export const KEYCHAIN_THEME_PRESETS: KeychainThemePreset[] = [
     patch: {
       tagShape: 'fish',
       symbolId: 'none',
+      symbolIdRight: undefined,
       symbolPosition: 'left',
       symbolSeparated: false,
       fontFamily: 'Fredoka',
