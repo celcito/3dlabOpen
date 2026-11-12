@@ -144,14 +144,16 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   const symbolBlockPx = symbolCount * (symbolGapPx + symbolSizePx);
   const totalContentWidthPx = textWidthPx + symbolBlockPx;
 
-  // Espessura extra em mm: positiva engrossa (contorno), negativa afina
-  // (erosão da própria silhueta). Abaixo de 0.5x a escala passa a afinar — é o
-  // que salva as fontes gordinhas, que antes ficavam com as letras coladas e os
-  // vazados fechados, sem controle para reduzir.
-  // 0.2x é o piso: abaixo disso a erosão come as hastes das fontes normais.
+  // Espessura extra em mm: positiva engrossa (contorno por fora), negativa
+  // afina (erosão da silhueta). 0.5x é a fonte original: daí para baixo a
+  // escala afina de verdade, sem trecho que ainda engorde. 1x segue em
+  // +1.2 mm e 2x em +2.4 mm, como antes. 0.2x (piso) erode 0.24 mm — o
+  // bastante para reabrir os vazados sem apagar as hastes das fontes normais.
   const weightScale = Math.min(2, Math.max(0.2, config.fontWeightScale || 1));
   const offsetMm =
-    weightScale >= 0.5 ? weightScale * 1.2 : 0.6 - (0.5 - weightScale) * 3;
+    weightScale >= 0.5
+      ? Math.min(2.4, (weightScale - 0.5) * 2.4)
+      : (weightScale - 0.5) * 0.8;
   const outlinePx = Math.abs(offsetMm) * PX_PER_MM;
   const paddingPx = Math.ceil(outlinePx * 2 + 12);
 
