@@ -63,7 +63,7 @@ export function loadSavedPenHolderConfig(): PenHolderConfig {
       fontFamily: typeof parsed.fontFamily === 'string' && parsed.fontFamily ? parsed.fontFamily : def.fontFamily,
       customFontName: typeof parsed.customFontName === 'string' ? parsed.customFontName : undefined,
       customFontBase64: typeof parsed.customFontBase64 === 'string' ? parsed.customFontBase64 : undefined,
-      letterHeight: clamp(parsed.letterHeight, 10, 28, def.letterHeight),
+      letterHeight: clamp(parsed.letterHeight, 10, 60, def.letterHeight),
       letterSpacing: clamp(parsed.letterSpacing, 0, 2.5, def.letterSpacing),
       fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
       outlineSize: clamp(parsed.outlineSize, 1.0, 6.0, def.outlineSize),
@@ -74,6 +74,9 @@ export function loadSavedPenHolderConfig(): PenHolderConfig {
         RIM_MAX,
         def.rimThickness
       ),
+      trayDepth: parsed.trayDepth == null ? undefined : clamp(parsed.trayDepth, 15, 80, 15),
+      extraHeight: parsed.extraHeight == null ? undefined : clamp(parsed.extraHeight, 0, 80, 30),
+      minCellWidth: parsed.minCellWidth == null ? undefined : clamp(parsed.minCellWidth, 6, 30, 10),
       cupHeight: clamp(parsed.cupHeight, CUP_HEIGHT_MIN, CUP_HEIGHT_MAX, def.cupHeight),
       wallThickness: clamp(parsed.wallThickness, CUP_WALL_MIN, CUP_WALL_MAX, def.wallThickness),
       floorThickness: clamp(parsed.floorThickness, CUP_FLOOR_MIN, CUP_FLOOR_MAX, def.floorThickness),

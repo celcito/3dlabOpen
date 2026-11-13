@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import type { PenHolderConfig, GeneratedPenHolder } from '../types/penHolder';
-import { generatePenHolderModel } from '../lib/penHolder/geometry';
+import { generatePenHolder } from '../lib/penHolder/nameTray';
 import {
   RotateCcw,
   RotateCw,
@@ -332,7 +332,7 @@ export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
     const buildModel = async () => {
       try {
         setIsGenerating(true);
-        const model = await generatePenHolderModel(config);
+        const model = await generatePenHolder(config);
         if (isCancelled) return;
 
         currentModelRef.current = model;
@@ -396,6 +396,10 @@ export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
     config.outlineSize,
     config.rimThickness,
     config.cupHeight,
+    config.layout,
+    config.trayDepth,
+    config.minCellWidth,
+    config.extraHeight,
     config.wallThickness,
     config.floorThickness,
     config.baseColor,
@@ -537,7 +541,7 @@ export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--on-surface-variant)]">Altura:</span>
           <span className="font-mono font-bold text-amber-400">
-            {config.cupHeight.toFixed(0)} mm
+            {(config.layout === 'cup' ? config.cupHeight : config.letterHeight * 1.3 + (config.extraHeight ?? 30)).toFixed(0)} mm
           </span>
         </div>
         <div className="w-px h-4 bg-[var(--surface-container-high)]" />

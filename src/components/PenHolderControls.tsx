@@ -97,7 +97,7 @@ export const PenHolderControls: React.FC<PenHolderControlsProps> = ({
           label="Tamanho da Letra"
           unit="mm"
           min="10"
-          max="28"
+          max="60"
           step="1"
           number={config.letterHeight}
           onChange={(value) => onChange({ ...config, letterHeight: value })}
@@ -157,6 +157,35 @@ export const PenHolderControls: React.FC<PenHolderControlsProps> = ({
           03. Altura & Parede
         </SectionTitle>
 
+        <div className="grid grid-cols-2 gap-2">
+          {([['tray', 'Placa + Bandeja'], ['cup', 'Copo do Nome']] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onChange({ ...config, layout: value })}
+              className={`py-2 rounded-lg text-[10px] font-bold uppercase border transition-colors ${
+                (config.layout ?? 'tray') === value
+                  ? 'border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10'
+                  : 'border-[var(--surface-container-high)] text-zinc-500'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {(config.layout ?? 'tray') === 'tray' && (
+          <>
+            <RangeControl label="Profundidade" unit="mm" min="15" max="80" step="1"
+              number={config.trayDepth ?? Math.round(config.letterHeight * 0.9)} onChange={(value) => onChange({ ...config, trayDepth: value })} />
+            <RangeControl label="Altura extra (para canetas)" unit="mm" min="0" max="80" step="1"
+              number={config.extraHeight ?? 30} onChange={(value) => onChange({ ...config, extraHeight: value })} />
+            <RangeControl label="Largura mín. da célula" unit="mm" min="6" max="30" step="1"
+              number={config.minCellWidth ?? 10} onChange={(value) => onChange({ ...config, minCellWidth: value })} />
+          </>
+        )}
+
+        {config.layout === 'cup' && (
         <RangeControl
           label="Altura da Peça"
           unit="mm"
@@ -166,6 +195,7 @@ export const PenHolderControls: React.FC<PenHolderControlsProps> = ({
           number={config.cupHeight}
           onChange={(value) => onChange({ ...config, cupHeight: value })}
         />
+        )}
 
         <RangeControl
           label="Parede da Cavidade"
