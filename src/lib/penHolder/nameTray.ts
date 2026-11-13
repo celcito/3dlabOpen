@@ -250,10 +250,9 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const rim = Math.max(RIM_MIN, config.rimThickness);
   const opts = { bevelEnabled: false, curveSegments: 12 } as const;
   const sample = (solid: Uint8Array) => extractContoursFromImageData(toImageData(solid, w, h), mmPerPx, cx, cy, 0.2);
-  const silC = sample(sil);
   const tallC = sample(tall);
   const coreC = sample(core);
-  if (silC.outer.length === 0) throw new Error('Silhueta do nome vazia');
+  if (tallC.outer.length === 0) throw new Error('Silhueta do nome vazia');
 
   // Camadas ao longo da profundidade t (t = 0 atrás; t = depth na frente); depois rotateX deixa o nome de pé.
   const layer = (shapes: THREE.Shape[], t0: number, len: number, holes: boolean) => {
@@ -263,7 +262,9 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
     return g;
   };
   const back = layer(buildThreeShapes(tallC.outer, []), 0, wall, false);
-  const front = layer(buildThreeShapes(silC.outer, []), depth - wall, wall, false);
+  // A frente acompanha a altura das paredes (tall), não a do nome (sil): com a face
+  // curta as células ficavam abertas na frente acima do nome, deixando ver o interior.
+  const front = layer(buildThreeShapes(tallC.outer, []), depth - wall, wall, false);
   const body = layer(buildThreeShapes(coreC.outer, coreC.holes), wall - EMBED, depth - 2 * wall + 2 * EMBED, true);
   const relief = layer(buildThreeShapes(name.outer, name.holes), depth - EMBED, rim + EMBED, true);
   const all = [back, front, body, relief];
