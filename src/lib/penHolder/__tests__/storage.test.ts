@@ -46,7 +46,7 @@ describe('penHolder/storage', () => {
     expect(loaded.wallThickness).toBe(1.5);
     expect(loaded.floorThickness).toBe(8);
     expect(loaded.rimThickness).toBe(3.0);
-    expect(loaded.letterHeight).toBe(28);
+    expect(loaded.letterHeight).toBe(60);
     expect(loaded.letterSpacing).toBe(0);
     expect(loaded.fontWeightScale).toBe(0.5);
     expect(loaded.outlineSize).toBe(6.0);

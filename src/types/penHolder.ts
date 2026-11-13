@@ -20,6 +20,15 @@ export interface PenHolderConfig {
   wallThickness: number;
   floorThickness: number;
 
+  /** 'tray' (padrão) = extrusão do nome com células; 'cup' = copo no formato do nome. */
+  layout?: 'tray' | 'cup';
+  /** Profundidade (Y) da peça, da frente para trás (mm). */
+  trayDepth?: number;
+  /** Altura extra das paredes traseiras/células acima da silhueta do nome (mm). */
+  extraHeight?: number;
+  /** Largura mínima de cada célula (mm); letras estreitas se juntam à vizinha. */
+  minCellWidth?: number;
+
   baseColor: string;
   reliefColor: string;
 }

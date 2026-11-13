@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import type { PenHolderConfig, GeneratedPenHolder } from '../types/penHolder';
-import { generatePenHolderModel } from '../lib/penHolder/geometry';
+import type { PenHolderConfig, GeneratedPenHolder, PenHolderDimensions } from '../types/penHolder';
+import { generatePenHolder } from '../lib/penHolder/nameTray';
 import {
   RotateCcw,
   RotateCw,
@@ -13,11 +13,13 @@ import {
 
 interface PenHolderCanvasProps {
   config: PenHolderConfig;
+  dimensions: PenHolderDimensions;
   onDimensionsChange: (dims: GeneratedPenHolder['dimensions']) => void;
 }
 
 export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
   config,
+  dimensions,
   onDimensionsChange,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -332,7 +334,7 @@ export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
     const buildModel = async () => {
       try {
         setIsGenerating(true);
-        const model = await generatePenHolderModel(config);
+        const model = await generatePenHolder(config);
         if (isCancelled) return;
 
         currentModelRef.current = model;
@@ -396,6 +398,10 @@ export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
     config.outlineSize,
     config.rimThickness,
     config.cupHeight,
+    config.layout,
+    config.trayDepth,
+    config.minCellWidth,
+    config.extraHeight,
     config.wallThickness,
     config.floorThickness,
     config.baseColor,
@@ -537,7 +543,7 @@ export const PenHolderCanvas: React.FC<PenHolderCanvasProps> = ({
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--on-surface-variant)]">Altura:</span>
           <span className="font-mono font-bold text-amber-400">
-            {config.cupHeight.toFixed(0)} mm
+            {dimensions.dimZ > 0 ? `${dimensions.dimZ.toFixed(0)} mm` : '—'}
           </span>
         </div>
         <div className="w-px h-4 bg-[var(--surface-container-high)]" />
