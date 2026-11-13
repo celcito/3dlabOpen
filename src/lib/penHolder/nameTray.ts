@@ -8,7 +8,6 @@ import { CUP_FLOOR_MIN, CUP_WALL_MIN, RIM_MIN } from './presets';
 import { computeHolderMetrics, drawSilhouette, fixWinding, generatePenHolderModel } from './geometry';
 
 const pxPerMm = 20;
-const mmPerPixel = 1 / pxPerMm;
 /** Sobreposição entre cascas (mm) — evita faces coincidentes sem precisar de CSG. */
 const EMBED = 0.4;
 
@@ -140,13 +139,13 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const text = config.text.trim() || 'Nome';
   const metrics = computeHolderMetrics(config);
   const L = Math.max(10, config.letterHeight);
-  const fontPx = L * pxPerMm;
+  const nominalFontPx = L * pxPerMm;
 
   try {
     if (!config.customFontName) await ensureGoogleFont(config.fontFamily);
     if (typeof document !== 'undefined' && document.fonts) {
-      await document.fonts.load(`${fontPx}px "${config.fontFamily}"`);
-      await document.fonts.load(`bold ${fontPx}px "${config.fontFamily}"`);
+      await document.fonts.load(`${nominalFontPx}px "${config.fontFamily}"`);
+      await document.fonts.load(`bold ${nominalFontPx}px "${config.fontFamily}"`);
     }
   } catch {
     // fallback
@@ -157,23 +156,47 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   if (!ctx) throw new Error('Falha ao inicializar Canvas 2D');
 
   const isDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
-  const fontStyle = `${isDisplay ? 'normal' : 'bold'} ${fontPx}px "${config.fontFamily}", sans-serif`;
-  ctx.font = fontStyle;
+  const setFont = (fontPx: number): string => {
+    const style = `${isDisplay ? 'normal' : 'bold'} ${fontPx}px "${config.fontFamily}", sans-serif`;
+    ctx.font = style;
+    return style;
+  };
 
-  const spacingPx = Math.max(0, config.letterSpacing ?? 1.8) * pxPerMm;
-  const offsets: number[] = [];
-  let textWidthPx = 0;
-  for (const ch of text) {
-    offsets.push(textWidthPx);
-    textWidthPx += ctx.measureText(ch).width + spacingPx;
-  }
-  textWidthPx -= spacingPx;
+  const extraMm = Math.max(0, config.extraHeight ?? 30);
+  const measure = (fontPx: number, density: number) => {
+    const spacing = Math.max(0, config.letterSpacing ?? 1.8) * density;
+    const offs: number[] = [];
+    let width = 0;
+    for (const ch of text) {
+      offs.push(width);
+      width += ctx.measureText(ch).width + spacing;
+    }
+    return { offs, width: width - spacing, spacing };
+  };
 
-  const outlinePx = metrics.outlineMm * pxPerMm;
+  // Raster de tamanho limitado: nome longo com fonte 60 mm e 80 mm de altura extra
+  // chega a dezenas de milhões de pixels; o gerador mantém vários buffers desse
+  // tamanho e roda flood-fill/distância de forma síncrona, travando o preview ou
+  // estourando a memória. Reduz a densidade (px/mm) para manter o total limitado,
+  // preservando as medidas em mm.
+  const MAX_TRAY_PIXELS = 6_000_000;
+  setFont(nominalFontPx);
+  const nominal = measure(nominalFontPx, pxPerMm);
+  const nominalPad = Math.ceil(metrics.outlineMm * pxPerMm * 2.5 + 28);
+  const nominalPixels =
+    Math.max(1, nominal.width + nominalPad * 2) *
+    Math.max(1, nominalFontPx + nominalPad * 2 + extraMm * pxPerMm * 2);
+  const density = pxPerMm * Math.min(1, Math.sqrt(MAX_TRAY_PIXELS / nominalPixels));
+  const mmPerPx = 1 / density;
+
+  const fontPx = L * density;
+  const fontStyle = setFont(fontPx);
+  const { offs: offsets, width: textWidthPx, spacing: spacingPx } = measure(fontPx, density);
+
+  const outlinePx = metrics.outlineMm * density;
   const pad = Math.ceil(outlinePx * 2.5 + 28);
   const w = Math.ceil(textWidthPx + pad * 2);
-  const extraMm = Math.max(0, config.extraHeight ?? 30);
-  const extraPx = Math.round(extraMm * pxPerMm);
+  const extraPx = Math.round(extraMm * density);
   const h = Math.ceil(fontPx + pad * 2 + extraPx * 2);
   canvas.width = w;
   canvas.height = h;
@@ -197,24 +220,24 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const tall = raiseTop(sil, w, h, extraPx);
 
   // 2) Nome fiel (com contraformas) para o relevo
-  const name = extractContoursFromImageData(draw(1), mmPerPixel, cx, cy, 0.2);
+  const name = extractContoursFromImageData(draw(1), mmPerPx, cx, cy, 0.2);
 
   // 3) Células: contorno encolhido pela parede -> colunas ocupadas acima do fundo
   const wall = Math.max(CUP_WALL_MIN, config.wallThickness);
   const floor = Math.max(CUP_FLOOR_MIN, config.floorThickness);
-  const wallPx = wall * pxPerMm;
+  const wallPx = wall * density;
   const dist = chamferDistance(tall, w, h);
   let bottomRow = 0;
   for (let y = h - 1; y >= 0 && !bottomRow; y--) {
     for (let x = 0; x < w; x++) if (tall[y * w + x]) { bottomRow = y; break; }
   }
-  const floorLine = Math.max(0, Math.round(bottomRow - floor * pxPerMm));
+  const floorLine = Math.max(0, Math.round(bottomRow - floor * density));
   const occupied = new Uint8Array(w);
   for (let y = 0; y < floorLine; y++) {
     for (let x = 0; x < w; x++) if (dist[y * w + x] >= wallPx * 3) occupied[x] = 1;
   }
   const letterGaps = offsets.slice(1).map(o => startX + o - spacingPx / 2);
-  const minCellPx = Math.max(4, config.minCellWidth ?? 10) * pxPerMm;
+  const minCellPx = Math.max(4, config.minCellWidth ?? 10) * density;
   const cells = planCells(occupied, letterGaps, wallPx, minCellPx);
 
   // 4) Miolo: silhueta menos as células (acima do fundo) = paredes + divisórias + fundo
@@ -226,7 +249,7 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const depth = Math.max(config.trayDepth ?? L * 0.9, 2 * wall + 10);
   const rim = Math.max(RIM_MIN, config.rimThickness);
   const opts = { bevelEnabled: false, curveSegments: 12 } as const;
-  const sample = (solid: Uint8Array) => extractContoursFromImageData(toImageData(solid, w, h), mmPerPixel, cx, cy, 0.2);
+  const sample = (solid: Uint8Array) => extractContoursFromImageData(toImageData(solid, w, h), mmPerPx, cx, cy, 0.2);
   const silC = sample(sil);
   const tallC = sample(tall);
   const coreC = sample(core);
