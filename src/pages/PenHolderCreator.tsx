@@ -82,6 +82,7 @@ export default function PenHolderCreator() {
       <div className="flex-1 min-w-0">
         <PenHolderCanvas
           config={config}
+          dimensions={dimensions}
           onDimensionsChange={setDimensions}
         />
       </div>
