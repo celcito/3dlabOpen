@@ -69,6 +69,55 @@ function chamferDistance(solid: Uint8Array, w: number, h: number): Uint16Array {
   return d;
 }
 
+/**
+ * Fecha fendas estreitas entre letras (linha a linha): vãos de até `maxGapPx` entre dois pixels sólidos
+ * viram sólido. Sem isso, letras que quase se tocam deixam frestas de ~1-3 mm que atravessam a peça
+ * de ponta a ponta (parecem "buracos" na malha e não são imprimíveis).
+ */
+export function closeNarrowGaps(solid: Uint8Array, w: number, h: number, maxGapPx: number): void {
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    let prev = -1; // último x sólido da linha
+    for (let x = 0; x < w; x++) {
+      if (!solid[row + x]) continue;
+      if (prev >= 0 && x - prev - 1 > 0 && x - prev - 1 <= maxGapPx) solid.fill(1, row + prev + 1, row + x);
+      prev = x;
+    }
+  }
+}
+
+/**
+ * Une corpos separados por um vão (ex.: o espaço entre duas palavras). Colunas totalmente vazias entre o
+ * primeiro e o último sólido deixam a peça em dois pedaços e uma fresta que atravessa tudo; aqui cada vão
+ * é preenchido nas linhas em que há sólido nos dois lados (a até `reachPx` do vão).
+ */
+export function bridgeEmptyColumns(solid: Uint8Array, w: number, h: number, reachPx: number): number {
+  const colHas = new Uint8Array(w);
+  let minX = w, maxX = -1;
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) if (solid[row + x]) { colHas[x] = 1; if (x < minX) minX = x; if (x > maxX) maxX = x; }
+  }
+  let bridged = 0;
+  let x = minX;
+  while (x <= maxX) {
+    if (colHas[x]) { x++; continue; }
+    const a = x;
+    while (x <= maxX && !colHas[x]) x++;
+    const b = x; // primeira coluna com sólido depois do vão
+    for (let y = 0; y < h; y++) {
+      const row = y * w;
+      let l = a - 1;
+      while (l >= 0 && a - 1 - l <= reachPx && !solid[row + l]) l--;
+      let r = b;
+      while (r < w && r - b <= reachPx && !solid[row + r]) r++;
+      if (l >= 0 && r < w && solid[row + l] && solid[row + r]) solid.fill(1, row + l, row + r + 1);
+    }
+    bridged++;
+  }
+  return bridged;
+}
+
 /** Estende cada coluna para cima em `extraPx` (varredura vertical): o topo sobe, a base não muda. */
 function raiseTop(solid: Uint8Array, w: number, h: number, extraPx: number): Uint8Array {
   const out = solid.slice();
@@ -216,6 +265,10 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const sil = new Uint8Array(w * h);
   for (let i = 0; i < sil.length; i++) sil[i] = silData.data[i * 4 + 3] > 120 ? 1 : 0;
   fillHoles(sil, w, h);
+  // Fendas entre letras mais estreitas que 2 paredes não comportam divisória nem impressão: fecha.
+  closeNarrowGaps(sil, w, h, Math.round(Math.max(4, 2 * Math.max(CUP_WALL_MIN, config.wallThickness) + 1.5) * density));
+  // Espaço entre palavras (ou letras bem afastadas) deixaria dois corpos soltos: une com uma ponte.
+  bridgeEmptyColumns(sil, w, h, Math.round(8 * density));
   // Corpo traseiro/células mais alto que a frente: o nome fica na altura normal, as paredes sobem para caber canetas.
   const tall = raiseTop(sil, w, h, extraPx);
 
