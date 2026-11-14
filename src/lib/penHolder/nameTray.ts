@@ -248,7 +248,7 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
 
   const depth = Math.max(config.trayDepth ?? L * 0.9, 2 * wall + 10);
   const rim = Math.max(RIM_MIN, config.rimThickness);
-  const opts = { bevelEnabled: false, curveSegments: 12 } as const;
+  const opts = { bevelEnabled: true, curveSegments: 24, bevelThickness: 0.15, bevelSize: 0.12, bevelSegments: 3 } as const;
   const sample = (solid: Uint8Array) => extractContoursFromImageData(toImageData(solid, w, h), mmPerPx, cx, cy, 0.2);
   const tallC = sample(tall);
   const coreC = sample(core);
@@ -268,7 +268,10 @@ export async function generateNameTrayModel(config: PenHolderConfig): Promise<Ge
   const body = layer(buildThreeShapes(coreC.outer, coreC.holes), wall - EMBED, depth - 2 * wall + 2 * EMBED, true);
   const relief = layer(buildThreeShapes(name.outer, name.holes), depth - EMBED, rim + EMBED, true);
   const all = [back, front, body, relief];
-  for (const g of all) g.rotateX(Math.PI / 2);
+  for (const g of all) {
+    g.computeVertexNormals();
+    g.rotateX(Math.PI / 2);
+  }
 
   front.computeBoundingBox();
   const fb = front.boundingBox as THREE.Box3;
