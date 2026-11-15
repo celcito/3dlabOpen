@@ -285,10 +285,19 @@ export function generateMold(
 
   if (config.type === 'single_open' || config.type === 'silicone_box') {
     const block = buildBlockGeometry(config.shape, blockW, blockH, blockD, config.wallThickness);
-    // O topo do bloco fica acima do topo do objeto (margem de 1 mm + rim).
+        // O topo do bloco deve ficar no Z máximo do objeto + margem, de forma que a
+// subtração rompa o tampo do bloco e a cavidade sia aberta por cima. O bloco tem
+// altura blockD em Y; seu topo está a blockD/2 acima do centro, então para ter o
+// topo em (objSize.z + 1 + rim) o centro deve ser:
+//   (objSize.z + 1 + rim) - blockD/2.
     const blockCenterZ = objSize.z + 1 + rim - blockD / 2;
     block.translate(0, 0, blockCenterZ);
-    applyDraft(block, config.draftAngle, 'top');
+    applyDraft(block, config.draftAngle, "top");
+    // P2: ao posicionar o bloco acima do Z do objeto e subtrair, a cavidade rompe o
+    // tampo do bloco — o molde de cavidade fica aberto e nunca selado com um teto
+    // sólido sobre o modelo.
+
+
 
     const mold = evaluate(evaluator, block, targetGeometry, SUBTRACTION);
 
