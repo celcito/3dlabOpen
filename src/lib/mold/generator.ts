@@ -309,8 +309,8 @@ export function generateMold(
 // altura blockD em Y; seu topo está a blockD/2 acima do centro, então para ter o
 // topo em (objSize.z + 1 + rim) o centro deve ser:
 //   (objSize.z + 1 + rim) - blockD/2.
-    const blockCenterZ = objSize.z + 1 + rim - blockD / 2;
-    block.translate(0, 0, blockCenterZ);
+    // Topo do bloco rente ao topo do objeto: a cavidade precisa ficar aberta.
+    block.translate(0, 0, objSize.z - blockD / 2);
     applyDraft(block, config.draftAngle, "top");
     // P2: ao posicionar o bloco acima do Z do objeto e subtrair, a cavidade rompe o
     // tampo do bloco — o molde de cavidade fica aberto e nunca selado com um teto
