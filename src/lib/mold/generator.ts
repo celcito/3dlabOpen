@@ -7,6 +7,9 @@ import type { MoldBounds, MoldBuildResult, MoldConfig, MoldSampleId } from '../.
  * Workbench) e centralizada em XY; a viewport gira para Y-up.
  */
 
+/** Quanto a cavidade ultrapassa o topo do bloco para garantir a abertura (mm). */
+const OPENING_OVERSHOOT = 0.1;
+
 function makeEvaluator(): Evaluator {
   const evaluator = new Evaluator();
   evaluator.attributes = ['position', 'normal'];
@@ -252,6 +255,21 @@ function buildBlockGeometry(
   return new THREE.BoxGeometry(width, height, depth);
 }
 
+/** Tronco de cone com eixo em Z, indo de zBottom (raio rBottom) até zTop (raio rTop). */
+function frustumZ(
+  zBottom: number,
+  zTop: number,
+  rBottom: number,
+  rTop: number,
+  segments: number
+): THREE.BufferGeometry {
+  // CylinderGeometry(radiusTop, radiusBottom): após rotateX(+90°) o "topo" (+Y) vira +Z.
+  const geometry = new THREE.CylinderGeometry(rTop, rBottom, zTop - zBottom, segments);
+  geometry.rotateX(Math.PI / 2);
+  geometry.translate(0, 0, (zBottom + zTop) / 2);
+  return geometry;
+}
+
 function geometryTriangleCount(geometry: THREE.BufferGeometry): number {
   const position = geometry.getAttribute('position');
   return geometry.index ? geometry.index.count / 3 : (position?.count ?? 0) / 3;
@@ -277,32 +295,54 @@ export function generateMold(
   const blockW = objSize.x + config.wallThickness * 2;
   const blockH = objSize.y + config.wallThickness * 2;
   const rim = config.type === 'silicone_box' ? config.wallThickness : 0;
-  const blockD = objSize.z + config.floorThickness + 2 + rim;
+  // Do fundo (z = -floorThickness) até o topo do objeto (+ borda na caixa de silicone).
+  const blockD = objSize.z + config.floorThickness + rim;
 
   const originalGeometry = targetGeometry.clone();
 
   const parts: MoldBuildResult['parts'] = [];
 
-  if (config.type === 'single_open' || config.type === 'silicone_box') {
+  if (config.type === 'single_open') {
     const block = buildBlockGeometry(config.shape, blockW, blockH, blockD, config.wallThickness);
-    // O topo do bloco fica acima do topo do objeto (margem de 1 mm + rim).
-    const blockCenterZ = objSize.z + 1 + rim - blockD / 2;
-    block.translate(0, 0, blockCenterZ);
+    // Topo do bloco rente ao topo do objeto: a cavidade precisa ficar aberta.
+    block.translate(0, 0, objSize.z - blockD / 2);
     applyDraft(block, config.draftAngle, 'top');
 
-    const mold = evaluate(evaluator, block, targetGeometry, SUBTRACTION);
+    // A cavidade sobe um pouco acima do topo do bloco para atravessá-lo sem
+    // faces coplanares (que geram artefatos no CSG).
+    const cutter = targetGeometry.clone();
+    cutter.translate(0, 0, OPENING_OVERSHOOT);
+
+    const mold = evaluate(evaluator, block, cutter, SUBTRACTION);
 
     parts.push({ id: 'single', geoms: [mold] });
+  } else if (config.type === 'silicone_box') {
+    const topZ = objSize.z + rim;
+    const block = buildBlockGeometry(config.shape, blockW, blockH, blockD, config.wallThickness);
+    block.translate(0, 0, topZ - blockD / 2);
+    applyDraft(block, config.draftAngle, 'top');
+
+    // Caixa aberta: interior oco do piso (z = 0) até acima da borda, para o
+    // silicone cobrir o objeto. O objeto (master) fica apoiado no piso.
+    const interiorD = topZ + OPENING_OVERSHOOT * 10;
+    const interior = buildBlockGeometry(config.shape, objSize.x, objSize.y, interiorD, 2);
+    interior.translate(0, 0, interiorD / 2);
+
+    const box = evaluate(evaluator, block, interior, SUBTRACTION);
+
+    parts.push({ id: 'single', geoms: [box] });
   } else {
     const splitZ = objSize.z * config.splitPlaneRatio;
     const lowerD = splitZ + config.floorThickness;
     const upperD = objSize.z - splitZ + config.floorThickness;
 
-    const lowerBlock = new THREE.BoxGeometry(blockW, blockH, lowerD);
+    // As duas metades respeitam a forma externa escolhida (retangular, cantos
+    // arredondados ou cilíndrica).
+    const lowerBlock = buildBlockGeometry(config.shape, blockW, blockH, lowerD, config.wallThickness);
     lowerBlock.translate(0, 0, splitZ - lowerD / 2);
     applyDraft(lowerBlock, config.draftAngle, 'top');
 
-    const upperBlock = new THREE.BoxGeometry(blockW, blockH, upperD);
+    const upperBlock = buildBlockGeometry(config.shape, blockW, blockH, upperD, config.wallThickness);
     upperBlock.translate(0, 0, splitZ + upperD / 2);
     applyDraft(upperBlock, config.draftAngle, 'bottom');
 
@@ -313,25 +353,51 @@ export function generateMold(
       const pinR = config.pinSize / 2;
       const pinH = Math.min(8, Math.max(2, lowerD * 0.4));
       const tipR = Math.max(0.6, pinR * 0.7);
-      const pinOffsetX = blockW / 2 - config.wallThickness * 0.75;
-      const pinOffsetY = blockH / 2 - config.wallThickness * 0.75;
+      const inset = config.wallThickness * 0.75;
 
-      const pinCoords: [number, number][] = [
-        [-pinOffsetX, -pinOffsetY],
-        [pinOffsetX, -pinOffsetY],
-        [pinOffsetX, pinOffsetY],
-        [-pinOffsetX, pinOffsetY],
-      ];
+      let pinCoords: [number, number][];
+      if (config.shape === 'cylinder') {
+        // No cilindro os cantos do retângulo ficam fora da parede: usa a
+        // circunferência, nas diagonais do bloco.
+        const radius = Math.max(blockW, blockH) / 2 - inset;
+        const angle = Math.atan2(blockH, blockW);
+        pinCoords = [angle, Math.PI - angle, Math.PI + angle, -angle].map(
+          (a) => [Math.cos(a) * radius, Math.sin(a) * radius] as [number, number]
+        );
+      } else {
+        const pinOffsetX = blockW / 2 - inset;
+        const pinOffsetY = blockH / 2 - inset;
+        pinCoords = [
+          [-pinOffsetX, -pinOffsetY],
+          [pinOffsetX, -pinOffsetY],
+          [pinOffsetX, pinOffsetY],
+          [-pinOffsetX, pinOffsetY],
+        ];
+      }
+
+      // O pino nasce dentro da metade de cima (embutido em `embed`), atravessa o
+      // plano de corte e entra na metade de baixo; a ponta (raio menor) é a
+      // extremidade livre. Antes ele só encostava na face de contato.
+      const embed = Math.min(2, upperD / 2);
+      const pinBottomZ = splitZ - pinH;
+      const pinTopZ = splitZ + embed;
+      const slope = (pinR - tipR) / (pinTopZ - pinBottomZ);
+
+      // Furo na metade de baixo: mesma conicidade do pino + folga, com
+      // sobra acima do plano de corte para não deixar faces coplanares.
+      const clearance = 0.3;
+      const holeBottomZ = pinBottomZ - 0.6;
+      const holeTopZ = splitZ + 0.5;
+      const holeRAt = (z: number) =>
+        Math.max(0.3, tipR + slope * (z - pinBottomZ)) + clearance;
 
       for (const [px, py] of pinCoords) {
-        const pinGeo = new THREE.CylinderGeometry(tipR, pinR, pinH, 20);
-        pinGeo.rotateX(Math.PI / 2);
-        pinGeo.translate(px, py, splitZ - pinH / 2);
+        const pinGeo = frustumZ(pinBottomZ, pinTopZ, tipR, pinR, 20);
+        pinGeo.translate(px, py, 0);
         upper = evaluate(evaluator, upper, pinGeo, ADDITION);
 
-        const holeGeo = new THREE.CylinderGeometry(tipR + 0.3, pinR + 0.3, pinH + 0.6, 20);
-        holeGeo.rotateX(Math.PI / 2);
-        holeGeo.translate(px, py, splitZ - (pinH + 0.6) / 2);
+        const holeGeo = frustumZ(holeBottomZ, holeTopZ, holeRAt(holeBottomZ), holeRAt(holeTopZ), 20);
+        holeGeo.translate(px, py, 0);
         lower = evaluate(evaluator, lower, holeGeo, SUBTRACTION);
       }
     }
