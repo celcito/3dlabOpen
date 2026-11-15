@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ModelLineart, Path2D, Point2D } from '../types';
+import { parseSvgStringToPaths } from '../utils/vectorStudioUtils';
 import {
   X,
   Sparkles,
@@ -206,7 +207,7 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
     setAiError(null);
 
     try {
-      const response = await fetch('/api/generate-shape', {
+      const response = await fetch('/api/flexi/generate-svg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt.trim() }),
@@ -219,19 +220,24 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
 
       const data = await response.json();
 
-      if (!data.outerPerimeter || !Array.isArray(data.outerPerimeter) || data.outerPerimeter.length < 3) {
+      if (!data.svgCode || typeof data.svgCode !== 'string') {
+        throw new Error('A API não retornou um SVG válido.');
+      }
+
+      const parsedPaths = parseSvgStringToPaths(data.svgCode);
+      if (!parsedPaths || parsedPaths.length === 0 || parsedPaths[0].length < 3) {
         throw new Error('A API não retornou uma silhueta de contorno válida.');
       }
 
       const generatedModel: ModelLineart = {
         id: `google_ai_${Date.now()}`,
-        name: data.name || aiPrompt.trim(),
+        name: aiPrompt.trim(),
         category: 'frames',
         categoryLabel: 'Google API',
-        description: data.description || `Forma gerada via API do Google para "${aiPrompt}".`,
+        description: `Forma gerada via API do Google para "${aiPrompt}".`,
         iconName: 'Sparkles',
-        outerPerimeter: data.outerPerimeter,
-        innerDetails: Array.isArray(data.innerDetails) ? data.innerDetails : [],
+        outerPerimeter: parsedPaths[0],
+        innerDetails: parsedPaths.slice(1),
       };
 
       onApplyCustomModel(generatedModel);

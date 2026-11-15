@@ -175,7 +175,7 @@ export default function App() {
   }, [activeModel, settings]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 relative">
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-slate-950 text-slate-100 relative">
       {/* Top Bar Contract (3 zones) */}
       <TopNav
         onOpenLibrary={() => setIsLibraryOpen(true)}

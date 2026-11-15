@@ -261,7 +261,17 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
       posX: item.posX + 10,
       posY: item.posY + 10,
     };
-    setItems((prev) => [...prev, dup]);
+    const updated = [...items, dup];
+    // Repack so the duplicate does not overlap the original and stored
+    // positions match the displayed nesting layout.
+    const res = autoNestBedItems(updated, {
+      bedWidthMm: bedWidth,
+      bedDepthMm: bedDepth,
+      spacingMm: spacing,
+      marginMm: margin,
+      allowRotation,
+    });
+    setItems(res.items);
   };
 
   // Remove single item
