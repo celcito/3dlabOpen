@@ -43,6 +43,7 @@ const KeychainCreator = lazy(() => import("./pages/KeychainCreator"));
 const PenHolderCreator = lazy(() => import("./pages/PenHolderCreator"));
 const EstojoBorrachaCreator = lazy(() => import("./pages/EstojoBorrachaCreator"));
 const ThermoformCreator = lazy(() => import("./pages/ThermoformCreator"));
+const MoldCreator = lazy(() => import("./pages/MoldCreator"));
 const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
 const MedalCreator = lazy(() => import("./pages/MedalCreator"));
 const ThreeMfAnalyzer = lazy(() => import("./pages/ThreeMfAnalyzer"));
@@ -59,6 +60,7 @@ const NAV_ITEMS = [
   { to: "/porta-canetas", icon: PenLine, label: "Porta Canetas", description: "Silhueta do nome extrudada + aro colorido" },
   { to: "/estojo-borracha", icon: NotebookPen, label: "Estojo Borracha", description: "Porta de enrolar print-in-place, 4 peças" },
   { to: "/termoformados", icon: Shapes, label: "Kit Termoformado", description: "Molde + prensa + folha a partir de SVG" },
+  { to: "/criador-de-moldes", icon: Box, label: "Criador de Moldes", description: "Cavidade STL/OBJ, bipartido com pinos" },
   { to: "/medalha", icon: Award, label: "Medalhas 3D", description: "Texto circular, borda e passador" },
   { to: "/letra-caixa", icon: Type, label: "Letra Caixa 3D", description: "3 Camadas Multicolor" },
   { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
@@ -225,6 +227,7 @@ export default function App() {
           <Route path="/porta-canetas" element={<PenHolderCreator />} />
           <Route path="/estojo-borracha" element={<EstojoBorrachaCreator />} />
           <Route path="/termoformados" element={<ThermoformCreator />} />
+          <Route path="/criador-de-moldes" element={<MoldCreator />} />
           <Route path="/medalha" element={<MedalCreator />} />
           <Route path="/letra-caixa" element={<LetterBoxCreator />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />
