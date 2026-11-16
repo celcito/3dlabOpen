@@ -258,42 +258,42 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-xl shadow-2xl flex flex-col overflow-hidden max-h-[88vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--inverse-surface)]/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-xl shadow-2xl flex flex-col overflow-hidden max-h-[88vh]">
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-5 border-b border-[var(--surface-container-high)] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500">
+            <div className="p-2 rounded-lg bg-[var(--primary-fixed)] border border-[var(--primary)] text-[var(--primary)]">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base lg:text-lg font-bold text-slate-100 flex items-center gap-2">
+              <h2 className="text-base lg:text-lg font-bold text-[var(--on-surface)] flex items-center gap-2">
                 <span>Silhuetas e Ícones via API do Google</span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[var(--on-surface-variant)]">
                 Gere ou escolha formas e ícones para converter automaticamente em cortadores e carimbos 3D
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] rounded-lg hover:bg-[var(--surface-container-low)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800 bg-slate-950/60 p-2 gap-2 shrink-0">
+        <div className="flex border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)] p-2 gap-2 shrink-0">
           <button
             onClick={() => setActiveTab('ai')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-colors ${
               activeTab === 'ai'
-                ? 'bg-slate-800 text-amber-400 shadow-sm border border-slate-700'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm border border-[var(--surface-container-highest)]'
+                : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
             }`}
           >
-            <Wand2 className="w-4 h-4 text-amber-400" />
+            <Wand2 className="w-4 h-4 text-[var(--primary)]" />
             <span>Gerador Inteligente (Google Gemini API)</span>
           </button>
 
@@ -301,11 +301,11 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
             onClick={() => setActiveTab('catalog')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-md transition-colors ${
               activeTab === 'catalog'
-                ? 'bg-slate-800 text-amber-400 shadow-sm border border-slate-700'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm border border-[var(--surface-container-highest)]'
+                : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
             }`}
           >
-            <Layers className="w-4 h-4 text-cyan-400" />
+            <Layers className="w-4 h-4 text-[var(--primary)]" />
             <span>Catálogo de Silhuetas Google ({GOOGLE_BASIC_SILHOUETTES.length})</span>
           </button>
         </div>
@@ -313,8 +313,8 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
         {/* Tab 1: AI Prompt Generator */}
         {activeTab === 'ai' && (
           <div className="p-6 overflow-y-auto space-y-5">
-            <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-3">
-              <label className="block text-xs font-semibold text-slate-200">
+            <div className="bg-[var(--workbench-page)] p-4 rounded-xl border border-[var(--surface-container-high)] space-y-3">
+              <label className="block text-xs font-semibold text-[var(--on-surface)]">
                 O que você gostaria de transformar em cortador e carimbo?
               </label>
               <div className="relative">
@@ -328,31 +328,31 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
                     }
                   }}
                   placeholder="Ex: Coroa de princesa, dinossauro t-rex, foguete espacial, guitarra elétrica..."
-                  className="w-full pl-3.5 pr-10 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-500 font-medium"
+                  className="w-full pl-3.5 pr-10 py-2.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-highest)] rounded-lg text-xs text-[var(--on-surface)] placeholder:text-[var(--workbench-muted)] focus:outline-none focus:border-[var(--primary)] font-medium"
                 />
                 <button
                   onClick={handleGenerateWithGoogleApi}
                   disabled={isLoadingAi || !aiPrompt.trim()}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-md text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[var(--primary)] hover:bg-[var(--primary-container)] text-[var(--on-primary)] rounded-md text-xs font-bold transition-all disabled:opacity-40 cursor-pointer"
                 >
                   {isLoadingAi ? 'Criando...' : 'Gerar 3D'}
                 </button>
               </div>
 
               {aiError && (
-                <div className="p-3 bg-rose-950/50 border border-rose-500/50 rounded-lg text-rose-300 text-xs">
+                <div className="p-3 bg-[#FEE2E2] border border-[var(--error)] rounded-lg text-[var(--error)] text-xs">
                   {aiError}
                 </div>
               )}
 
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[var(--on-surface-variant)]">
                 A API do Google Gemini calcula automaticamente o contorno fechado para a lâmina afiada e as linhas internas ideais para o carimbo de relevo.
               </p>
             </div>
 
             {/* Quick Inspiration Prompts */}
             <div>
-              <span className="text-xs text-slate-400 block mb-2 font-medium">
+              <span className="text-xs text-[var(--on-surface-variant)] block mb-2 font-medium">
                 Ideias Prontas para Testar com 1 Clique:
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
@@ -372,7 +372,7 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
                     onClick={() => {
                       setAiPrompt(idea);
                     }}
-                    className="p-2 bg-slate-950 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 rounded-lg text-left transition-colors truncate"
+                    className="p-2 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] hover:border-[var(--primary)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] rounded-lg text-left transition-colors truncate"
                   >
                     ✦ {idea}
                   </button>
@@ -381,13 +381,13 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
             </div>
 
             {isLoadingAi && (
-              <div className="p-6 bg-slate-950/80 border border-amber-500/40 rounded-xl flex flex-col items-center justify-center gap-3 text-center">
-                <div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+              <div className="p-6 bg-[var(--workbench-page)] border border-[var(--primary)] rounded-xl flex flex-col items-center justify-center gap-3 text-center">
+                <div className="w-8 h-8 rounded-full border-2 border-[var(--primary)] border-t-transparent animate-spin" />
                 <div>
-                  <p className="text-xs font-semibold text-slate-100">
+                  <p className="text-xs font-semibold text-[var(--on-surface)]">
                     Processando com a API do Google...
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
                     Calculando perímetro do cortador e lâminas do carimbo.
                   </p>
                 </div>
@@ -400,15 +400,15 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
         {activeTab === 'catalog' && (
           <div className="flex flex-col h-full overflow-hidden">
             {/* Search filter */}
-            <div className="p-4 border-b border-slate-800 bg-slate-950/40">
+            <div className="p-4 border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)]">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-[var(--on-surface-variant)] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Filtrar silhuetas..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-md text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-[var(--workbench-panel)] border border-[var(--surface-container-highest)] rounded-md text-[var(--on-surface)] placeholder:text-[var(--workbench-muted)] focus:outline-none focus:border-[var(--primary)]"
                 />
               </div>
             </div>
@@ -432,15 +432,15 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
                     onApplyCustomModel(customModel);
                     onClose();
                   }}
-                  className="group p-3 bg-slate-950/70 border border-slate-800 hover:border-amber-500/70 rounded-lg cursor-pointer transition-all flex flex-col justify-between"
+                  className="group p-3 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] hover:border-[var(--primary)] rounded-lg cursor-pointer transition-all flex flex-col justify-between"
                 >
-                  <div className="w-full aspect-square bg-slate-900/90 rounded-md p-2 flex items-center justify-center border border-slate-800/80 group-hover:border-amber-500/30">
+                  <div className="w-full aspect-square bg-[var(--workbench-panel)] rounded-md p-2 flex items-center justify-center border border-[var(--surface-container-high)] group-hover:border-[var(--primary)]">
                     <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow">
                       <polygon
                         points={shape.outerPerimeter.map(([x, y]) => `${x},${y}`).join(' ')}
-                        fill="#f59e0b"
+                        fill="#904000"
                         fillOpacity="0.15"
-                        stroke="#f59e0b"
+                        stroke="#904000"
                         strokeWidth="2.5"
                         strokeLinejoin="round"
                       />
@@ -449,7 +449,7 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
                           key={idx}
                           points={path.map(([x, y]) => `${x},${y}`).join(' ')}
                           fill="none"
-                          stroke="#38bdf8"
+                          stroke="#7C4DFF"
                           strokeWidth="2"
                           strokeLinecap="round"
                         />
@@ -458,10 +458,10 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
                   </div>
 
                   <div className="mt-2.5">
-                    <h4 className="text-xs font-semibold text-slate-200 group-hover:text-amber-400 transition-colors">
+                    <h4 className="text-xs font-semibold text-[var(--on-surface)] group-hover:text-[var(--primary)] transition-colors">
                       {shape.name}
                     </h4>
-                    <span className="text-[10px] text-slate-500 block truncate">
+                    <span className="text-[10px] text-[var(--workbench-muted)] block truncate">
                       {shape.category}
                     </span>
                   </div>
@@ -472,11 +472,11 @@ export const GoogleShapeModal: React.FC<GoogleShapeModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-xs text-slate-400">
+        <div className="p-4 border-t border-[var(--surface-container-high)] bg-[var(--workbench-page)] flex items-center justify-between text-xs text-[var(--on-surface-variant)]">
           <span>Pronto para impressão 3D (Cortador + Carimbo)</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md transition-colors"
+            className="px-4 py-1.5 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface)] rounded-md transition-colors"
           >
             Fechar
           </button>

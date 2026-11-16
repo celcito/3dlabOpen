@@ -294,7 +294,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
     const height = containerRef.current.clientHeight;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0f1d);
+    scene.background = new THREE.Color(0xf1f3ed);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 1, 3000);
@@ -394,7 +394,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
     // 1. Base Plate (Dark textured PEI / Spring Steel sheet)
     const plateGeom = new THREE.BoxGeometry(bedWidth, bedDepth, 3);
     const plateMat = new THREE.MeshStandardMaterial({
-      color: 0x182030,
+      color: 0xe8e9e3,
       roughness: 0.85,
       metalness: 0.25,
     });
@@ -407,8 +407,8 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
     const gridHelper = new THREE.GridHelper(
       Math.max(bedWidth, bedDepth),
       Math.round(Math.max(bedWidth, bedDepth) / 10),
-      0x475569,
-      0x1e293b
+      0xcac3d8,
+      0xdde1d8
     );
     gridHelper.rotation.x = Math.PI / 2;
     gridHelper.position.set(0, 0, 0.05);
@@ -482,13 +482,13 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
       const isSelected = item.id === selectedItemId;
       const isOut = item.isOutOfBounds;
 
-      let color = isOut ? 0xef4444 : isSelected ? 0x60a5fa : item.part === 'cutter' ? 0x38bdf8 : 0xf472b6;
+      let color = isOut ? 0xdc2626 : isSelected ? 0x7c4dff : item.part === 'cutter' ? 0x38bdf8 : 0xf472b6;
 
       const mat = new THREE.MeshStandardMaterial({
         color,
         roughness: 0.35,
         metalness: 0.15,
-        emissive: isSelected ? 0x1d4ed8 : isOut ? 0x991b1b : 0x000000,
+        emissive: isSelected ? 0x632ce5 : isOut ? 0xdc2626 : 0x000000,
         emissiveIntensity: isSelected || isOut ? 0.35 : 0,
       });
 
@@ -518,7 +518,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
       ];
       fpGeom.setFromPoints(fpPts);
       const fpMat = new THREE.LineBasicMaterial({
-        color: isOut ? 0xef4444 : isSelected ? 0x3b82f6 : 0x475569,
+        color: isOut ? 0xdc2626 : isSelected ? 0x632ce5 : 0xcac3d8,
         linewidth: isSelected ? 2 : 1,
       });
       const fpLine = new THREE.Line(fpGeom, fpMat);
@@ -569,22 +569,22 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
   const currentPreset = PRINTER_BED_PRESETS.find((p) => p.id === selectedPresetId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 lg:p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-7xl h-[94vh] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 lg:p-4 bg-[var(--inverse-surface)]/40 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-7xl h-[94vh] bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-3 px-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div className="p-3 px-6 border-b border-[var(--surface-container-high)] flex items-center justify-between bg-[var(--workbench-page)]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-400">
+            <div className="p-2 bg-[var(--primary-fixed)] border border-[var(--primary)] rounded-xl text-[var(--primary)]">
               <LayoutGrid className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold text-[var(--on-surface)] flex items-center gap-2">
                 <span>Layout de Impressão 3D (Otimizador de Mesa)</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)] uppercase">
                   Nesting Automático
                 </span>
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[var(--on-surface-variant)]">
                 Organize múltiplos cortadores e carimbos na mesa da sua impressora com máxima economia de espaço e tempo.
               </p>
             </div>
@@ -594,7 +594,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
             <button
               onClick={handleExportPlateSTL}
               disabled={items.length === 0 || isExporting}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-bold text-xs rounded-xl shadow transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary-container)] disabled:opacity-40 text-[var(--on-primary)] font-bold text-xs rounded-xl shadow transition-all cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>{isExporting ? 'Gerando STL...' : `Baixar Mesa STL (${items.length} peças)`}</span>
@@ -602,7 +602,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
 
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-100 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] rounded-xl hover:bg-[var(--surface-container-low)] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -612,22 +612,22 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
         {/* Main Content Workspace */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Center 3D Viewport Area */}
-          <div className="flex-1 relative h-full bg-slate-950 flex flex-col">
+          <div className="flex-1 relative h-full bg-[var(--workbench-page)] flex flex-col">
             <div ref={containerRef} className="w-full h-full block cursor-grab active:cursor-grabbing" />
 
             {/* Viewport Overlay HUD */}
-            <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-800 text-xs text-slate-200 shadow-xl flex items-center gap-3 pointer-events-none">
+            <div className="absolute top-4 left-4 bg-[var(--workbench-panel)] backdrop-blur-md px-3.5 py-2 rounded-xl border border-[var(--surface-container-high)] text-xs text-[var(--on-surface)] shadow-xl flex items-center gap-3 pointer-events-none">
               <div className="flex items-center gap-2">
-                <Printer className="w-4 h-4 text-cyan-400" />
-                <span className="font-semibold text-slate-100">
+                <Printer className="w-4 h-4 text-[var(--primary)]" />
+                <span className="font-semibold text-[var(--on-surface)]">
                   {currentPreset?.name || 'Mesa Personalizada'}
                 </span>
-                <span className="font-mono text-cyan-400 text-[11px]">
+                <span className="font-mono text-[var(--primary)] text-[11px]">
                   ({bedWidth} x {bedDepth} mm)
                 </span>
               </div>
-              <span className="text-slate-600">|</span>
-              <span className="text-slate-400">
+              <span className="text-[var(--workbench-muted)]">|</span>
+              <span className="text-[var(--on-surface-variant)]">
                 {items.length} {items.length === 1 ? 'peça' : 'peças'} na mesa
               </span>
             </div>
@@ -635,21 +635,21 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
             {/* Status Feedback Banner */}
             <div className="absolute top-4 right-4 max-w-sm pointer-events-none">
               {nestingResult.allFit ? (
-                <div className="bg-emerald-950/90 border border-emerald-500/50 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs text-emerald-200 shadow-xl flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="bg-emerald-100 border border-emerald-300 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs text-emerald-700 shadow-xl flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
                   <div>
                     <p className="font-semibold leading-tight">Todos os cortadores cabem na mesa!</p>
-                    <p className="text-[10px] text-emerald-400/80">
+                    <p className="text-[10px] text-emerald-700">
                       Ocupação: {nestingResult.occupancyPercent}% da área útil da impressora.
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-rose-950/90 border border-rose-500/50 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs text-rose-200 shadow-xl flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                <div className="bg-[#FEE2E2] border border-[var(--error)] backdrop-blur-md px-3.5 py-2 rounded-xl text-xs text-[var(--error)] shadow-xl flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-[var(--error)] shrink-0" />
                   <div>
                     <p className="font-semibold leading-tight">Peças ultrapassam o limite da mesa!</p>
-                    <p className="text-[10px] text-rose-300">
+                    <p className="text-[10px] text-[var(--error)]">
                       Reduza o espaçamento ou divida o lote em duas impressões.
                     </p>
                   </div>
@@ -658,10 +658,10 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
             </div>
 
             {/* Floating Quick Action Bar */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md p-2 px-3 rounded-2xl border border-slate-700/80 shadow-2xl flex items-center gap-2">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[var(--workbench-panel)] backdrop-blur-md p-2 px-3 rounded-2xl border border-[var(--surface-container-highest)] shadow-2xl flex items-center gap-2">
               <button
                 onClick={handleAutoNest}
-                className="flex items-center gap-1.5 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[var(--primary)] hover:bg-[var(--primary-container)] text-[var(--on-primary)] font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
                 title="Executar algoritmo de organização automática na mesa"
               >
                 <Sparkles className="w-4 h-4" />
@@ -670,43 +670,43 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
 
               <button
                 onClick={() => handleAddItem(activeModel, 'both')}
-                className="flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-3 py-2 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface)] text-xs rounded-xl border border-[var(--surface-container-highest)] transition-colors cursor-pointer"
                 title="Adicionar par (Cortador + Carimbo) do modelo ativo"
               >
-                <Plus className="w-3.5 h-3.5 text-amber-400" />
+                <Plus className="w-3.5 h-3.5 text-[var(--primary)]" />
                 <span>+1 Par Atual</span>
               </button>
 
               <button
                 onClick={() => handleAddBatchCopies(4)}
-                className="flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-3 py-2 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface)] text-xs rounded-xl border border-[var(--surface-container-highest)] transition-colors cursor-pointer"
                 title="Adicionar 4 cópias do cortador na mesa"
               >
-                <Copy className="w-3.5 h-3.5 text-cyan-400" />
+                <Copy className="w-3.5 h-3.5 text-[var(--primary)]" />
                 <span>+4 Cortadores</span>
               </button>
 
               <button
                 onClick={() => setIsLibraryPickerOpen(true)}
-                className="flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-3 py-2 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface)] text-xs rounded-xl border border-[var(--surface-container-highest)] transition-colors cursor-pointer"
                 title="Escolher outro formato na biblioteca de modelos"
               >
-                <FolderOpen className="w-3.5 h-3.5 text-purple-400" />
+                <FolderOpen className="w-3.5 h-3.5 text-[var(--primary)]" />
                 <span>Biblioteca...</span>
               </button>
             </div>
           </div>
 
           {/* Right Sidebar: Settings, Item Queue & Metrics (400px) */}
-          <div className="w-full lg:w-[420px] bg-slate-950 border-l border-slate-800 flex flex-col h-full overflow-hidden">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-cyan-400" />
+          <div className="w-full lg:w-[420px] bg-[var(--workbench-page)] border-l border-[var(--surface-container-high)] flex flex-col h-full overflow-hidden">
+            <div className="p-4 border-b border-[var(--surface-container-high)] flex items-center justify-between">
+              <h3 className="text-xs font-bold text-[var(--on-surface)] uppercase tracking-wider flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-[var(--primary)]" />
                 <span>Configuração da Mesa & Otimização</span>
               </h3>
               <button
                 onClick={handleClearBed}
-                className="text-[11px] text-slate-500 hover:text-rose-400 transition-colors"
+                className="text-[11px] text-[var(--workbench-muted)] hover:text-[var(--error)] transition-colors"
               >
                 Limpar Mesa
               </button>
@@ -714,14 +714,14 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Printer Preset Selector */}
-              <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 space-y-3">
-                <label className="text-xs font-medium text-slate-300 block">
+              <div className="p-3.5 bg-[var(--workbench-panel)] rounded-xl border border-[var(--surface-container-high)] space-y-3">
+                <label className="text-xs font-medium text-[var(--on-surface-variant)] block">
                   Modelo da Impressora 3D:
                 </label>
                 <select
                   value={selectedPresetId}
                   onChange={(e) => handleSelectPreset(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full px-3 py-2 text-xs bg-[var(--workbench-page)] border border-[var(--surface-container-highest)] rounded-lg text-[var(--on-surface)] focus:outline-none focus:border-[var(--primary)]"
                 >
                   {PRINTER_BED_PRESETS.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -733,35 +733,35 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                 {/* Custom dimensions if needed */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">Largura X (mm):</span>
+                    <span className="text-[10px] text-[var(--on-surface-variant)] block mb-1">Largura X (mm):</span>
                     <input
                       type="number"
                       min={100}
                       max={500}
                       value={bedWidth}
                       onChange={(e) => setBedWidth(Math.max(80, Number(e.target.value)))}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono"
+                      className="w-full px-2.5 py-1.5 text-xs bg-[var(--workbench-page)] border border-[var(--surface-container-highest)] rounded-lg text-[var(--on-surface)] font-mono"
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">Profundidade Y (mm):</span>
+                    <span className="text-[10px] text-[var(--on-surface-variant)] block mb-1">Profundidade Y (mm):</span>
                     <input
                       type="number"
                       min={100}
                       max={500}
                       value={bedDepth}
                       onChange={(e) => setBedDepth(Math.max(80, Number(e.target.value)))}
-                      className="w-full px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono"
+                      className="w-full px-2.5 py-1.5 text-xs bg-[var(--workbench-page)] border border-[var(--surface-container-highest)] rounded-lg text-[var(--on-surface)] font-mono"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Nesting Parameters */}
-              <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 space-y-3">
-                <div className="flex items-center justify-between text-xs text-slate-300">
+              <div className="p-3.5 bg-[var(--workbench-panel)] rounded-xl border border-[var(--surface-container-high)] space-y-3">
+                <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)]">
                   <span>Espaçamento Entre Peças:</span>
-                  <span className="font-mono text-cyan-400">{spacing} mm</span>
+                  <span className="font-mono text-[var(--primary)]">{spacing} mm</span>
                 </div>
                 <input
                   type="range"
@@ -769,12 +769,12 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                   max="14"
                   value={spacing}
                   onChange={(e) => setSpacing(Number(e.target.value))}
-                  className="w-full accent-cyan-500 cursor-pointer"
+                  className="w-full accent-[var(--primary)] cursor-pointer"
                 />
 
-                <div className="flex items-center justify-between text-xs text-slate-300 pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] pt-2 border-t border-[var(--surface-container-high)]">
                   <span>Margem da Borda da Mesa:</span>
-                  <span className="font-mono text-cyan-400">{margin} mm</span>
+                  <span className="font-mono text-[var(--primary)]">{margin} mm</span>
                 </div>
                 <input
                   type="range"
@@ -782,15 +782,15 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                   max="15"
                   value={margin}
                   onChange={(e) => setMargin(Number(e.target.value))}
-                  className="w-full accent-cyan-500 cursor-pointer"
+                  className="w-full accent-[var(--primary)] cursor-pointer"
                 />
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-                  <span className="text-slate-300">Permitir Rotação 90° (Melhor Encaixe)</span>
+                <div className="flex items-center justify-between pt-2 border-t border-[var(--surface-container-high)] text-xs">
+                  <span className="text-[var(--on-surface-variant)]">Permitir Rotação 90° (Melhor Encaixe)</span>
                   <button
                     onClick={() => setAllowRotation(!allowRotation)}
                     className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-                      allowRotation ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-400'
+                      allowRotation ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold' : 'bg-[var(--surface-container-low)] text-[var(--on-surface-variant)]'
                     }`}
                   >
                     {allowRotation ? 'Ativo' : 'Desativado'}
@@ -799,44 +799,44 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
               </div>
 
               {/* Batch Print Estimation Metrics */}
-              <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2.5">
+              <div className="p-3.5 bg-[var(--workbench-panel)] rounded-xl border border-[var(--surface-container-high)] space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-medium">Ocupação da Área da Mesa:</span>
+                  <span className="text-[var(--on-surface-variant)] font-medium">Ocupação da Área da Mesa:</span>
                   <span
                     className={`font-mono font-bold ${
-                      nestingResult.allFit ? 'text-emerald-400' : 'text-rose-400'
+                      nestingResult.allFit ? 'text-emerald-700' : 'text-[var(--error)]'
                     }`}
                   >
                     {nestingResult.occupancyPercent}%
                   </span>
                 </div>
 
-                <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                <div className="w-full bg-[var(--workbench-page)] h-2 rounded-full overflow-hidden border border-[var(--surface-container-high)]">
                   <div
                     className={`h-full transition-all duration-300 ${
-                      nestingResult.allFit ? 'bg-emerald-500' : 'bg-rose-500'
+                      nestingResult.allFit ? 'bg-emerald-600' : 'bg-[var(--error)]'
                     }`}
                     style={{ width: `${Math.min(100, nestingResult.occupancyPercent)}%` }}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                  <div className="p-2 bg-slate-950/70 rounded-lg border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1 mb-0.5">
-                      <Scale className="w-3 h-3 text-cyan-400" />
+                  <div className="p-2 bg-[var(--workbench-page)] rounded-lg border border-[var(--surface-container-high)]">
+                    <span className="text-[10px] text-[var(--on-surface-variant)] flex items-center gap-1 mb-0.5">
+                      <Scale className="w-3 h-3 text-[var(--primary)]" />
                       Peso Total Estimado
                     </span>
-                    <p className="font-mono font-bold text-slate-200">
+                    <p className="font-mono font-bold text-[var(--on-surface)]">
                       ~{nestingResult.totalFilamentGrams} g
                     </p>
                   </div>
 
-                  <div className="p-2 bg-slate-950/70 rounded-lg border border-slate-800/80">
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1 mb-0.5">
-                      <Clock className="w-3 h-3 text-amber-400" />
+                  <div className="p-2 bg-[var(--workbench-page)] rounded-lg border border-[var(--surface-container-high)]">
+                    <span className="text-[10px] text-[var(--on-surface-variant)] flex items-center gap-1 mb-0.5">
+                      <Clock className="w-3 h-3 text-[var(--primary)]" />
                       Tempo Total do Lote
                     </span>
-                    <p className="font-mono font-bold text-slate-200">
+                    <p className="font-mono font-bold text-[var(--on-surface)]">
                       ~{Math.floor(nestingResult.totalTimeMinutes / 60)}h{' '}
                       {nestingResult.totalTimeMinutes % 60}m
                     </p>
@@ -846,19 +846,19 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
 
               {/* Items on Bed Queue */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+                <div className="flex items-center justify-between text-xs font-semibold text-[var(--on-surface-variant)]">
                   <span className="flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                    <Layers className="w-3.5 h-3.5 text-[var(--primary)]" />
                     <span>Peças na Mesa ({items.length})</span>
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-[var(--workbench-muted)]">
                     Azul = Cortador | Rosa = Carimbo
                   </span>
                 </div>
 
                 <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
                   {items.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                    <div className="p-4 text-center text-xs text-[var(--workbench-muted)] border border-dashed border-[var(--surface-container-high)] rounded-xl">
                       A mesa está vazia. Adicione cortadores usando os botões rápidos.
                     </div>
                   ) : (
@@ -870,10 +870,10 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                           onClick={() => setSelectedItemId(it.id)}
                           className={`p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 transition-all cursor-pointer ${
                             it.isOutOfBounds
-                              ? 'bg-rose-950/20 border-rose-500/50 text-rose-200'
+                              ? 'bg-[#FEE2E2] border-[var(--error)] text-[var(--error)]'
                               : isSelected
-                              ? 'bg-cyan-950/40 border-cyan-500 text-cyan-100'
-                              : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                              ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)]'
+                              : 'bg-[var(--workbench-panel)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:border-[var(--surface-container-highest)]'
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate">
@@ -885,7 +885,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                               <p className="font-medium text-[11px] truncate leading-tight">
                                 {it.label}
                               </p>
-                              <p className="text-[10px] text-slate-400 font-mono">
+                              <p className="text-[10px] text-[var(--on-surface-variant)] font-mono">
                                 {Math.round(it.widthMm)} x {Math.round(it.depthMm)} mm • {it.rotationDeg}°
                               </p>
                             </div>
@@ -897,7 +897,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                                 e.stopPropagation();
                                 handleRotateItem(it.id);
                               }}
-                              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-cyan-400 transition-colors"
+                              className="p-1 hover:bg-[var(--surface-container-low)] rounded text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors"
                               title="Girar 90 graus"
                             >
                               <RotateCw className="w-3.5 h-3.5" />
@@ -908,7 +908,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                                 e.stopPropagation();
                                 handleDuplicateItem(it.id);
                               }}
-                              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-slate-200 transition-colors"
+                              className="p-1 hover:bg-[var(--surface-container-low)] rounded text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition-colors"
                               title="Duplicar peça"
                             >
                               <Copy className="w-3.5 h-3.5" />
@@ -919,7 +919,7 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                                 e.stopPropagation();
                                 handleRemoveItem(it.id);
                               }}
-                              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-rose-400 transition-colors"
+                              className="p-1 hover:bg-[var(--surface-container-low)] rounded text-[var(--on-surface-variant)] hover:text-[var(--error)] transition-colors"
                               title="Remover peça"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -938,21 +938,21 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
 
       {/* Library Model Picker Modal */}
       {isLibraryPickerOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-5 shadow-2xl flex flex-col gap-3">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-[var(--inverse-surface)]/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-2xl w-full max-w-xl p-5 shadow-2xl flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <FolderOpen className="w-4 h-4 text-purple-400" />
+              <h3 className="text-sm font-bold text-[var(--on-surface)] flex items-center gap-2">
+                <FolderOpen className="w-4 h-4 text-[var(--primary)]" />
                 <span>Escolher Modelo da Biblioteca para a Mesa</span>
               </h3>
               <button
                 onClick={() => setIsLibraryPickerOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--on-surface-variant)]">
               Selecione outro formato para adicionar à mesma impressão:
             </p>
 
@@ -964,12 +964,12 @@ export const PrintBedStudio: React.FC<PrintBedStudioProps> = ({
                     handleAddItem(model, 'both');
                     setIsLibraryPickerOpen(false);
                   }}
-                  className="p-2.5 bg-slate-950 border border-slate-800 hover:border-cyan-500 rounded-xl text-left transition-colors flex flex-col gap-1 cursor-pointer"
+                  className="p-2.5 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] hover:border-[var(--primary)] rounded-xl text-left transition-colors flex flex-col gap-1 cursor-pointer"
                 >
-                  <span className="font-semibold text-xs text-slate-200 truncate">
+                  <span className="font-semibold text-xs text-[var(--on-surface)] truncate">
                     {model.name}
                   </span>
-                  <span className="text-[10px] text-slate-500 capitalize">
+                  <span className="text-[10px] text-[var(--workbench-muted)] capitalize">
                     {model.categoryLabel}
                   </span>
                 </button>

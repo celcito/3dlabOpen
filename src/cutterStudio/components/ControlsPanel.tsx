@@ -39,7 +39,7 @@ const ParamTooltip: React.FC<{ text: string; technical?: string }> = ({ text, te
     >
       <button
         type="button"
-        className="text-slate-400 hover:text-amber-400 focus:outline-none focus:text-amber-400 transition-colors cursor-help p-0.5 rounded"
+        className="text-[var(--on-surface-variant)] hover:text-[var(--primary)] focus:outline-none focus:text-[var(--primary)] transition-colors cursor-help p-0.5 rounded"
         aria-label="Informação técnica"
         onClick={(e) => {
           e.preventDefault();
@@ -50,14 +50,14 @@ const ParamTooltip: React.FC<{ text: string; technical?: string }> = ({ text, te
       </button>
 
       {show && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-60 sm:w-64 p-2.5 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl text-[11px] text-slate-200 leading-relaxed pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-          <p className="font-normal text-slate-300">{text}</p>
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-60 sm:w-64 p-2.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-highest)] rounded-lg shadow-2xl text-[11px] text-[var(--on-surface)] leading-relaxed pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+          <p className="font-normal text-[var(--on-surface-variant)]">{text}</p>
           {technical && (
-            <div className="mt-1.5 pt-1.5 border-t border-slate-800 text-[10px] text-amber-400 font-mono">
+            <div className="mt-1.5 pt-1.5 border-t border-[var(--surface-container-high)] text-[10px] text-[var(--primary)] font-mono">
               💡 Dica 3D: {technical}
             </div>
           )}
-          <div className="absolute left-1/2 -translate-x-1/2 top-full -mt-1 w-2 h-2 bg-slate-900 border-r border-b border-slate-700 rotate-45" />
+          <div className="absolute left-1/2 -translate-x-1/2 top-full -mt-1 w-2 h-2 bg-[var(--workbench-panel)] border-r border-b border-[var(--surface-container-highest)] rotate-45" />
         </div>
       )}
     </div>
@@ -127,18 +127,18 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   };
 
   return (
-    <aside className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-900/95 flex flex-col shrink-0 select-none overflow-hidden h-full">
+    <aside className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-[var(--surface-container-high)] bg-[var(--workbench-panel)] flex flex-col shrink-0 select-none overflow-hidden h-full">
       {/* Top Header: Title and Undo Button */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-slate-800 bg-slate-950/80 shrink-0">
-        <span className="text-xs font-semibold text-slate-200">Parâmetros 3D</span>
+      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)] shrink-0">
+        <span className="text-xs font-semibold text-[var(--on-surface)]">Parâmetros 3D</span>
         {onUndo && (
           <button
             onClick={onUndo}
             disabled={!canUndo}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
               canUndo
-                ? 'bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 border border-slate-700 shadow-sm cursor-pointer'
-                : 'text-slate-600 border border-slate-800/40 opacity-40 cursor-not-allowed'
+                ? 'bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--primary)] hover:text-[var(--primary)] border border-[var(--surface-container-highest)] shadow-sm cursor-pointer'
+                : 'text-[var(--workbench-muted)] border border-[var(--surface-container-high)] opacity-40 cursor-not-allowed'
             }`}
             title={
               canUndo
@@ -149,20 +149,20 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             <Undo2 className="w-3.5 h-3.5" />
             <span>Desfazer</span>
             {canUndo && undoCount > 0 && (
-              <span className="text-[10px] font-mono text-amber-500/80">({undoCount}/5)</span>
+              <span className="text-[10px] font-mono text-[var(--primary)]">({undoCount}/5)</span>
             )}
           </button>
         )}
       </div>
 
       {/* Tabs Header */}
-      <div className="flex border-b border-slate-800 bg-slate-950/70 p-1.5 gap-1 shrink-0 overflow-x-auto scrollbar-none">
+      <div className="flex border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)] p-1.5 gap-1 shrink-0 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('dimensions')}
           className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'dimensions'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm'
+              : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Dimensões (mm)"
         >
@@ -174,8 +174,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           onClick={() => setActiveTab('cutter')}
           className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'cutter'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm'
+              : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Ajustes da lâmina do cortador"
         >
@@ -187,8 +187,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           onClick={() => setActiveTab('stamp')}
           className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'stamp'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm'
+              : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Ajustes do carimbo e puxador"
         >
@@ -200,15 +200,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           onClick={() => setActiveTab('text')}
           className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center justify-center gap-1.5 relative ${
             activeTab === 'text'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm'
+              : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Adicionar ou editar texto gravado no carimbo"
         >
           <Type className="w-3.5 h-3.5" />
           <span>Texto</span>
           {settings.customText && (
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 absolute top-1 right-1" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-container)] absolute top-1 right-1" />
           )}
         </button>
 
@@ -216,8 +216,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           onClick={() => setActiveTab('filament')}
           className={`flex-1 py-1.5 px-2 text-xs font-medium rounded-md whitespace-nowrap transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'filament'
-              ? 'bg-slate-800 text-amber-400 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm'
+              : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Configurações técnicas de fatiamento (infill), mesa e filamento"
         >
@@ -232,34 +232,34 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         {activeTab === 'dimensions' && (
           <div className="space-y-4">
             {/* Quick Custom Shape Creation Callout */}
-            <div className="p-3 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-cyan-500/10 border border-amber-500/25 rounded-xl space-y-2">
+            <div className="p-3 bg-gradient-to-r from-[var(--primary)]/10 via-[var(--primary-fixed)] to-[var(--primary-fixed)] border border-[var(--primary)] rounded-xl space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-xs font-bold text-[var(--on-surface)] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span>Crie com Sua Própria Imagem ou Desenho</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-snug">
+              <p className="text-[11px] text-[var(--on-surface-variant)] leading-snug">
                 Você não precisa usar apenas os modelos prontos! Envie qualquer foto da internet, faça um desenho à mão ou gere uma silhueta com IA:
               </p>
               <div className="grid grid-cols-2 gap-1.5 pt-0.5">
                 {onOpenCreator && (
                   <button
                     onClick={onOpenCreator}
-                    className="p-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 rounded-lg text-left transition-colors flex items-center gap-1.5 cursor-pointer text-xs text-cyan-300"
+                    className="p-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] hover:border-[var(--primary)] rounded-lg text-left transition-colors flex items-center gap-1.5 cursor-pointer text-xs text-[var(--primary)]"
                     title="Importar imagem (PNG, JPG, SVG) ou desenhar à mão livre"
                   >
-                    <PenTool className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <PenTool className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
                     <span className="font-semibold text-[11px]">Enviar Imagem / Desenhar</span>
                   </button>
                 )}
                 {onOpenGoogleShape && (
                   <button
                     onClick={onOpenGoogleShape}
-                    className="p-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-purple-500/60 rounded-lg text-left transition-colors flex items-center gap-1.5 cursor-pointer text-xs text-purple-300"
+                    className="p-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] hover:border-[var(--primary)] rounded-lg text-left transition-colors flex items-center gap-1.5 cursor-pointer text-xs text-[var(--primary)]"
                     title="Gerar silhuetas vetoriais de qualquer tema"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
                     <span className="font-semibold text-[11px]">Buscar Silhuetas com IA</span>
                   </button>
                 )}
@@ -269,26 +269,26 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 <div className="grid grid-cols-2 gap-1.5 mt-1">
                   <button
                     onClick={onOpenMoldStudio}
-                    className="p-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 rounded-lg text-left transition-all flex items-center justify-between cursor-pointer text-xs text-sky-200 shadow-xs"
+                    className="p-2 bg-[var(--primary-fixed)] hover:bg-[var(--primary-fixed)] border border-[var(--primary)] rounded-lg text-left transition-all flex items-center justify-between cursor-pointer text-xs text-[var(--primary)] shadow-xs"
                     title="Abrir o Criador de Moldes 3D para gerar molde a partir de modelo 3D"
                   >
                     <div className="flex items-center gap-1.5 truncate">
-                      <Box className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                      <Box className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
                       <span className="font-semibold text-[11px] truncate">Moldes 3D</span>
                     </div>
-                    <span className="text-[10px] text-sky-400 font-mono">Abrir →</span>
+                    <span className="text-[10px] text-[var(--primary)] font-mono">Abrir →</span>
                   </button>
 
                   {onUploadSTLForMold && (
                     <label
-                      className="p-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/60 rounded-lg text-left transition-all flex items-center justify-between cursor-pointer text-xs text-slate-200 shadow-xs"
+                      className="p-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] hover:border-[var(--primary)] rounded-lg text-left transition-all flex items-center justify-between cursor-pointer text-xs text-[var(--on-surface)] shadow-xs"
                       title="Enviar arquivo STL do computador diretamente para o gerador de moldes"
                     >
                       <div className="flex items-center gap-1.5 truncate">
-                        <Upload className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                        <Upload className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
                         <span className="font-semibold text-[11px] truncate">Enviar STL</span>
                       </div>
-                      <span className="text-[10px] text-sky-400 font-mono font-bold">+</span>
+                      <span className="text-[10px] text-[var(--primary)] font-mono font-bold">+</span>
                       <input
                         type="file"
                         accept=".stl,.obj"
@@ -307,24 +307,24 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               )}
 
               {onOpenPrintBed && (
-                <div className="mt-1.5 pt-1.5 border-t border-slate-800/80">
+                <div className="mt-1.5 pt-1.5 border-t border-[var(--surface-container-high)]">
                   <button
                     onClick={onOpenPrintBed}
-                    className="w-full p-2 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/40 hover:border-cyan-400 rounded-lg text-left transition-all flex items-center justify-between cursor-pointer text-xs text-cyan-200 shadow-xs"
+                    className="w-full p-2 bg-[var(--primary-fixed)] hover:bg-[var(--primary-fixed)] border border-[var(--primary)] hover:border-[var(--primary)] rounded-lg text-left transition-all flex items-center justify-between cursor-pointer text-xs text-[var(--primary)] shadow-xs"
                     title="Organizar múltiplos cortadores na mesa virtual 3D com nesting automático"
                   >
                     <div className="flex items-center gap-2">
-                      <LayoutGrid className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <LayoutGrid className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" />
                       <div>
-                        <span className="font-semibold text-[11px] block text-cyan-200 leading-tight">
+                        <span className="font-semibold text-[11px] block text-[var(--primary)] leading-tight">
                           Layout de Impressão (Nesting de Mesa)
                         </span>
-                        <span className="text-[10px] text-slate-400 block leading-tight">
+                        <span className="text-[10px] text-[var(--on-surface-variant)] block leading-tight">
                           Encaixe automático de múltiplos cortadores na mesma mesa
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                    <span className="text-[10px] font-mono text-[var(--primary)] bg-[var(--primary-fixed)] px-1.5 py-0.5 rounded border border-[var(--primary)]">
                       Abrir 3D →
                     </span>
                   </button>
@@ -334,9 +334,9 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 
             {/* Standard Cookie Size Presets (Quick Buttons) */}
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-2">
-                <span className="font-semibold text-slate-200">Tamanhos Padrão de Biscoito:</span>
-                <span className="text-[11px] text-slate-400">Largura × Altura</span>
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-2">
+                <span className="font-semibold text-[var(--on-surface)]">Tamanhos Padrão de Biscoito:</span>
+                <span className="text-[11px] text-[var(--on-surface-variant)]">Largura × Altura</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 {[
@@ -356,13 +356,13 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                       }}
                       className={`p-2.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                         isActive
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 shadow-sm ring-1 ring-amber-500/40 font-semibold'
-                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 hover:bg-slate-900/60'
+                          ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)] font-semibold'
+                          : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)] hover:bg-[var(--workbench-panel)]'
                       }`}
                     >
-                      <div className="font-bold text-sm tracking-tight text-amber-400">{preset.size} mm</div>
-                      <div className="text-[10px] text-slate-400 truncate w-full">{preset.label}</div>
-                      <div className="text-[9px] text-slate-500 font-mono">{preset.desc}</div>
+                      <div className="font-bold text-sm tracking-tight text-[var(--primary)]">{preset.size} mm</div>
+                      <div className="text-[10px] text-[var(--on-surface-variant)] truncate w-full">{preset.label}</div>
+                      <div className="text-[9px] text-[var(--workbench-muted)] font-mono">{preset.desc}</div>
                     </button>
                   );
                 })}
@@ -370,7 +370,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 
               {/* Quick secondary sizes chips */}
               <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-none py-0.5">
-                <span className="text-[10px] text-slate-400 shrink-0">Mais medidas:</span>
+                <span className="text-[10px] text-[var(--on-surface-variant)] shrink-0">Mais medidas:</span>
                 {[45, 60, 85, 110, 120].map((s) => (
                   <button
                     key={s}
@@ -382,8 +382,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     }}
                     className={`px-2 py-0.5 rounded text-[11px] font-mono border transition-colors shrink-0 cursor-pointer ${
                       settings.targetWidth === s && settings.targetHeight === s
-                        ? 'bg-amber-500 text-slate-950 font-bold border-amber-500'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold border-[var(--primary)]'
+                        : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)]'
                     }`}
                   >
                     {s}mm
@@ -392,8 +392,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               </div>
             </div>
 
-            <div className="pt-2 border-t border-slate-800/80">
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+            <div className="pt-2 border-t border-[var(--surface-container-high)]">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Largura Customizada (X)</span>
                   <ParamTooltip
@@ -401,7 +401,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="50mm para mini doces; 75mm para tamanho clássico de confeitaria; 100mm para cookies gourmet."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.targetWidth} mm
                 </span>
               </div>
@@ -412,12 +412,12 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="1"
                 value={settings.targetWidth}
                 onChange={(e) => handleWidthChange(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Altura Customizada (Y)</span>
                   <ParamTooltip
@@ -425,7 +425,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="Mantenha a proporção travada para preservar a curvatura exata do desenho."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.targetHeight} mm
                 </span>
               </div>
@@ -436,17 +436,17 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="1"
                 value={settings.targetHeight}
                 onChange={(e) => handleHeightChange(Number(e.target.value))}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             {/* Lock aspect ratio */}
-            <div className="flex items-center justify-between p-2.5 bg-slate-950/60 rounded-lg border border-slate-800 text-xs text-slate-300">
+            <div className="flex items-center justify-between p-2.5 bg-[var(--workbench-page)] rounded-lg border border-[var(--surface-container-high)] text-xs text-[var(--on-surface-variant)]">
               <span className="flex items-center gap-2">
                 {settings.lockAspectRatio ? (
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <Lock className="w-3.5 h-3.5 text-[var(--primary)]" />
                 ) : (
-                  <Unlock className="w-3.5 h-3.5 text-slate-500" />
+                  <Unlock className="w-3.5 h-3.5 text-[var(--workbench-muted)]" />
                 )}
                 <span className="flex items-center">
                   <span>Manter Proporção (Trava 1:1)</span>
@@ -462,8 +462,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 }
                 className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
                   settings.lockAspectRatio
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-medium'
-                    : 'bg-slate-800 text-slate-400'
+                    ? 'bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)] font-medium'
+                    : 'bg-[var(--surface-container-low)] text-[var(--on-surface-variant)]'
                 }`}
               >
                 {settings.lockAspectRatio ? 'Ativado' : 'Livre'}
@@ -476,7 +476,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         {activeTab === 'cutter' && (
           <div className="space-y-4">
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Altura da Lâmina (Profundidade)</span>
                   <ParamTooltip
@@ -484,7 +484,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="14 a 16 mm é a altura padrão recomendada para massas de 5-6 mm de espessura."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.bladeHeight} mm
                 </span>
               </div>
@@ -495,15 +495,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="1"
                 value={settings.bladeHeight}
                 onChange={(e) => onUpdateSettings({ bladeHeight: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-[var(--workbench-muted)] block mt-0.5">
                 Padrão confeitaria: 15mm para massas de 5-6mm
               </span>
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Espessura do Fio da Lâmina</span>
                   <ParamTooltip
@@ -511,7 +511,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="0.8 a 0.9 mm é o padrão de excelência para bicos 0.4mm (2 perímetros de extrusão sem emendas)."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.bladeEdgeThickness} mm
                 </span>
               </div>
@@ -524,15 +524,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 onChange={(e) =>
                   onUpdateSettings({ bladeEdgeThickness: Number(e.target.value) })
                 }
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-[var(--workbench-muted)] block mt-0.5">
                 0.9mm corta massas e pasta americana sem quebrar
               </span>
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Espessura da Base da Parede</span>
                   <ParamTooltip
@@ -540,7 +540,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="1.8 a 2.0 mm evita que o cortador entorte ao aplicar força sobre massas mais densas ou geladas."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.bladeBaseThickness} mm
                 </span>
               </div>
@@ -553,12 +553,12 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 onChange={(e) =>
                   onUpdateSettings({ bladeBaseThickness: Number(e.target.value) })
                 }
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Aba Superior de Apoio (Pega)</span>
                   <ParamTooltip
@@ -566,7 +566,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="5 a 7 mm distribui a carga confortavelmente e evita fadiga muscular durante cortes contínuos."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.lipWidth} mm
                 </span>
               </div>
@@ -577,15 +577,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="0.5"
                 value={settings.lipWidth}
                 onChange={(e) => onUpdateSettings({ lipWidth: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-[var(--workbench-muted)] block mt-0.5">
                 Borda larga para as mãos pressionarem sem machucar
               </span>
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Espessura da Aba Superior</span>
                   <ParamTooltip
@@ -593,7 +593,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="2.5 mm oferece alta rigidez com excelente aderência de camadas no fatiador."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.lipThickness} mm
                 </span>
               </div>
@@ -604,7 +604,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="0.1"
                 value={settings.lipThickness}
                 onChange={(e) => onUpdateSettings({ lipThickness: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
           </div>
@@ -615,7 +615,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           <div className="space-y-4">
             {/* stampClearance - Tolerância Mecânica */}
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Folga Carimbo-Cortador (Clearance)</span>
                   <ParamTooltip
@@ -623,7 +623,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="Tolerância mecânica essencial: 1.0mm a 1.2mm permite que o carimbo deslize livremente sem travar devido à dilatação natural do filamento PLA impresso."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.stampClearance} mm
                 </span>
               </div>
@@ -634,15 +634,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="0.1"
                 value={settings.stampClearance}
                 onChange={(e) => onUpdateSettings({ stampClearance: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-[var(--workbench-muted)] block mt-0.5">
                 Padrão 1.0mm: deslize suave sem prender no cortador
               </span>
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Profundidade do Relevo (Gravação)</span>
                   <ParamTooltip
@@ -650,7 +650,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="2.5 a 3.5 mm marca com excelente contraste visual sem furar a base do biscoito."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.stampDepth} mm
                 </span>
               </div>
@@ -661,12 +661,12 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="0.5"
                 value={settings.stampDepth}
                 onChange={(e) => onUpdateSettings({ stampDepth: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Espessura dos Traços Lineart</span>
                   <ParamTooltip
@@ -674,7 +674,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="1.2 a 1.5 mm garante linhas sólidas e contínuas na impressora 3D (3 passes de extrusão)."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.stampLineThickness} mm
                 </span>
               </div>
@@ -687,12 +687,12 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 onChange={(e) =>
                   onUpdateSettings({ stampLineThickness: Number(e.target.value) })
                 }
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Espessura da Placa Base</span>
                   <ParamTooltip
@@ -700,7 +700,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="2.5 a 3.0 mm assegura 100% de rigidez na prensagem contra a bancada sem envergar."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.stampPlateThickness} mm
                 </span>
               </div>
@@ -713,14 +713,14 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 onChange={(e) =>
                   onUpdateSettings({ stampPlateThickness: Number(e.target.value) })
                 }
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             {/* Handle Type */}
             <div>
               <div className="flex items-center mb-1.5">
-                <span className="text-xs text-slate-300">
+                <span className="text-xs text-[var(--on-surface-variant)]">
                   Modelo do Puxador / Pegador
                 </span>
                 <ParamTooltip
@@ -739,8 +739,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     onClick={() => onUpdateSettings({ handleType: h.id as any })}
                     className={`p-2 rounded-lg border text-center transition-colors cursor-pointer ${
                       settings.handleType === h.id
-                        ? 'bg-amber-500/10 border-amber-500 text-amber-300 font-semibold'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                        ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] font-semibold'
+                        : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                     }`}
                   >
                     {h.label}
@@ -752,7 +752,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             {/* Handle Height */}
             {settings.handleType !== 'none' && (
               <div>
-                <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+                <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                   <span className="flex items-center">
                     <span>Altura do Puxador</span>
                     <ParamTooltip
@@ -760,7 +760,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                       technical="20 a 24 mm é o tamanho ergonômico padrão para pinça dos dedos indicador e polegar."
                     />
                   </span>
-                  <span className="font-mono text-amber-400 tabular-nums">
+                  <span className="font-mono text-[var(--primary)] tabular-nums">
                     {settings.handleHeight} mm
                   </span>
                 </div>
@@ -773,16 +773,16 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   onChange={(e) =>
                     onUpdateSettings({ handleHeight: Number(e.target.value) })
                   }
-                  className="w-full accent-amber-500 cursor-pointer"
+                  className="w-full accent-[var(--primary)] cursor-pointer"
                 />
               </div>
             )}
 
             {/* Air Release Holes (Anti-vacuum) */}
-            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-300">
+            <div className="p-3 bg-[var(--workbench-page)] rounded-lg border border-[var(--surface-container-high)] space-y-2">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)]">
                 <span className="flex items-center gap-1.5">
-                  <Wind className="w-3.5 h-3.5 text-cyan-400" />
+                  <Wind className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span className="flex items-center">
                     <span>Furos de Escape de Ar</span>
                     <ParamTooltip
@@ -797,14 +797,14 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   }
                   className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
                     settings.airReleaseHoles
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-medium'
-                      : 'bg-slate-800 text-slate-400'
+                      ? 'bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)] font-medium'
+                      : 'bg-[var(--surface-container-low)] text-[var(--on-surface-variant)]'
                   }`}
                 >
                   {settings.airReleaseHoles ? 'Ativo' : 'Desativado'}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-[var(--workbench-muted)]">
                 Evita o efeito de sucção (vácuo) que faz a massa grudar no carimbo ao levantar.
               </p>
             </div>
@@ -815,10 +815,10 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         {activeTab === 'text' && (
           <div className="space-y-4">
             {/* PRE-DEFINED CUTTER SHAPES FOR TEXT */}
-            <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+            <div className="bg-[var(--workbench-page)] p-3 rounded-xl border border-[var(--surface-container-high)]">
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                  <Stamp className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-semibold text-[var(--on-surface)] flex items-center gap-1.5">
+                  <Stamp className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span className="flex items-center">
                     <span>Formas Pré-definidas para Cortador</span>
                     <ParamTooltip
@@ -827,7 +827,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     />
                   </span>
                 </span>
-                <span className="text-[10px] text-amber-400 font-mono">10 modelos</span>
+                <span className="text-[10px] text-[var(--primary)] font-mono">10 modelos</span>
               </div>
 
               <div className="grid grid-cols-5 gap-1.5 mb-2">
@@ -846,15 +846,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                       }}
                       className={`p-1.5 rounded-lg border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 shadow-sm ring-1 ring-amber-500/40 font-semibold'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900/60'
+                          ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)] font-semibold'
+                          : 'bg-[var(--workbench-panel)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)] hover:bg-[var(--workbench-panel)]'
                       }`}
                       title={`${shape.name} - ${shape.description}`}
                     >
                       <svg viewBox="0 0 100 100" className="w-5 h-5 overflow-visible">
                         <polygon
                           points={shape.model.outerPerimeter.map(([x, y]) => `${x},${y}`).join(' ')}
-                          className={isSelected ? 'fill-amber-500/25 stroke-amber-400' : 'fill-slate-800/40 stroke-slate-400'}
+                          className={isSelected ? 'fill-[var(--primary-fixed)] stroke-[var(--primary)]' : 'fill-[var(--surface-container-high)] stroke-[var(--on-surface-variant)]'}
                           strokeWidth="4"
                           strokeLinejoin="round"
                         />
@@ -866,15 +866,15 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   );
                 })}
               </div>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-[var(--on-surface-variant)]">
                 Clique numa forma acima para trocar a silhueta do cortador instantaneamente mantendo o seu texto!
               </p>
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1.5">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1.5">
                 <span className="font-semibold flex items-center gap-1.5">
-                  <Type className="w-3.5 h-3.5 text-amber-400" />
+                  <Type className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span className="flex items-center">
                     <span>Texto no Carimbo</span>
                     <ParamTooltip
@@ -886,7 +886,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 {settings.customText && (
                   <button
                     onClick={() => onUpdateSettings({ customText: '' })}
-                    className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-[11px] text-[var(--error)] hover:text-[var(--error)] flex items-center gap-1 transition-colors cursor-pointer"
                     title="Remover texto do carimbo"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -899,9 +899,9 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 value={settings.customText}
                 onChange={(e) => onUpdateSettings({ customText: e.target.value })}
                 placeholder="Digite uma palavra, frase ou nome (Ex: Parabéns, Amor, 15 Anos)..."
-                className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-500 resize-none font-medium"
+                className="w-full px-3 py-2 text-xs bg-[var(--workbench-page)] border border-[var(--surface-container-highest)] rounded-lg text-[var(--on-surface)] placeholder:text-[var(--workbench-muted)] focus:outline-none focus:border-[var(--primary)] resize-none font-medium"
               />
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-[var(--workbench-muted)] block mt-0.5">
                 O texto é gravado diretamente no relevo do carimbo 3D em tempo real.
               </span>
             </div>
@@ -909,7 +909,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             {/* Font Style */}
             <div>
               <div className="flex items-center mb-1.5">
-                <span className="text-xs text-slate-300 font-medium">
+                <span className="text-xs text-[var(--on-surface-variant)] font-medium">
                   Estilo da Tipografia
                 </span>
                 <ParamTooltip
@@ -929,12 +929,12 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     onClick={() => onUpdateSettings({ textFont: f.id as any })}
                     className={`p-2.5 rounded-lg border text-left transition-colors flex flex-col justify-between cursor-pointer ${
                       settings.textFont === f.id
-                        ? 'bg-amber-500/15 border-amber-500 text-amber-300 shadow-sm'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] shadow-sm'
+                        : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)]'
                     }`}
                   >
-                    <div className="font-semibold text-xs text-slate-200">{f.label}</div>
-                    <div className="text-[10px] text-slate-500">{f.sub}</div>
+                    <div className="font-semibold text-xs text-[var(--on-surface)]">{f.label}</div>
+                    <div className="text-[10px] text-[var(--workbench-muted)]">{f.sub}</div>
                   </button>
                 ))}
               </div>
@@ -942,7 +942,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 
             {/* Text Size Slider */}
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Tamanho da Letra</span>
                   <ParamTooltip
@@ -950,7 +950,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     technical="Tamanhos a partir de 18pt garantem letras legíveis mesmo após o biscoito crescer no forno."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.textSize} pt
                 </span>
               </div>
@@ -961,20 +961,20 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="1"
                 value={settings.textSize}
                 onChange={(e) => onUpdateSettings({ textSize: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
             </div>
 
             {/* Text Vertical Offset */}
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)] mb-1">
                 <span className="flex items-center">
                   <span>Posição Vertical (Subir / Descer)</span>
                   <ParamTooltip
                     text="Desloca o texto para cima ou para baixo para centralizar ou deixar espaço para outros desenhos."
                   />
                 </span>
-                <span className="font-mono text-amber-400 tabular-nums">
+                <span className="font-mono text-[var(--primary)] tabular-nums">
                   {settings.textOffsetY > 0 ? `+${settings.textOffsetY}` : settings.textOffsetY} mm
                 </span>
               </div>
@@ -985,9 +985,9 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="2"
                 value={settings.textOffsetY}
                 onChange={(e) => onUpdateSettings({ textOffsetY: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
+              <div className="flex justify-between text-[10px] text-[var(--workbench-muted)] mt-0.5">
                 <span>Mais abaixo</span>
                 <span>Centro (0)</span>
                 <span>Mais acima</span>
@@ -995,10 +995,10 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
 
             {/* Mirror text toggle for stamps */}
-            <div className="p-3 bg-slate-950/70 rounded-lg border border-slate-800 space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-slate-300">
+            <div className="p-3 bg-[var(--workbench-page)] rounded-lg border border-[var(--surface-container-high)] space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)]">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <FlipHorizontal className="w-3.5 h-3.5 text-cyan-400" />
+                  <FlipHorizontal className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span className="flex items-center">
                     <span>Espelhar Texto para Carimbo</span>
                     <ParamTooltip
@@ -1011,14 +1011,14 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   onClick={() => onUpdateSettings({ mirrorText: !settings.mirrorText })}
                   className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
                     settings.mirrorText
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-medium'
-                      : 'bg-slate-800 text-slate-400'
+                      ? 'bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)] font-medium'
+                      : 'bg-[var(--surface-container-low)] text-[var(--on-surface-variant)]'
                   }`}
                 >
                   {settings.mirrorText ? 'Espelhado' : 'Normal'}
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-[var(--workbench-muted)]">
                 {settings.mirrorText
                   ? 'Ativado: O carimbo físico sai espelhado para que, ao carimbar a massa do biscoito, as letras fiquem perfeitamente legíveis da esquerda para a direita!'
                   : 'Desativado: O texto fica na orientação normal de leitura diretamente na peça.'}
@@ -1027,7 +1027,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 
             {/* Quick Text Suggestions */}
             <div>
-              <span className="text-[11px] text-slate-400 block mb-1.5">
+              <span className="text-[11px] text-[var(--on-surface-variant)] block mb-1.5">
                 Sugestões Rápidas:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -1036,7 +1036,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     <button
                       key={phrase}
                       onClick={() => onUpdateSettings({ customText: phrase })}
-                      className="px-2 py-1 text-[11px] bg-slate-950 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-300 rounded transition-colors cursor-pointer"
+                      className="px-2 py-1 text-[11px] bg-[var(--workbench-page)] border border-[var(--surface-container-high)] hover:border-[var(--primary)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] rounded transition-colors cursor-pointer"
                     >
                       {phrase}
                     </button>
@@ -1051,16 +1051,16 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         {activeTab === 'filament' && (
           <div className="space-y-4">
             {/* INFILL % (PREENCHIMENTO INTERNO PARA IMPRESSÃO 3D) */}
-            <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2.5">
+            <div className="bg-[var(--workbench-page)] p-3 rounded-xl border border-[var(--surface-container-high)] space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-200 flex items-center">
+                <span className="font-semibold text-[var(--on-surface)] flex items-center">
                   <span>Preenchimento (Infill %)</span>
                   <ParamTooltip
                     text="Densidade percentual de material que preenche o núcleo interno das peças (cortador e carimbo). Altera diretamente o consumo de filamento (gramas) e o tempo total de impressão."
                     technical="20% (padrão Gyroid ou Grade) é o valor ideal para cortadores: economiza plástico e reduz tempo mantendo a resistência estrutural necessária para corte de massas. Use 40% a 100% caso necessite de rigidez extrema para argilas ou massas duras."
                   />
                 </span>
-                <span className="font-mono text-amber-400 font-bold text-xs tabular-nums">
+                <span className="font-mono text-[var(--primary)] font-bold text-xs tabular-nums">
                   {settings.infillPercent}%
                 </span>
               </div>
@@ -1073,7 +1073,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 step="5"
                 value={settings.infillPercent}
                 onChange={(e) => onUpdateSettings({ infillPercent: Number(e.target.value) })}
-                className="w-full accent-amber-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
 
               {/* Quick Preset Buttons */}
@@ -1091,8 +1091,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                       onClick={() => onUpdateSettings({ infillPercent: chip.val })}
                       className={`py-1 rounded text-center font-medium border transition-colors cursor-pointer ${
                         isActive
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold shadow-sm'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] font-bold shadow-sm'
+                          : 'bg-[var(--workbench-panel)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)]'
                       }`}
                     >
                       {chip.label}
@@ -1102,7 +1102,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               </div>
 
               {/* Feedback description badge */}
-              <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-900 flex items-center justify-between">
+              <div className="text-[10px] text-[var(--on-surface-variant)] pt-1 border-t border-[var(--surface-container-high)] flex items-center justify-between">
                 <span>
                   {settings.infillPercent <= 15 && '⚡ Econômico: Impressão rápida e baixo peso'}
                   {settings.infillPercent > 15 && settings.infillPercent <= 25 && '⭐ Recomendado: Equilíbrio ideal entre força e tempo'}
@@ -1113,7 +1113,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
 
             <div>
-              <span className="text-xs text-slate-300 block mb-2">Cor do Cortador:</span>
+              <span className="text-xs text-[var(--on-surface-variant)] block mb-2">Cor do Cortador:</span>
               <div className="grid grid-cols-4 gap-2">
                 {filamentList.map((f) => (
                   <button
@@ -1121,16 +1121,16 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     onClick={() => onUpdateSettings({ filamentColor: f.id })}
                     className={`p-2 rounded-lg border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                       settings.filamentColor === f.id
-                        ? 'border-amber-500 bg-slate-800'
-                        : 'border-slate-800 hover:border-slate-700 bg-slate-950'
+                        ? 'border-[var(--primary)] bg-[var(--surface-container-low)]'
+                        : 'border-[var(--surface-container-high)] hover:border-[var(--surface-container-highest)] bg-[var(--workbench-page)]'
                     }`}
                     title={f.name}
                   >
                     <span
-                      className="w-5 h-5 rounded-full shadow-inner border border-white/20"
+                      className="w-5 h-5 rounded-full shadow-inner border border-[var(--on-primary)]/20"
                       style={{ backgroundColor: f.hex }}
                     />
-                    <span className="text-[10px] text-slate-300 truncate w-full text-center">
+                    <span className="text-[10px] text-[var(--on-surface-variant)] truncate w-full text-center">
                       {f.name.split(' ')[0]}
                     </span>
                   </button>
@@ -1139,7 +1139,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
 
             <div>
-              <span className="text-xs text-slate-300 block mb-2">Cor do Carimbo:</span>
+              <span className="text-xs text-[var(--on-surface-variant)] block mb-2">Cor do Carimbo:</span>
               <div className="grid grid-cols-4 gap-2">
                 {filamentList.map((f) => (
                   <button
@@ -1147,16 +1147,16 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                     onClick={() => onUpdateSettings({ stampFilamentColor: f.id })}
                     className={`p-2 rounded-lg border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
                       settings.stampFilamentColor === f.id
-                        ? 'border-amber-500 bg-slate-800'
-                        : 'border-slate-800 hover:border-slate-700 bg-slate-950'
+                        ? 'border-[var(--primary)] bg-[var(--surface-container-low)]'
+                        : 'border-[var(--surface-container-high)] hover:border-[var(--surface-container-highest)] bg-[var(--workbench-page)]'
                     }`}
                     title={f.name}
                   >
                     <span
-                      className="w-5 h-5 rounded-full shadow-inner border border-white/20"
+                      className="w-5 h-5 rounded-full shadow-inner border border-[var(--on-primary)]/20"
                       style={{ backgroundColor: f.hex }}
                     />
-                    <span className="text-[10px] text-slate-300 truncate w-full text-center">
+                    <span className="text-[10px] text-[var(--on-surface-variant)] truncate w-full text-center">
                       {f.name.split(' ')[0]}
                     </span>
                   </button>
@@ -1165,8 +1165,8 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             </div>
 
             {/* Visual helpers */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <div className="flex items-center justify-between text-xs text-slate-300">
+            <div className="space-y-2 pt-2 border-t border-[var(--surface-container-high)]">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)]">
                 <span className="flex items-center">
                   <span>Mesa de Impressão (Grade mm)</span>
                   <ParamTooltip
@@ -1178,11 +1178,11 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   type="checkbox"
                   checked={settings.showPrintBed}
                   onChange={(e) => onUpdateSettings({ showPrintBed: e.target.checked })}
-                  className="rounded accent-amber-500 cursor-pointer"
+                  className="rounded accent-[var(--primary)] cursor-pointer"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-300">
+              <div className="flex items-center justify-between text-xs text-[var(--on-surface-variant)]">
                 <span className="flex items-center">
                   <span>Modo Aramado (Wireframe 3D)</span>
                   <ParamTooltip
@@ -1194,7 +1194,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   type="checkbox"
                   checked={settings.wireframe}
                   onChange={(e) => onUpdateSettings({ wireframe: e.target.checked })}
-                  className="rounded accent-amber-500 cursor-pointer"
+                  className="rounded accent-[var(--primary)] cursor-pointer"
                 />
               </div>
             </div>
@@ -1203,30 +1203,30 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
       </div>
 
       {/* Bottom Sticky Card: Print Estimation (Estimativa de Impressão) */}
-      <div className="p-3.5 border-t border-slate-800 bg-slate-950/90 shrink-0">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-200 mb-2">
+      <div className="p-3.5 border-t border-[var(--surface-container-high)] bg-[var(--workbench-page)] shrink-0">
+        <div className="flex items-center justify-between text-xs font-semibold text-[var(--on-surface)] mb-2">
           <span className="flex items-center gap-1.5">
-            <Scale className="w-3.5 h-3.5 text-amber-400" />
+            <Scale className="w-3.5 h-3.5 text-[var(--primary)]" />
             <span>Estimativa de Impressão 3D</span>
           </span>
-          <span className="text-[11px] font-mono text-slate-400 tabular-nums">
+          <span className="text-[11px] font-mono text-[var(--on-surface-variant)] tabular-nums">
             PLA 1.75mm · Infill {settings.infillPercent}%
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+        <div className="grid grid-cols-2 gap-2 text-xs bg-[var(--workbench-panel)] p-2.5 rounded-lg border border-[var(--surface-container-high)]">
           <div>
-            <span className="text-[10px] text-slate-400 block">Tempo Estimado</span>
-            <span className="font-semibold text-slate-100 flex items-center gap-1 mt-0.5">
-              <Clock className="w-3 h-3 text-emerald-400" />
+            <span className="text-[10px] text-[var(--on-surface-variant)] block">Tempo Estimado</span>
+            <span className="font-semibold text-[var(--on-surface)] flex items-center gap-1 mt-0.5">
+              <Clock className="w-3 h-3 text-emerald-700" />
               <span>~{estimation.printTimeMinutes} min</span>
             </span>
           </div>
 
           <div>
-            <span className="text-[10px] text-slate-400 block">Material / Peso</span>
-            <span className="font-semibold text-slate-100 flex items-center gap-1 mt-0.5">
-              <Layers className="w-3 h-3 text-cyan-400" />
+            <span className="text-[10px] text-[var(--on-surface-variant)] block">Material / Peso</span>
+            <span className="font-semibold text-[var(--on-surface)] flex items-center gap-1 mt-0.5">
+              <Layers className="w-3 h-3 text-[var(--primary)]" />
               <span>~{estimation.totalWeightGrams} g ({estimation.filamentMeters}m)</span>
             </span>
           </div>

@@ -697,7 +697,7 @@ export function exportPathsToSVG(
     }
 
     const closedSuffix = p.isClosed ? ' Z' : '';
-    const strokeColor = p.isOuter ? '#f59e0b' : '#38bdf8';
+    const strokeColor = p.isOuter ? '#904000' : '#7C4DFF';
     const strokeWidth = p.isOuter ? '1.5' : '1.0';
     const roleClass = p.isOuter ? 'cutter-blade' : 'stamp-emboss';
 
@@ -710,11 +710,11 @@ export function exportPathsToSVG(
   <title>${name}</title>
   <defs>
     <style>
-      .cutter-blade { stroke: #f59e0b; stroke-width: 1.5; }
-      .stamp-emboss { stroke: #38bdf8; stroke-width: 1.0; }
+      .cutter-blade { stroke: #904000; stroke-width: 1.5; }
+      .stamp-emboss { stroke: #7C4DFF; stroke-width: 1.0; }
     </style>
   </defs>
-  <rect width="100" height="100" fill="#0f172a" opacity="0.05" />
+  <rect width="100" height="100" fill="#494455" opacity="0.05" />
 ${pathElements.join('\n')}
 </svg>`;
 }

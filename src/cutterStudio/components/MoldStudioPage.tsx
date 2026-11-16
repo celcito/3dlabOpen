@@ -141,7 +141,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
     const height = container.clientHeight;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090d16);
+    scene.background = new THREE.Color(0xf1f3ed);
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -184,7 +184,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
     scene.add(rimLight);
 
     // Build Plate Grid
-    const grid = new THREE.GridHelper(180, 18, 0x334155, 0x1e293b);
+    const grid = new THREE.GridHelper(180, 18, 0xcac3d8, 0xdde1d8);
     grid.rotation.x = Math.PI / 2;
     grid.position.z = -0.1;
     scene.add(grid);
@@ -573,39 +573,39 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="flex flex-col h-screen w-full bg-slate-950 text-slate-100 overflow-hidden font-sans relative"
+      className="flex flex-col h-screen w-full bg-[var(--workbench-page)] text-[var(--on-surface)] overflow-hidden font-sans relative"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDraggingFile && (
-        <div className="absolute inset-4 bg-slate-950/92 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 border-3 border-dashed border-sky-400 rounded-3xl animate-in fade-in duration-150 pointer-events-none shadow-2xl">
-          <div className="p-5 rounded-2xl bg-sky-500/20 border border-sky-400/50 mb-4 animate-bounce">
-            <FileUp className="w-12 h-12 text-sky-300" />
+        <div className="absolute inset-4 bg-[var(--workbench-page)] backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 border-3 border-dashed border-[var(--primary)] rounded-3xl animate-in fade-in duration-150 pointer-events-none shadow-2xl">
+          <div className="p-5 rounded-2xl bg-[var(--primary-fixed)] border border-[var(--primary)] mb-4 animate-bounce">
+            <FileUp className="w-12 h-12 text-[var(--primary)]" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Solte seu arquivo .STL ou .OBJ aqui</h3>
-          <p className="text-xs sm:text-sm text-sky-200 text-center max-w-md leading-relaxed">
+          <h3 className="text-xl font-bold text-[var(--on-surface)] mb-2">Solte seu arquivo .STL ou .OBJ aqui</h3>
+          <p className="text-xs sm:text-sm text-[var(--primary)] text-center max-w-md leading-relaxed">
             O Cookie3D Studio vai carregar seu modelo 3D e gerar automaticamente a cavidade negativa, pinos cónicos e plano de partição!
           </p>
-          <span className="mt-4 px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-mono font-semibold">
+          <span className="mt-4 px-3 py-1 rounded-full bg-[var(--primary-fixed)] text-[var(--primary)] text-xs font-mono font-semibold">
             Formatos aceitos: .STL (binário ou ASCII) e .OBJ
           </span>
         </div>
       )}
 
       {/* Top Header Navigation */}
-      <header className="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 lg:px-6 flex items-center justify-between z-20 shrink-0">
+      <header className="h-14 border-b border-[var(--surface-container-high)] bg-[var(--workbench-panel)] backdrop-blur-md px-4 lg:px-6 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={onBackToCutters}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors cursor-pointer border border-slate-700/80"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] rounded-lg text-xs font-medium transition-colors cursor-pointer border border-[var(--surface-container-highest)]"
           >
             <span>← Voltar aos Cortadores</span>
           </button>
-          <div className="h-5 w-px bg-slate-800 hidden sm:block" />
+          <div className="h-5 w-px bg-[var(--surface-container-low)] hidden sm:block" />
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50" />
-            <h1 className="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--primary-container)] shadow-sm shadow-none" />
+            <h1 className="text-sm sm:text-base font-bold text-[var(--on-surface)] flex items-center gap-1.5">
               <span>Criador de Moldes 3D</span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)]">
                 PRO
               </span>
             </h1>
@@ -613,11 +613,11 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
         </div>
 
         {/* View Mode Pill Switcher */}
-        <div className="hidden md:flex items-center p-1 bg-slate-950/80 border border-slate-800 rounded-lg text-xs">
+        <div className="hidden md:flex items-center p-1 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] rounded-lg text-xs">
           <button
             onClick={() => setViewMode('mold')}
             className={`px-3 py-1 rounded transition-colors cursor-pointer ${
-              viewMode === 'mold' ? 'bg-slate-800 text-sky-400 font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              viewMode === 'mold' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] font-semibold shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
             }`}
           >
             Molde 3D
@@ -625,7 +625,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           <button
             onClick={() => setViewMode('xray')}
             className={`px-3 py-1 rounded transition-colors cursor-pointer ${
-              viewMode === 'xray' ? 'bg-slate-800 text-amber-400 font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              viewMode === 'xray' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] font-semibold shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
             }`}
           >
             Raio-X (Cavidade)
@@ -633,7 +633,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           <button
             onClick={() => setViewMode('cast')}
             className={`px-3 py-1 rounded transition-colors cursor-pointer ${
-              viewMode === 'cast' ? 'bg-slate-800 text-amber-300 font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              viewMode === 'cast' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] font-semibold shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
             }`}
           >
             Peça Fundida
@@ -641,7 +641,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           <button
             onClick={() => setViewMode('original')}
             className={`px-3 py-1 rounded transition-colors cursor-pointer ${
-              viewMode === 'original' ? 'bg-slate-800 text-emerald-400 font-semibold shadow-sm' : 'text-slate-400 hover:text-slate-200'
+              viewMode === 'original' ? 'bg-[var(--surface-container-low)] text-emerald-700 font-semibold shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
             }`}
           >
             Objeto Importado
@@ -651,8 +651,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
         {/* Action Buttons in Header */}
         <div className="flex items-center gap-2">
           {/* Quick Upload Button in Header */}
-          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-300 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs">
-            <Upload className="w-3.5 h-3.5 text-sky-400" />
+          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--primary-fixed)] hover:bg-[var(--primary-fixed)] border border-[var(--primary)] text-[var(--primary)] hover:text-[var(--on-surface)] rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-xs">
+            <Upload className="w-3.5 h-3.5 text-[var(--primary)]" />
             <span className="hidden sm:inline">Enviar Arquivo STL</span>
             <span className="sm:hidden">STL</span>
             <input
@@ -666,7 +666,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           <button
             onClick={handleExportAllZip}
             disabled={isProcessing}
-            className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-400 hover:to-sky-500 text-slate-950 font-bold text-xs rounded-lg shadow-md transition-all whitespace-nowrap cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-container)] hover:from-[var(--primary)] hover:to-[var(--primary-container)] text-[var(--on-primary)] font-bold text-xs rounded-lg shadow-md transition-all whitespace-nowrap cursor-pointer disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Baixar Molde STL (ZIP)</span>
@@ -678,22 +678,22 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
       {/* Main Workspace (Viewport + Sidebar) */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         {/* Left / Center 3D Viewport */}
-        <div className="flex-1 relative h-[50vh] lg:h-full bg-gradient-to-b from-slate-950 via-slate-900/90 to-slate-950">
+        <div className="flex-1 relative h-[50vh] lg:h-full bg-gradient-to-b from-[var(--workbench-page)] via-[var(--workbench-panel)] to-[var(--workbench-panel)]">
           <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
 
           {/* Processing Spinner Overlay */}
           {isProcessing && (
-            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-30 pointer-events-none">
-              <div className="w-9 h-9 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs font-medium text-sky-200 tracking-wide">{progressMsg}</p>
+            <div className="absolute inset-0 bg-[var(--workbench-page)] backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-30 pointer-events-none">
+              <div className="w-9 h-9 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-medium text-[var(--primary)] tracking-wide">{progressMsg}</p>
             </div>
           )}
 
           {/* Floating Viewport Quick Controls */}
           <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 z-10">
             {/* Quick Upload Button */}
-            <label className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/60 rounded-lg text-xs font-semibold text-slate-200 hover:text-sky-300 shadow-lg backdrop-blur-md transition-all cursor-pointer">
-              <Upload className="w-3.5 h-3.5 text-sky-400" />
+            <label className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] hover:border-[var(--primary)] rounded-lg text-xs font-semibold text-[var(--on-surface)] hover:text-[var(--primary)] shadow-lg backdrop-blur-md transition-all cursor-pointer">
+              <Upload className="w-3.5 h-3.5 text-[var(--primary)]" />
               <span>Enviar Arquivo 3D (STL / OBJ)</span>
               <input
                 type="file"
@@ -704,25 +704,25 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
             </label>
 
             {/* Rotation Helpers */}
-            <div className="flex items-center gap-1 bg-slate-900/90 border border-slate-800 rounded-lg p-1 text-[11px] backdrop-blur-md shadow-lg">
-              <span className="text-slate-400 px-1 text-[10px] font-mono">Girar 90°:</span>
+            <div className="flex items-center gap-1 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg p-1 text-[11px] backdrop-blur-md shadow-lg">
+              <span className="text-[var(--on-surface-variant)] px-1 text-[10px] font-mono">Girar 90°:</span>
               <button
                 onClick={() => handleRotateModel('x')}
-                className="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 cursor-pointer"
+                className="px-2 py-0.5 rounded hover:bg-[var(--surface-container-low)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] cursor-pointer"
                 title="Girar no eixo X"
               >
                 X
               </button>
               <button
                 onClick={() => handleRotateModel('y')}
-                className="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 cursor-pointer"
+                className="px-2 py-0.5 rounded hover:bg-[var(--surface-container-low)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] cursor-pointer"
                 title="Girar no eixo Y"
               >
                 Y
               </button>
               <button
                 onClick={() => handleRotateModel('z')}
-                className="px-2 py-0.5 rounded hover:bg-slate-800 text-slate-300 hover:text-sky-400 cursor-pointer"
+                className="px-2 py-0.5 rounded hover:bg-[var(--surface-container-low)] text-[var(--on-surface-variant)] hover:text-[var(--primary)] cursor-pointer"
                 title="Girar no eixo Z"
               >
                 Z
@@ -732,13 +732,13 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
 
           {/* Floating Explode Slider (for 2-part molds) */}
           {config.type === 'two_part' && viewMode !== 'original' && viewMode !== 'cast' && (
-            <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-80 p-3 bg-slate-900/90 border border-slate-800 rounded-xl shadow-2xl backdrop-blur-md z-10 space-y-1.5">
+            <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:w-80 p-3 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-xl shadow-2xl backdrop-blur-md z-10 space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                  <Split className="w-3.5 h-3.5 text-sky-400" />
+                <span className="font-semibold text-[var(--on-surface)] flex items-center gap-1.5">
+                  <Split className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span>Separar Metades (Visão Explodida)</span>
                 </span>
-                <span className="font-mono text-sky-400 font-bold">{config.explodeDistance} mm</span>
+                <span className="font-mono text-[var(--primary)] font-bold">{config.explodeDistance} mm</span>
               </div>
               <input
                 type="range"
@@ -747,9 +747,9 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                 step="1"
                 value={config.explodeDistance}
                 onChange={(e) => handleExplodeChange(Number(e.target.value))}
-                className="w-full accent-sky-500 cursor-pointer"
+                className="w-full accent-[var(--primary)] cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-slate-500">
+              <div className="flex justify-between text-[10px] text-[var(--workbench-muted)]">
                 <span>Fechado (0 mm)</span>
                 <span>Molde Aberto (40 mm)</span>
               </div>
@@ -757,25 +757,25 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           )}
 
           {/* Model Stats Pill */}
-          <div className="absolute bottom-4 right-4 hidden sm:flex items-center gap-3 px-3 py-1.5 bg-slate-900/90 border border-slate-800 rounded-lg text-[11px] text-slate-300 backdrop-blur-md shadow-lg z-10 font-mono">
+          <div className="absolute bottom-4 right-4 hidden sm:flex items-center gap-3 px-3 py-1.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg text-[11px] text-[var(--on-surface-variant)] backdrop-blur-md shadow-lg z-10 font-mono">
             <span>
               📦 {modelStats.width} × {modelStats.height} × {modelStats.depth} mm
             </span>
-            <span className="text-slate-600">|</span>
+            <span className="text-[var(--workbench-muted)]">|</span>
             <span>🔺 {modelStats.triangles.toLocaleString()} polígonos</span>
           </div>
         </div>
 
         {/* Right Configuration Sidebar */}
-        <aside className="w-full lg:w-[410px] bg-slate-900/95 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col h-[50vh] lg:h-full z-10 shrink-0">
+        <aside className="w-full lg:w-[410px] bg-[var(--workbench-panel)] border-t lg:border-t-0 lg:border-l border-[var(--surface-container-high)] flex flex-col h-[50vh] lg:h-full z-10 shrink-0">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="p-4 border-b border-[var(--surface-container-high)] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                <Sliders className="w-4 h-4 text-sky-400" />
+              <h2 className="text-sm font-bold text-[var(--on-surface)] flex items-center gap-1.5">
+                <Sliders className="w-4 h-4 text-[var(--primary)]" />
                 <span>Parâmetros de Molde</span>
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[var(--on-surface-variant)]">
                 Ajuste paredes, encaixes, canais de injeção e respiros
               </p>
             </div>
@@ -784,7 +784,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                 // Trigger recalculation
                 setConfig({ ...config });
               }}
-              className="p-1.5 text-slate-400 hover:text-sky-400 rounded-md hover:bg-slate-800 transition-colors"
+              className="p-1.5 text-[var(--on-surface-variant)] hover:text-[var(--primary)] rounded-md hover:bg-[var(--surface-container-low)] transition-colors"
               title="Recalcular molde 3D"
             >
               <RefreshCw className="w-4 h-4" />
@@ -795,33 +795,33 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
             {/* 1. SEÇÃO DE ENVIO DE ARQUIVO STL / OBJ */}
             <div className="space-y-2">
-              <label className="font-semibold text-slate-100 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-sky-300">
-                  <FileUp className="w-4 h-4 text-sky-400" />
+              <label className="font-semibold text-[var(--on-surface)] flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[var(--primary)]">
+                  <FileUp className="w-4 h-4 text-[var(--primary)]" />
                   <span>Enviar Modelo 3D (STL / OBJ)</span>
                 </span>
-                <span className="text-[10px] font-mono text-slate-400">Arraste ou Selecione</span>
+                <span className="text-[10px] font-mono text-[var(--on-surface-variant)]">Arraste ou Selecione</span>
               </label>
 
               {isCustomUpload && uploadedFileInfo ? (
                 /* Card do Arquivo STL Carregado com Sucesso */
-                <div className="p-3 bg-gradient-to-br from-sky-950/60 to-slate-900/90 border border-sky-500/40 rounded-xl space-y-2.5 shadow-md">
-                  <div className="flex items-start justify-between gap-2 border-b border-slate-800/80 pb-2">
+                <div className="p-3 bg-gradient-to-br from-[var(--primary)] to-[var(--workbench-panel)] border border-[var(--primary)] rounded-xl space-y-2.5 shadow-md">
+                  <div className="flex items-start justify-between gap-2 border-b border-[var(--surface-container-high)] pb-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400 shrink-0">
+                      <div className="p-1.5 rounded-lg bg-[var(--primary-fixed)] text-[var(--primary)] shrink-0">
                         <CheckCircle2 className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-100 truncate text-[12px]" title={uploadedFileInfo.name}>
+                        <p className="font-bold text-[var(--on-surface)] truncate text-[12px]" title={uploadedFileInfo.name}>
                           {uploadedFileInfo.name}
                         </p>
-                        <p className="text-[10px] text-sky-300 font-mono">
+                        <p className="text-[10px] text-[var(--primary)] font-mono">
                           {uploadedFileInfo.sizeFormatted} • {uploadedFileInfo.triangles.toLocaleString()} polígonos
                         </p>
                       </div>
                     </div>
 
-                    <label className="shrink-0 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 hover:text-white rounded text-[11px] font-medium border border-slate-700 transition-colors cursor-pointer whitespace-nowrap">
+                    <label className="shrink-0 px-2.5 py-1 bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--primary)] hover:text-[var(--on-surface)] rounded text-[11px] font-medium border border-[var(--surface-container-highest)] transition-colors cursor-pointer whitespace-nowrap">
                       Trocar
                       <input
                         type="file"
@@ -833,10 +833,10 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                   </div>
 
                   {/* Dimensões em Milímetros */}
-                  <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-800/80 space-y-1">
+                  <div className="bg-[var(--workbench-page)] p-2 rounded-lg border border-[var(--surface-container-high)] space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Dimensões do Objeto:</span>
-                      <span className="font-mono text-sky-300 font-bold">
+                      <span className="text-[var(--on-surface-variant)]">Dimensões do Objeto:</span>
+                      <span className="font-mono text-[var(--primary)] font-bold">
                         {modelStats.width} × {modelStats.height} × {modelStats.depth} mm
                       </span>
                     </div>
@@ -847,8 +847,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                         onClick={() => handleTargetSizeChange(targetSizeMm)}
                         className={`flex-1 py-1 px-2 rounded text-[10px] font-medium transition-colors cursor-pointer text-center ${
                           scaleMode === 'fit'
-                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                            : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                            ? 'bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)]'
+                            : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                         }`}
                       >
                         Escalar (mm)
@@ -857,8 +857,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                         onClick={handleToggleOriginalScale}
                         className={`flex-1 py-1 px-2 rounded text-[10px] font-medium transition-colors cursor-pointer text-center ${
                           scaleMode === 'original'
-                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                            : 'bg-slate-900 text-slate-400 hover:text-slate-200'
+                            ? 'bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)]'
+                            : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                         }`}
                         title="Mantém exatamente as dimensões originais do arquivo CAD exportado"
                       >
@@ -871,8 +871,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                   {scaleMode === 'fit' && (
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-300">Tamanho Alvo (Maior Dimensão):</span>
-                        <span className="font-mono text-sky-400 font-bold">{targetSizeMm} mm</span>
+                        <span className="text-[var(--on-surface-variant)]">Tamanho Alvo (Maior Dimensão):</span>
+                        <span className="font-mono text-[var(--primary)] font-bold">{targetSizeMm} mm</span>
                       </div>
                       <input
                         type="range"
@@ -881,7 +881,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                         step="5"
                         value={targetSizeMm}
                         onChange={(e) => handleTargetSizeChange(Number(e.target.value))}
-                        className="w-full accent-sky-500 cursor-pointer"
+                        className="w-full accent-[var(--primary)] cursor-pointer"
                       />
                       <div className="flex flex-wrap gap-1 pt-0.5">
                         {[35, 50, 65, 80, 100].map((sz) => (
@@ -890,8 +890,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                             onClick={() => handleTargetSizeChange(sz)}
                             className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors cursor-pointer ${
                               targetSizeMm === sz
-                                ? 'bg-sky-500 text-slate-950 font-bold'
-                                : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                                ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                                : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)]'
                             }`}
                           >
                             {sz}mm
@@ -903,20 +903,20 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                 </div>
               ) : (
                 /* Card Dropzone para Envio de STL */
-                <label className="group relative block p-4 bg-gradient-to-b from-sky-500/10 via-slate-900/80 to-slate-950 border-2 border-dashed border-sky-500/40 hover:border-sky-400 rounded-xl cursor-pointer transition-all hover:bg-sky-500/15 shadow-sm">
+                <label className="group relative block p-4 bg-gradient-to-b from-[var(--primary)] via-[var(--workbench-panel)] to-[var(--workbench-panel)] border-2 border-dashed border-[var(--primary)] hover:border-[var(--primary)] rounded-xl cursor-pointer transition-all hover:bg-[var(--primary-fixed)] shadow-sm">
                   <div className="flex flex-col items-center justify-center text-center gap-2">
-                    <div className="p-3 rounded-full bg-sky-500/20 group-hover:bg-sky-500/30 text-sky-400 transition-colors">
+                    <div className="p-3 rounded-full bg-[var(--primary-fixed)] group-hover:bg-[var(--primary-fixed)] text-[var(--primary)] transition-colors">
                       <Upload className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-100 text-xs">
-                        Clique aqui para enviar arquivo <span className="text-sky-400 font-mono">.STL</span> ou <span className="text-sky-400 font-mono">.OBJ</span>
+                      <p className="font-bold text-[var(--on-surface)] text-xs">
+                        Clique aqui para enviar arquivo <span className="text-[var(--primary)] font-mono">.STL</span> ou <span className="text-[var(--primary)] font-mono">.OBJ</span>
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-[var(--on-surface-variant)] mt-0.5">
                         ou arraste e solte seu modelo 3D em qualquer lugar
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-sky-300 font-medium bg-sky-950/60 px-2.5 py-1 rounded-md border border-sky-800/60 mt-1">
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--primary)] font-medium bg-[var(--primary-fixed)] px-2.5 py-1 rounded-md border border-[var(--primary)] mt-1">
                       <span>✓ Geração Automática de Fôrma Negativa</span>
                     </div>
                   </div>
@@ -932,15 +932,15 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
 
             {/* 2. Modelos 3D de Exemplo (Clique para Testar) */}
             <div className="space-y-1.5 pt-1">
-              <label className="font-semibold text-slate-200 flex items-center justify-between">
+              <label className="font-semibold text-[var(--on-surface)] flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span>Modelos de Exemplo:</span>
                 </span>
                 {isCustomUpload && (
                   <button
                     onClick={() => handleSelectSample('bear', 'Ursinho')}
-                    className="text-[10px] text-slate-400 hover:text-amber-400 cursor-pointer"
+                    className="text-[10px] text-[var(--on-surface-variant)] hover:text-[var(--primary)] cursor-pointer"
                   >
                     Restaurar Padrão
                   </button>
@@ -959,8 +959,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                     onClick={() => handleSelectSample(s.key as any, s.label)}
                     className={`p-2 rounded-lg border text-left flex items-center gap-1.5 transition-colors cursor-pointer ${
                       modelName === s.label && !isCustomUpload
-                        ? 'bg-sky-500/15 border-sky-500 text-sky-300 font-semibold'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] font-semibold'
+                        : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)]'
                     }`}
                   >
                     <span>{s.icon}</span>
@@ -972,8 +972,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
 
             {/* 2. Tipo de Molde */}
             <div className="space-y-2">
-              <label className="font-semibold text-slate-200 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-sky-400" />
+              <label className="font-semibold text-[var(--on-surface)] flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-[var(--primary)]" />
                 <span>Tipo de Peça de Molde:</span>
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -981,15 +981,15 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                   onClick={() => setConfig({ ...config, type: 'two_part' })}
                   className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex flex-col gap-1 ${
                     config.type === 'two_part'
-                      ? 'bg-sky-500/15 border-sky-500 text-sky-200 shadow-sm ring-1 ring-sky-500/40'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)]'
+                      : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)]'
                   }`}
                 >
-                  <div className="font-bold flex items-center gap-1.5 text-slate-100">
-                    <Split className="w-4 h-4 text-sky-400" />
+                  <div className="font-bold flex items-center gap-1.5 text-[var(--on-surface)]">
+                    <Split className="w-4 h-4 text-[var(--primary)]" />
                     <span>Molde Bipartido</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 leading-tight">
+                  <span className="text-[10px] text-[var(--on-surface-variant)] leading-tight">
                     2 metades (Base + Tampa) com pinos cónicos de encaixe e funil de injeção.
                   </span>
                 </button>
@@ -998,15 +998,15 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                   onClick={() => setConfig({ ...config, type: 'single_open' })}
                   className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex flex-col gap-1 ${
                     config.type === 'single_open'
-                      ? 'bg-sky-500/15 border-sky-500 text-sky-200 shadow-sm ring-1 ring-sky-500/40'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                      ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] shadow-sm ring-1 ring-[var(--primary)]'
+                      : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:border-[var(--surface-container-highest)]'
                   }`}
                 >
-                  <div className="font-bold flex items-center gap-1.5 text-slate-100">
-                    <Box className="w-4 h-4 text-amber-400" />
+                  <div className="font-bold flex items-center gap-1.5 text-[var(--on-surface)]">
+                    <Box className="w-4 h-4 text-[var(--primary)]" />
                     <span>Cavidade Única</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 leading-tight">
+                  <span className="text-[10px] text-[var(--on-surface-variant)] leading-tight">
                     Fôrma aberta para sabonetes, chocolate, gesso ou carimbos de prensa.
                   </span>
                 </button>
@@ -1015,7 +1015,7 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
 
             {/* 3. Formato do Molde */}
             <div className="space-y-1.5">
-              <label className="font-semibold text-slate-200">Formato Externo da Caixa do Molde:</label>
+              <label className="font-semibold text-[var(--on-surface)]">Formato Externo da Caixa do Molde:</label>
               <div className="grid grid-cols-3 gap-1.5">
                 {[
                   { id: 'box', label: 'Retangular' },
@@ -1027,8 +1027,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                     onClick={() => setConfig({ ...config, shape: sh.id as any })}
                     className={`py-1.5 px-2 rounded-lg border text-center transition-colors cursor-pointer ${
                       config.shape === sh.id
-                        ? 'bg-sky-500/20 border-sky-500 text-sky-300 font-semibold'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                        ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)] font-semibold'
+                        : 'bg-[var(--workbench-page)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                     }`}
                   >
                     {sh.label}
@@ -1038,11 +1038,11 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
             </div>
 
             {/* 4. Espessura das Paredes e Fundo */}
-            <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-3">
+            <div className="p-3 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] rounded-xl space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-slate-300">Margem das Paredes Laterais:</span>
-                  <span className="font-mono text-sky-400 font-semibold">{config.wallThickness} mm</span>
+                  <span className="font-medium text-[var(--on-surface-variant)]">Margem das Paredes Laterais:</span>
+                  <span className="font-mono text-[var(--primary)] font-semibold">{config.wallThickness} mm</span>
                 </div>
                 <input
                   type="range"
@@ -1051,17 +1051,17 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                   step="1"
                   value={config.wallThickness}
                   onChange={(e) => setConfig({ ...config, wallThickness: Number(e.target.value) })}
-                  className="w-full accent-sky-500 cursor-pointer"
+                  className="w-full accent-[var(--primary)] cursor-pointer"
                 />
-                <span className="text-[10px] text-slate-500 block">
+                <span className="text-[10px] text-[var(--workbench-muted)] block">
                   Espessura estrutural para suportar a pressão do material fundido.
                 </span>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-slate-300">Espessura do Fundo / Base:</span>
-                  <span className="font-mono text-sky-400 font-semibold">{config.floorThickness} mm</span>
+                  <span className="font-medium text-[var(--on-surface-variant)]">Espessura do Fundo / Base:</span>
+                  <span className="font-mono text-[var(--primary)] font-semibold">{config.floorThickness} mm</span>
                 </div>
                 <input
                   type="range"
@@ -1070,15 +1070,15 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                   step="1"
                   value={config.floorThickness}
                   onChange={(e) => setConfig({ ...config, floorThickness: Number(e.target.value) })}
-                  className="w-full accent-sky-500 cursor-pointer"
+                  className="w-full accent-[var(--primary)] cursor-pointer"
                 />
               </div>
             </div>
 
             {/* 5. Controles específicos do Molde Bipartido */}
             {config.type === 'two_part' && (
-              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-3">
-                <div className="font-semibold text-sky-300 flex items-center gap-1.5 border-b border-slate-800/80 pb-2">
+              <div className="p-3 bg-[var(--workbench-page)] border border-[var(--surface-container-high)] rounded-xl space-y-3">
+                <div className="font-semibold text-[var(--primary)] flex items-center gap-1.5 border-b border-[var(--surface-container-high)] pb-2">
                   <Split className="w-3.5 h-3.5" />
                   <span>Recursos de Injeção e Encaixe</span>
                 </div>
@@ -1086,8 +1086,8 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                 {/* Plano de Partição */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-slate-300">Altura do Corte (Plano de Partição):</span>
-                    <span className="font-mono text-sky-400 font-semibold">
+                    <span className="text-[var(--on-surface-variant)]">Altura do Corte (Plano de Partição):</span>
+                    <span className="font-mono text-[var(--primary)] font-semibold">
                       {Math.round(config.splitPlaneRatio * 100)}%
                     </span>
                   </div>
@@ -1098,9 +1098,9 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                     step="0.05"
                     value={config.splitPlaneRatio}
                     onChange={(e) => setConfig({ ...config, splitPlaneRatio: Number(e.target.value) })}
-                    className="w-full accent-sky-500 cursor-pointer"
+                    className="w-full accent-[var(--primary)] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-500">
+                  <div className="flex justify-between text-[10px] text-[var(--workbench-muted)]">
                     <span>Base Baixa (20%)</span>
                     <span>Meio (50%)</span>
                     <span>Base Alta (80%)</span>
@@ -1110,54 +1110,54 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
                 {/* Pinos de Alinhamento */}
                 <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className="font-medium text-slate-200 block">Pinos Guia (Macho / Fêmea)</span>
-                    <span className="text-[10px] text-slate-500">Trava as duas metades sem desalinhamento</span>
+                    <span className="font-medium text-[var(--on-surface)] block">Pinos Guia (Macho / Fêmea)</span>
+                    <span className="text-[10px] text-[var(--workbench-muted)]">Trava as duas metades sem desalinhamento</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={config.alignmentPins}
                     onChange={(e) => setConfig({ ...config, alignmentPins: e.target.checked })}
-                    className="w-4 h-4 accent-sky-500 rounded cursor-pointer"
+                    className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer"
                   />
                 </div>
 
                 {/* Funil de Despejo */}
                 <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className="font-medium text-slate-200 block">Canal de Injeção / Despejo</span>
-                    <span className="text-[10px] text-slate-500">Funil superior para verter resina/chocolate</span>
+                    <span className="font-medium text-[var(--on-surface)] block">Canal de Injeção / Despejo</span>
+                    <span className="text-[10px] text-[var(--workbench-muted)]">Funil superior para verter resina/chocolate</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={config.pourSpout}
                     onChange={(e) => setConfig({ ...config, pourSpout: e.target.checked })}
-                    className="w-4 h-4 accent-sky-500 rounded cursor-pointer"
+                    className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer"
                   />
                 </div>
 
                 {/* Respiros de Ar */}
                 <div className="flex items-center justify-between pt-1">
                   <div>
-                    <span className="font-medium text-slate-200 block">Saídas de Ar (Air Vents)</span>
-                    <span className="text-[10px] text-slate-500">Canais finos que impedem bolhas de ar</span>
+                    <span className="font-medium text-[var(--on-surface)] block">Saídas de Ar (Air Vents)</span>
+                    <span className="text-[10px] text-[var(--workbench-muted)]">Canais finos que impedem bolhas de ar</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={config.airVents}
                     onChange={(e) => setConfig({ ...config, airVents: e.target.checked })}
-                    className="w-4 h-4 accent-sky-500 rounded cursor-pointer"
+                    className="w-4 h-4 accent-[var(--primary)] rounded cursor-pointer"
                   />
                 </div>
               </div>
             )}
 
             {/* 6. Dicas de Impressão e Aplicação */}
-            <div className="p-3 bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border border-sky-500/20 rounded-xl space-y-1.5">
-              <div className="flex items-center gap-1.5 font-bold text-sky-300 text-xs">
+            <div className="p-3 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-fixed)] border border-[var(--primary)] rounded-xl space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-[var(--primary)] text-xs">
                 <Info className="w-3.5 h-3.5" />
                 <span>Dica para Desmoldagem Fácil:</span>
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
+              <p className="text-[11px] text-[var(--on-surface-variant)] leading-relaxed">
                 Para alimentos (chocolate/gelatina), imprima em <strong>PLA Food-Safe</strong> ou use celofane.
                 Para resina e gesso, aplique spray desmoldante de silicone antes do primeiro despejo.
               </p>
@@ -1165,33 +1165,33 @@ export const MoldStudioPage: React.FC<MoldStudioPageProps> = ({ onBackToCutters,
           </div>
 
           {/* Sidebar Footer with Individual Part Downloads */}
-          <div className="p-4 border-t border-slate-800 bg-slate-950 flex flex-col gap-2">
-            <div className="flex items-center justify-between text-[11px] text-slate-400">
+          <div className="p-4 border-t border-[var(--surface-container-high)] bg-[var(--workbench-page)] flex flex-col gap-2">
+            <div className="flex items-center justify-between text-[11px] text-[var(--on-surface-variant)]">
               <span>Exportar Peças Individuais:</span>
             </div>
             {config.type === 'two_part' ? (
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleExportSinglePart('partA')}
-                  className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 hover:text-sky-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="px-3 py-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg text-xs font-semibold text-[var(--on-surface)] hover:text-[var(--primary)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5 text-sky-400" />
+                  <Download className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span>Parte A (Base)</span>
                 </button>
                 <button
                   onClick={() => handleExportSinglePart('partB')}
-                  className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 hover:text-blue-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="px-3 py-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg text-xs font-semibold text-[var(--on-surface)] hover:text-[var(--primary)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5 text-blue-400" />
+                  <Download className="w-3.5 h-3.5 text-[var(--primary)]" />
                   <span>Parte B (Tampa)</span>
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => handleExportSinglePart('single')}
-                className="w-full px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 hover:text-sky-300 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full px-3 py-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg text-xs font-semibold text-[var(--on-surface)] hover:text-[var(--primary)] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-sky-400" />
+                <Download className="w-3.5 h-3.5 text-[var(--primary)]" />
                 <span>Baixar Molde de Cavidade Única (.STL)</span>
               </button>
             )}

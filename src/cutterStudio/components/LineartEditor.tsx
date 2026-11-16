@@ -448,7 +448,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
     const h = canvas.height;
 
     // 1. Background
-    ctx.fillStyle = '#090d16';
+    ctx.fillStyle = '#F1F3ED';
     ctx.fillRect(0, 0, w, h);
 
     // 2. Precision Grid & Magnetic Grid Visuals
@@ -458,7 +458,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
       // Minor grid lines
       ctx.lineWidth = 1;
-      ctx.strokeStyle = enableSnapGrid ? '#1e293b90' : '#1e293b45';
+      ctx.strokeStyle = enableSnapGrid ? '#dde1d8cc' : '#dde1d866';
       ctx.beginPath();
       for (let p = 0; p <= 100.001; p += stepPct) {
         const px = (p / 100) * w;
@@ -471,7 +471,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
       // Major grid lines (every 10% or 25% depending on spacing)
       const majorPct = stepPct === 12.5 ? 25 : 10;
-      ctx.strokeStyle = enableSnapGrid ? '#334155b0' : '#33415560';
+      ctx.strokeStyle = enableSnapGrid ? '#cac3d8' : '#cac3d866';
       ctx.beginPath();
       for (let p = 0; p <= 100.001; p += majorPct) {
         const px = (p / 100) * w;
@@ -485,7 +485,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       // Magnetic intersection anchor dots when Magnetic Grid Mode is ON
       if (enableSnapGrid) {
         const dotStep = stepPct < 5 ? stepPct * 2 : stepPct;
-        ctx.fillStyle = '#06b6d466';
+        ctx.fillStyle = '#632ce566';
         for (let xPct = dotStep; xPct < 100; xPct += dotStep) {
           for (let yPct = dotStep; yPct < 100; yPct += dotStep) {
             const gx = (xPct / 100) * w;
@@ -495,7 +495,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         }
 
         // Crisp CAD border ticks & labels every 10% / 25%
-        ctx.fillStyle = '#64748b';
+        ctx.fillStyle = '#687064';
         ctx.font = '11px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
@@ -514,7 +514,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
     // 3. Center axes
     if (showCenterGuides) {
-      ctx.strokeStyle = '#47556980';
+      ctx.strokeStyle = '#7a748780';
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -526,7 +526,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       ctx.setLineDash([]);
 
       // Safe margin box
-      ctx.strokeStyle = '#33415550';
+      ctx.strokeStyle = '#cac3d8aa';
       ctx.setLineDash([2, 4]);
       ctx.strokeRect(w * 0.05, h * 0.05, w * 0.9, h * 0.9);
       ctx.setLineDash([]);
@@ -534,7 +534,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
     // 4. Mirror Axis
     if (mirrorMode) {
-      ctx.strokeStyle = '#06b6d490';
+      ctx.strokeStyle = '#632ce5aa';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([6, 4]);
       ctx.beginPath();
@@ -556,10 +556,10 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         : Math.max(2, brushSize * 0.75);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = isOuterBlade ? '#f59e0b' : '#38bdf8';
+      ctx.strokeStyle = isOuterBlade ? '#904000' : '#7C4DFF';
 
       if (isOuterBlade) {
-        ctx.shadowColor = 'rgba(245, 158, 11, 0.45)';
+        ctx.shadowColor = 'rgba(144, 64, 0, 0.3)';
         ctx.shadowBlur = 8;
       } else {
         ctx.shadowColor = 'transparent';
@@ -581,7 +581,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
       // Selection halo
       if (isSelected) {
-        ctx.strokeStyle = '#3b82f6';
+        ctx.strokeStyle = '#632CE5';
         ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 4]);
         ctx.stroke();
@@ -603,7 +603,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               Math.abs(idx - selectedNodeIndex) <= 1;
 
             if (showHandles) {
-              ctx.strokeStyle = isNodeSelected ? '#38bdf8' : '#64748b80';
+              ctx.strokeStyle = isNodeSelected ? '#7C4DFF' : '#68706480';
               ctx.lineWidth = 1.25;
 
               if (anc.handleIn) {
@@ -614,8 +614,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                 ctx.lineTo(hx, hy);
                 ctx.stroke();
 
-                ctx.fillStyle = isNodeSelected ? '#22d3ee' : '#94a3b8';
-                ctx.strokeStyle = '#0f172a';
+                ctx.fillStyle = isNodeSelected ? '#7C4DFF' : '#7A7487';
+                ctx.strokeStyle = '#494455';
                 ctx.beginPath();
                 ctx.arc(hx, hy, isNodeSelected ? 5.5 : 4, 0, Math.PI * 2);
                 ctx.fill();
@@ -625,14 +625,14 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               if (anc.handleOut) {
                 const hx = (anc.handleOut[0] / 100) * w;
                 const hy = (anc.handleOut[1] / 100) * h;
-                ctx.strokeStyle = isNodeSelected ? '#38bdf8' : '#64748b80';
+                ctx.strokeStyle = isNodeSelected ? '#7C4DFF' : '#68706480';
                 ctx.beginPath();
                 ctx.moveTo(ax, ay);
                 ctx.lineTo(hx, hy);
                 ctx.stroke();
 
-                ctx.fillStyle = isNodeSelected ? '#f59e0b' : '#94a3b8';
-                ctx.strokeStyle = '#0f172a';
+                ctx.fillStyle = isNodeSelected ? '#904000' : '#7A7487';
+                ctx.strokeStyle = '#494455';
                 ctx.beginPath();
                 ctx.arc(hx, hy, isNodeSelected ? 5.5 : 4, 0, Math.PI * 2);
                 ctx.fill();
@@ -642,8 +642,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
             // Draw Anchor Node (diamond for corner, circle for smooth/symmetric)
             const size = isNodeSelected ? 6 : 4.5;
-            ctx.fillStyle = isNodeSelected ? '#3b82f6' : '#ffffff';
-            ctx.strokeStyle = '#0f172a';
+            ctx.fillStyle = isNodeSelected ? '#632CE5' : '#ffffff';
+            ctx.strokeStyle = '#494455';
             ctx.lineWidth = 1.5;
 
             if (anc.mode === 'corner') {
@@ -669,8 +669,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
             const nx = (pt[0] / 100) * w;
             const ny = (pt[1] / 100) * h;
             const nodeSize = isNodeSelected ? 9 : 7;
-            ctx.fillStyle = isNodeSelected ? '#3b82f6' : '#ffffff';
-            ctx.strokeStyle = '#1e293b';
+            ctx.fillStyle = isNodeSelected ? '#632CE5' : '#ffffff';
+            ctx.strokeStyle = '#494455';
             ctx.lineWidth = 1.5;
             ctx.fillRect(nx - nodeSize / 2, ny - nodeSize / 2, nodeSize, nodeSize);
             ctx.strokeRect(nx - nodeSize / 2, ny - nodeSize / 2, nodeSize, nodeSize);
@@ -688,7 +688,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       const bw = (b.width / 100) * w;
       const bh = (b.height / 100) * h;
 
-      ctx.strokeStyle = '#3b82f6';
+      ctx.strokeStyle = '#632CE5';
       ctx.lineWidth = 1.2;
       ctx.setLineDash([3, 3]);
       ctx.strokeRect(bx, by, bw, bh);
@@ -708,21 +708,21 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
       handles.forEach((hnd) => {
         ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#3b82f6';
+        ctx.strokeStyle = '#632CE5';
         ctx.lineWidth = 1.5;
         ctx.fillRect(hnd.x - handleSize / 2, hnd.y - handleSize / 2, handleSize, handleSize);
         ctx.strokeRect(hnd.x - handleSize / 2, hnd.y - handleSize / 2, handleSize, handleSize);
       });
 
       const rotY = by - 20;
-      ctx.strokeStyle = '#3b82f6';
+      ctx.strokeStyle = '#632CE5';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(bx + bw / 2, by);
       ctx.lineTo(bx + bw / 2, rotY);
       ctx.stroke();
 
-      ctx.fillStyle = '#60a5fa';
+      ctx.fillStyle = '#7C4DFF';
       ctx.beginPath();
       ctx.arc(bx + bw / 2, rotY, 5, 0, Math.PI * 2);
       ctx.fill();
@@ -735,7 +735,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       // Draw committed segments of draft
       const sampledDraft = sampleBezierPath(bezierDraft, false, 20);
       if (sampledDraft.length >= 2) {
-        ctx.strokeStyle = '#22d3ee';
+        ctx.strokeStyle = '#7C4DFF';
         ctx.lineWidth = Math.max(2.5, brushSize * 0.9);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -752,7 +752,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       if (cursorPos && !isDraggingBezierHandleRef.current) {
         const cp1 = lastAnc.handleOut || lastAnc.pos;
         const cp2 = cursorPos;
-        ctx.strokeStyle = '#38bdf880';
+        ctx.strokeStyle = '#7C4DFF80';
         ctx.lineWidth = 1.8;
         ctx.setLineDash([5, 4]);
         ctx.beginPath();
@@ -773,13 +773,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         if (anc.handleIn) {
           const hx = (anc.handleIn[0] / 100) * w;
           const hy = (anc.handleIn[1] / 100) * h;
-          ctx.strokeStyle = '#38bdf8';
+          ctx.strokeStyle = '#7C4DFF';
           ctx.lineWidth = 1.2;
           ctx.beginPath();
           ctx.moveTo(ax, ay);
           ctx.lineTo(hx, hy);
           ctx.stroke();
-          ctx.fillStyle = '#22d3ee';
+          ctx.fillStyle = '#7C4DFF';
           ctx.beginPath();
           ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
           ctx.fill();
@@ -787,13 +787,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         if (anc.handleOut) {
           const hx = (anc.handleOut[0] / 100) * w;
           const hy = (anc.handleOut[1] / 100) * h;
-          ctx.strokeStyle = '#f59e0b';
+          ctx.strokeStyle = '#904000';
           ctx.lineWidth = 1.2;
           ctx.beginPath();
           ctx.moveTo(ax, ay);
           ctx.lineTo(hx, hy);
           ctx.stroke();
-          ctx.fillStyle = '#fbbf24';
+          ctx.fillStyle = '#904000';
           ctx.beginPath();
           ctx.arc(hx, hy, 4.5, 0, Math.PI * 2);
           ctx.fill();
@@ -801,18 +801,18 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
         // First anchor highlights green when closing loop
         if (i === 0 && isNearStart && bezierDraft.length >= 2) {
-          ctx.strokeStyle = '#22c55e';
+          ctx.strokeStyle = '#059669';
           ctx.lineWidth = 2.5;
           ctx.beginPath();
           ctx.arc(ax, ay, 12, 0, Math.PI * 2);
           ctx.stroke();
-          ctx.fillStyle = '#22c55e';
+          ctx.fillStyle = '#059669';
           ctx.beginPath();
           ctx.arc(ax, ay, 5.5, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          ctx.fillStyle = i === bezierDraft.length - 1 ? '#f59e0b' : '#ffffff';
-          ctx.strokeStyle = '#0f172a';
+          ctx.fillStyle = i === bezierDraft.length - 1 ? '#904000' : '#ffffff';
+          ctx.strokeStyle = '#494455';
           ctx.lineWidth = 1.5;
           ctx.fillRect(ax - 4.5, ay - 4.5, 9, 9);
           ctx.strokeRect(ax - 4.5, ay - 4.5, 9, 9);
@@ -826,8 +826,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       ctx.lineWidth = brushSize;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#38bdf8';
-      ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+      ctx.strokeStyle = '#7C4DFF';
+      ctx.shadowColor = 'rgba(124, 77, 255, 0.35)';
       ctx.shadowBlur = 6;
 
       ctx.beginPath();
@@ -839,7 +839,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       ctx.stroke();
 
       if (mirrorMode) {
-        ctx.strokeStyle = '#06b6d4';
+        ctx.strokeStyle = '#632ce5';
         ctx.beginPath();
         ctx.moveTo(((100 - p0[0]) / 100) * w, (p0[1] / 100) * h);
         for (let i = 1; i < pts.length; i++) {
@@ -854,17 +854,17 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       const startY = (startPt[1] / 100) * h;
 
       if (isNearStart) {
-        ctx.strokeStyle = '#22c55e';
+        ctx.strokeStyle = '#059669';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.arc(startX, startY, 12, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.fillStyle = '#22c55e';
+        ctx.fillStyle = '#059669';
         ctx.beginPath();
         ctx.arc(startX, startY, 5, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        ctx.fillStyle = '#e2e8f0';
+        ctx.fillStyle = '#494455';
         ctx.beginPath();
         ctx.arc(startX, startY, 3.5, 0, Math.PI * 2);
         ctx.fill();
@@ -877,7 +877,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       const sy = (cursorPos[1] / 100) * h;
 
       // Full-canvas faint magnetic alignment hairlines
-      ctx.strokeStyle = '#06b6d438';
+      ctx.strokeStyle = '#632ce538';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 5]);
       ctx.beginPath();
@@ -893,7 +893,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         const rx = (rawCursorPos[0] / 100) * w;
         const ry = (rawCursorPos[1] / 100) * h;
         if (Math.hypot(rx - sx, ry - sy) > 2) {
-          ctx.strokeStyle = '#10b98180';
+          ctx.strokeStyle = '#05966980';
           ctx.lineWidth = 1;
           ctx.setLineDash([2, 2]);
           ctx.beginPath();
@@ -905,13 +905,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       }
 
       // Snapped target diamond + ring
-      ctx.strokeStyle = '#10b981';
+      ctx.strokeStyle = '#059669';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
       ctx.arc(sx, sy, 8, 0, Math.PI * 2);
       ctx.stroke();
 
-      ctx.fillStyle = '#34d399';
+      ctx.fillStyle = '#059669';
       ctx.beginPath();
       ctx.moveTo(sx, sy - 4);
       ctx.lineTo(sx + 4, sy);
@@ -1887,42 +1887,42 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
       : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 lg:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-6xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 lg:p-5 bg-[var(--inverse-surface)]/40 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-6xl bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
         {/* Header */}
-        <div className="p-3.5 px-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div className="p-3.5 px-6 border-b border-[var(--surface-container-high)] flex items-center justify-between bg-[var(--workbench-page)]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+            <div className="p-2 bg-[var(--primary-fixed)] border border-[var(--primary)] rounded-xl text-[var(--primary)]">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-bold text-[var(--on-surface)] flex items-center gap-2">
                 <span>Estúdio Vetorial (Curvas Bézier & Grade Magnética)</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--primary-fixed)] text-[var(--primary)] border border-[var(--primary)] uppercase">
                   Illustrator / Inkscape
                 </span>
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[var(--on-surface-variant)]">
                 Desenhe com Caneta Bézier (alças tangentes), edite nós e curvas, alinhe com Grade Magnética ou vetorize imagens.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-100 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] rounded-xl hover:bg-[var(--surface-container-low)] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab switch */}
-        <div className="flex border-b border-slate-800 bg-slate-950/40 p-2 gap-2 px-6">
+        <div className="flex border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)] p-2 gap-2 px-6">
           <button
             onClick={() => setTab('draw')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               tab === 'draw'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-[var(--primary)] text-[var(--on-primary)] shadow-md shadow-none'
+                : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container-low)]'
             }`}
           >
             <Spline className="w-4 h-4" />
@@ -1932,8 +1932,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
             onClick={() => setTab('upload')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
               tab === 'upload'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-[var(--primary)] text-[var(--on-primary)] shadow-md shadow-none'
+                : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container-low)]'
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -1944,14 +1944,14 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         {/* Workspace */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-3">
           {/* Top Info / Name / SVG Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-950/60 p-2.5 px-4 rounded-xl border border-slate-800/80">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--workbench-page)] p-2.5 px-4 rounded-xl border border-[var(--surface-container-high)]">
             <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-              <span className="text-xs font-medium text-slate-400 whitespace-nowrap">Nome:</span>
+              <span className="text-xs font-medium text-[var(--on-surface-variant)] whitespace-nowrap">Nome:</span>
               <input
                 type="text"
                 value={modelName}
                 onChange={(e) => setModelName(e.target.value)}
-                className="flex-1 px-3 py-1 text-xs bg-slate-900 border border-slate-700/80 rounded-lg text-slate-200 focus:outline-none focus:border-amber-500"
+                className="flex-1 px-3 py-1 text-xs bg-[var(--workbench-panel)] border border-[var(--surface-container-highest)] rounded-lg text-[var(--on-surface)] focus:outline-none focus:border-[var(--primary)]"
                 placeholder="Ex: Cortador Flor Geométrica"
               />
             </div>
@@ -1967,7 +1967,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               />
               <button
                 onClick={() => svgFileInputRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1 text-xs bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--primary)] rounded-lg border border-[var(--surface-container-highest)] transition-colors cursor-pointer"
                 title="Abrir arquivo vetorial .SVG do Illustrator, Inkscape ou Corel"
               >
                 <Upload className="w-3.5 h-3.5" />
@@ -1976,7 +1976,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
               <button
                 onClick={() => setSvgModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1 text-xs bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] rounded-lg border border-[var(--surface-container-highest)] transition-colors cursor-pointer"
                 title="Colar código SVG XML diretamente"
               >
                 <FileCode className="w-3.5 h-3.5" />
@@ -1986,7 +1986,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               <button
                 onClick={handleExportSVG}
                 disabled={strokes.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-amber-400 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1 text-xs bg-[var(--surface-container-low)] hover:bg-[var(--surface-container-high)] disabled:opacity-40 text-[var(--primary)] rounded-lg border border-[var(--surface-container-highest)] transition-colors cursor-pointer"
                 title="Baixar arquivo .SVG com curvas Bézier reais compatível com Illustrator e Inkscape"
               >
                 <DownloadIcon className="w-3.5 h-3.5" />
@@ -2000,16 +2000,16 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               {/* Left Column: Canvas & Primary Vector Toolbar (8 cols) */}
               <div className="lg:col-span-8 flex flex-col gap-2.5">
                 {/* Illustrator/Inkscape Main Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-950/80 rounded-xl border border-slate-800 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-[var(--workbench-page)] rounded-xl border border-[var(--surface-container-high)] text-xs">
                   {/* Vector Tools Group */}
-                  <div className="flex flex-wrap items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                  <div className="flex flex-wrap items-center gap-1 bg-[var(--workbench-panel)] p-1 rounded-lg border border-[var(--surface-container-high)]">
                     {/* Selection Tool (V) */}
                     <button
                       onClick={() => setActiveTool('select')}
                       className={`p-1.5 px-2.5 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'select'
-                          ? 'bg-blue-600 text-white font-bold shadow'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-surface)] font-bold shadow'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Seleção & Transformação (V) - Mover, redimensionar e girar objeto"
                     >
@@ -2022,8 +2022,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('node')}
                       className={`p-1.5 px-2.5 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'node'
-                          ? 'bg-cyan-600 text-white font-bold shadow'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-surface)] font-bold shadow'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Editar Nós & Alças Bézier (A) - Ajuste âncoras e tangentes"
                     >
@@ -2031,15 +2031,15 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       <span className="text-[11px]">Nós Bézier (A)</span>
                     </button>
 
-                    <div className="w-[1px] h-5 bg-slate-800 mx-0.5" />
+                    <div className="w-[1px] h-5 bg-[var(--surface-container-low)] mx-0.5" />
 
                     {/* Cubic Bézier Pen Tool (B) */}
                     <button
                       onClick={() => setActiveTool('bezier')}
                       className={`p-1.5 px-2.5 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'bezier'
-                          ? 'bg-emerald-500 text-slate-950 font-bold shadow'
-                          : 'text-slate-400 hover:text-emerald-300'
+                          ? 'bg-emerald-600 text-[var(--on-primary)] font-bold shadow'
+                          : 'text-[var(--on-surface-variant)] hover:text-emerald-700'
                       }`}
                       title="Caneta Bézier (B) - Clique para âncora reta, clique e arraste para curvar alças"
                     >
@@ -2052,8 +2052,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('pen')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'pen'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Mão Livre com Estabilizador & Auto-Bézier (P)"
                     >
@@ -2066,8 +2066,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('line')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'line'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Linha Reta com Snap na Grade"
                     >
@@ -2079,8 +2079,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('circle')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'circle'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Círculo ou Elipse Perfeita"
                     >
@@ -2092,8 +2092,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('rect')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'rect'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Retângulo / Moldura Geométrica"
                     >
@@ -2105,8 +2105,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('star')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'star'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Estrela Geométrica"
                     >
@@ -2118,8 +2118,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('heart')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'heart'
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Coração Orgânico"
                     >
@@ -2131,8 +2131,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setActiveTool('eraser')}
                       className={`p-1.5 px-2 rounded flex items-center gap-1.5 transition-colors cursor-pointer ${
                         activeTool === 'eraser'
-                          ? 'bg-rose-500 text-white font-bold'
-                          : 'text-slate-400 hover:text-rose-400'
+                          ? 'bg-[var(--error)] text-[var(--on-surface)] font-bold'
+                          : 'text-[var(--on-surface-variant)] hover:text-[var(--error)]'
                       }`}
                       title="Borracha de Vetores"
                     >
@@ -2145,7 +2145,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     <button
                       onClick={handleUndo}
                       disabled={undoStack.length === 0 && bezierDraft.length === 0}
-                      className="p-1.5 px-2 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-30 transition-colors cursor-pointer"
+                      className="p-1.5 px-2 rounded text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container-low)] disabled:opacity-30 transition-colors cursor-pointer"
                       title="Desfazer (Ctrl+Z)"
                     >
                       <Undo2 className="w-3.5 h-3.5" />
@@ -2153,7 +2153,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     <button
                       onClick={handleRedo}
                       disabled={redoStack.length === 0}
-                      className="p-1.5 px-2 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 disabled:opacity-30 transition-colors cursor-pointer"
+                      className="p-1.5 px-2 rounded text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container-low)] disabled:opacity-30 transition-colors cursor-pointer"
                       title="Refazer (Ctrl+Y)"
                     >
                       <Redo2 className="w-3.5 h-3.5" />
@@ -2165,7 +2165,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                         setSelectedStrokeId(null);
                         setSelectedNodeIndex(null);
                       }}
-                      className="p-1.5 px-2 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      className="p-1.5 px-2 rounded text-[var(--on-surface-variant)] hover:text-[var(--error)] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
                       title="Limpar tudo"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
@@ -2174,7 +2174,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                 </div>
 
                 {/* Precision Canvas Area */}
-                <div className="relative aspect-square w-full max-h-[460px] bg-slate-950 rounded-2xl border-2 border-slate-800 shadow-inner flex items-center justify-center overflow-hidden touch-none select-none">
+                <div className="relative aspect-square w-full max-h-[460px] bg-[var(--workbench-page)] rounded-2xl border-2 border-[var(--surface-container-high)] shadow-inner flex items-center justify-center overflow-hidden touch-none select-none">
                   <canvas
                     ref={drawCanvasRef}
                     width={800}
@@ -2193,24 +2193,24 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                   />
 
                   {/* HUD Info Tag */}
-                  <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700/80 text-[11px] font-mono text-slate-300 flex flex-wrap items-center gap-2.5 pointer-events-none">
-                    <span className="flex items-center gap-1 text-amber-400">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <div className="absolute top-3 left-3 bg-[var(--workbench-panel)] backdrop-blur-md px-3 py-1.5 rounded-lg border border-[var(--surface-container-highest)] text-[11px] font-mono text-[var(--on-surface-variant)] flex flex-wrap items-center gap-2.5 pointer-events-none">
+                    <span className="flex items-center gap-1 text-[var(--primary)]">
+                      <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" />
                       {cursorPos
                         ? `X: ${cursorPos[0].toFixed(1)}% Y: ${cursorPos[1].toFixed(1)}%`
                         : '0.0, 0.0'}
                     </span>
-                    <span className="text-slate-600">|</span>
+                    <span className="text-[var(--workbench-muted)]">|</span>
                     {enableSnapGrid && (
                       <>
-                        <span className="text-emerald-400 flex items-center gap-1 font-semibold">
+                        <span className="text-emerald-700 flex items-center gap-1 font-semibold">
                           <Magnet className="w-3 h-3" />
                           SNAP {gridSpacing}%
                         </span>
-                        <span className="text-slate-600">|</span>
+                        <span className="text-[var(--workbench-muted)]">|</span>
                       </>
                     )}
-                    <span className="text-cyan-400">
+                    <span className="text-[var(--primary)]">
                       {activeTool === 'select'
                         ? 'Seleção (V)'
                         : activeTool === 'node'
@@ -2223,8 +2223,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     </span>
                     {activeStroke && (
                       <>
-                        <span className="text-slate-600">|</span>
-                        <span className="text-slate-300">
+                        <span className="text-[var(--workbench-muted)]">|</span>
+                        <span className="text-[var(--on-surface-variant)]">
                           {activeStroke.bezierAnchors
                             ? `${activeStroke.bezierAnchors.length} âncoras Bézier`
                             : `${activeStroke.points.length} nós`}
@@ -2235,14 +2235,14 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
                   {/* Active Bézier Draft Floating Controls */}
                   {bezierDraft.length > 0 && (
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md px-3 py-2 rounded-xl border border-emerald-500/40 shadow-2xl flex flex-wrap items-center justify-center gap-2 text-xs z-10">
-                      <span className="text-[11px] text-emerald-300 font-medium px-1">
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-[var(--workbench-panel)] backdrop-blur-md px-3 py-2 rounded-xl border border-emerald-300 shadow-2xl flex flex-wrap items-center justify-center gap-2 text-xs z-10">
+                      <span className="text-[11px] text-emerald-700 font-medium px-1">
                         {bezierDraft.length} {bezierDraft.length === 1 ? 'âncora' : 'âncoras'} · Arraste para curvar alças
                       </span>
                       {bezierDraft.length >= 3 && (
                         <button
                           onClick={() => commitBezierDraft(true)}
-                          className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-[11px] cursor-pointer"
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-600 text-[var(--on-primary)] font-bold rounded-lg text-[11px] cursor-pointer"
                         >
                           Fechar Contorno
                         </button>
@@ -2250,14 +2250,14 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       {bezierDraft.length >= 2 && (
                         <button
                           onClick={() => commitBezierDraft(false)}
-                          className="px-2.5 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg text-[11px] cursor-pointer"
+                          className="px-2.5 py-1 bg-[var(--primary)] hover:bg-[var(--primary-container)] text-[var(--on-primary)] font-bold rounded-lg text-[11px] cursor-pointer"
                         >
                           Finalizar Aberto (Enter)
                         </button>
                       )}
                       <button
                         onClick={() => setBezierDraft([])}
-                        className="px-2 py-1 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 rounded-lg text-[11px] cursor-pointer"
+                        className="px-2 py-1 bg-[var(--surface-container-low)] hover:bg-[#FEE2E2] text-[var(--on-surface-variant)] hover:text-[var(--error)] rounded-lg text-[11px] cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -2266,7 +2266,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
                   {/* Magnetic snap loop close helper */}
                   {isNearStart && (
-                    <div className="absolute top-14 left-1/2 -translate-x-1/2 bg-emerald-500 text-slate-950 font-bold text-xs px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-bounce pointer-events-none">
+                    <div className="absolute top-14 left-1/2 -translate-x-1/2 bg-emerald-600 text-[var(--on-primary)] font-bold text-xs px-3 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-bounce pointer-events-none">
                       <Magnet className="w-3.5 h-3.5" />
                       <span>
                         {activeTool === 'bezier'
@@ -2279,13 +2279,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                   {/* Instructions on empty */}
                   {strokes.length === 0 && bezierDraft.length === 0 && !isPointerDownRef.current && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-6 text-center">
-                      <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3">
+                      <div className="w-12 h-12 rounded-full bg-[var(--primary-fixed)] border border-[var(--primary)] flex items-center justify-center text-[var(--primary)] mb-3">
                         <Spline className="w-6 h-6" />
                       </div>
-                      <p className="text-sm font-semibold text-slate-200">
+                      <p className="text-sm font-semibold text-[var(--on-surface)]">
                         Prancheta Vetorial com Bézier & Grade Magnética
                       </p>
-                      <p className="text-xs text-slate-400 max-w-md mt-1">
+                      <p className="text-xs text-[var(--on-surface-variant)] max-w-md mt-1">
                         Use a <strong>Caneta Bézier (B)</strong> para clicar e arrastar alças de curva, ou desenhe à <strong>Mão Livre (P)</strong> com conversão automática para curvas editáveis. A <strong>Grade Magnética</strong> alinha formas geométricas com precisão.
                       </p>
                     </div>
@@ -2293,14 +2293,14 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                 </div>
 
                 {/* Sub-toolbar: Magnetic Grid Mode & Guides */}
-                <div className="p-2.5 bg-slate-950/70 rounded-xl border border-slate-800 flex flex-col gap-2">
+                <div className="p-2.5 bg-[var(--workbench-page)] rounded-xl border border-[var(--surface-container-high)] flex flex-col gap-2">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                     <button
                       onClick={() => setEnableSnapGrid(!enableSnapGrid)}
                       className={`p-2 rounded-xl border flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         enableSnapGrid
-                          ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/60 font-semibold shadow-sm'
-                          : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                          ? 'bg-emerald-100 text-emerald-700 border-emerald-300 font-semibold shadow-sm'
+                          : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)] hover:text-[var(--on-surface)]'
                       }`}
                       title="Ativar/Desativar Grade Magnética (Atalho: G · Segure Alt para ignorar temporariamente)"
                     >
@@ -2312,8 +2312,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setShowGrid(!showGrid)}
                       className={`p-2 rounded-xl border flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         showGrid
-                          ? 'bg-slate-800 text-amber-400 border-amber-500/40'
-                          : 'bg-slate-900/60 text-slate-400 border-slate-800'
+                          ? 'bg-[var(--surface-container-low)] text-[var(--primary)] border-[var(--primary)]'
+                          : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)]'
                       }`}
                     >
                       <Grid className="w-3.5 h-3.5" />
@@ -2324,8 +2324,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setShowCenterGuides(!showCenterGuides)}
                       className={`p-2 rounded-xl border flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         showCenterGuides
-                          ? 'bg-slate-800 text-amber-400 border-amber-500/40'
-                          : 'bg-slate-900/60 text-slate-400 border-slate-800'
+                          ? 'bg-[var(--surface-container-low)] text-[var(--primary)] border-[var(--primary)]'
+                          : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)]'
                       }`}
                     >
                       <Crosshair className="w-3.5 h-3.5" />
@@ -2336,8 +2336,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setMirrorMode(!mirrorMode)}
                       className={`p-2 rounded-xl border flex items-center justify-center gap-2 transition-colors cursor-pointer ${
                         mirrorMode
-                          ? 'bg-cyan-950/60 text-cyan-400 border-cyan-500/60'
-                          : 'bg-slate-900/60 text-slate-400 border-slate-800'
+                          ? 'bg-[var(--primary-fixed)] text-[var(--primary)] border-[var(--primary)]'
+                          : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-high)]'
                       }`}
                     >
                       <SplitSquareVertical className="w-3.5 h-3.5" />
@@ -2346,12 +2346,12 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                   </div>
 
                   {/* Magnetic Grid Spacing Density Selector */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-800/80 text-[11px]">
-                    <span className="text-slate-400 flex items-center gap-1.5">
-                      <Magnet className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-[var(--surface-container-high)] text-[11px]">
+                    <span className="text-[var(--on-surface-variant)] flex items-center gap-1.5">
+                      <Magnet className="w-3.5 h-3.5 text-emerald-700" />
                       <span>Passo da Grade Magnética:</span>
                     </span>
-                    <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                    <div className="flex items-center gap-1 bg-[var(--workbench-panel)] p-0.5 rounded-lg border border-[var(--surface-container-high)]">
                       {(
                         [
                           { value: 2, label: 'Fina (2%)' },
@@ -2368,16 +2368,16 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                           }}
                           className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors cursor-pointer ${
                             gridSpacing === opt.value
-                              ? 'bg-emerald-500 text-slate-950 font-bold'
-                              : 'text-slate-400 hover:text-slate-200'
+                              ? 'bg-emerald-600 text-[var(--on-primary)] font-bold'
+                              : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                           }`}
                         >
                           {opt.label}
                         </button>
                       ))}
                     </div>
-                    <span className="text-[10px] text-slate-500 hidden sm:inline">
-                      Segure <kbd className="px-1 py-0.5 bg-slate-800 rounded text-slate-300">Alt</kbd> para ajuste livre
+                    <span className="text-[10px] text-[var(--workbench-muted)] hidden sm:inline">
+                      Segure <kbd className="px-1 py-0.5 bg-[var(--surface-container-low)] rounded text-[var(--on-surface-variant)]">Alt</kbd> para ajuste livre
                     </span>
                   </div>
                 </div>
@@ -2387,13 +2387,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               <div className="lg:col-span-4 flex flex-col gap-3">
                 {/* Selected Bézier Anchor Controls */}
                 {activeTool === 'node' && activeStroke && selectedAnchor && (
-                  <div className="p-3.5 bg-slate-950/90 rounded-2xl border border-cyan-500/50 shadow-lg flex flex-col gap-2.5 animate-in fade-in">
-                    <div className="flex items-center justify-between text-xs font-semibold text-cyan-300">
+                  <div className="p-3.5 bg-[var(--workbench-page)] rounded-2xl border border-[var(--primary)] shadow-lg flex flex-col gap-2.5 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs font-semibold text-[var(--primary)]">
                       <span className="flex items-center gap-1.5">
                         <Spline className="w-4 h-4" />
                         <span>Âncora Bézier #{(selectedNodeIndex ?? 0) + 1}</span>
                       </span>
-                      <span className="text-[10px] font-mono uppercase bg-cyan-500/15 px-2 py-0.5 rounded text-cyan-300">
+                      <span className="text-[10px] font-mono uppercase bg-[var(--primary-fixed)] px-2 py-0.5 rounded text-[var(--primary)]">
                         {selectedAnchor.mode === 'corner'
                           ? 'Canto'
                           : selectedAnchor.mode === 'smooth'
@@ -2407,8 +2407,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                         onClick={() => handleChangeSelectedAnchorMode('corner')}
                         className={`py-1.5 px-2 rounded-lg border font-medium transition-colors cursor-pointer ${
                           selectedAnchor.mode === 'corner'
-                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold'
-                            : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] border-[var(--primary)] font-bold'
+                            : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-highest)] hover:bg-[var(--surface-container-low)]'
                         }`}
                         title="Canto / Cúspide: Alças independentes para ângulos agudos"
                       >
@@ -2418,8 +2418,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                         onClick={() => handleChangeSelectedAnchorMode('smooth')}
                         className={`py-1.5 px-2 rounded-lg border font-medium transition-colors cursor-pointer ${
                           selectedAnchor.mode === 'smooth'
-                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold'
-                            : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] border-[var(--primary)] font-bold'
+                            : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-highest)] hover:bg-[var(--surface-container-low)]'
                         }`}
                         title="Suave: Alças alinhadas com comprimentos independentes"
                       >
@@ -2429,8 +2429,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                         onClick={() => handleChangeSelectedAnchorMode('symmetric')}
                         className={`py-1.5 px-2 rounded-lg border font-medium transition-colors cursor-pointer ${
                           selectedAnchor.mode === 'symmetric'
-                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold'
-                            : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] border-[var(--primary)] font-bold'
+                            : 'bg-[var(--workbench-panel)] text-[var(--on-surface-variant)] border-[var(--surface-container-highest)] hover:bg-[var(--surface-container-low)]'
                         }`}
                         title="Simétrico: Alças alinhadas e espelhadas com mesmo comprimento"
                       >
@@ -2441,15 +2441,15 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     <div className="flex items-center gap-1.5 pt-1">
                       <button
                         onClick={handleFlattenSelectedAnchor}
-                        className="flex-1 py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-[10px] text-slate-300 flex items-center justify-center gap-1 cursor-pointer"
+                        className="flex-1 py-1.5 px-2 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg text-[10px] text-[var(--on-surface-variant)] flex items-center justify-center gap-1 cursor-pointer"
                         title="Remover alças de curva deste nó (tornar vértice reto)"
                       >
-                        <CornerDownRight className="w-3 h-3 text-amber-400" />
+                        <CornerDownRight className="w-3 h-3 text-[var(--primary)]" />
                         <span>Zerar Alças</span>
                       </button>
                       <button
                         onClick={handleDeleteSelectedNode}
-                        className="py-1.5 px-2.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 rounded-lg text-[10px] text-rose-300 flex items-center gap-1 cursor-pointer"
+                        className="py-1.5 px-2.5 bg-[#FEE2E2] hover:bg-[#FEE2E2] border border-[var(--error)] rounded-lg text-[10px] text-[var(--error)] flex items-center gap-1 cursor-pointer"
                         title="Excluir este nó (Delete)"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -2461,13 +2461,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
                 {/* Contextual Transform Box (When Shape is Selected) */}
                 {activeStroke ? (
-                  <div className="p-3.5 bg-slate-950/80 rounded-2xl border border-blue-500/40 shadow-lg flex flex-col gap-2.5 animate-in fade-in">
-                    <div className="flex items-center justify-between text-xs font-semibold text-blue-400">
+                  <div className="p-3.5 bg-[var(--workbench-page)] rounded-2xl border border-[var(--primary)] shadow-lg flex flex-col gap-2.5 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs font-semibold text-[var(--primary)]">
                       <span className="flex items-center gap-1.5">
                         <MousePointer className="w-4 h-4" />
                         <span>Objeto Selecionado</span>
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-[var(--on-surface-variant)] font-mono">
                         {activeStroke.bezierAnchors
                           ? `${activeStroke.bezierAnchors.length} âncoras Bézier`
                           : `${activeStroke.points.length} pontos`}
@@ -2478,7 +2478,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     {!activeStroke.bezierAnchors && (
                       <button
                         onClick={handleConvertSelectedToBezier}
-                        className="w-full py-1.5 px-3 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 rounded-xl text-xs font-semibold text-emerald-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-1.5 px-3 bg-emerald-100 hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs font-semibold text-emerald-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                         title="Converter contorno em âncoras e alças Bézier editáveis"
                       >
                         <Spline className="w-3.5 h-3.5" />
@@ -2490,68 +2490,68 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     <div className="grid grid-cols-4 gap-1.5">
                       <button
                         onClick={handleFlipHorizontal}
-                        className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                        className="p-1.5 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-[var(--on-surface-variant)] transition-colors cursor-pointer"
                         title="Inverter Horizontalmente"
                       >
-                        <FlipHorizontal className="w-3.5 h-3.5 text-blue-400" />
+                        <FlipHorizontal className="w-3.5 h-3.5 text-[var(--primary)]" />
                         <span>Espelhar H</span>
                       </button>
 
                       <button
                         onClick={handleFlipVertical}
-                        className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                        className="p-1.5 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-[var(--on-surface-variant)] transition-colors cursor-pointer"
                         title="Inverter Verticalmente"
                       >
-                        <FlipVertical className="w-3.5 h-3.5 text-blue-400" />
+                        <FlipVertical className="w-3.5 h-3.5 text-[var(--primary)]" />
                         <span>Espelhar V</span>
                       </button>
 
                       <button
                         onClick={handleRotate90}
-                        className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                        className="p-1.5 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-[var(--on-surface-variant)] transition-colors cursor-pointer"
                         title="Girar 90 graus"
                       >
-                        <RotateCw className="w-3.5 h-3.5 text-blue-400" />
+                        <RotateCw className="w-3.5 h-3.5 text-[var(--primary)]" />
                         <span>Girar 90°</span>
                       </button>
 
                       <button
                         onClick={handleCenterInCanvas}
-                        className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-slate-300 transition-colors cursor-pointer"
+                        className="p-1.5 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded-lg flex flex-col items-center justify-center gap-1 text-[10px] text-[var(--on-surface-variant)] transition-colors cursor-pointer"
                         title="Centralizar no centro do quadro"
                       >
-                        <Maximize2 className="w-3.5 h-3.5 text-blue-400" />
+                        <Maximize2 className="w-3.5 h-3.5 text-[var(--primary)]" />
                         <span>Centralizar</span>
                       </button>
                     </div>
 
                     {/* Offset Path */}
-                    <div className="pt-2 border-t border-slate-800">
-                      <span className="text-[11px] text-slate-400 block mb-1">
+                    <div className="pt-2 border-t border-[var(--surface-container-high)]">
+                      <span className="text-[11px] text-[var(--on-surface-variant)] block mb-1">
                         Deslocamento de Contorno (Offset Path):
                       </span>
                       <div className="grid grid-cols-4 gap-1.5">
                         <button
                           onClick={() => handleOffsetPath(2)}
-                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-[10px] text-amber-300 transition-colors cursor-pointer"
+                          className="px-2 py-1 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded text-[10px] text-[var(--primary)] transition-colors cursor-pointer"
                         >
                           +2% Out
                         </button>
                         <button
                           onClick={() => handleOffsetPath(4)}
-                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-[10px] text-amber-300 transition-colors cursor-pointer"
+                          className="px-2 py-1 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded text-[10px] text-[var(--primary)] transition-colors cursor-pointer"
                         >
                           +4% Out
                         </button>
                         <button
                           onClick={() => handleOffsetPath(-2)}
-                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-[10px] text-cyan-300 transition-colors cursor-pointer"
+                          className="px-2 py-1 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded text-[10px] text-[var(--primary)] transition-colors cursor-pointer"
                         >
                           -2% In
                         </button>
                         <button
                           onClick={() => handleOffsetPath(-4)}
-                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-[10px] text-cyan-300 transition-colors cursor-pointer"
+                          className="px-2 py-1 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded text-[10px] text-[var(--primary)] transition-colors cursor-pointer"
                         >
                           -4% In
                         </button>
@@ -2562,7 +2562,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     <div className="flex items-center gap-2 pt-1">
                       <button
                         onClick={handleSmoothSelectedStroke}
-                        className="flex-1 py-1 px-2 bg-slate-900 hover:bg-cyan-950/60 border border-cyan-500/40 rounded text-[10px] text-cyan-300 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        className="flex-1 py-1 px-2 bg-[var(--workbench-panel)] hover:bg-[var(--primary-fixed)] border border-[var(--primary)] rounded text-[10px] text-[var(--primary)] transition-colors flex items-center justify-center gap-1 cursor-pointer"
                         title="Suavizar curvas e gerar âncoras Bézier suaves"
                       >
                         <Sparkles className="w-3 h-3" />
@@ -2571,7 +2571,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
                       <button
                         onClick={handleDuplicateSelected}
-                        className="py-1 px-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded text-[10px] text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
+                        className="py-1 px-2.5 bg-[var(--workbench-panel)] hover:bg-[var(--surface-container-low)] border border-[var(--surface-container-highest)] rounded text-[10px] text-[var(--on-surface-variant)] transition-colors flex items-center gap-1 cursor-pointer"
                         title="Duplicar Objeto"
                       >
                         <Copy className="w-3 h-3" />
@@ -2580,7 +2580,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
                       <button
                         onClick={handleDeleteSelectedStroke}
-                        className="p-1 px-2 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 rounded text-rose-300 transition-colors cursor-pointer"
+                        className="p-1 px-2 bg-[#FEE2E2] hover:bg-[#FEE2E2] border border-[var(--error)] rounded text-[var(--error)] transition-colors cursor-pointer"
                         title="Excluir este objeto"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -2588,8 +2588,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-slate-950/70 rounded-2xl border border-slate-800 text-xs text-slate-400 flex items-start gap-2.5">
-                    <PenTool className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="p-3 bg-[var(--workbench-page)] rounded-2xl border border-[var(--surface-container-high)] text-xs text-[var(--on-surface-variant)] flex items-start gap-2.5">
+                    <PenTool className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
                     <span>
                       Dica: Use <strong>Bézier (B)</strong> para curvas perfeitas com alças, <strong>Livre (P)</strong> para esboços suaves e <strong>Nós Bézier (A)</strong> para esculpir qualquer ponto ou alça tangente.
                     </span>
@@ -2597,16 +2597,16 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                 )}
 
                 {/* Precision & Smoothing Engine */}
-                <div className="p-3.5 bg-slate-950/70 rounded-2xl border border-slate-800 flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-                    <Sliders className="w-4 h-4 text-amber-400" />
+                <div className="p-3.5 bg-[var(--workbench-page)] rounded-2xl border border-[var(--surface-container-high)] flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[var(--on-surface)]">
+                    <Sliders className="w-4 h-4 text-[var(--primary)]" />
                     <span>Motor de Traço & Auto-Bézier</span>
                   </div>
 
                   <div>
-                    <label className="text-[11px] text-slate-400 flex items-center justify-between mb-1">
+                    <label className="text-[11px] text-[var(--on-surface-variant)] flex items-center justify-between mb-1">
                       <span>Estabilizador Mão Livre:</span>
-                      <span className="font-mono text-amber-400 uppercase text-[10px]">
+                      <span className="font-mono text-[var(--primary)] uppercase text-[10px]">
                         {smoothingLevel === 'none'
                           ? 'Bruto'
                           : smoothingLevel === 'medium'
@@ -2614,13 +2614,13 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                           : 'Ultra'}
                       </span>
                     </label>
-                    <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px]">
+                    <div className="grid grid-cols-3 gap-1 bg-[var(--workbench-panel)] p-1 rounded-xl border border-[var(--surface-container-high)] text-[11px]">
                       <button
                         onClick={() => setSmoothingLevel('none')}
                         className={`py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                           smoothingLevel === 'none'
-                            ? 'bg-amber-500 text-slate-950 font-bold'
-                            : 'text-slate-400 hover:text-slate-200'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                            : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                         }`}
                       >
                         Bruto
@@ -2629,8 +2629,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                         onClick={() => setSmoothingLevel('medium')}
                         className={`py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                           smoothingLevel === 'medium'
-                            ? 'bg-amber-500 text-slate-950 font-bold'
-                            : 'text-slate-400 hover:text-slate-200'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                            : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                         }`}
                       >
                         Suave
@@ -2639,8 +2639,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                         onClick={() => setSmoothingLevel('high')}
                         className={`py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                           smoothingLevel === 'high'
-                            ? 'bg-amber-500 text-slate-950 font-bold'
-                            : 'text-slate-400 hover:text-slate-200'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                            : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
                         }`}
                       >
                         Ultra
@@ -2651,10 +2651,10 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                   {/* Auto-convert freehand to Bézier toggle */}
                   <div className="flex items-center justify-between pt-1">
                     <div>
-                      <p className="text-[11px] text-slate-300 font-medium">
+                      <p className="text-[11px] text-[var(--on-surface-variant)] font-medium">
                         Auto-Bézier no Traço Livre
                       </p>
-                      <p className="text-[10px] text-slate-500">
+                      <p className="text-[10px] text-[var(--workbench-muted)]">
                         Gera alças editáveis automaticamente
                       </p>
                     </div>
@@ -2662,8 +2662,8 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       onClick={() => setAutoBezierFreehand(!autoBezierFreehand)}
                       className={`px-2.5 py-1 text-[11px] rounded-lg font-medium transition-colors cursor-pointer ${
                         autoBezierFreehand
-                          ? 'bg-emerald-500 text-slate-950 font-bold'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-emerald-600 text-[var(--on-primary)] font-bold'
+                          : 'bg-[var(--surface-container-low)] text-[var(--on-surface-variant)]'
                       }`}
                     >
                       {autoBezierFreehand ? 'Ativo' : 'Polilinha'}
@@ -2671,9 +2671,9 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                    <div className="flex items-center justify-between text-[11px] text-[var(--on-surface-variant)] mb-1">
                       <span>Espessura Visual:</span>
-                      <span className="font-mono text-amber-400">{brushSize}px</span>
+                      <span className="font-mono text-[var(--primary)]">{brushSize}px</span>
                     </div>
                     <input
                       type="range"
@@ -2681,26 +2681,26 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       max="12"
                       value={brushSize}
                       onChange={(e) => setBrushSize(Number(e.target.value))}
-                      className="w-full accent-amber-500 cursor-pointer"
+                      className="w-full accent-[var(--primary)] cursor-pointer"
                     />
                   </div>
                 </div>
 
                 {/* Layer Hierarchy / Contours List */}
-                <div className="p-3.5 bg-slate-950/70 rounded-2xl border border-slate-800 flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
+                <div className="p-3.5 bg-[var(--workbench-page)] rounded-2xl border border-[var(--surface-container-high)] flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[var(--on-surface)]">
                     <span className="flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-cyan-400" />
+                      <Layers className="w-4 h-4 text-[var(--primary)]" />
                       <span>Camadas de Objetos ({strokes.length})</span>
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-[var(--on-surface-variant)]">
                       {outerStroke ? '1 Lâmina Cortador' : '0 Cortador'}
                     </span>
                   </div>
 
                   <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1">
                     {strokes.length === 0 ? (
-                      <div className="p-3 text-center text-[11px] text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                      <div className="p-3 text-center text-[11px] text-[var(--workbench-muted)] border border-dashed border-[var(--surface-container-high)] rounded-xl">
                         Nenhum objeto na prancheta.
                       </div>
                     ) : (
@@ -2715,22 +2715,22 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                             }}
                             className={`p-2 rounded-xl border text-xs flex items-center justify-between gap-2 cursor-pointer transition-all ${
                               isSelected
-                                ? 'bg-blue-950/40 border-blue-500 text-blue-200'
+                                ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)]'
                                 : st.isOuter
-                                ? 'bg-amber-950/20 border-amber-500/40 text-amber-200'
-                                : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                                ? 'bg-[var(--primary-fixed)] border-[var(--primary)] text-[var(--primary)]'
+                                : 'bg-[var(--workbench-panel)] border-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:border-[var(--surface-container-highest)]'
                             }`}
                           >
                             <div className="flex items-center gap-2 overflow-hidden">
                               <span
                                 className="w-2.5 h-2.5 rounded-full shrink-0"
-                                style={{ backgroundColor: st.isOuter ? '#f59e0b' : '#38bdf8' }}
+                                style={{ backgroundColor: st.isOuter ? '#904000' : '#7C4DFF' }}
                               />
                               <div className="truncate">
                                 <p className="text-[11px] font-medium leading-tight truncate">
                                   {st.isOuter ? 'Lâmina de Corte (Contorno)' : `Carimbo #${idx + 1}`}
                                 </p>
-                                <p className="text-[9px] text-slate-400">
+                                <p className="text-[9px] text-[var(--on-surface-variant)]">
                                   {st.bezierAnchors
                                     ? `${st.bezierAnchors.length} âncoras Bézier`
                                     : `${st.points.length} nós`}{' '}
@@ -2750,7 +2750,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                                     }));
                                     recordHistory(updated);
                                   }}
-                                  className="px-1.5 py-0.5 text-[9px] bg-slate-800 hover:bg-amber-500 hover:text-slate-950 rounded text-slate-300 transition-colors cursor-pointer"
+                                  className="px-1.5 py-0.5 text-[9px] bg-[var(--surface-container-low)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] rounded text-[var(--on-surface-variant)] transition-colors cursor-pointer"
                                   title="Tornar este contorno a Lâmina do Cortador"
                                 >
                                   Lâmina
@@ -2764,7 +2764,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                                   recordHistory(reclassifyStrokes(updated));
                                   if (selectedStrokeId === st.id) setSelectedStrokeId(null);
                                 }}
-                                className="p-1 rounded text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                                className="p-1 rounded text-[var(--workbench-muted)] hover:text-[var(--error)] transition-colors cursor-pointer"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -2791,21 +2791,21 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               {!uploadedImageSrc ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-slate-700 hover:border-amber-500/80 rounded-2xl p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-950/40"
+                  className="border-2 border-dashed border-[var(--surface-container-highest)] hover:border-[var(--primary)] rounded-2xl p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-[var(--workbench-page)]"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-3">
+                  <div className="w-14 h-14 rounded-2xl bg-[var(--primary-fixed)] border border-[var(--primary)] flex items-center justify-center text-[var(--primary)] mb-3">
                     <Upload className="w-7 h-7" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-200">
+                  <p className="text-sm font-semibold text-[var(--on-surface)]">
                     Clique aqui ou arraste uma imagem lineart
                   </p>
-                  <p className="text-xs text-slate-400 mt-1 max-w-md">
+                  <p className="text-xs text-[var(--on-surface-variant)] mt-1 max-w-md">
                     PNG, JPG ou SVG com traços pretos nítidos sobre fundo branco ou transparente
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  <div className="relative aspect-video max-h-[280px] bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden p-3">
+                  <div className="relative aspect-video max-h-[280px] bg-[var(--workbench-page)] rounded-xl border border-[var(--surface-container-high)] flex items-center justify-center overflow-hidden p-3">
                     <img
                       src={uploadedImageSrc}
                       alt="Prévia lineart"
@@ -2816,19 +2816,19 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute top-3 right-3 text-xs bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-slate-200 hover:text-white border border-slate-700 shadow cursor-pointer"
+                      className="absolute top-3 right-3 text-xs bg-[var(--workbench-panel)] backdrop-blur-md px-3 py-1.5 rounded-lg text-[var(--on-surface)] hover:text-[var(--on-surface)] border border-[var(--surface-container-highest)] shadow cursor-pointer"
                     >
                       Trocar Imagem
                     </button>
                   </div>
 
-                  <div className="p-4 bg-slate-950/70 rounded-xl border border-slate-800 flex flex-col gap-3">
+                  <div className="p-4 bg-[var(--workbench-page)] rounded-xl border border-[var(--surface-container-high)] flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-300 flex items-center gap-1.5">
-                        <Sliders className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs text-[var(--on-surface-variant)] flex items-center gap-1.5">
+                        <Sliders className="w-4 h-4 text-[var(--primary)]" />
                         <span>Sensibilidade do Traço (Limiar P&B)</span>
                       </span>
-                      <span className="text-xs font-mono text-amber-400">{threshold}</span>
+                      <span className="text-xs font-mono text-[var(--primary)]">{threshold}</span>
                     </div>
                     <input
                       type="range"
@@ -2836,19 +2836,19 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
                       max="225"
                       value={threshold}
                       onChange={(e) => setThreshold(Number(e.target.value))}
-                      className="w-full accent-amber-500 cursor-pointer"
+                      className="w-full accent-[var(--primary)] cursor-pointer"
                     />
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-                      <span className="text-xs text-slate-300">
+                    <div className="flex items-center justify-between pt-2 border-t border-[var(--surface-container-high)]">
+                      <span className="text-xs text-[var(--on-surface-variant)]">
                         Inverter cores (se fundo for escuro)
                       </span>
                       <button
                         onClick={() => setInvert(!invert)}
                         className={`px-3 py-1 text-xs rounded-lg transition-colors cursor-pointer ${
                           invert
-                            ? 'bg-amber-500 text-slate-950 font-bold'
-                            : 'bg-slate-800 text-slate-400'
+                            ? 'bg-[var(--primary)] text-[var(--on-primary)] font-bold'
+                            : 'bg-[var(--surface-container-low)] text-[var(--on-surface-variant)]'
                         }`}
                       >
                         {invert ? 'Invertido' : 'Normal'}
@@ -2862,10 +2862,10 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 px-6 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
+        <div className="p-4 px-6 border-t border-[var(--surface-container-high)] bg-[var(--workbench-page)] flex items-center justify-between">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="px-4 py-2 text-xs text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition-colors cursor-pointer"
           >
             Cancelar
           </button>
@@ -2874,7 +2874,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
             <button
               disabled={!uploadedImageSrc || isProcessing}
               onClick={handleProcessUploadedImage}
-              className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-6 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-container)] disabled:opacity-40 text-[var(--on-primary)] font-bold text-xs rounded-xl shadow-lg shadow-none transition-all cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>{isProcessing ? 'Vetorizando...' : 'Gerar Cortador e Carimbo 3D'}</span>
@@ -2883,7 +2883,7 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
             <button
               disabled={strokes.length === 0}
               onClick={handleProcessDrawnLines}
-              className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-6 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-container)] disabled:opacity-40 text-[var(--on-primary)] font-bold text-xs rounded-xl shadow-lg shadow-none transition-all cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>Transformar em Modelo 3D ({strokes.length} objetos)</span>
@@ -2894,21 +2894,21 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
 
       {/* SVG Paste Modal */}
       {svgModalOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 shadow-2xl flex flex-col gap-3">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-[var(--inverse-surface)]/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-2xl w-full max-w-lg p-5 shadow-2xl flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <FileCode className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-sm font-bold text-[var(--on-surface)] flex items-center gap-2">
+                <FileCode className="w-4 h-4 text-[var(--primary)]" />
                 <span>Colar Código SVG (Illustrator / Inkscape)</span>
               </h3>
               <button
                 onClick={() => setSvgModalOpen(false)}
-                className="text-slate-400 hover:text-white cursor-pointer"
+                className="text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--on-surface-variant)]">
               Copie o código SVG do Illustrator ou Inkscape (ou abra o arquivo .svg em um editor de texto) e cole abaixo:
             </p>
             <textarea
@@ -2916,19 +2916,19 @@ export const LineartEditor: React.FC<LineartEditorProps> = ({
               value={svgTextInput}
               onChange={(e) => setSvgTextInput(e.target.value)}
               placeholder="<svg ...><path d='M10,20 C30,5 60,5 80,20 ...' /></svg>"
-              className="w-full p-3 text-xs font-mono bg-slate-950 border border-slate-700 rounded-xl text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="w-full p-3 text-xs font-mono bg-[var(--workbench-page)] border border-[var(--surface-container-highest)] rounded-xl text-[var(--on-surface)] focus:outline-none focus:border-[var(--primary)]"
             />
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setSvgModalOpen(false)}
-                className="px-4 py-2 text-xs text-slate-400 hover:text-white cursor-pointer"
+                className="px-4 py-2 text-xs text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleImportSVGCode(svgTextInput)}
                 disabled={!svgTextInput.trim()}
-                className="px-5 py-2 text-xs font-bold bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-slate-950 rounded-xl cursor-pointer"
+                className="px-5 py-2 text-xs font-bold bg-[var(--primary)] hover:bg-[var(--primary-container)] disabled:opacity-40 text-[var(--on-primary)] rounded-xl cursor-pointer"
               >
                 Importar Vetor
               </button>

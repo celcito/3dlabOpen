@@ -88,7 +88,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     // 1. Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0f17); // Deep obsidian studio slate
+    scene.background = new THREE.Color(0xf1f3ed); // Deep obsidian studio slate
     sceneRef.current = scene;
 
     // 2. Camera
@@ -148,7 +148,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     // Base plate surface
     const bedGeo = new THREE.PlaneGeometry(220, 220);
     const bedMat = new THREE.MeshStandardMaterial({
-      color: 0x171e2e,
+      color: 0xe8e9e3,
       roughness: 0.85,
       metalness: 0.1,
     });
@@ -157,14 +157,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     bedGroup.add(bedMesh);
 
     // Grid lines (10mm intervals, accented at 50mm)
-    const gridHelper = new THREE.GridHelper(220, 22, 0x38bdf8, 0x1e293b);
+    const gridHelper = new THREE.GridHelper(220, 22, 0x632ce5, 0xdde1d8);
     gridHelper.rotation.x = Math.PI / 2;
     gridHelper.position.z = 0.1;
     bedGroup.add(gridHelper);
 
     // Build plate border notch / notch marker
     const borderGeo = new THREE.RingGeometry(110, 111, 4);
-    const borderMat = new THREE.MeshBasicMaterial({ color: 0x334155, side: THREE.DoubleSide });
+    const borderMat = new THREE.MeshBasicMaterial({ color: 0xcac3d8, side: THREE.DoubleSide });
     const borderMesh = new THREE.Mesh(borderGeo, borderMat);
     borderMesh.rotation.z = Math.PI / 4;
     borderMesh.position.z = 0.15;
@@ -363,7 +363,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full min-h-[460px] bg-slate-950 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+      className="relative w-full h-full min-h-[460px] bg-[var(--workbench-page)] overflow-hidden select-none cursor-grab active:cursor-grabbing"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -378,33 +378,33 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
       {/* Floating HUD Top-Left: Model Name, Dimensions & Mode */}
       <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-1.5">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 backdrop-blur-md border border-slate-700/60 shadow-lg text-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-semibold text-slate-100">{model.name}</span>
-          <span className="text-slate-500">·</span>
-          <span className="text-amber-400 font-mono tabular-nums">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--workbench-panel)] backdrop-blur-md border border-[var(--surface-container-highest)] shadow-lg text-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+          <span className="font-semibold text-[var(--on-surface)]">{model.name}</span>
+          <span className="text-[var(--workbench-muted)]">·</span>
+          <span className="text-[var(--primary)] font-mono tabular-nums">
             {settings.targetWidth} × {settings.targetHeight} mm
           </span>
-          <span className="text-slate-500">·</span>
-          <span className="text-slate-400">
+          <span className="text-[var(--workbench-muted)]">·</span>
+          <span className="text-[var(--on-surface-variant)]">
             Lâmina: {settings.bladeHeight}mm
           </span>
         </div>
 
         {doughMode && (
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-amber-950/80 backdrop-blur-md border border-amber-600/40 text-amber-200 text-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[var(--primary-fixed)] backdrop-blur-md border border-[var(--primary)] text-[var(--primary)] text-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
             <span>Simulação de Biscoito Assado (Visualização do Resultado)</span>
           </div>
         )}
       </div>
 
       {/* Floating HUD Top-Right: Quick Camera Presets & Reset */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 p-1 bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-lg shadow-lg">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 p-1 bg-[var(--workbench-panel)] backdrop-blur-md border border-[var(--surface-container-highest)] rounded-lg shadow-lg">
         <button
           onClick={() => setCameraView('iso')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-            activeCameraView === 'iso' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            activeCameraView === 'iso' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Vista Perspectiva Isométrica"
         >
@@ -413,7 +413,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         <button
           onClick={() => setCameraView('top')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-            activeCameraView === 'top' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            activeCameraView === 'top' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Vista Superior 2D (Topo)"
         >
@@ -422,7 +422,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         <button
           onClick={() => setCameraView('front')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-            activeCameraView === 'front' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            activeCameraView === 'front' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Vista Frontal"
         >
@@ -431,16 +431,16 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         <button
           onClick={() => setCameraView('side')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-            activeCameraView === 'side' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            activeCameraView === 'side' ? 'bg-[var(--surface-container-low)] text-[var(--primary)] shadow-sm' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
           }`}
           title="Vista Lateral"
         >
           Lateral
         </button>
-        <div className="w-[1px] h-4 bg-slate-700 mx-0.5" />
+        <div className="w-[1px] h-4 bg-[var(--surface-container-high)] mx-0.5" />
         <button
           onClick={resetCamera}
-          className="p-1 text-slate-400 hover:text-slate-100 transition-colors"
+          className="p-1 text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition-colors"
           title="Centralizar e resetar câmera"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -453,8 +453,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           onClick={onToggleDoughMode}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shadow-md ${
             doughMode
-              ? 'bg-amber-500 text-slate-950 font-semibold'
-              : 'bg-slate-900/80 backdrop-blur-md border border-slate-700/60 text-slate-300 hover:text-amber-400'
+              ? 'bg-[var(--primary)] text-[var(--on-primary)] font-semibold'
+              : 'bg-[var(--workbench-panel)] backdrop-blur-md border border-[var(--surface-container-highest)] text-[var(--on-surface-variant)] hover:text-[var(--primary)]'
           }`}
           title="Ver como o biscoito real ficará cortado e estampado!"
         >
@@ -464,7 +464,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       </div>
 
       {/* Floating HUD Bottom-Right: Viewport Interaction Tip */}
-      <div className="absolute bottom-4 right-4 z-10 pointer-events-none hidden md:flex items-center gap-3 text-[11px] text-slate-400 bg-slate-900/70 backdrop-blur-md px-3 py-1 rounded-md border border-slate-800">
+      <div className="absolute bottom-4 right-4 z-10 pointer-events-none hidden md:flex items-center gap-3 text-[11px] text-[var(--on-surface-variant)] bg-[var(--workbench-panel)] backdrop-blur-md px-3 py-1 rounded-md border border-[var(--surface-container-high)]">
         <span>Girar: Botão esquerdo</span>
         <span>·</span>
         <span>Mover: Botão direito</span>

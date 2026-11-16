@@ -175,7 +175,7 @@ export default function App() {
   }, [activeModel, settings]);
 
   return (
-    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-slate-950 text-slate-100 relative">
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-[var(--workbench-page)] text-[var(--on-surface)] relative">
       {/* Top Bar Contract (3 zones) */}
       <TopNav
         onOpenLibrary={() => setIsLibraryOpen(true)}
@@ -210,8 +210,8 @@ export default function App() {
           />
 
           {/* Quick Preset Selector Floating Bar on bottom center */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 hidden sm:flex items-center gap-1.5 p-1.5 bg-slate-900/85 backdrop-blur-md border border-slate-700/60 rounded-xl shadow-2xl max-w-[90vw] overflow-x-auto scrollbar-none">
-            <span className="text-[11px] font-medium text-slate-400 px-2 whitespace-nowrap">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 hidden sm:flex items-center gap-1.5 p-1.5 bg-[var(--workbench-panel)] backdrop-blur-md border border-[var(--surface-container-highest)] rounded-xl shadow-2xl max-w-[90vw] overflow-x-auto scrollbar-none">
+            <span className="text-[11px] font-medium text-[var(--on-surface-variant)] px-2 whitespace-nowrap">
               Modelos Rápidos:
             </span>
             {PRESET_MODELS.slice(0, 8).map((preset) => (
@@ -225,8 +225,8 @@ export default function App() {
                 }}
                 className={`px-3 py-1 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
                   activeModel.id === preset.id
-                    ? 'bg-amber-500 text-slate-950 font-semibold shadow'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                    ? 'bg-[var(--primary)] text-[var(--on-primary)] font-semibold shadow'
+                    : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container-low)]'
                 }`}
               >
                 {preset.name}
@@ -234,7 +234,7 @@ export default function App() {
             ))}
             <button
               onClick={() => setIsLibraryOpen(true)}
-              className="px-2.5 py-1 text-xs text-amber-400 hover:text-amber-300 font-medium whitespace-nowrap"
+              className="px-2.5 py-1 text-xs text-[var(--primary)] hover:text-[var(--primary)] font-medium whitespace-nowrap"
             >
               Ver Todos ({PRESET_MODELS.length}) →
             </button>
