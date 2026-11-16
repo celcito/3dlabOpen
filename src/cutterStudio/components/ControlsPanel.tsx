@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ModelSettings, FilamentColor, PrintEstimation, ModelLineart } from '../types';
 import { PREDEFINED_TEXT_SHAPES } from '../data/textShapes';
+import { PRESET_MODELS } from '../data/presets';
 import {
   Sliders,
   Scissors,
@@ -80,6 +81,7 @@ interface ControlsPanelProps {
   onOpenMoldStudio?: () => void;
   onUploadSTLForMold?: (file: File) => void;
   onOpenPrintBed?: () => void;
+  onOpenLibrary?: () => void;
 }
 
 export const ControlsPanel: React.FC<ControlsPanelProps> = ({
@@ -98,6 +100,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   onOpenMoldStudio,
   onUploadSTLForMold,
   onOpenPrintBed,
+  onOpenLibrary,
 }) => {
   const [activeTab, setActiveTab] = useState<'dimensions' | 'cutter' | 'stamp' | 'text' | 'filament'>('dimensions');
 
@@ -228,6 +231,45 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
 
       {/* Tab Panels Body */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Modelos prontos */}
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--on-surface-variant)]">
+              Modelos prontos
+            </span>
+            {onOpenLibrary && (
+              <button
+                onClick={onOpenLibrary}
+                className="font-mono text-[10px] text-[var(--primary)] transition-colors hover:text-[var(--primary-container)]"
+              >
+                Ver todos ({PRESET_MODELS.length}) →
+              </button>
+            )}
+          </div>
+          <div className="max-h-44 space-y-0.5 overflow-y-auto rounded-md border border-[var(--surface-container-high)] p-1 scrollbar-none">
+            {PRESET_MODELS.slice(0, 8).map((preset) => {
+              const isActive = activeModelId === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => onSelectBaseShape?.(preset)}
+                  aria-pressed={isActive}
+                  className={`flex w-full items-center justify-between gap-2 rounded px-2.5 py-1.5 text-left font-mono text-[11px] tracking-[0.02em] transition-colors ${
+                    isActive
+                      ? 'bg-[var(--primary-fixed)] text-[var(--primary)]'
+                      : 'text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] hover:text-[var(--on-surface)]'
+                  }`}
+                >
+                  <span className="truncate">{preset.name}</span>
+                  {isActive && (
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* TAB 1: DIMENSIONS */}
         {activeTab === 'dimensions' && (
           <div className="space-y-4">

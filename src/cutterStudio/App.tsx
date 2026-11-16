@@ -209,47 +209,6 @@ export default function App() {
             onToggleDoughMode={() => setDoughMode((prev) => !prev)}
           />
 
-          {/* Modelos prontos: rail vertical na lateral direita do viewport */}
-          <div className="absolute right-4 top-16 bottom-16 z-10 hidden sm:flex w-[172px] flex-col overflow-hidden rounded-lg border border-[var(--surface-container-high)] bg-[var(--workbench-panel)]">
-            <div className="flex items-center justify-between gap-2 border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)] px-2.5 py-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--on-surface-variant)]">
-                Modelos prontos
-              </span>
-              <span className="font-mono text-[10px] tabular-nums text-[var(--workbench-muted)]">
-                {PRESET_MODELS.length}
-              </span>
-            </div>
-            <div className="flex-1 space-y-0.5 overflow-y-auto p-1 scrollbar-none">
-              {PRESET_MODELS.slice(0, 8).map((preset) => {
-                const isActive = activeModel.id === preset.id;
-                return (
-                  <button
-                    key={preset.id}
-                    onClick={() => {
-                      setActiveModel(preset);
-                      setDoughMode(false);
-                      setHistory([]);
-                      pendingSnapshotRef.current = null;
-                    }}
-                    className={`w-full truncate rounded px-2.5 py-1.5 text-left font-mono text-[11px] tracking-[0.02em] transition-colors ${
-                      isActive
-                        ? 'bg-[var(--primary)] text-[var(--on-primary)]'
-                        : 'text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] hover:text-[var(--on-surface)]'
-                    }`}
-                    aria-pressed={isActive}
-                  >
-                    {preset.name}
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={() => setIsLibraryOpen(true)}
-              className="w-full border-t border-[var(--surface-container-high)] px-2.5 py-2 text-left font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--primary)] transition-colors hover:bg-[var(--surface-container-low)]"
-            >
-              Ver todos ({PRESET_MODELS.length}) →
-            </button>
-          </div>
         </div>
 
         {/* Right Sidebar Controls Panel */}
@@ -270,6 +229,7 @@ export default function App() {
           onOpenGoogleShape={() => setIsGoogleShapeOpen(true)}
           onOpenTextModal={() => setIsTextModalOpen(true)}
           onOpenPrintBed={() => setIsPrintBedStudioOpen(true)}
+          onOpenLibrary={() => setIsLibraryOpen(true)}
         />
       </main>
 
