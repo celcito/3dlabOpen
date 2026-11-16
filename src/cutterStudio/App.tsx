@@ -209,34 +209,45 @@ export default function App() {
             onToggleDoughMode={() => setDoughMode((prev) => !prev)}
           />
 
-          {/* Quick Preset Selector Floating Bar on bottom center */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 hidden sm:flex items-center gap-1.5 p-1.5 bg-[var(--workbench-panel)] backdrop-blur-md border border-[var(--surface-container-highest)] rounded-xl shadow-2xl max-w-[90vw] overflow-x-auto scrollbar-none">
-            <span className="text-[11px] font-medium text-[var(--on-surface-variant)] px-2 whitespace-nowrap">
-              Modelos Rápidos:
-            </span>
-            {PRESET_MODELS.slice(0, 8).map((preset) => (
-              <button
-                key={preset.id}
-                onClick={() => {
-                  setActiveModel(preset);
-                  setDoughMode(false);
-                  setHistory([]);
-                  pendingSnapshotRef.current = null;
-                }}
-                className={`px-3 py-1 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
-                  activeModel.id === preset.id
-                    ? 'bg-[var(--primary)] text-[var(--on-primary)] font-semibold shadow'
-                    : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-container-low)]'
-                }`}
-              >
-                {preset.name}
-              </button>
-            ))}
+          {/* Modelos prontos: rail vertical na lateral direita do viewport */}
+          <div className="absolute right-4 top-16 bottom-16 z-10 hidden sm:flex w-[172px] flex-col overflow-hidden rounded-lg border border-[var(--surface-container-high)] bg-[var(--workbench-panel)]">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--surface-container-high)] bg-[var(--workbench-page)] px-2.5 py-2">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--on-surface-variant)]">
+                Modelos prontos
+              </span>
+              <span className="font-mono text-[10px] tabular-nums text-[var(--workbench-muted)]">
+                {PRESET_MODELS.length}
+              </span>
+            </div>
+            <div className="flex-1 space-y-0.5 overflow-y-auto p-1 scrollbar-none">
+              {PRESET_MODELS.slice(0, 8).map((preset) => {
+                const isActive = activeModel.id === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => {
+                      setActiveModel(preset);
+                      setDoughMode(false);
+                      setHistory([]);
+                      pendingSnapshotRef.current = null;
+                    }}
+                    className={`w-full truncate rounded px-2.5 py-1.5 text-left font-mono text-[11px] tracking-[0.02em] transition-colors ${
+                      isActive
+                        ? 'bg-[var(--primary)] text-[var(--on-primary)]'
+                        : 'text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] hover:text-[var(--on-surface)]'
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {preset.name}
+                  </button>
+                );
+              })}
+            </div>
             <button
               onClick={() => setIsLibraryOpen(true)}
-              className="px-2.5 py-1 text-xs text-[var(--primary)] hover:text-[var(--primary)] font-medium whitespace-nowrap"
+              className="w-full border-t border-[var(--surface-container-high)] px-2.5 py-2 text-left font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--primary)] transition-colors hover:bg-[var(--surface-container-low)]"
             >
-              Ver Todos ({PRESET_MODELS.length}) →
+              Ver todos ({PRESET_MODELS.length}) →
             </button>
           </div>
         </div>
