@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ModelLineart, ModelSettings, Path2D, Point2D } from '../types';
 import {
   scaleAndCenterPath,
@@ -10,6 +11,25 @@ import {
 } from './vectorMath';
 import { vectorizeText } from './imageTracer';
 import { generate3DTextShapes } from './text3DGenerator';
+
+/**
+ * Welds duplicated vertices and smooths shading across shallow angles while
+ * keeping genuine hard edges (blade tip, lip steps) crisp. Works on both
+ * indexed and non-indexed geometry.
+ */
+function applySmoothShading(
+  geometry: THREE.BufferGeometry,
+  creaseAngle: number = Math.PI / 3
+): THREE.BufferGeometry {
+  // Normals must not be present for the weld pass, otherwise coincident
+  // vertices keep distinct normals and never merge.
+  geometry.deleteAttribute('normal');
+  const welded = BufferGeometryUtils.mergeVertices(geometry, 1e-4);
+  const smoothed = BufferGeometryUtils.toCreasedNormals(welded, creaseAngle);
+  welded.dispose();
+  geometry.dispose();
+  return smoothed;
+}
 
 export interface GeneratedMeshes {
   cutterMesh: THREE.Mesh | null;
@@ -77,7 +97,7 @@ export function generateCutterMesh(
     settings.targetHeight,
     sourceBounds
   );
-  const baseContour = smoothPath(scaledOuter, 2, true);
+  const baseContour = smoothPath(scaledOuter, 3, true);
 
   const edgeThick = settings.bladeEdgeThickness;
   const baseThick = settings.bladeBaseThickness;
@@ -138,9 +158,9 @@ export function generateCutterMesh(
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
-  geometry.computeVertexNormals();
+  const smoothGeometry = applySmoothShading(geometry);
 
-  const mesh = new THREE.Mesh(geometry, material);
+  const mesh = new THREE.Mesh(smoothGeometry, material);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.name = 'cutter';
@@ -163,7 +183,7 @@ export function generateStampMesh(
     settings.targetHeight,
     sourceBounds
   );
-  const baseContour = smoothPath(scaledOuter, 2, true);
+  const baseContour = smoothPath(scaledOuter, 3, true);
 
   // Inset contour for stamp base plate clearance so it slides smoothly
   const stampPlateContour = offsetClosedPolygon(baseContour, -settings.stampClearance);
@@ -203,7 +223,7 @@ export function generateStampMesh(
   const plateGeo = new THREE.ExtrudeGeometry(shape, {
     depth: plateThick,
     bevelEnabled: true,
-    bevelSegments: 2,
+    bevelSegments: 4,
     steps: 1,
     bevelSize: 0.5,
     bevelThickness: 0.5,
@@ -262,7 +282,7 @@ export function generateStampMesh(
       const lineGeo = new THREE.ExtrudeGeometry(ribbonShape, {
         depth: reliefDepth + 0.8, // Slightly overlap into plate for clean Boolean union
         bevelEnabled: true,
-        bevelSegments: 2,
+        bevelSegments: 3,
         steps: 1,
         bevelSize: 0.25,
         bevelThickness: 0.25,
@@ -283,7 +303,7 @@ export function generateStampMesh(
         const textGeo = new THREE.ExtrudeGeometry(textShape, {
           depth: reliefDepth + 0.8, // Fused solidly into base plate
           bevelEnabled: true,
-          bevelSegments: 2,
+          bevelSegments: 3,
           steps: 1,
           bevelSize: 0.2,
           bevelThickness: 0.2,
@@ -340,9 +360,9 @@ export function generateStampMesh(
 
   // Merge all geometries into a single watertight BufferGeometry
   const mergedGeometry = mergeBufferGeometries(geometries);
-  mergedGeometry.computeVertexNormals();
+  const smoothGeometry = applySmoothShading(mergedGeometry);
 
-  const mesh = new THREE.Mesh(mergedGeometry, material);
+  const mesh = new THREE.Mesh(smoothGeometry, material);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.name = 'stamp';
