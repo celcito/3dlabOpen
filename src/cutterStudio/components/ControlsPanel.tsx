@@ -65,6 +65,47 @@ const ParamTooltip: React.FC<{ text: string; technical?: string }> = ({ text, te
   );
 };
 
+/**
+ * Compact vector thumbnail used by the ready-made model list.
+ */
+const ModelThumbnail: React.FC<{ model: ModelLineart; active?: boolean }> = ({ model, active = false }) => {
+  const stroke = active ? 'var(--primary)' : 'var(--on-surface-variant)';
+  const fill = active ? 'var(--primary-fixed)' : 'var(--surface-container-low)';
+
+  return (
+    <span
+      className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded border p-0.5 ${
+        active ? 'border-[var(--primary)]' : 'border-[var(--surface-container-high)]'
+      }`}
+      style={{ backgroundColor: 'var(--workbench-page)' }}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 100 100" className="h-full w-full" preserveAspectRatio="xMidYMid meet">
+        <polygon
+          points={model.outerPerimeter.map(([x, y]) => `${x},${y}`).join(' ')}
+          style={{ fill, stroke }}
+          fillOpacity={0.85}
+          strokeWidth={5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {model.innerDetails.map((path, idx) => (
+          <polyline
+            key={idx}
+            points={path.map(([x, y]) => `${x},${y}`).join(' ')}
+            fill="none"
+            style={{ stroke: active ? 'var(--primary)' : 'var(--on-surface-variant)' }}
+            strokeWidth={3.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={0.75}
+          />
+        ))}
+      </svg>
+    </span>
+  );
+};
+
 interface ControlsPanelProps {
   settings: ModelSettings;
   onUpdateSettings: (newSettings: Partial<ModelSettings>) => void;
@@ -246,7 +287,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
               </button>
             )}
           </div>
-          <div className="max-h-44 space-y-0.5 overflow-y-auto rounded-md border border-[var(--surface-container-high)] p-1 scrollbar-none">
+          <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-md border border-[var(--surface-container-high)] p-1 scrollbar-none">
             {PRESET_MODELS.slice(0, 8).map((preset) => {
               const isActive = activeModelId === preset.id;
               return (
@@ -254,13 +295,14 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                   key={preset.id}
                   onClick={() => onSelectBaseShape?.(preset)}
                   aria-pressed={isActive}
-                  className={`flex w-full items-center justify-between gap-2 rounded px-2.5 py-1.5 text-left font-mono text-[11px] tracking-[0.02em] transition-colors ${
+                  className={`flex w-full items-center gap-2 rounded px-1.5 py-1 text-left font-mono text-[11px] tracking-[0.02em] transition-colors ${
                     isActive
                       ? 'bg-[var(--primary-fixed)] text-[var(--primary)]'
                       : 'text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-low)] hover:text-[var(--on-surface)]'
                   }`}
                 >
-                  <span className="truncate">{preset.name}</span>
+                  <ModelThumbnail model={preset} active={isActive} />
+                  <span className="min-w-0 flex-1 truncate">{preset.name}</span>
                   {isActive && (
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
                   )}
