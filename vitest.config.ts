@@ -14,6 +14,7 @@ export default defineConfig({
     include: [
       "src/lib/split3mf/**/*.test.ts",
       "src/lib/fastener/**/*.test.ts",
+      "src/lib/primitives/**/*.test.ts",
       "src/lib/imageTools/**/*.test.ts",
       "src/lib/threeMfAnalyzer/**/*.test.ts",
       "src/lib/medal/**/*.test.ts",
