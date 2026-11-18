@@ -304,9 +304,19 @@ export function generateMold(
 
   if (config.type === 'single_open') {
     const block = buildBlockGeometry(config.shape, blockW, blockH, blockD, config.wallThickness);
+        // O topo do bloco deve ficar no Z máximo do objeto + margem, de forma que a
+// subtração rompa o tampo do bloco e a cavidade sia aberta por cima. O bloco tem
+// altura blockD em Y; seu topo está a blockD/2 acima do centro, então para ter o
+// topo em (objSize.z + 1 + rim) o centro deve ser:
+//   (objSize.z + 1 + rim) - blockD/2.
     // Topo do bloco rente ao topo do objeto: a cavidade precisa ficar aberta.
     block.translate(0, 0, objSize.z - blockD / 2);
-    applyDraft(block, config.draftAngle, 'top');
+    applyDraft(block, config.draftAngle, "top");
+    // P2: ao posicionar o bloco acima do Z do objeto e subtrair, a cavidade rompe o
+    // tampo do bloco — o molde de cavidade fica aberto e nunca selado com um teto
+    // sólido sobre o modelo.
+
+
 
     // A cavidade sobe um pouco acima do topo do bloco para atravessá-lo sem
     // faces coplanares (que geram artefatos no CSG).
