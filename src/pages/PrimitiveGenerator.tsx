@@ -434,10 +434,11 @@ export default function PrimitiveGenerator() {
           </div>
           <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 40, 60], fov: 45 }}>
             <color attach="background" args={["#F1F3ED"]} />
-            <ambientLight intensity={0.6} />
-            <hemisphereLight args={["#ffffff", "#444455", 0.6]} />
-            <spotLight position={[50, 50, 50]} angle={0.2} penumbra={1} intensity={1.2} castShadow />
-            <pointLight position={[-50, -50, -50]} intensity={0.8} />
+            <ambientLight intensity={0.8} />
+            <pointLight position={[10, 10, 10]} intensity={1.5} />
+            <pointLight position={[-10, 5, -10]} intensity={0.8} color="#632CE5" />
+            <directionalLight position={[5, 10, 5]} intensity={2.0} castShadow />
+            <directionalLight position={[-5, -10, -5]} intensity={0.6} />
             <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
 
             <Grid
@@ -451,7 +452,7 @@ export default function PrimitiveGenerator() {
 
             <Center>
               <mesh geometry={geometry} castShadow receiveShadow>
-                <meshStandardMaterial color="#e8e8e8" metalness={0.35} roughness={0.35} />
+                <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
               </mesh>
             </Center>
           </Canvas>

@@ -87,33 +87,24 @@ function boxPoints(width: number, depth: number, ridges: number, knurlDepth: num
   return pts;
 }
 
-/** Outward miter normals, used to inset the chamfered end rings. */
-function miterNormals(points: Pt[]): Pt[] {
-  const n = points.length;
-  const normals: Pt[] = [];
-  for (let i = 0; i < n; i++) {
-    const prev = points[(i - 1 + n) % n];
-    const cur = points[i];
-    const next = points[(i + 1) % n];
-    const inx = cur.x - prev.x;
-    const inz = cur.z - prev.z;
-    const outx = next.x - cur.x;
-    const outz = next.z - cur.z;
-    const inLen = Math.hypot(inx, inz) || 1;
-    const outLen = Math.hypot(outx, outz) || 1;
-    // Outward normal of an edge running CCW (seen from +Y).
-    const n1 = { x: inz / inLen, z: -inx / inLen };
-    const n2 = { x: outz / outLen, z: -outx / outLen };
-    let nx = n1.x + n2.x;
-    let nz = n1.z + n2.z;
-    const len = Math.hypot(nx, nz) || 1;
-    nx /= len;
-    nz /= len;
-    // Keep the offset distance c on the mitered corner (rectangle corners).
-    const cosHalf = Math.max(0.2, n1.x * nx + n1.z * nz);
-    normals.push({ x: nx / cosHalf, z: nz / cosHalf });
+/**
+ * Moves an outline point inward for a chamfered end ring. The shift is capped
+ * at the smooth footprint, so a ridged outline is trimmed by the chamfer
+ * instead of being pushed outward at its sharp valleys.
+ */
+function insetPoint(p: Pt, inset: number, halfW: number, halfD: number, circular: boolean): Pt {
+  if (inset <= 0) return p;
+  if (circular) {
+    const len = Math.hypot(p.x, p.z) || 1;
+    const r = Math.max(0, Math.min(len - inset, halfW - inset));
+    return { x: (p.x / len) * r, z: (p.z / len) * r };
   }
-  return normals;
+  const maxX = Math.max(0, halfW - inset);
+  const maxZ = Math.max(0, halfD - inset);
+  return {
+    x: Math.sign(p.x) * Math.min(Math.max(0, Math.abs(p.x) - inset), maxX),
+    z: Math.sign(p.z) * Math.min(Math.max(0, Math.abs(p.z) - inset), maxZ),
+  };
 }
 
 export interface PrimitiveGeometryOptions {
@@ -142,7 +133,9 @@ export function buildPrimitiveGeometry(
         ? knurledCirclePoints(footprintRadius(config), knurl.ridges, knurl.depth)
         : circlePoints(footprintRadius(config), segments)
       : boxPoints(config.width, config.depth, knurl.ridges, knurl.depth);
-  const normals = miterNormals(points);
+  const circular = config.shape === "cylinder";
+  const halfW = circular ? footprintRadius(config) : config.width / 2;
+  const halfD = circular ? footprintRadius(config) : config.depth / 2;
 
   const rings: { y: number; inset: number }[] =
     chamfer > 0
@@ -158,10 +151,10 @@ export function buildPrimitiveGeometry(
         ];
 
   const ringPoints = rings.map((ring) =>
-    points.map(
-      (p, i) =>
-        new THREE.Vector3(p.x - normals[i].x * ring.inset, ring.y, p.z - normals[i].z * ring.inset)
-    )
+    points.map((p) => {
+      const q = insetPoint(p, ring.inset, halfW, halfD, circular);
+      return new THREE.Vector3(q.x, ring.y, q.z);
+    })
   );
 
   const positions: number[] = [];
