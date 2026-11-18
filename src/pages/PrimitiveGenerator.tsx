@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import type { PrimitiveConfig, PrimitiveShape } from "@/src/lib/primitives/types";
-import { buildPrimitiveGeometry, resolveChamfer, resolveKnurl } from "@/src/lib/primitives/geometry";
+import { buildPrimitiveGeometry, resolveChamfer, resolveFit, resolveGroove, resolveKnurl } from "@/src/lib/primitives/geometry";
 import { generatePrimitiveScad } from "@/src/lib/primitives/scad";
 
 export default function PrimitiveGenerator() {
@@ -28,6 +28,15 @@ export default function PrimitiveGenerator() {
     knurlRidges: 24,
     knurlDepth: 1,
 
+    fit: false,
+    fitHeight: 8,
+    fitClearance: 0.4,
+
+    groove: false,
+    grooveWidth: 2.5,
+    grooveDepth: 1.2,
+    grooveHeight: 4,
+
     quality: 1,
   });
 
@@ -38,6 +47,13 @@ export default function PrimitiveGenerator() {
 
   const chamfer = resolveChamfer(config);
   const knurl = resolveKnurl(config);
+  const fit = resolveFit(config);
+  const fitLabel = fit
+    ? config.shape === 'cylinder'
+      ? `Ø${(config.diameter - 2 * fit.clearance).toFixed(1)} × ${fit.height} mm`
+      : `${(config.width - 2 * fit.clearance).toFixed(1)} × ${(config.depth - 2 * fit.clearance).toFixed(1)} × ${fit.height} mm`
+    : '';
+  const groove = resolveGroove(config);
   const sizeLabel =
     config.shape === 'cylinder'
       ? `Ø${config.diameter} × ${config.height} mm`
@@ -148,7 +164,14 @@ export default function PrimitiveGenerator() {
                 </div>
 
                 <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
-                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">4. Renderize e exporte</h4>
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">4. Encaixe de tampa</h4>
+                  <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
+                    Ligando o encaixe a peça vira tampa: a base sai menor (medida nominal menos a folga por lado) e a aba de cima mantém a medida, apoiando na borda do recipiente.
+                  </p>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl border border-[var(--surface-container-high)]">
+                  <h4 className="text-[12px] font-black text-[var(--workbench-text)] mb-2">5. Renderize e exporte</h4>
                   <p className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     A prévia é atualizada em tempo real. Exporte o STL pronto para fatiar ou o código OpenSCAD paramétrico.
                   </p>
@@ -173,6 +196,14 @@ export default function PrimitiveGenerator() {
                   <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
                     <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Estriado vertical</h5>
                     <p className="text-[9px] text-[var(--on-surface-variant)]">Nº de estrias e profundidade configuráveis.</p>
+                  </div>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Encaixe de tampa</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">Degrau inferior com folga ajustável para tampar cilindros e caixas.</p>
+                  </div>
+                  <div className="bg-[var(--surface-container-low)] p-3 rounded-lg border border-[var(--surface-container-high)]/50">
+                    <h5 className="text-[10px] font-bold text-[var(--workbench-text)] mb-1">Rasgo de anel</h5>
+                    <p className="text-[9px] text-[var(--on-surface-variant)]">Canal circunferencial para anel elástico, em cilindros.</p>
                   </div>
                 </div>
               </div>
@@ -329,9 +360,96 @@ export default function PrimitiveGenerator() {
               </div>
 
               <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
+                    <Circle className="w-3.5 h-3.5 text-[#632CE5]" />
+                    05. Rasgo (Anel)
+                  </h3>
+                  {config.shape === 'cylinder' && (
+                    <Toggle on={config.groove} onClick={() => setConfig({ ...config, groove: !config.groove })} />
+                  )}
+                </div>
+
+                {config.shape !== 'cylinder' ? (
+                  <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
+                    O rasgo de anel elástico está disponível apenas para cilindros.
+                  </p>
+                ) : config.groove ? (
+                  <>
+                    <NumberSlider
+                      label="Largura do Rasgo"
+                      value={config.grooveWidth}
+                      min={0.5} max={10} step={0.1}
+                      unit="mm"
+                      onChange={(v) => setConfig({ ...config, grooveWidth: v })}
+                    />
+                    <NumberSlider
+                      label="Profundidade"
+                      value={config.grooveDepth}
+                      min={0.1} max={5} step={0.1}
+                      unit="mm"
+                      onChange={(v) => setConfig({ ...config, grooveDepth: v })}
+                    />
+                    <NumberSlider
+                      label="Centro (da base)"
+                      value={config.grooveHeight}
+                      min={0} max={200} step={0.5}
+                      unit="mm"
+                      onChange={(v) => setConfig({ ...config, grooveHeight: v })}
+                    />
+                    <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
+                      {groove
+                        ? `Rasgo com ${groove.width.toFixed(1)} mm de largura e ${groove.depth.toFixed(1)} mm de profundidade, a ${groove.bottom.toFixed(1)} mm da base.`
+                        : 'Sem espaço para o rasgo com estas medidas.'}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
+                    Laterais sem canal. O rasgo deixa um rebaixo para prender um anel elástico (O-ring).
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
+                    06. Encaixe (Tampa)
+                  </h3>
+                  <Toggle on={config.fit} onClick={() => setConfig({ ...config, fit: !config.fit })} />
+                </div>
+
+                {config.fit ? (
+                  <>
+                    <NumberSlider
+                      label="Altura do Encaixe"
+                      value={config.fitHeight}
+                      min={1} max={60} step={0.5}
+                      unit="mm"
+                      onChange={(v) => setConfig({ ...config, fitHeight: v })}
+                    />
+                    <NumberSlider
+                      label="Folga por Lado"
+                      value={config.fitClearance}
+                      min={0.05} max={2} step={0.05}
+                      unit="mm"
+                      onChange={(v) => setConfig({ ...config, fitClearance: v })}
+                    />
+                    <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
+                      Encaixe {fitLabel}: a base menor entra no recipiente e a aba de cima fica apoiada na borda.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
+                    Peça sólida, sem degrau de encaixe.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-[var(--surface-container-high)]">
                 <h3 className="text-[11px] uppercase tracking-[0.2em] text-[var(--on-surface-variant)] font-black flex items-center gap-2">
                   <Settings className="w-3.5 h-3.5 text-[#632CE5]" />
-                  05. Qualidade
+                  07. Qualidade
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   {[
@@ -398,7 +516,7 @@ export default function PrimitiveGenerator() {
                   <Settings className="w-4 h-4 text-[#632CE5] shrink-0 mt-0.5" />
                   <div className="text-[10px] text-[var(--on-surface-variant)] leading-relaxed">
                     <strong className="text-[#632CE5] block mb-1">Dica de chanfro</strong>
-                    O chanfro é aplicado no topo e na base. Ele também corta as estrias nas pontas, deixando o acabamento uniforme.
+                    O chanfro é aplicado no topo e na base — com encaixe, ele quebra o canto de entrada da tampa. Ele também corta as estrias nas pontas, deixando o acabamento uniforme.
                   </div>
                 </div>
               </div>
