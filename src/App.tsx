@@ -33,6 +33,7 @@ const GearGenerator = lazy(() => import("./pages/GearGenerator"));
 const PulleyGenerator = lazy(() => import("./pages/PulleyGenerator"));
 const BeltGenerator = lazy(() => import("./pages/BeltGenerator"));
 const ScrewGenerator = lazy(() => import("./pages/ScrewGenerator"));
+const PrimitiveGenerator = lazy(() => import("./pages/PrimitiveGenerator"));
 const CanOpener = lazy(() => import("./pages/CanOpener"));
 const FidgetMaker = lazy(() => import("./pages/FidgetMaker"));
 const ClipMaker = lazy(() => import("./pages/ClipMaker"));
@@ -97,6 +98,7 @@ const ENGINEERING_ITEMS = [
   { to: "/pulley-generator", icon: CircleDot, label: "Pulley Generator", description: "Timing Belt Pulleys" },
   { to: "/belt-generator", icon: WrapText, label: "Belt Generator", description: "Timing Belts (GT2, HTD)" },
   { to: "/screw-generator", icon: Nut, label: "Screw Generator", description: "Parametric Fasteners" },
+  { to: "/primitive-generator", icon: Box, label: "Primitives Generator", description: "Cilindros e cubos estriados/chanfrados" },
   { to: "/can-opener", icon: ImagePlus, label: "Image Can Opener", description: "Imagem → Abridor de Latas 3D" },
   { to: "/fidget-maker", icon: Layers, label: "Fidget Maker", description: "Camadas Aninhadas 3D" },
 ];
@@ -258,6 +260,7 @@ export default function App() {
           <Route path="/pulley-generator" element={<PulleyGenerator />} />
           <Route path="/belt-generator" element={<BeltGenerator />} />
           <Route path="/screw-generator" element={<ScrewGenerator />} />
+          <Route path="/primitive-generator" element={<PrimitiveGenerator />} />
           <Route path="/can-opener" element={<CanOpener />} />
           <Route path="/fidget-maker" element={<FidgetMaker />} />
           <Route path="/clip-maker" element={<ClipMaker />} />
