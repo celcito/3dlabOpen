@@ -166,6 +166,8 @@ function insetPoint(p: Pt, inset: number, halfW: number, halfD: number, circular
 export interface PrimitiveGeometryOptions {
   /** Radial segments override. */
   segments?: number;
+  /** Which part to build when the lid fit splits the part into two sections. */
+  part?: "full" | "spigot" | "flange";
 }
 
 interface Ring {
@@ -230,28 +232,50 @@ export function buildPrimitiveGeometry(
   const grooveFloorRadius = groove ? Math.max(0.1, (grooveOnSpigot ? fitRadius : radius) - groove.depth) : 0;
   const grooveFloor = groove ? circlePoints(grooveFloorRadius, circleSamples) : null;
 
-  const rings: Ring[] = [];
-  const addRing = (y: number, points: Pt[], inset: number, hw: number, hd: number) =>
-    rings.push({ y, points, inset, halfW: hw, halfD: hd });
+  const spigotRings: Ring[] = [];
+  const flangeRings: Ring[] = [];
+  const addSpigot = (y: number, points: Pt[], inset: number, hw: number, hd: number) =>
+    spigotRings.push({ y, points, inset, halfW: hw, halfD: hd });
+  const addFlange = (y: number, points: Pt[], inset: number, hw: number, hd: number) =>
+    flangeRings.push({ y, points, inset, halfW: hw, halfD: hd });
   /** Channel cut into the wall: flat shoulders, smooth floor, then the wall again. */
-  const addGroove = (points: Pt[], hw: number, hd: number) => {
+  const addGrooveTo = (target: Ring[], points: Pt[], hw: number, hd: number) => {
     if (!groove || !grooveFloor) return;
-    addRing(groove.bottom, points, 0, hw, hd);
-    addRing(groove.bottom, grooveFloor, 0, grooveFloorRadius, grooveFloorRadius);
-    addRing(groove.bottom + groove.width, grooveFloor, 0, grooveFloorRadius, grooveFloorRadius);
-    addRing(groove.bottom + groove.width, points, 0, hw, hd);
+    const push = (y: number, pts: Pt[], inset: number, hW: number, hD: number) =>
+      target.push({ y, points: pts, inset, halfW: hW, halfD: hD });
+    push(groove.bottom, points, 0, hw, hd);
+    push(groove.bottom, grooveFloor, 0, grooveFloorRadius, grooveFloorRadius);
+    push(groove.bottom + groove.width, grooveFloor, 0, grooveFloorRadius, grooveFloorRadius);
+    push(groove.bottom + groove.width, points, 0, hw, hd);
   };
 
-  if (chamfer > 0) addRing(0, lowerPoints, chamfer, lowerW, lowerD);
-  addRing(chamfer, lowerPoints, 0, lowerW, lowerD);
-  if (groove && !grooveOnSpigot) addGroove(lowerPoints, lowerW, lowerD);
   if (hasFit) {
-    addRing(fitHeight, lowerPoints, 0, lowerW, lowerD);
-    addRing(fitHeight, outerPoints, 0, halfW, halfD);
-    if (grooveOnSpigot) addGroove(outerPoints, halfW, halfD);
+    // Spigot section: smaller step at the base, chamfer on its bottom edge.
+    if (chamfer > 0) addSpigot(0, lowerPoints, chamfer, lowerW, lowerD);
+    addSpigot(chamfer, lowerPoints, 0, lowerW, lowerD);
+    if (groove && grooveOnSpigot) addGrooveTo(spigotRings, lowerPoints, lowerW, lowerD);
+    addSpigot(fitHeight, lowerPoints, 0, lowerW, lowerD);
+    // Flange section: full-size top, chamfer on its top edge.
+    addFlange(fitHeight, outerPoints, 0, halfW, halfD);
+    if (groove && !grooveOnSpigot) addGrooveTo(flangeRings, outerPoints, halfW, halfD);
+    if (chamfer > 0) addFlange(height - chamfer, outerPoints, 0, halfW, halfD);
+    addFlange(height, outerPoints, chamfer, halfW, halfD);
+  } else {
+    // Single section: chamfer on both ends.
+    if (chamfer > 0) addFlange(0, outerPoints, chamfer, halfW, halfD);
+    addFlange(chamfer, outerPoints, 0, halfW, halfD);
+    if (groove) addGrooveTo(flangeRings, outerPoints, halfW, halfD);
+    if (chamfer > 0) addFlange(height - chamfer, outerPoints, 0, halfW, halfD);
+    addFlange(height, outerPoints, chamfer, halfW, halfD);
   }
-  if (chamfer > 0) addRing(height - chamfer, outerPoints, 0, halfW, halfD);
-  addRing(height, outerPoints, chamfer, halfW, halfD);
+
+  const part = opts.part ?? "full";
+  const rings: Ring[] =
+    part === "spigot"
+      ? (spigotRings.length ? spigotRings : flangeRings)
+      : part === "flange"
+        ? (flangeRings.length ? flangeRings : spigotRings)
+        : [...spigotRings, ...flangeRings];
 
   const ringPoints = rings.map((ring) =>
     ring.points.map((p) => {
@@ -278,8 +302,8 @@ export function buildPrimitiveGeometry(
 
   const bottom = ringPoints[0];
   const top = ringPoints[ringPoints.length - 1];
-  const bottomCenter = new THREE.Vector3(0, 0, 0);
-  const topCenter = new THREE.Vector3(0, height, 0);
+  const bottomCenter = new THREE.Vector3(0, bottom[0].y, 0);
+  const topCenter = new THREE.Vector3(0, top[0].y, 0);
   for (let i = 0; i < count; i++) {
     const j = (i + 1) % count;
     tri(bottomCenter, bottom[i], bottom[j]);
