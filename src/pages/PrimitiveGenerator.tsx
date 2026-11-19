@@ -41,8 +41,11 @@ export default function PrimitiveGenerator() {
   });
 
   const [activeTab, setActiveTab] = useState<'info' | 'settings' | 'materials'>('info');
+  const [exploded, setExploded] = useState(false);
 
   const geometry = useMemo(() => buildPrimitiveGeometry(config), [config]);
+  const spigotGeometry = useMemo(() => buildPrimitiveGeometry(config, { part: "spigot" }), [config]);
+  const flangeGeometry = useMemo(() => buildPrimitiveGeometry(config, { part: "flange" }), [config]);
   const scadCode = useMemo(() => generatePrimitiveScad(config), [config]);
 
   const chamfer = resolveChamfer(config);
@@ -416,7 +419,7 @@ export default function PrimitiveGenerator() {
                     <Layers className="w-3.5 h-3.5 text-[#632CE5]" />
                     06. Encaixe (Tampa)
                   </h3>
-                  <Toggle on={config.fit} onClick={() => setConfig({ ...config, fit: !config.fit })} />
+                  <Toggle on={config.fit} onClick={() => { setConfig({ ...config, fit: !config.fit }); if (config.fit) setExploded(false); }} />
                 </div>
 
                 {config.fit ? (
@@ -438,6 +441,10 @@ export default function PrimitiveGenerator() {
                     <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
                       Encaixe {fitLabel}: a base menor entra no recipiente e a aba de cima fica apoiada na borda.
                     </p>
+                    <div className="flex items-center justify-between pt-2 border-t border-[var(--surface-container-high)]">
+                      <span className="text-[9px] uppercase font-bold text-[var(--on-surface-variant)]">Vista explodida</span>
+                      <Toggle on={exploded} onClick={() => setExploded(!exploded)} />
+                    </div>
                   </>
                 ) : (
                   <p className="text-[9px] text-[var(--on-surface-variant)] leading-relaxed">
@@ -569,9 +576,20 @@ export default function PrimitiveGenerator() {
             />
 
             <Center>
-              <mesh geometry={geometry} castShadow receiveShadow>
-                <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
-              </mesh>
+              {config.fit && exploded ? (
+                <group>
+                  <mesh geometry={spigotGeometry} castShadow receiveShadow>
+                    <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
+                  </mesh>
+                  <mesh geometry={flangeGeometry} position={[0, 12, 0]} castShadow receiveShadow>
+                    <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
+                  </mesh>
+                </group>
+              ) : (
+                <mesh geometry={geometry} castShadow receiveShadow>
+                  <meshStandardMaterial color="#e8e8e8" roughness={0.4} metalness={0.2} side={THREE.DoubleSide} />
+                </mesh>
+              )}
             </Center>
           </Canvas>
         </div>
