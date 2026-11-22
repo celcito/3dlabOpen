@@ -18,6 +18,13 @@ import {
   sanitizeFileName,
 } from "../lib/cakeTopper/plaqueExport";
 import type { KeychainConfig } from "../types/keychain";
+import {
+  BLUEY_CHARACTERS,
+  BLUEY_FONT_URL,
+  BLUEY_TEMPLATES,
+  type BlueyCharacter,
+} from "../lib/cakeTopper/bluey";
+import { isTtfTopperFontAvailable } from "../lib/cakeTopper/ttfFont";
 import { FontPicker } from "../components/FontPicker";
 import {
   TopperConfig,
@@ -600,7 +607,7 @@ export default function CakeTopperCreator() {
     showGrid, setShowGrid, showDimensions, setShowDimensions,
     showCakePreview, setShowCakePreview, modelColor, setModelColor,
     undo, redo, canUndo, canRedo, resetConfig, loadTemplate, replaceConfig, applyTheme,
-    uploadImageFile, uploadSvgFile,
+    uploadImageFile, uploadSvgFile, addSvgElement,
   } = creator;
 
   const [activeTab, setActiveTab] = useState<"texto" | "numeros" | "elementos" | "temas" | "templates" | "formas" | "imagem">("texto");
@@ -707,6 +714,16 @@ export default function CakeTopperCreator() {
   const [isUploading, setIsUploading] = useState(false);
   const [plateSvgError, setPlateSvgError] = useState<string | null>(null);
 
+  // A fonte Bluey é opcional: o arquivo precisa estar em public/fonts/Bluey.ttf.
+  const [blueyFontReady, setBlueyFontReady] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    isTtfTopperFontAvailable(BLUEY_FONT_URL)
+      .then((ok) => { if (alive) setBlueyFontReady(ok); })
+      .catch(() => { if (alive) setBlueyFontReady(false); });
+    return () => { alive = false; };
+  }, []);
+
   const handleAddShape = useCallback((shapeType: string) => {
     addElement("shape", shapeType, shapeType);
   }, [addElement]);
@@ -714,6 +731,22 @@ export default function CakeTopperCreator() {
   const handleAddNumber = useCallback((num: string) => {
     addElement("number", num);
   }, [addElement]);
+
+  /** Modelos Bluey: aplica a config e sincroniza a cor da placa no preview 3D. */
+  const handleLoadBlueyTemplate = useCallback((template: Partial<TopperConfig>) => {
+    loadTemplate(template);
+    setModelColor(template.plateColor ?? config.plateColor);
+  }, [loadTemplate, setModelColor, config.plateColor]);
+
+  const handleAddBlueyCharacter = useCallback((character: BlueyCharacter) => {
+    const widthMm = character.defaultWidthMm;
+    addSvgElement(character.svg, {
+      name: character.name,
+      widthMm,
+      color: character.color,
+      x: Math.max(0, config.plateWidth / 2 - widthMm / 2 - 6),
+    });
+  }, [addSvgElement, config.plateWidth]);
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -866,9 +899,20 @@ export default function CakeTopperCreator() {
                   className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold"
                 >
                   {TOPPER_FONTS.map((f) => (
-                    <option key={f.url} value={f.url}>{f.name}</option>
+                    <option key={f.url} value={f.url}>
+                      {f.url === BLUEY_FONT_URL && blueyFontReady === false
+                        ? "Bluey (fonte não instalada)"
+                        : f.name}
+                    </option>
                   ))}
                 </select>
+                {config.fontFamily === BLUEY_FONT_URL && (
+                  <p className="text-[8px] text-zinc-400 font-bold mt-1 leading-relaxed">
+                    {blueyFontReady === false
+                      ? "Copie Bluey.ttf (ou Bluey.otf) para public/fonts/ — até lá o texto usa a fonte Impact."
+                      : "Fonte Bluey carregada de public/fonts/Bluey.ttf."}
+                  </p>
+                )}
               </div>
               <div>
                 <div className="flex justify-between mb-1.5">
@@ -1111,6 +1155,59 @@ export default function CakeTopperCreator() {
           {/* TEMPLATES TAB */}
           {activeTab === "templates" && (
             <div className="space-y-3">
+              <div className="rounded-xl border border-[#5B9FCE]/40 bg-gradient-to-br from-[#5B9FCE]/15 to-[#FFD93D]/10 p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-[#3E6F91]" />
+                  <span className="text-[9px] font-black uppercase tracking-wide text-[#3E6F91]">Modelos Bluey</span>
+                </div>
+                {BLUEY_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => handleLoadBlueyTemplate(tpl.config)}
+                    className="w-full p-2.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg hover:border-[#5B9FCE] transition-all text-left"
+                  >
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex -space-x-1">
+                        {tpl.colors.map((color) => (
+                          <span
+                            key={color}
+                            className="w-3.5 h-3.5 rounded-full border border-white shadow"
+                            style={{ background: color }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-[var(--workbench-text)]">{tpl.name}</span>
+                    </div>
+                    <span className="text-[9px] text-zinc-400 font-bold">{tpl.description}</span>
+                  </button>
+                ))}
+
+                <div className="pt-1">
+                  <span className="text-[8px] uppercase font-bold text-zinc-500 block mb-1">Personagens</span>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {BLUEY_CHARACTERS.map((character) => (
+                      <button
+                        key={character.id}
+                        onClick={() => handleAddBlueyCharacter(character)}
+                        title={`Adicionar ${character.name} ao topper`}
+                        className="aspect-square bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-0.5 hover:border-[#5B9FCE] transition-all"
+                      >
+                        <svg viewBox="-15 -8 190 130" className="w-7 h-5" fill={character.color}>
+                          <path d={character.path} />
+                        </svg>
+                        <span className="text-[7px] font-black uppercase text-zinc-500">{character.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {blueyFontReady === false && (
+                  <p className="text-[8px] text-zinc-400 font-bold leading-relaxed">
+                    Fonte Bluey: copie Bluey.ttf (ou Bluey.otf) para public/fonts/ para o texto sair na letra do desenho.
+                  </p>
+                )}
+              </div>
+
               <label className="text-[9px] uppercase font-bold text-zinc-500 block">Modelos Prontos</label>
               {TEMPLATES.map((tpl) => (
                 <button
