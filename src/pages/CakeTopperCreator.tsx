@@ -22,6 +22,7 @@ import {
   BLUEY_CHARACTERS,
   BLUEY_FONT_URL,
   BLUEY_TEMPLATES,
+  BLUEY_VIEW_BOX,
   type BlueyCharacter,
 } from "../lib/cakeTopper/bluey";
 import { isTtfTopperFontAvailable } from "../lib/cakeTopper/ttfFont";
@@ -739,12 +740,15 @@ export default function CakeTopperCreator() {
   }, [loadTemplate, setModelColor, config.plateColor]);
 
   const handleAddBlueyCharacter = useCallback((character: BlueyCharacter) => {
-    const widthMm = character.defaultWidthMm;
+    // `widthMm` do elemento é o maior lado do desenho, que nesta silhueta é a altura.
+    const heightMm = character.defaultHeightMm;
+    const widthMm = (heightMm * 170) / 246;
     addSvgElement(character.svg, {
       name: character.name,
-      widthMm,
+      widthMm: heightMm,
       color: character.color,
       x: Math.max(0, config.plateWidth / 2 - widthMm / 2 - 6),
+      y: -10,
     });
   }, [addSvgElement, config.plateWidth]);
 
@@ -1192,7 +1196,7 @@ export default function CakeTopperCreator() {
                         title={`Adicionar ${character.name} ao topper`}
                         className="aspect-square bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-0.5 hover:border-[#5B9FCE] transition-all"
                       >
-                        <svg viewBox="-15 -8 190 130" className="w-7 h-5" fill={character.color}>
+                        <svg viewBox={BLUEY_VIEW_BOX} className="h-6 w-auto" fill={character.color}>
                           <path d={character.path} />
                         </svg>
                         <span className="text-[7px] font-black uppercase text-zinc-500">{character.name}</span>

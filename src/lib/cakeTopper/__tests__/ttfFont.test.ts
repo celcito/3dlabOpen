@@ -5,16 +5,22 @@ import { createTextGeometry } from "../cakeTopperGeometry";
 import { BLUEY_FONT_URL } from "../bluey";
 import { isTtfFontUrl, isTtfTopperFontAvailable, opentypeFontToTypeface } from "../ttfFont";
 
-/** Um .ttf empacotado serve de dublê para a fonte Bluey nos testes. */
+/** Fonte da Bluey que acompanha o projeto. */
+const BLUEY_TTF_PATH = "public/fonts/Bluey.ttf";
+/** Um .ttf empacotado serve de dublê nos testes de furos das letras. */
 const TTF_PATH = "public/fonts/Super Mario 256.ttf";
 
-function ttfBuffer(): ArrayBuffer {
-  const buf = readFileSync(TTF_PATH);
+function bufferOf(path: string): ArrayBuffer {
+  const buf = readFileSync(path);
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
 }
 
+function ttfBuffer(): ArrayBuffer {
+  return bufferOf(TTF_PATH);
+}
+
 function stubFetch(available: boolean) {
-  const bytes = available ? ttfBuffer() : null;
+  const bytes = available ? bufferOf(BLUEY_TTF_PATH) : null;
   vi.stubGlobal("fetch", async (url: string) => {
     if (String(url) === BLUEY_FONT_URL && bytes) return new Response(bytes, { status: 200 });
     return new Response(null, { status: 404 });
@@ -49,6 +55,13 @@ describe("fonte TTF do topo de bolo", () => {
       return new Response(null, { status: 404 });
     });
     expect(await isTtfTopperFontAvailable(BLUEY_FONT_URL)).toBe(true);
+  });
+
+  it("a fonte da Bluey vem no projeto e tem as letras do alfabeto", async () => {
+    const opentype = await import("opentype.js");
+    const parsed = opentype.parse(bufferOf(BLUEY_TTF_PATH));
+    expect(parsed.glyphs.length).toBeGreaterThan(80);
+    expect(parsed.charToGlyph("B").path.commands.length).toBeGreaterThan(0);
   });
 
   it("gera geometria de texto a partir de public/fonts/Bluey.ttf", async () => {

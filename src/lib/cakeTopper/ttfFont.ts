@@ -51,6 +51,11 @@ export function opentypeCommandsToOutline(commands: OpentypeCommand[]): string {
   return tokens.join(" ");
 }
 
+/** Acentos comuns em pt-BR → letra sem acento equivalente. */
+const ACCENT_FALLBACK: Record<string, string> = Object.fromEntries(
+  "áàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ".split("").map((ch) => [ch, ch.normalize("NFD")[0]])
+);
+
 interface TypefaceGlyph {
   x_min: number;
   x_max: number;
@@ -93,6 +98,13 @@ export function opentypeFontToTypeface(font: any, familyName = "TTF"): any {
       const ch = String.fromCodePoint(cp);
       if (!(ch in glyphs)) glyphs[ch] = entry;
     }
+  }
+
+  // Muitas fontes de display (a da Bluey, por exemplo) só têm o alfabeto sem
+  // acento: reaproveita a letra base para não sair "?" no lugar de á/ã/ç.
+  for (const ch of Object.keys(ACCENT_FALLBACK)) {
+    const base = ACCENT_FALLBACK[ch];
+    if (!glyphs[ch] && glyphs[base]) glyphs[ch] = glyphs[base];
   }
 
   // O FontLoader usa "?" para caracteres ausentes: garanta que exista.
