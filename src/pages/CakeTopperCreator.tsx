@@ -612,6 +612,8 @@ export default function CakeTopperCreator() {
   } = creator;
 
   const [activeTab, setActiveTab] = useState<"texto" | "numeros" | "elementos" | "temas" | "templates" | "formas" | "imagem">("texto");
+  // Aba Formas: a forma pode recortar o topo inteiro (silhueta) ou virar enfeite.
+  const [shapeMode, setShapeMode] = useState<"silhueta" | "elemento">("silhueta");
   const [sidebarTab, setSidebarTab] = useState<"propriedades" | "impressao" | "colecao">("propriedades");
 
   // Estilos de plaquinha (T5–T6): placa com texto · nome em silhueta · nome em relevo sobre placa.
@@ -1038,22 +1040,66 @@ export default function CakeTopperCreator() {
           {activeTab === "formas" && (
             <div className="space-y-3">
               <label className="text-[9px] uppercase font-bold text-zinc-500 block">Formas Geométricas</label>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.keys(SHAPE_PRESETS).map((shapeType) => (
-                  <button
-                    key={shapeType}
-                    onClick={() => handleAddShape(shapeType)}
-                    className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all"
-                  >
-                    <div className="w-8 h-8">
-                      <svg viewBox="-25 -25 50 50" className="w-full h-full">
-                        <ShapeSVG shapeType={shapeType} />
-                      </svg>
-                    </div>
-                    <span className="text-[8px] font-bold uppercase text-zinc-500">{shapeType}</span>
-                  </button>
-                ))}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setShapeMode("silhueta")}
+                  className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
+                    shapeMode === "silhueta"
+                      ? "bg-[#632CE5] text-white border-[#632CE5]"
+                      : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
+                  }`}
+                >
+                  Silhueta do topo
+                </button>
+                <button
+                  onClick={() => setShapeMode("elemento")}
+                  className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
+                    shapeMode === "elemento"
+                      ? "bg-[#632CE5] text-white border-[#632CE5]"
+                      : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
+                  }`}
+                >
+                  Enfeite
+                </button>
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(shapeMode === "silhueta"
+                  ? PLATE_SHAPE_IDS.filter((id) => id !== "svg")
+                  : Object.keys(SHAPE_PRESETS)
+                ).map((shapeType) => {
+                  const isActive = shapeMode === "silhueta" && config.plateShape === shapeType;
+                  return (
+                    <button
+                      key={shapeType}
+                      onClick={() => {
+                        if (shapeMode === "silhueta") {
+                          setPlateSvgError(null);
+                          updateConfig({ plateShape: shapeType });
+                        } else {
+                          handleAddShape(shapeType);
+                        }
+                      }}
+                      className={`aspect-square border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                        isActive
+                          ? "bg-[#632CE5]/10 border-[#632CE5]"
+                          : "bg-[var(--workbench-viewport)] border-[var(--surface-container-high)] hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30"
+                      }`}
+                    >
+                      <div className="w-8 h-8">
+                        <svg viewBox="-25 -25 50 50" className="w-full h-full">
+                          <ShapeSVG shapeType={shapeType} />
+                        </svg>
+                      </div>
+                      <span className={`text-[8px] font-bold uppercase ${isActive ? "text-[#632CE5]" : "text-zinc-500"}`}>{shapeType}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[9px] text-zinc-400 leading-relaxed">
+                {shapeMode === "silhueta"
+                  ? "A placa inteira é recortada nesse formato (vira a silhueta do topo)."
+                  : "A forma entra como enfeite sólido sobre a placa, na cor do texto."}
+              </p>
             </div>
           )}
 
