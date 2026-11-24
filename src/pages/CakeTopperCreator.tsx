@@ -825,7 +825,7 @@ export default function CakeTopperCreator() {
                   id === "placa"
                     ? "Placa com texto e elementos decorativos"
                     : id === "nome-silhueta"
-                      ? "Nome recortado em silhueta com hastes"
+                      ? "Nome recortado em silhueta com hastes — a forma da placa não se aplica"
                       : "Nome em relevo sobre a placa"
                 }
                 className={`py-2 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
@@ -872,7 +872,16 @@ export default function CakeTopperCreator() {
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {/* ESTILOS DE NOME */}
           {isNameStyle ? (
-            <NamePanel nameConfig={nameConfig} onChange={setNameConfig} nameGeometry={nameGeometry} />
+            <NamePanel
+              nameConfig={nameConfig}
+              onChange={setNameConfig}
+              nameGeometry={nameGeometry}
+              ignoredShape={
+                plaqueStyle === "nome-silhueta" && config.plateShape !== "retangulo"
+                  ? config.plateShape
+                  : null
+              }
+            />
           ) : (
           <>
           {activeTab === "texto" && (
@@ -1952,10 +1961,12 @@ function CollectionPanel({ plaques, onLoad, onDuplicate, onRemove, onDownloadZip
 }
 
 /** Painel esquerdo dos estilos de nome (T6): texto, fonte, 6 sliders e cores. */
-function NamePanel({ nameConfig, onChange, nameGeometry }: {
+function NamePanel({ nameConfig, onChange, nameGeometry, ignoredShape }: {
   nameConfig: KeychainConfig;
   onChange: (next: KeychainConfig) => void;
   nameGeometry: NamePlaqueGeometryState;
+  /** Forma escolhida na aba Formas que este estilo ignora (Nome/Silhueta). */
+  ignoredShape?: string | null;
 }) {
   const slider = (
     label: string,
@@ -1994,6 +2005,16 @@ function NamePanel({ nameConfig, onChange, nameGeometry }: {
           className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
         />
       </div>
+
+      {ignoredShape && (
+        <div className="flex items-start gap-2 p-2 rounded bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] text-zinc-500">
+          <Info className="w-3 h-3 mt-0.5 shrink-0 text-[#632CE5]" />
+          <span className="font-bold leading-relaxed">
+            A forma “{ignoredShape}” escolhida na aba Formas não aparece no estilo Nome (Silhueta):
+            aqui o formato do topo é o próprio nome. Use “Nome em Placa” para recortar numa forma.
+          </span>
+        </div>
+      )}
 
       <FontPicker
         fontFamily={nameConfig.fontFamily}
