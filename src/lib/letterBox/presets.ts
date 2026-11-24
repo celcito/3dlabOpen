@@ -16,6 +16,7 @@ export const FONT_CATALOG: FontOption[] = [
   { id: 'Pokemon Hollow', name: 'Pokémon Hollow', category: 'fun', description: 'Logo Pokémon, letra vazada de contorno' },
   { id: 'Super Mario 256', name: 'Super Mario 256', category: 'fun', description: 'Pixel art do Super Mario Bros' },
   { id: 'SEGA LOGO FONT', name: 'SEGA Logo', category: 'fun', description: 'Logo SEGA clássico, letra fluida dos anos 90' },
+  { id: 'Bluey', name: 'Bluey', category: 'fun', description: 'Letra do desenho Bluey, fonte do projeto' },
   { id: 'Bangers', name: 'Bangers', category: 'fun', description: 'Estilo HQ e gibi de super-heróis' },
   { id: 'Fjalla One', name: 'Fjalla One', category: 'condensed', description: 'Display nórdica condensada' },
   { id: 'Kanit', name: 'Kanit', category: 'geom', description: 'Curvas geométricas modernas' },

@@ -283,6 +283,36 @@ export function useCakeTopperCreator() {
     }
   }, [config.textColor, config.elements.length, pushHistory]);
 
+  /** Adiciona um SVG pronto (ex.: personagens da Bluey) como elemento do topper. */
+  const addSvgElement = useCallback(
+    (
+      svgData: string,
+      opts: { name: string; widthMm: number; color?: string; x?: number; y?: number }
+    ) => {
+      const el: TopperElement = {
+        id: uid(),
+        type: "image",
+        content: opts.name,
+        x: opts.x ?? 0,
+        y: opts.y ?? 0,
+        scale: 1,
+        rotation: 0,
+        color: opts.color ?? config.textColor,
+        svgData,
+        widthMm: opts.widthMm,
+        heightMm: opts.widthMm,
+        zIndex: config.elements.length,
+      };
+      setConfig((prev) => {
+        const next = { ...prev, elements: [...prev.elements, el] };
+        pushHistory(next, el.id);
+        return next;
+      });
+      setSelectedElementId(el.id);
+    },
+    [config.textColor, config.elements.length, pushHistory]
+  );
+
   const undo = useCallback(() => {
     const idx = historyIndexRef.current;
     if (idx <= 0) return;
@@ -387,5 +417,6 @@ export function useCakeTopperCreator() {
     applyTheme,
     uploadImageFile,
     uploadSvgFile,
+    addSvgElement,
   };
 }

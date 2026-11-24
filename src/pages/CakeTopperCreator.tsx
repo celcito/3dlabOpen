@@ -18,6 +18,14 @@ import {
   sanitizeFileName,
 } from "../lib/cakeTopper/plaqueExport";
 import type { KeychainConfig } from "../types/keychain";
+import {
+  BLUEY_CHARACTERS,
+  BLUEY_FONT_URL,
+  BLUEY_TEMPLATES,
+  BLUEY_VIEW_BOX,
+  type BlueyCharacter,
+} from "../lib/cakeTopper/bluey";
+import { isTtfTopperFontAvailable } from "../lib/cakeTopper/ttfFont";
 import { FontPicker } from "../components/FontPicker";
 import {
   TopperConfig,
@@ -600,10 +608,12 @@ export default function CakeTopperCreator() {
     showGrid, setShowGrid, showDimensions, setShowDimensions,
     showCakePreview, setShowCakePreview, modelColor, setModelColor,
     undo, redo, canUndo, canRedo, resetConfig, loadTemplate, replaceConfig, applyTheme,
-    uploadImageFile, uploadSvgFile,
+    uploadImageFile, uploadSvgFile, addSvgElement,
   } = creator;
 
   const [activeTab, setActiveTab] = useState<"texto" | "numeros" | "elementos" | "temas" | "templates" | "formas" | "imagem">("texto");
+  // Aba Formas: a forma pode recortar o topo inteiro (silhueta) ou virar enfeite.
+  const [shapeMode, setShapeMode] = useState<"silhueta" | "elemento">("silhueta");
   const [sidebarTab, setSidebarTab] = useState<"propriedades" | "impressao" | "colecao">("propriedades");
 
   // Estilos de plaquinha (T5–T6): placa com texto · nome em silhueta · nome em relevo sobre placa.
@@ -707,6 +717,16 @@ export default function CakeTopperCreator() {
   const [isUploading, setIsUploading] = useState(false);
   const [plateSvgError, setPlateSvgError] = useState<string | null>(null);
 
+  // A fonte Bluey é opcional: o arquivo precisa estar em public/fonts/Bluey.ttf.
+  const [blueyFontReady, setBlueyFontReady] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    isTtfTopperFontAvailable(BLUEY_FONT_URL)
+      .then((ok) => { if (alive) setBlueyFontReady(ok); })
+      .catch(() => { if (alive) setBlueyFontReady(false); });
+    return () => { alive = false; };
+  }, []);
+
   const handleAddShape = useCallback((shapeType: string) => {
     addElement("shape", shapeType, shapeType);
   }, [addElement]);
@@ -714,6 +734,25 @@ export default function CakeTopperCreator() {
   const handleAddNumber = useCallback((num: string) => {
     addElement("number", num);
   }, [addElement]);
+
+  /** Modelos Bluey: aplica a config e sincroniza a cor da placa no preview 3D. */
+  const handleLoadBlueyTemplate = useCallback((template: Partial<TopperConfig>) => {
+    loadTemplate(template);
+    setModelColor(template.plateColor ?? config.plateColor);
+  }, [loadTemplate, setModelColor, config.plateColor]);
+
+  const handleAddBlueyCharacter = useCallback((character: BlueyCharacter) => {
+    // `widthMm` do elemento é o maior lado do desenho, que nesta silhueta é a altura.
+    const heightMm = character.defaultHeightMm;
+    const widthMm = (heightMm * 170) / 246;
+    addSvgElement(character.svg, {
+      name: character.name,
+      widthMm: heightMm,
+      color: character.color,
+      x: Math.max(0, config.plateWidth / 2 - widthMm / 2 - 6),
+      y: -10,
+    });
+  }, [addSvgElement, config.plateWidth]);
 
   const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -786,7 +825,7 @@ export default function CakeTopperCreator() {
                   id === "placa"
                     ? "Placa com texto e elementos decorativos"
                     : id === "nome-silhueta"
-                      ? "Nome recortado em silhueta com hastes"
+                      ? "Nome recortado em silhueta com hastes — a forma da placa não se aplica"
                       : "Nome em relevo sobre a placa"
                 }
                 className={`py-2 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
@@ -833,7 +872,16 @@ export default function CakeTopperCreator() {
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {/* ESTILOS DE NOME */}
           {isNameStyle ? (
-            <NamePanel nameConfig={nameConfig} onChange={setNameConfig} nameGeometry={nameGeometry} />
+            <NamePanel
+              nameConfig={nameConfig}
+              onChange={setNameConfig}
+              nameGeometry={nameGeometry}
+              ignoredShape={
+                plaqueStyle === "nome-silhueta" && config.plateShape !== "retangulo"
+                  ? config.plateShape
+                  : null
+              }
+            />
           ) : (
           <>
           {activeTab === "texto" && (
@@ -866,9 +914,20 @@ export default function CakeTopperCreator() {
                   className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold"
                 >
                   {TOPPER_FONTS.map((f) => (
-                    <option key={f.url} value={f.url}>{f.name}</option>
+                    <option key={f.url} value={f.url}>
+                      {f.url === BLUEY_FONT_URL && blueyFontReady === false
+                        ? "Bluey (fonte não instalada)"
+                        : f.name}
+                    </option>
                   ))}
                 </select>
+                {config.fontFamily === BLUEY_FONT_URL && (
+                  <p className="text-[8px] text-zinc-400 font-bold mt-1 leading-relaxed">
+                    {blueyFontReady === false
+                      ? "Copie Bluey.ttf (ou Bluey.otf) para public/fonts/ — até lá o texto usa a fonte Impact."
+                      : "Fonte Bluey carregada de public/fonts/Bluey.ttf."}
+                  </p>
+                )}
               </div>
               <div>
                 <div className="flex justify-between mb-1.5">
@@ -990,22 +1049,66 @@ export default function CakeTopperCreator() {
           {activeTab === "formas" && (
             <div className="space-y-3">
               <label className="text-[9px] uppercase font-bold text-zinc-500 block">Formas Geométricas</label>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.keys(SHAPE_PRESETS).map((shapeType) => (
-                  <button
-                    key={shapeType}
-                    onClick={() => handleAddShape(shapeType)}
-                    className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all"
-                  >
-                    <div className="w-8 h-8">
-                      <svg viewBox="-25 -25 50 50" className="w-full h-full">
-                        <ShapeSVG shapeType={shapeType} />
-                      </svg>
-                    </div>
-                    <span className="text-[8px] font-bold uppercase text-zinc-500">{shapeType}</span>
-                  </button>
-                ))}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setShapeMode("silhueta")}
+                  className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
+                    shapeMode === "silhueta"
+                      ? "bg-[#632CE5] text-white border-[#632CE5]"
+                      : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
+                  }`}
+                >
+                  Silhueta do topo
+                </button>
+                <button
+                  onClick={() => setShapeMode("elemento")}
+                  className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
+                    shapeMode === "elemento"
+                      ? "bg-[#632CE5] text-white border-[#632CE5]"
+                      : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
+                  }`}
+                >
+                  Enfeite
+                </button>
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(shapeMode === "silhueta"
+                  ? PLATE_SHAPE_IDS.filter((id) => id !== "svg")
+                  : Object.keys(SHAPE_PRESETS)
+                ).map((shapeType) => {
+                  const isActive = shapeMode === "silhueta" && config.plateShape === shapeType;
+                  return (
+                    <button
+                      key={shapeType}
+                      onClick={() => {
+                        if (shapeMode === "silhueta") {
+                          setPlateSvgError(null);
+                          updateConfig({ plateShape: shapeType });
+                        } else {
+                          handleAddShape(shapeType);
+                        }
+                      }}
+                      className={`aspect-square border rounded-lg flex flex-col items-center justify-center gap-1 transition-all ${
+                        isActive
+                          ? "bg-[#632CE5]/10 border-[#632CE5]"
+                          : "bg-[var(--workbench-viewport)] border-[var(--surface-container-high)] hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30"
+                      }`}
+                    >
+                      <div className="w-8 h-8">
+                        <svg viewBox="-25 -25 50 50" className="w-full h-full">
+                          <ShapeSVG shapeType={shapeType} />
+                        </svg>
+                      </div>
+                      <span className={`text-[8px] font-bold uppercase ${isActive ? "text-[#632CE5]" : "text-zinc-500"}`}>{shapeType}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[9px] text-zinc-400 leading-relaxed">
+                {shapeMode === "silhueta"
+                  ? "A placa inteira é recortada nesse formato (vira a silhueta do topo)."
+                  : "A forma entra como enfeite sólido sobre a placa, na cor do texto."}
+              </p>
             </div>
           )}
 
@@ -1111,6 +1214,59 @@ export default function CakeTopperCreator() {
           {/* TEMPLATES TAB */}
           {activeTab === "templates" && (
             <div className="space-y-3">
+              <div className="rounded-xl border border-[#5B9FCE]/40 bg-gradient-to-br from-[#5B9FCE]/15 to-[#FFD93D]/10 p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-[#3E6F91]" />
+                  <span className="text-[9px] font-black uppercase tracking-wide text-[#3E6F91]">Modelos Bluey</span>
+                </div>
+                {BLUEY_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => handleLoadBlueyTemplate(tpl.config)}
+                    className="w-full p-2.5 bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg hover:border-[#5B9FCE] transition-all text-left"
+                  >
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex -space-x-1">
+                        {tpl.colors.map((color) => (
+                          <span
+                            key={color}
+                            className="w-3.5 h-3.5 rounded-full border border-white shadow"
+                            style={{ background: color }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-[var(--workbench-text)]">{tpl.name}</span>
+                    </div>
+                    <span className="text-[9px] text-zinc-400 font-bold">{tpl.description}</span>
+                  </button>
+                ))}
+
+                <div className="pt-1">
+                  <span className="text-[8px] uppercase font-bold text-zinc-500 block mb-1">Personagens</span>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {BLUEY_CHARACTERS.map((character) => (
+                      <button
+                        key={character.id}
+                        onClick={() => handleAddBlueyCharacter(character)}
+                        title={`Adicionar ${character.name} ao topper`}
+                        className="aspect-square bg-[var(--workbench-panel)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-0.5 hover:border-[#5B9FCE] transition-all"
+                      >
+                        <svg viewBox={BLUEY_VIEW_BOX} className="h-6 w-auto" fill={character.color}>
+                          <path d={character.path} />
+                        </svg>
+                        <span className="text-[7px] font-black uppercase text-zinc-500">{character.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {blueyFontReady === false && (
+                  <p className="text-[8px] text-zinc-400 font-bold leading-relaxed">
+                    Fonte Bluey: copie Bluey.ttf (ou Bluey.otf) para public/fonts/ para o texto sair na letra do desenho.
+                  </p>
+                )}
+              </div>
+
               <label className="text-[9px] uppercase font-bold text-zinc-500 block">Modelos Prontos</label>
               {TEMPLATES.map((tpl) => (
                 <button
@@ -1805,10 +1961,12 @@ function CollectionPanel({ plaques, onLoad, onDuplicate, onRemove, onDownloadZip
 }
 
 /** Painel esquerdo dos estilos de nome (T6): texto, fonte, 6 sliders e cores. */
-function NamePanel({ nameConfig, onChange, nameGeometry }: {
+function NamePanel({ nameConfig, onChange, nameGeometry, ignoredShape }: {
   nameConfig: KeychainConfig;
   onChange: (next: KeychainConfig) => void;
   nameGeometry: NamePlaqueGeometryState;
+  /** Forma escolhida na aba Formas que este estilo ignora (Nome/Silhueta). */
+  ignoredShape?: string | null;
 }) {
   const slider = (
     label: string,
@@ -1847,6 +2005,16 @@ function NamePanel({ nameConfig, onChange, nameGeometry }: {
           className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
         />
       </div>
+
+      {ignoredShape && (
+        <div className="flex items-start gap-2 p-2 rounded bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] text-zinc-500">
+          <Info className="w-3 h-3 mt-0.5 shrink-0 text-[#632CE5]" />
+          <span className="font-bold leading-relaxed">
+            A forma “{ignoredShape}” escolhida na aba Formas não aparece no estilo Nome (Silhueta):
+            aqui o formato do topo é o próprio nome. Use “Nome em Placa” para recortar numa forma.
+          </span>
+        </div>
+      )}
 
       <FontPicker
         fontFamily={nameConfig.fontFamily}

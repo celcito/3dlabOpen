@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { parseSvgShapes } from "../svgToShapes";
+import { isTtfFontUrl, loadTtfTopperFont } from "./ttfFont";
 
 export const TOPPER_FONTS = [
   { name: "Impact (Grossa)", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/helvetiker_bold.typeface.json" },
@@ -9,6 +10,8 @@ export const TOPPER_FONTS = [
   { name: "Gentilis", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/gentilis_bold.typeface.json" },
   { name: "Optimer", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/optimer_regular.typeface.json" },
   { name: "Gentilis Italic", url: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/gentilis_regular.typeface.json" },
+  // TTF local: o usuário coloca o arquivo em public/fonts/Bluey.ttf.
+  { name: "Bluey", url: "/fonts/Bluey.ttf" },
 ];
 
 export interface TopperElement {
@@ -173,6 +176,7 @@ export const THEMES: Record<string, { plateColor: string; textColor: string; bor
   batizado: { plateColor: "#FFFFFF", textColor: "#C9A96E", borderColor: "#C9A96E", elements: { borderWidth: 1, showBorder: true } },
   formatura: { plateColor: "#1A1A2E", textColor: "#FFD700", borderColor: "#FFD700", elements: { borderWidth: 2, showBorder: true } },
   natal: { plateColor: "#CC0000", textColor: "#FFD700", borderColor: "#FFD700", elements: { borderWidth: 3, showBorder: true } },
+  bluey: { plateColor: "#5B9FCE", textColor: "#FFFFFF", borderColor: "#2B5F86", elements: { borderWidth: 2.4, showBorder: true } },
   personalizado: { plateColor: "#632CE5", textColor: "#FFFFFF", borderColor: "#FFFFFF", elements: { borderWidth: 2, showBorder: true } },
 };
 
@@ -476,13 +480,22 @@ export async function loadTopperFont(url: string): Promise<any> {
   if (fontCache.has(url)) return fontCache.get(url);
   if (fontLoadPromises.has(url)) return fontLoadPromises.get(url);
 
-  const promise = new Promise<any>((resolve) => {
-    new FontLoader().load(url, (font) => {
-      fontCache.set(url, font);
-      resolve(font);
-    });
-  });
+  const promise = isTtfFontUrl(url)
+    ? loadTtfTopperFont(url)
+    : new Promise<any>((resolve, reject) => {
+        new FontLoader().load(
+          url,
+          (font) => {
+            fontCache.set(url, font);
+            resolve(font);
+          },
+          undefined,
+          (err) => reject(err)
+        );
+      });
   fontLoadPromises.set(url, promise);
+  // Falha não fica cacheada (arquivo ainda não instalado, rede fora, etc.).
+  promise.catch(() => fontLoadPromises.delete(url));
   return promise;
 }
 
@@ -493,7 +506,15 @@ export async function createTextGeometry(
   depth: number,
   letterSpacing: number = 0
 ): Promise<{ geometry: THREE.BufferGeometry; width: number; height: number }> {
-  const font = await loadTopperFont(fontUrl);
+  let font: any;
+  try {
+    font = await loadTopperFont(fontUrl);
+  } catch (err) {
+    // Fonte opcional ausente (ex.: public/fonts/Bluey.ttf fora do lugar):
+    // o texto continua saindo na fonte padrão em vez de sumir.
+    console.warn("Fonte do topo de bolo indisponível, usando a padrão:", err);
+    font = await loadTopperFont(TOPPER_FONTS[0].url);
+  }
 
   // Create individual letter geometries if letterSpacing > 0
   if (letterSpacing > 0 && text.length > 1) {
