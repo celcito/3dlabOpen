@@ -562,7 +562,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--on-surface-variant)]">Nome:</span>
           <span className="font-mono font-bold text-[var(--workbench-text)]">
-            {config.text || 'Nome'}
+            {config.text.replace(/\n/g, ' · ') || 'Nome'}
           </span>
         </div>
       </div>

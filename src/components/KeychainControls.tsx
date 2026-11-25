@@ -78,14 +78,25 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="text-[9px] uppercase font-bold text-zinc-600">Nome / Texto</label>
-            <span className="text-[10px] font-mono text-[#632CE5]">{config.text}</span>
+            <span className="text-[10px] font-mono text-[#632CE5]">
+              {config.text.split('\n').length}/3 linhas
+            </span>
           </div>
-          <input
-            type="text"
+          <textarea
             value={config.text}
-            onChange={(e) => onChange({ ...config, text: e.target.value.substring(0, 18) })}
-            placeholder="Nome no chaveiro (ex: Milene)"
-            className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-colors"
+            onChange={(e) =>
+              onChange({
+                ...config,
+                text: e.target.value
+                  .split('\n')
+                  .slice(0, 3)
+                  .map((line) => line.slice(0, 18))
+                  .join('\n'),
+              })
+            }
+            rows={2}
+            placeholder={'Nome no chaveiro (ex: Milene)\nEnter para uma linha abaixo'}
+            className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-colors resize-none"
           />
         </div>
 
@@ -158,6 +169,18 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           number={config.letterSpacing}
           onChange={(value) => onChange({ ...config, letterSpacing: value })}
         />
+
+        {config.text.includes('\n') && (
+          <RangeControl
+            label="Espaçamento entre Linhas"
+            unit="mm"
+            min="0"
+            max="12"
+            step="0.1"
+            number={config.nameLineSpacing}
+            onChange={(value) => onChange({ ...config, nameLineSpacing: value })}
+          />
+        )}
 
         <RangeControl
           label="Espessura da Fonte"
