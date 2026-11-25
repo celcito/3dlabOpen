@@ -17,7 +17,7 @@ export const NAME_LINE_SPACING_MAX = 12;
 
 export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   text: 'Nome',
-  fontFamily: 'Pacifico',
+  fontFamily: 'Montserrat',
   letterHeight: 16,
   letterSpacing: 1.8,
   fontWeightScale: 1.0,
