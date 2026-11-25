@@ -87,6 +87,7 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       bodyThickness: clamp(parsed.bodyThickness, 1.5, 6.0, def.bodyThickness),
       reliefThickness: clamp(parsed.reliefThickness, 0.8, 4.0, def.reliefThickness),
       baseColor: typeof parsed.baseColor === 'string' && parsed.baseColor.startsWith('#') ? parsed.baseColor : def.baseColor,
+      baseThickness: clamp(parsed.baseThickness, 1.5, 6.0, def.baseThickness),
       reliefColor: typeof parsed.reliefColor === 'string' && parsed.reliefColor.startsWith('#') ? parsed.reliefColor : def.reliefColor,
       reliefColor2: typeof parsed.reliefColor2 === 'string' && parsed.reliefColor2.startsWith('#') ? parsed.reliefColor2 : def.reliefColor2,
       reliefColor3: typeof parsed.reliefColor3 === 'string' && parsed.reliefColor3.startsWith('#') ? parsed.reliefColor3 : def.reliefColor3,

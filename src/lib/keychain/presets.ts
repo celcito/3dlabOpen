@@ -25,6 +25,7 @@ export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   symbolPosition: 'right',
   outlineSize: 2.8,
   bodyThickness: 3.0,
+  baseThickness: 3.0,
   reliefThickness: 2.0,
   baseColor: '#111827',
   reliefColor: '#FBBF24',

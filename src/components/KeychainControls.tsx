@@ -281,6 +281,16 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
         />
 
         <RangeControl
+          label="Espessura da Base"
+          unit="mm"
+          min="1.5"
+          max="6.0"
+          step="0.1"
+          number={config.baseThickness}
+          onChange={(value) => onChange({ ...config, baseThickness: value })}
+        />
+
+        <RangeControl
           label="Espessura do Relevo"
           unit="mm"
           min="0.8"
