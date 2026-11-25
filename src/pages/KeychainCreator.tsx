@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import type { KeychainConfig, Model3DDimensions } from '../types/keychain';
 import { loadSavedKeychainConfig, saveKeychainConfigToStorage } from '../lib/keychain/storage';
-import { exportPencilTopper3MF } from '../lib/pencilTopper/threeMfExporter';
+import { exportKeychain3MF } from '../lib/keychain/threeMfExporter';
 import { exportToBinarySTL, downloadBlob } from '../lib/pencilTopper/stlExporter';
 import { generateKeychainModel } from '../lib/keychain/geometry';
 import { KeychainCanvas } from '../components/KeychainCanvas';
@@ -11,9 +11,6 @@ import { SvgConverterModal } from '../components/SvgConverterModal';
 
 const KEYCHAIN_3MF_META = {
   application: '3D Lab Open Chaveiro Personalizado 3D Parametrico',
-  baseObjectName: '1_Corpo_do_Chaveiro',
-  reliefObjectName: '2_Nome_em_Relevo',
-  singleColor: true,
 };
 
 function safeName(config: KeychainConfig): string {
@@ -45,7 +42,10 @@ export default function KeychainCreator() {
     });
     try {
       const model = await generateKeychainModel(config);
-      const buffer = exportToBinarySTL([model.baseMesh.geometry, model.reliefMesh.geometry]);
+      const buffer = exportToBinarySTL([
+        model.baseMesh.geometry,
+        ...model.reliefMeshes.map((mesh) => mesh.geometry),
+      ]);
       const filename = `Chaveiro_${safeName(config)}.stl`;
       downloadBlob(new Blob([buffer], { type: 'model/stl' }), filename);
     } catch (err) {
@@ -69,13 +69,18 @@ export default function KeychainCreator() {
       const model = await generateKeychainModel(config);
       const filename = `Chaveiro_${safeName(config)}.3mf`;
 
-      const blob = await exportPencilTopper3MF(
-        model.baseMesh.geometry,
-        model.reliefMesh.geometry,
-        config.baseColor,
-        config.reliefColor,
+      const blob = await exportKeychain3MF(
+        [
+          { geometry: model.baseMesh.geometry, color: config.baseColor, name: model.baseMesh.name },
+          ...model.reliefMeshes.map((mesh) => ({
+            geometry: mesh.geometry,
+            // Usa a cor real do material da camada (mesma da prévia 3D).
+            color: `#${((mesh.material as import('three').MeshStandardMaterial).color).getHexString()}`,
+            name: mesh.name,
+          })),
+        ],
         filename,
-        KEYCHAIN_3MF_META
+        KEYCHAIN_3MF_META.application
       );
 
       downloadBlob(blob, filename);

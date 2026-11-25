@@ -7,6 +7,10 @@ import {
   LOOP_HOLE_MIN,
   LOOP_WALL_MAX,
   LOOP_WALL_MIN,
+  NAME_LAYER_MAX,
+  NAME_LAYER_MIN,
+  NAME_LAYER_STEP_MAX,
+  NAME_LAYER_STEP_MIN,
 } from './presets';
 
 const STORAGE_KEY = 'chaveiro_nome_3d_config_v1';
@@ -82,6 +86,17 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       reliefThickness: clamp(parsed.reliefThickness, 0.8, 4.0, def.reliefThickness),
       baseColor: typeof parsed.baseColor === 'string' && parsed.baseColor.startsWith('#') ? parsed.baseColor : def.baseColor,
       reliefColor: typeof parsed.reliefColor === 'string' && parsed.reliefColor.startsWith('#') ? parsed.reliefColor : def.reliefColor,
+      reliefColor2: typeof parsed.reliefColor2 === 'string' && parsed.reliefColor2.startsWith('#') ? parsed.reliefColor2 : def.reliefColor2,
+      reliefColor3: typeof parsed.reliefColor3 === 'string' && parsed.reliefColor3.startsWith('#') ? parsed.reliefColor3 : def.reliefColor3,
+      nameLayerCount: Math.round(
+        clamp(parsed.nameLayerCount, NAME_LAYER_MIN, NAME_LAYER_MAX, def.nameLayerCount)
+      ),
+      nameLayerStep: clamp(
+        parsed.nameLayerStep,
+        NAME_LAYER_STEP_MIN,
+        NAME_LAYER_STEP_MAX,
+        def.nameLayerStep
+      ),
       loopEnabled: typeof parsed.loopEnabled === 'boolean' ? parsed.loopEnabled : def.loopEnabled,
       loopSide: readLoopSide(parsed.loopSide),
       loopHoleDiameter: clamp(parsed.loopHoleDiameter, LOOP_HOLE_MIN, LOOP_HOLE_MAX, def.loopHoleDiameter),

@@ -256,7 +256,9 @@ async function buildNomeParts(plaque: Plaque): Promise<PlaquePart[]> {
   const nameConfig: KeychainConfig = { ...plaque.name, loopEnabled: false };
   const model = await generateKeychainModel(nameConfig);
   const baseGeom = model.baseMesh.geometry;
-  const reliefGeom = model.reliefMesh.geometry;
+  // Usa o relevo de topo: camadas extras de cor do chaveiro não fazem parte do estilo de nome.
+  const reliefGeom =
+    model.reliefMeshes[model.reliefMeshes.length - 1]?.geometry ?? baseGeom;
 
   baseGeom.computeBoundingBox();
   const baseBox = baseGeom.boundingBox || new THREE.Box3();

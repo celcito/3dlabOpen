@@ -208,6 +208,22 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   // qualquer dilatação os fecha (o punchMask só restaura contadores fechados). Sem dilatação.
   const reliefDilationMm = config.fontFamily === 'SEGA LOGO FONT' ? 0 : (fontScale - 0.5) * 0.4;
 
+  // Camadas do nome: a camada de base é a cópia mais larga e a de topo é o relevo atual.
+  // Assim cada cor extra aparece como um contorno em volta da letra, sem recorte CSG.
+  const nameLayerCount = Math.min(3, Math.max(1, Math.round(config.nameLayerCount ?? 1)));
+  const requestedLayerStepMm = Math.min(1.5, Math.max(0.2, config.nameLayerStep ?? 0.6));
+  // O contorno extra não pode passar da borda do corpo.
+  const maxExtraDilationMm = Math.max(0, config.outlineSize - reliefDilationMm - 0.3);
+  const layerStepMm =
+    nameLayerCount > 1
+      ? Math.min(requestedLayerStepMm, maxExtraDilationMm / (nameLayerCount - 1))
+      : 0;
+  const nameLayerColors = [
+    config.reliefColor3 ?? '#632CE5',
+    config.reliefColor2 ?? '#F9FAFB',
+    config.reliefColor,
+  ].slice(3 - nameLayerCount);
+
   let iconImage: CanvasImageSource | null = null;
   let iconNaturalWidth = 256;
   let iconNaturalHeight = 256;
@@ -380,39 +396,49 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   );
   const baseShapes = buildThreeShapes(baseContours.outer, baseContours.holes);
 
-  // 4) Relevo: texto com dilatação controlada pela "Espessura da Fonte" + ícone sem dilatação.
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  ctx.fillStyle = '#000000';
-  ctx.strokeStyle = '#000000';
-  // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
-  const reliefStroke = reliefDilationMm > 0.01;
-  if (reliefStroke) ctx.lineWidth = reliefDilationMm * 2 * pxPerMm;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.font = fontStyle;
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-  for (let i = 0; i < text.length; i++) {
-    const cx = textStartXPx + charOffsets[i];
-    if (reliefStroke) ctx.strokeText(text[i], cx, textBaselineY);
-    ctx.fillText(text[i], cx, textBaselineY);
+  // 4) Camadas do nome: cada camada é o texto com uma dilatação menor, da base
+  // (mais larga, cor de fundo) para o topo (o relevo atual, cor do nome).
+  const reliefLayers: { imgData: ImageData; shapes: THREE.Shape[]; color: string }[] = [];
+  for (let layerIndex = 0; layerIndex < nameLayerCount; layerIndex++) {
+    const dilationMm = reliefDilationMm + layerStepMm * (nameLayerCount - 1 - layerIndex);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle = '#000000';
+    ctx.strokeStyle = '#000000';
+    // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
+    const reliefStroke = dilationMm > 0.01;
+    if (reliefStroke) ctx.lineWidth = dilationMm * 2 * pxPerMm;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.font = fontStyle;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    for (let i = 0; i < text.length; i++) {
+      const cx = textStartXPx + charOffsets[i];
+      if (reliefStroke) ctx.strokeText(text[i], cx, textBaselineY);
+      ctx.fillText(text[i], cx, textBaselineY);
+    }
+    drawIcons(ctx, reliefStroke ? dilationMm * pxPerMm : 0);
+
+    const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    punchMask(imgData, counterMask);
+    const contours = extractContoursFromImageData(
+      imgData,
+      mmPerPixel,
+      canvasWidth / 2,
+      canvasHeight / 2,
+      0.05,
+      { resimplifyMm: 0.02 }
+    );
+    reliefLayers.push({
+      imgData,
+      shapes: buildThreeShapes(contours.outer, contours.holes),
+      color: nameLayerColors[layerIndex],
+    });
   }
-  drawIcons(ctx, reliefStroke ? reliefDilationMm * pxPerMm : 0);
 
-  const reliefImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-  punchMask(reliefImgData, counterMask);
-  const reliefContours = extractContoursFromImageData(
-    reliefImgData,
-    mmPerPixel,
-    canvasWidth / 2,
-    canvasHeight / 2,
-    0.05,
-    { resimplifyMm: 0.02 }
-  );
-  const reliefShapes = buildThreeShapes(reliefContours.outer, reliefContours.holes);
-
-  const safeBaseShapes = baseShapes.length > 0 ? baseShapes : reliefShapes;
-  const safeReliefShapes = reliefShapes.length > 0 ? reliefShapes : safeBaseShapes;
+  const fallbackReliefShapes =
+    reliefLayers.find((layer) => layer.shapes.length > 0)?.shapes ?? [];
+  const safeBaseShapes = baseShapes.length > 0 ? baseShapes : fallbackReliefShapes;
 
   const bodyThickness = Math.max(1.5, config.bodyThickness);
   const reliefThickness = Math.max(0.8, config.reliefThickness);
@@ -433,39 +459,56 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   baseGeom.translate(0, 0, baseBevelThickness);
   const bodyTopZ = bodyThickness + 2 * baseBevelThickness;
 
-  // Relevo: a altura total (topo) é a mesma de antes, mas o fundo é reto e começa
-  // exatamente no topo do corpo — sem a parte enterrada que sobrepunha as duas cores.
-  // Mantém o topo em bodyThickness + baseBevelThickness + reliefThickness.
-  const reliefDepth = Math.max(0.2, reliefThickness - baseBevelThickness);
-  const reliefGeom = new THREE.ExtrudeGeometry(safeReliefShapes, {
-    depth: reliefDepth,
-    bevelEnabled: true,
-    bevelThickness: reliefBevelThickness,
-    bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
-    bevelSegments: 4,
+  // Cada camada do nome ocupa uma fatia da espessura do relevo, empilhada a partir do topo do corpo.
+  const layerDepth = reliefThickness / nameLayerCount;
+  const layerExtrudeDepth = Math.max(0.2, layerDepth - reliefBevelThickness);
+  const reliefGeoms = reliefLayers.map((layer, layerIndex) => {
+    const shapes = layer.shapes.length > 0 ? layer.shapes : safeBaseShapes;
+    const geom = new THREE.ExtrudeGeometry(shapes, {
+      depth: layerExtrudeDepth,
+      bevelEnabled: true,
+      bevelThickness: reliefBevelThickness,
+      bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
+      bevelSegments: 4,
+    });
+    flattenBottomBevel(geom);
+    geom.translate(0, 0, bodyTopZ + layerIndex * layerDepth);
+    return geom;
   });
-  flattenBottomBevel(reliefGeom);
-  reliefGeom.translate(0, 0, bodyTopZ);
+  const layerNames = reliefLayers.map((_, layerIndex) =>
+    layerIndex === nameLayerCount - 1
+      ? `${layerIndex + 2}_Nome_em_Relevo`
+      : `${layerIndex + 2}_Camada_${layerIndex + 1}_do_Nome`
+  );
 
   baseGeom.computeBoundingBox();
   const bbBase = baseGeom.boundingBox || new THREE.Box3();
   const midX = (bbBase.min.x + bbBase.max.x) / 2;
   const midY = (bbBase.min.y + bbBase.max.y) / 2;
   baseGeom.translate(-midX, -midY, 0);
-  reliefGeom.translate(-midX, -midY, 0);
+  reliefGeoms.forEach((geom) => {
+    geom.translate(-midX, -midY, 0);
+    geom.computeBoundingBox();
+  });
   baseGeom.computeBoundingBox();
-  reliefGeom.computeBoundingBox();
 
-  const totalBox = (baseGeom.boundingBox || new THREE.Box3()).clone().union(reliefGeom.boundingBox || new THREE.Box3());
+  const totalBox = (baseGeom.boundingBox || new THREE.Box3()).clone();
+  reliefGeoms.forEach((geom) => {
+    if (geom.boundingBox) totalBox.union(geom.boundingBox);
+  });
   const size = new THREE.Vector3();
   totalBox.getSize(size);
 
   const mm2PerPx = mmPerPixel * mmPerPixel;
   const baseAreaMm2 = countSolidPixels(baseAfterLoop.data) * mm2PerPx;
-  const reliefAreaMm2 = countSolidPixels(reliefImgData.data) * mm2PerPx;
+  const reliefVolumeMm3 =
+    reliefLayers.reduce(
+      (sum, layer) => sum + countSolidPixels(layer.imgData.data) * mm2PerPx,
+      0
+    ) * layerDepth;
   const volumeCm3 = Math.max(
     1.0,
-    Number(((baseAreaMm2 * bodyThickness + reliefAreaMm2 * reliefThickness) / 1000).toFixed(1))
+    Number(((baseAreaMm2 * bodyThickness + reliefVolumeMm3) / 1000).toFixed(1))
   );
   const weightGrams = Number((volumeCm3 * 1.24).toFixed(1));
   const printTimeMinutes = Math.max(12, Math.round(weightGrams * 2.8 + 8));
@@ -491,17 +534,20 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   baseMesh.castShadow = true;
   baseMesh.receiveShadow = true;
 
-  const reliefMesh = new THREE.Mesh(
-    reliefGeom,
-    new THREE.MeshStandardMaterial({
-      color: new THREE.Color(config.reliefColor),
-      roughness: 0.28,
-      metalness: 0.12,
-    })
-  );
-  reliefMesh.name = '2_Nome_em_Relevo';
-  reliefMesh.castShadow = true;
-  reliefMesh.receiveShadow = true;
+  const reliefMeshes = reliefGeoms.map((geom, layerIndex) => {
+    const mesh = new THREE.Mesh(
+      geom,
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(reliefLayers[layerIndex].color),
+        roughness: 0.28,
+        metalness: 0.12,
+      })
+    );
+    mesh.name = layerNames[layerIndex];
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  });
 
-  return { baseMesh, reliefMesh, dimensions };
+  return { baseMesh, reliefMeshes, dimensions };
 }

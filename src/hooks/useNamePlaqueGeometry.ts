@@ -48,13 +48,16 @@ export function useNamePlaqueGeometry(config: KeychainConfig, enabled: boolean):
     const timer = setTimeout(async () => {
       try {
         const model = await generateKeychainModel({ ...config, loopEnabled: false });
+        // A plaquinha usa só o relevo de topo (as camadas extras são do chaveiro).
+        const topReliefGeometry = model.reliefMeshes[model.reliefMeshes.length - 1]?.geometry;
         if (cancelled) {
           model.baseMesh.geometry.dispose();
-          model.reliefMesh.geometry.dispose();
+          model.reliefMeshes.forEach((mesh) => mesh.geometry.dispose());
           return;
         }
+        model.reliefMeshes.slice(0, -1).forEach((mesh) => mesh.geometry.dispose());
         const base = model.baseMesh.geometry;
-        const relief = model.reliefMesh.geometry;
+        const relief = topReliefGeometry ?? base;
         flushSync(() =>
           setState((prev) => {
             prev.base?.dispose();
