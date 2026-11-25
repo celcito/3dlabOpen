@@ -168,7 +168,13 @@ function drawLoopTab(
 }
 
 export async function generateKeychainModel(config: KeychainConfig): Promise<GeneratedKeychain> {
-  const text = config.text.trim() || 'Nome';
+  // Pular linha empilha até 3 linhas (nome + textos abaixo); linhas vazias são ignoradas.
+  const textLines = (config.text.trim() || 'Nome')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(0, 3);
+  if (textLines.length === 0) textLines.push('Nome');
   const targetFontHeightPx = Math.max(10, config.letterHeight) * pxPerMm;
 
   try {
@@ -192,15 +198,21 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   mctx.font = fontStyle;
 
   const letterSpacingPx = Math.max(0.0, config.letterSpacing ?? 1.8) * pxPerMm;
-  let textWidthPx = 0;
-  const charOffsets: number[] = [];
-  for (let i = 0; i < text.length; i++) {
-    charOffsets.push(textWidthPx);
-    textWidthPx += mctx.measureText(text[i]).width + letterSpacingPx;
-  }
-  if (text.length > 0) textWidthPx -= letterSpacingPx;
+  const textLinesLayout = textLines.map((line) => {
+    const charOffsets: number[] = [];
+    let widthPx = 0;
+    for (let i = 0; i < line.length; i++) {
+      charOffsets.push(widthPx);
+      widthPx += mctx.measureText(line[i]).width + letterSpacingPx;
+    }
+    if (line.length > 0) widthPx -= letterSpacingPx;
+    return { text: line, charOffsets, widthPx };
+  });
+  const textWidthPx = Math.max(...textLinesLayout.map((line) => line.widthPx));
 
   const textHeightPx = targetFontHeightPx;
+  const linePitchPx = textHeightPx * 1.18;
+  const textBlockHeightPx = (textLinesLayout.length - 1) * linePitchPx + textHeightPx;
   // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
   const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
   const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
@@ -275,7 +287,7 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     ) + 28
   );
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
-  const canvasHeight = Math.ceil(textHeightPx + paddingPx * 2);
+  const canvasHeight = Math.ceil(textBlockHeightPx + paddingPx * 2);
 
   const drawCanvas = document.createElement('canvas');
   drawCanvas.width = canvasWidth;
@@ -288,15 +300,22 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const contentStartXPx = centerX - totalContentWidthPx / 2;
   const leftBlockPx = showIconLeft ? iconBlockGapPx + iconBlockWidthPx : 0;
   const textStartXPx = contentStartXPx + leftBlockPx;
-  const textBaselineY = centerY + textHeightPx * 0.32;
-  const contentCenterYPx = textBaselineY - textHeightPx * 0.28;
+  // Cada linha é centralizada dentro do bloco de texto; o ícone acompanha o bloco todo.
+  const lineStartXPx = (line: { widthPx: number }) => textStartXPx + (textWidthPx - line.widthPx) / 2;
+  const lineBaselineY = (index: number) =>
+    centerY + textHeightPx * 0.32 + (index - (textLinesLayout.length - 1) / 2) * linePitchPx;
+  const contentCenterYPx = centerY + textHeightPx * 0.32 - textHeightPx * 0.28;
   // Fim real da tinta do último caractere (sem side bearing) — sem isso o gap
   // ganha a entreletra e o símbolo/ícone acaba descolado do corpo.
-  const lastCharMeasure = text.length > 0 ? mctx.measureText(text[text.length - 1]) : null;
-  const lastCharInkRightPx = lastCharMeasure
-    ? charOffsets[text.length - 1] + Math.max(lastCharMeasure.actualBoundingBoxRight ?? lastCharMeasure.width, 0)
-    : textWidthPx;
-  const textInkEndPx = textStartXPx + lastCharInkRightPx;
+  const textInkRightPx = textLinesLayout.reduce((max, line) => {
+    if (line.text.length === 0) return max;
+    const measure = mctx.measureText(line.text[line.text.length - 1]);
+    const ink =
+      line.charOffsets[line.charOffsets.length - 1] +
+      Math.max(measure.actualBoundingBoxRight ?? measure.width, 0);
+    return Math.max(max, lineStartXPx(line) - textStartXPx + ink);
+  }, textWidthPx);
+  const textInkEndPx = textStartXPx + textInkRightPx;
   const iconLeftCenterX = contentStartXPx + iconBlockWidthPx / 2;
   const iconRightCenterX = textInkEndPx + iconBlockGapPx + iconBlockWidthPx / 2;
 
@@ -318,9 +337,13 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     targetCtx.font = fontStyle;
     targetCtx.textBaseline = 'alphabetic';
     targetCtx.textAlign = 'left';
-    for (let i = 0; i < text.length; i++) {
-      targetCtx.fillText(text[i], textStartXPx + charOffsets[i], textBaselineY);
-    }
+    textLinesLayout.forEach((line, lineIndex) => {
+      const startX = lineStartXPx(line);
+      const baselineY = lineBaselineY(lineIndex);
+      for (let i = 0; i < line.text.length; i++) {
+        targetCtx.fillText(line.text[i], startX + line.charOffsets[i], baselineY);
+      }
+    });
   };
 
   const drawIcon = (targetCtx: CanvasRenderingContext2D, x: number, y: number) => {
@@ -371,11 +394,15 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   ctx.font = fontStyle;
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
-  for (let i = 0; i < text.length; i++) {
-    const cx = textStartXPx + charOffsets[i];
-    ctx.strokeText(text[i], cx, textBaselineY);
-    ctx.fillText(text[i], cx, textBaselineY);
-  }
+  textLinesLayout.forEach((line, lineIndex) => {
+    const startX = lineStartXPx(line);
+    const baselineY = lineBaselineY(lineIndex);
+    for (let i = 0; i < line.text.length; i++) {
+      const cx = startX + line.charOffsets[i];
+      ctx.strokeText(line.text[i], cx, baselineY);
+      ctx.fillText(line.text[i], cx, baselineY);
+    }
+  });
   drawIcons(ctx, outlinePx);
 
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
@@ -412,11 +439,15 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     ctx.font = fontStyle;
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
-    for (let i = 0; i < text.length; i++) {
-      const cx = textStartXPx + charOffsets[i];
-      if (reliefStroke) ctx.strokeText(text[i], cx, textBaselineY);
-      ctx.fillText(text[i], cx, textBaselineY);
-    }
+    textLinesLayout.forEach((line, lineIndex) => {
+      const startX = lineStartXPx(line);
+      const baselineY = lineBaselineY(lineIndex);
+      for (let i = 0; i < line.text.length; i++) {
+        const cx = startX + line.charOffsets[i];
+        if (reliefStroke) ctx.strokeText(line.text[i], cx, baselineY);
+        ctx.fillText(line.text[i], cx, baselineY);
+      }
+    });
     drawIcons(ctx, reliefStroke ? dilationMm * pxPerMm : 0);
 
     const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);

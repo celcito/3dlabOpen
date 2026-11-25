@@ -1843,16 +1843,29 @@ function NamePanel({ nameConfig, onChange, nameGeometry }: {
       <div>
         <div className="flex justify-between mb-1.5">
           <label className="text-[9px] uppercase font-bold text-zinc-500">Nome</label>
-          <span className="text-[10px] font-mono text-[#632CE5]">{nameConfig.text.length}/18</span>
+          <span className="text-[10px] font-mono text-[#632CE5]">
+            {nameConfig.text.split("\n").length}/3 linhas
+          </span>
         </div>
-        <input
-          type="text"
+        <textarea
           value={nameConfig.text}
-          onChange={(e) => onChange({ ...nameConfig, text: e.target.value.substring(0, 18) })}
-          maxLength={18}
-          placeholder="Nome no bolo (ex: Milene)"
-          className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
+          onChange={(e) =>
+            onChange({
+              ...nameConfig,
+              text: e.target.value
+                .split("\n")
+                .slice(0, 3)
+                .map((line) => line.slice(0, 18))
+                .join("\n"),
+            })
+          }
+          rows={2}
+          placeholder={"Nome no bolo (ex: Milene)\nEnter para uma linha abaixo"}
+          className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all resize-none"
         />
+        <p className="text-[9px] text-zinc-500 leading-snug">
+          Enter pula linha: até 3 linhas empilhadas (cada uma com 18 caracteres).
+        </p>
       </div>
 
       <FontPicker
