@@ -156,6 +156,7 @@ function sanitizeName(raw: unknown): KeychainConfig {
     reliefColor3: readColor(n.reliefColor3, def.reliefColor3 ?? def.reliefColor),
     nameLayerCount: Math.round(clamp(n.nameLayerCount, 1, 3, def.nameLayerCount)),
     nameLayerStep: clamp(n.nameLayerStep, 0.2, 1.5, def.nameLayerStep),
+    nameLineSpacing: clamp(n.nameLineSpacing, 0, 12, def.nameLineSpacing),
     // Peça de bolo nunca tem argola.
     loopEnabled: false,
     loopSide: n.loopSide === "right" ? "right" : "left",

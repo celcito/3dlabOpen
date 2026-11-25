@@ -28,6 +28,8 @@ export interface KeychainConfig {
   nameLayerCount: number;
   /** Degrau (mm) entre os contornos das camadas do nome. */
   nameLayerStep: number;
+  /** Espaçamento (mm) entre as linhas do nome quando o texto tem pulo de linha. */
+  nameLineSpacing: number;
 
   loopEnabled: boolean;
   loopSide: 'left' | 'right';

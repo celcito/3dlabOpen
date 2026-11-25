@@ -211,7 +211,8 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const textWidthPx = Math.max(...textLinesLayout.map((line) => line.widthPx));
 
   const textHeightPx = targetFontHeightPx;
-  const linePitchPx = textHeightPx * 1.18;
+  const lineSpacingMm = Math.min(12, Math.max(0, config.nameLineSpacing ?? 2.8));
+  const linePitchPx = textHeightPx + lineSpacingMm * pxPerMm;
   const textBlockHeightPx = (textLinesLayout.length - 1) * linePitchPx + textHeightPx;
   // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
   const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;

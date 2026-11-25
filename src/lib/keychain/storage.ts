@@ -11,6 +11,8 @@ import {
   NAME_LAYER_MIN,
   NAME_LAYER_STEP_MAX,
   NAME_LAYER_STEP_MIN,
+  NAME_LINE_SPACING_MAX,
+  NAME_LINE_SPACING_MIN,
 } from './presets';
 
 const STORAGE_KEY = 'chaveiro_nome_3d_config_v1';
@@ -96,6 +98,12 @@ export function loadSavedKeychainConfig(): KeychainConfig {
         NAME_LAYER_STEP_MIN,
         NAME_LAYER_STEP_MAX,
         def.nameLayerStep
+      ),
+      nameLineSpacing: clamp(
+        parsed.nameLineSpacing,
+        NAME_LINE_SPACING_MIN,
+        NAME_LINE_SPACING_MAX,
+        def.nameLineSpacing
       ),
       loopEnabled: typeof parsed.loopEnabled === 'boolean' ? parsed.loopEnabled : def.loopEnabled,
       loopSide: readLoopSide(parsed.loopSide),
