@@ -56,9 +56,17 @@ export async function exportKeychain3MF(
   modelName: string = 'Chaveiro_Personalizado',
   application: string = '3D Lab Open Chaveiro Personalizado 3D Parametrico'
 ): Promise<Blob> {
-  const colors = layers.map(
-    (layer) => (layer.color.startsWith('#') ? layer.color : `#${layer.color}`) + 'FF'
-  );
+  // Cores iguais compartilham o mesmo material: sem segunda cor o fatiador não
+  // troca filamento (nem gera torre de purga) só porque a peça virou dois objetos.
+  const colorToIndex = new Map<string, number>();
+  const colors: string[] = [];
+  for (const layer of layers) {
+    const color = (layer.color.startsWith('#') ? layer.color : `#${layer.color}`) + 'FF';
+    if (!colorToIndex.has(color)) {
+      colorToIndex.set(color, colors.length);
+      colors.push(color);
+    }
+  }
 
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -76,10 +84,11 @@ export async function exportKeychain3MF(
     .join('\n      ');
 
   const objectsXml = layers
-    .map(
-      (layer, index) =>
-        `<object id="${index + 2}" type="model" pid="1" pindex="${index}" name="${layer.name}">\n      ${geometryToXmlMesh(layer.geometry)}\n    </object>`
-    )
+    .map((layer, index) => {
+      const color = (layer.color.startsWith('#') ? layer.color : `#${layer.color}`) + 'FF';
+      const pindex = colorToIndex.get(color) ?? 0;
+      return `<object id="${index + 2}" type="model" pid="1" pindex="${pindex}" name="${layer.name}">\n      ${geometryToXmlMesh(layer.geometry)}\n    </object>`;
+    })
     .join('\n    ');
 
   const itemsXml = layers

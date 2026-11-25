@@ -291,11 +291,11 @@ function TopperScene({ config, modelColor, showCakePreview, showGrid, showDimens
           <mesh geometry={nameGeometry.base}>
             <meshStandardMaterial color={nameConfig.baseColor} roughness={0.35} metalness={0.08} />
           </mesh>
-          {nameGeometry.relief && (
-            <mesh geometry={nameGeometry.relief}>
-              <meshStandardMaterial color={nameConfig.reliefColor} roughness={0.28} metalness={0.12} />
+          {nameGeometry.reliefs.map((layer) => (
+            <mesh key={layer.name} geometry={layer.geometry}>
+              <meshStandardMaterial color={layer.color} roughness={0.28} metalness={0.12} />
             </mesh>
-          )}
+          ))}
         </group>
       )}
 
@@ -1816,7 +1816,14 @@ function NamePanel({ nameConfig, onChange, nameGeometry }: {
     min: string,
     max: string,
     step: string,
-    field: "letterHeight" | "letterSpacing" | "fontWeightScale" | "outlineSize" | "bodyThickness" | "reliefThickness"
+    field:
+      | "letterHeight"
+      | "letterSpacing"
+      | "fontWeightScale"
+      | "outlineSize"
+      | "bodyThickness"
+      | "reliefThickness"
+      | "nameLayerStep"
   ) => (
     <PropRow label={label} value={value}>
       <input
@@ -1861,9 +1868,63 @@ function NamePanel({ nameConfig, onChange, nameGeometry }: {
       {slider("Corpo", `${nameConfig.bodyThickness}mm`, "1.5", "6", "0.1", "bodyThickness")}
       {slider("Relevo", `${nameConfig.reliefThickness}mm`, "0.8", "4", "0.2", "reliefThickness")}
 
+      <div className="space-y-2">
+        <label className="text-[9px] uppercase font-bold text-zinc-500 block">
+          Camadas do Nome
+        </label>
+        <div className="grid grid-cols-3 gap-2">
+          {[1, 2, 3].map((count) => (
+            <button
+              key={count}
+              type="button"
+              onClick={() => onChange({ ...nameConfig, nameLayerCount: count })}
+              className={`py-2 rounded-lg border text-[9px] font-black uppercase tracking-wide transition-all ${
+                nameConfig.nameLayerCount === count
+                  ? "border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10"
+                  : "border-[var(--surface-container-high)] text-zinc-500 hover:border-[#632CE5]/40"
+              }`}
+            >
+              {count} {count === 1 ? "camada" : "camadas"}
+            </button>
+          ))}
+        </div>
+        <p className="text-[9px] text-zinc-500 leading-snug">
+          Cada camada extra vira um contorno colorido em volta do nome. Corpo + camadas do nome =
+          até 4 cores.
+        </p>
+      </div>
+
+      {nameConfig.nameLayerCount > 1 &&
+        slider("Degrau entre Camadas", `${nameConfig.nameLayerStep}mm`, "0.2", "1.5", "0.1", "nameLayerStep")}
+
       <div className="grid grid-cols-2 gap-2">
         <ColorField label="Corpo" value={nameConfig.baseColor} onChange={(c) => onChange({ ...nameConfig, baseColor: c })} />
-        <ColorField label="Relevo" value={nameConfig.reliefColor} onChange={(c) => onChange({ ...nameConfig, reliefColor: c })} />
+        <ColorField
+          label={nameConfig.nameLayerCount > 1 ? "Nome (topo)" : "Relevo"}
+          value={nameConfig.reliefColor}
+          onChange={(c) => onChange({ ...nameConfig, reliefColor: c })}
+        />
+        {nameConfig.nameLayerCount === 2 && (
+          <ColorField
+            label="Camada de base"
+            value={nameConfig.reliefColor2 ?? "#F9FAFB"}
+            onChange={(c) => onChange({ ...nameConfig, reliefColor2: c })}
+          />
+        )}
+        {nameConfig.nameLayerCount > 2 && (
+          <>
+            <ColorField
+              label="Camada do meio"
+              value={nameConfig.reliefColor2 ?? "#F9FAFB"}
+              onChange={(c) => onChange({ ...nameConfig, reliefColor2: c })}
+            />
+            <ColorField
+              label="Camada de base"
+              value={nameConfig.reliefColor3 ?? "#632CE5"}
+              onChange={(c) => onChange({ ...nameConfig, reliefColor3: c })}
+            />
+          </>
+        )}
       </div>
 
       {nameGeometry.generating && (
