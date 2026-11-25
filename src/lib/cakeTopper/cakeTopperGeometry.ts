@@ -129,7 +129,7 @@ export function defaultSticks(
 
 export const DEFAULT_TOPPER_CONFIG: TopperConfig = {
   text: "Feliz Aniversário",
-  fontFamily: TOPPER_FONTS[0].url,
+  fontFamily: TOPPER_FONTS[1].url,
   fontSize: 14,
   textThickness: 2,
   letterSpacing: 0.5,

@@ -291,7 +291,7 @@ function TopperScene({ config, modelColor, showCakePreview, showGrid, showDimens
           <mesh geometry={nameGeometry.base}>
             <meshStandardMaterial color={nameConfig.baseColor} roughness={0.35} metalness={0.08} />
           </mesh>
-          {nameGeometry.reliefs.map((layer) => (
+          {nameGeometry.reliefs.reverse().map((layer) => (
             <mesh key={layer.name} geometry={layer.geometry}>
               <meshStandardMaterial color={layer.color} roughness={0.28} metalness={0.12} />
             </mesh>
