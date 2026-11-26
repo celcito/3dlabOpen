@@ -684,13 +684,17 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
 
   // Cada camada do nome ocupa uma fatia da espessura do relevo, empilhada a partir do topo do corpo.
   const layerDepth = reliefThickness / nameLayerCount;
-  const layerExtrudeDepth = Math.max(0.2, layerDepth - reliefBevelThickness);
+  // flattenBottomBevel() deixa o fundo reto em z = 0, então a peça mede
+  // layerExtrudeDepth + bevelThickness e precisa caber exatamente no passo
+  // layerDepth; um piso fixo no depth empurrava a camada para dentro da de cima.
+  const layerBevelThickness = Math.min(reliefBevelThickness, layerDepth * 0.5);
+  const layerExtrudeDepth = layerDepth - layerBevelThickness;
   const reliefGeoms = reliefLayers.map((layer, layerIndex) => {
     const shapes = layer.shapes.length > 0 ? layer.shapes : safeBaseShapes;
     const geom = new THREE.ExtrudeGeometry(shapes, {
       depth: layerExtrudeDepth,
       bevelEnabled: true,
-      bevelThickness: reliefBevelThickness,
+      bevelThickness: layerBevelThickness,
       bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
       bevelSegments: 4,
     });
