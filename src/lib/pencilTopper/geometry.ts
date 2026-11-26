@@ -38,7 +38,11 @@ export async function generatePencilTopperModel(
 
   // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
   const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
-  const fontWeight = isCursiveOrDisplay ? 'normal' : 'bold';
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  // "Espessura da Fonte" até 1x (padrão incluso) usa o peso regular (traço fino, melhor
+  // leitura); acima de 1x, bold. O Google Fonts só carrega 400 e 700 — pesos
+  // intermediários seriam sintetizados e o resultado não seria previsível.
+  const fontWeight = isCursiveOrDisplay || fontScale <= 1 ? 'normal' : 'bold';
   const fontStyle = `${fontWeight} ${targetFontHeightPx}px "${config.fontFamily}", sans-serif`;
   mctx.font = fontStyle;
 
@@ -59,7 +63,6 @@ export async function generatePencilTopperModel(
   const textHeightPx = targetFontHeightPx;
   // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
   const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
-  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
   // SEGA: os filetes internos do logo têm 0,25–0,65 mm e estão abertos nas pontas —
   // qualquer dilatação os fecha (o punchMask só restaura contadores fechados). Sem dilatação.
   const reliefDilationMm = config.fontFamily === 'SEGA LOGO FONT' ? 0 : (fontScale - 0.5) * 0.4;

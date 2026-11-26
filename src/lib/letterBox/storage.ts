@@ -40,6 +40,7 @@ export function loadSavedConfig(): LetterBoxConfig {
       letterHeight: typeof parsed.letterHeight === 'number' && !isNaN(parsed.letterHeight) ? parsed.letterHeight : DEFAULT_CONFIG.letterHeight,
       backDepth: typeof parsed.backDepth === 'number' && !isNaN(parsed.backDepth) ? parsed.backDepth : DEFAULT_CONFIG.backDepth,
       letterSpacing: typeof parsed.letterSpacing === 'number' && !isNaN(parsed.letterSpacing) ? parsed.letterSpacing : DEFAULT_CONFIG.letterSpacing,
+      fontWeightScale: typeof parsed.fontWeightScale === 'number' && !isNaN(parsed.fontWeightScale) ? Math.min(2, Math.max(0.5, parsed.fontWeightScale)) : DEFAULT_CONFIG.fontWeightScale,
       backContour: typeof parsed.backContour === 'number' && !isNaN(parsed.backContour) ? parsed.backContour : DEFAULT_CONFIG.backContour,
       midContour: typeof parsed.midContour === 'number' && !isNaN(parsed.midContour) ? parsed.midContour : DEFAULT_CONFIG.midContour,
       frontThickness: typeof parsed.frontThickness === 'number' && !isNaN(parsed.frontThickness) ? parsed.frontThickness : DEFAULT_CONFIG.frontThickness,

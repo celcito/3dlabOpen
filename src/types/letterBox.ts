@@ -21,6 +21,8 @@ export interface LetterBoxConfig {
   backDepth: number;
 
   letterSpacing: number;
+  /** Escala da fonte: até 1x o texto sai em peso regular; acima, em bold. */
+  fontWeightScale: number;
   backContour: number;
   midContour: number;
   frontThickness: number;

@@ -73,6 +73,7 @@ export const DEFAULT_CONFIG: LetterBoxConfig = {
   letterHeight: 50,
   backDepth: 20,
   letterSpacing: 1.0,
+  fontWeightScale: 1.0,
   backContour: 9.5,
   midContour: 4.0,
   frontThickness: 2.4,
