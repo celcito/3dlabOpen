@@ -55,7 +55,7 @@ export function computeHolderMetrics(config: PenHolderConfig): HolderMetrics {
   };
 }
 
-function drawSilhouette(
+export function drawSilhouette(
   ctx: CanvasRenderingContext2D,
   text: string,
   fontStyle: string,
@@ -72,10 +72,14 @@ function drawSilhouette(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   ctx.lineWidth = lineWidthPx;
-  for (let i = 0; i < text.length; i++) {
+  // Itera por code point (mesma unidade usada na medição): com emoji/astral um
+  // índice por unidade UTF-16 desalinharia os offsets e as letras seguintes sairiam
+  // em posição inválida.
+  const chars = Array.from(text);
+  for (let i = 0; i < chars.length; i++) {
     const cx = textStartXPx + charOffsets[i];
-    ctx.strokeText(text[i], cx, baselineYPx);
-    ctx.fillText(text[i], cx, baselineYPx);
+    ctx.strokeText(chars[i], cx, baselineYPx);
+    ctx.fillText(chars[i], cx, baselineYPx);
   }
 }
 
@@ -249,11 +253,12 @@ export async function buildPenHolderShellGeometries(
   const letterSpacingPx = Math.max(0.0, config.letterSpacing ?? 1.8) * pxPerMm;
   let textWidthPx = 0;
   const charOffsets: number[] = [];
-  for (let i = 0; i < text.length; i++) {
+  const chars = Array.from(text);
+  for (let i = 0; i < chars.length; i++) {
     charOffsets.push(textWidthPx);
-    textWidthPx += mctx.measureText(text[i]).width + letterSpacingPx;
+    textWidthPx += mctx.measureText(chars[i]).width + letterSpacingPx;
   }
-  if (text.length > 0) textWidthPx -= letterSpacingPx;
+  if (chars.length > 0) textWidthPx -= letterSpacingPx;
 
   const outlinePx = metrics.outlineMm * pxPerMm;
   const cavityPx = metrics.cavityDilation * pxPerMm;

@@ -197,12 +197,23 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   ctx.font = fontStyle;
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = 'left';
-  for (let i = 0; i < text.length; i++) {
-    const cx = textStartX + offsets[i];
-    ctx.strokeText(text[i], cx, baselineY);
-    ctx.fillText(text[i], cx, baselineY);
+  if (offsetMm >= 0) {
+    for (let i = 0; i < text.length; i++) {
+      const cx = textStartX + offsets[i];
+      ctx.strokeText(text[i], cx, baselineY);
+      ctx.fillText(text[i], cx, baselineY);
+    }
+    if (hasSymbol) drawSymbols(ctx, outlinePx);
+  } else {
+    // Erosão: pinta todo o texto e depois apaga uma faixa na borda de cada
+    // letra. Metade da faixa cai fora (onde não há tinta), então a silhueta
+    // encolhe `offsetPx` para dentro — e os vazados abrem no mesmo passo.
+    for (let i = 0; i < text.length; i++) ctx.fillText(text[i], textStartX + offsets[i], baselineY);
+    if (hasSymbol) drawSymbols(ctx);
+    ctx.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i < text.length; i++) ctx.strokeText(text[i], textStartX + offsets[i], baselineY);
+    ctx.globalCompositeOperation = 'source-over';
   }
-  if (hasSymbol) drawSymbols(ctx, outlinePx);
 
   const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   punchMask(imageData, counterMask);

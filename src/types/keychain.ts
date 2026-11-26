@@ -11,6 +11,8 @@ export interface KeychainConfig {
 
   symbolId: string;
   symbolPosition: 'left' | 'right' | 'both';
+  /** Ícone do fim quando a posição é "ambos"; vazio = o mesmo do início. */
+  symbolIdRight?: string;
   customIconUrl?: string;
 
   outlineSize: number;
@@ -39,6 +41,12 @@ export interface KeychainConfig {
   loopWallThickness: number;
   /** Folga (mm) entre a borda do furo da argola e a letra mais próxima. */
   loopLetterGap: number;
+  /** Fator de folga do ícone em relação ao tamanho da letra (1 = ícone muito afastado). */
+  symbolGapFactor: number;
+  /** Ícone como peça separada do nome, com argola no início do ícone e no fim do nome. */
+  symbolSeparated: boolean;
+  /** Corpo em formato de tag (osso ou peixinho) com o nome dentro e argola no topo. */
+  tagShape?: 'bone' | 'fish';
 }
 
 export interface GeneratedKeychain {

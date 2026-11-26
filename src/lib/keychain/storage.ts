@@ -15,6 +15,9 @@ import {
   NAME_LINE_SPACING_MIN,
 } from './presets';
 
+export const SYMBOL_GAP_FACTOR_MIN = 0.05;
+export const SYMBOL_GAP_FACTOR_MAX = 1.2;
+
 const STORAGE_KEY = 'chaveiro_nome_3d_config_v1';
 
 function clamp(value: number, min: number, max: number, fallback: number): number {
@@ -82,6 +85,10 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       letterSpacing: clamp(parsed.letterSpacing, 0, 2.5, def.letterSpacing),
       fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
       symbolId: typeof parsed.symbolId === 'string' ? parsed.symbolId : def.symbolId,
+      symbolIdRight:
+        typeof parsed.symbolIdRight === 'string' && parsed.symbolIdRight !== 'none'
+          ? parsed.symbolIdRight
+          : undefined,
       symbolPosition: readSymbolPosition(parsed.symbolPosition),
       outlineSize: clamp(parsed.outlineSize, 1.0, 6.0, def.outlineSize),
       bodyThickness: clamp(parsed.bodyThickness, 1.5, 6.0, def.bodyThickness),
@@ -109,8 +116,24 @@ export function loadSavedKeychainConfig(): KeychainConfig {
       loopEnabled: typeof parsed.loopEnabled === 'boolean' ? parsed.loopEnabled : def.loopEnabled,
       loopSide: readLoopSide(parsed.loopSide),
       loopHoleDiameter: clamp(parsed.loopHoleDiameter, LOOP_HOLE_MIN, LOOP_HOLE_MAX, def.loopHoleDiameter),
-      loopWallThickness: clamp(parsed.loopWallThickness, LOOP_WALL_MIN, LOOP_WALL_MAX, def.loopWallThickness),
-      loopLetterGap: clamp(parsed.loopLetterGap, LOOP_GAP_MIN, LOOP_GAP_MAX, def.loopLetterGap),
+      loopWallThickness: clamp(parsed.loopWallThickness, LOOP_WALL_MIN, LOOP_WALL_MAX, def.loopWallThickness),      loopLetterGap: clamp(
+        parsed.loopLetterGap,
+        LOOP_GAP_MIN,
+        LOOP_GAP_MAX,
+        def.loopLetterGap
+      ),
+      symbolGapFactor: clamp(
+        parsed.symbolGapFactor,
+        SYMBOL_GAP_FACTOR_MIN,
+        SYMBOL_GAP_FACTOR_MAX,
+        def.symbolGapFactor
+      ),
+      symbolSeparated:
+        typeof parsed.symbolSeparated === 'boolean'
+          ? parsed.symbolSeparated
+          : def.symbolSeparated,
+      tagShape:
+        parsed.tagShape === 'bone' || parsed.tagShape === 'fish' ? parsed.tagShape : undefined,
     };
   } catch (err) {
     console.warn('Erro ao carregar chaveiro do localStorage:', err);

@@ -33,6 +33,7 @@ const GearGenerator = lazy(() => import("./pages/GearGenerator"));
 const PulleyGenerator = lazy(() => import("./pages/PulleyGenerator"));
 const BeltGenerator = lazy(() => import("./pages/BeltGenerator"));
 const ScrewGenerator = lazy(() => import("./pages/ScrewGenerator"));
+const PrimitiveGenerator = lazy(() => import("./pages/PrimitiveGenerator"));
 const CanOpener = lazy(() => import("./pages/CanOpener"));
 const FidgetMaker = lazy(() => import("./pages/FidgetMaker"));
 const ClipMaker = lazy(() => import("./pages/ClipMaker"));
@@ -43,10 +44,13 @@ const KeychainCreator = lazy(() => import("./pages/KeychainCreator"));
 const PenHolderCreator = lazy(() => import("./pages/PenHolderCreator"));
 const EstojoBorrachaCreator = lazy(() => import("./pages/EstojoBorrachaCreator"));
 const ThermoformCreator = lazy(() => import("./pages/ThermoformCreator"));
+const MoldCreator = lazy(() => import("./pages/MoldCreator"));
+const CutterStudio = lazy(() => import("./pages/CutterStudio"));
 const LetterBoxCreator = lazy(() => import("./pages/LetterBoxCreator"));
 const MedalCreator = lazy(() => import("./pages/MedalCreator"));
 const ThreeMfAnalyzer = lazy(() => import("./pages/ThreeMfAnalyzer"));
 const PencilPersonalizer = lazy(() => import("./pages/PencilPersonalizer"));
+const LowPolyMaker = lazy(() => import("./pages/LowPolyMaker"));
 
 const NAV_ITEMS = [
   { to: "/split-3mf", icon: Scissors, label: "Split 3MF", description: "Import & split multi-color 3MF" },
@@ -58,6 +62,8 @@ const NAV_ITEMS = [
   { to: "/porta-canetas", icon: PenLine, label: "Porta Canetas", description: "Silhueta do nome extrudada + aro colorido" },
   { to: "/estojo-borracha", icon: NotebookPen, label: "Estojo Borracha", description: "Porta de enrolar print-in-place, 4 peças" },
   { to: "/termoformados", icon: Shapes, label: "Kit Termoformado", description: "Molde + prensa + folha a partir de SVG" },
+  { to: "/criador-de-moldes", icon: Box, label: "Criador de Moldes", description: "Cavidade STL/OBJ, bipartido com pinos" },
+  { to: "/estudio-de-cortadores", icon: Scissors, label: "Estúdio de Cortadores", description: "Cortadores, carimbos e estúdio de bandeja" },
   { to: "/medalha", icon: Award, label: "Medalhas 3D", description: "Texto circular, borda e passador" },
   { to: "/letra-caixa", icon: Type, label: "Letra Caixa 3D", description: "3 Camadas Multicolor" },
   { to: "/face-3d", icon: UserCircle2, label: "Face 3D", description: "Foto em Relevo 3D" },
@@ -70,6 +76,7 @@ const NAV_ITEMS = [
   { to: "/name-sign", icon: Baseline, label: "Gerador de Placas", description: "Placas e Letreiros" },
   { to: "/fidget-clicker", icon: Gamepad2, label: "Clicker Maker", description: "Fidget Chaveiro 3D" },
   { to: "/clip-maker", icon: Paperclip, label: "Clip Maker", description: "Clipes Decorativos 3D" },
+  { to: "/low-poly-maker", icon: Box, label: "Low Poly 3D", description: "Modelos Multifacetados" },
   { to: "/cake-topper", icon: Cake, label: "Criador de Topo de Bolo", description: "Topper 3D Personalizado" },
   { to: "/puzzle-generator", icon: Puzzle, label: "Puzzle Generator", description: "Quebra-Cabeça Paramétrico" },
   { to: "/design-editor", icon: Palette, label: "Editor de Design", description: "Criação de Layouts" },
@@ -91,6 +98,7 @@ const ENGINEERING_ITEMS = [
   { to: "/pulley-generator", icon: CircleDot, label: "Pulley Generator", description: "Timing Belt Pulleys" },
   { to: "/belt-generator", icon: WrapText, label: "Belt Generator", description: "Timing Belts (GT2, HTD)" },
   { to: "/screw-generator", icon: Nut, label: "Screw Generator", description: "Parametric Fasteners" },
+  { to: "/primitive-generator", icon: Box, label: "Primitives Generator", description: "Cilindros e cubos estriados/chanfrados" },
   { to: "/can-opener", icon: ImagePlus, label: "Image Can Opener", description: "Imagem → Abridor de Latas 3D" },
   { to: "/fidget-maker", icon: Layers, label: "Fidget Maker", description: "Camadas Aninhadas 3D" },
 ];
@@ -223,6 +231,8 @@ export default function App() {
           <Route path="/porta-canetas" element={<PenHolderCreator />} />
           <Route path="/estojo-borracha" element={<EstojoBorrachaCreator />} />
           <Route path="/termoformados" element={<ThermoformCreator />} />
+          <Route path="/criador-de-moldes" element={<MoldCreator />} />
+          <Route path="/estudio-de-cortadores" element={<CutterStudio />} />
           <Route path="/medalha" element={<MedalCreator />} />
           <Route path="/letra-caixa" element={<LetterBoxCreator />} />
           <Route path="/face-3d" element={<Face3DGenerator />} />
@@ -250,9 +260,11 @@ export default function App() {
           <Route path="/pulley-generator" element={<PulleyGenerator />} />
           <Route path="/belt-generator" element={<BeltGenerator />} />
           <Route path="/screw-generator" element={<ScrewGenerator />} />
+          <Route path="/primitive-generator" element={<PrimitiveGenerator />} />
           <Route path="/can-opener" element={<CanOpener />} />
           <Route path="/fidget-maker" element={<FidgetMaker />} />
           <Route path="/clip-maker" element={<ClipMaker />} />
+          <Route path="/low-poly-maker" element={<LowPolyMaker />} />
           <Route path="/cake-topper" element={<CakeTopperCreator />} />
           <Route path="/puzzle-generator" element={<PuzzleGenerator />} />
         </Routes>

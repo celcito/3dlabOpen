@@ -66,6 +66,8 @@ export const PRESET_SYMBOLS: PresetSymbol[] = [
   { id: 'gamepad', name: 'Gamer', emoji: '🎮' },
   { id: 'ball', name: 'Futebol', emoji: '⚽' },
   { id: 'gradcap', name: 'Formatura', emoji: '🎓' },
+  { id: 'bone', name: 'Osso', emoji: '🦴' },
+  { id: 'fish', name: 'Peixinho', emoji: '🐟' },
 ];
 
 export const SYMBOL_GAP_MIN = 0;

@@ -100,6 +100,7 @@ export default function KeychainCreator() {
       <div className="flex-1 min-w-0">
         <KeychainCanvas
           config={config}
+          dimensions={dimensions}
           onDimensionsChange={setDimensions}
         />
       </div>
