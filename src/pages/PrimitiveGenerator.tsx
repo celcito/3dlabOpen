@@ -84,7 +84,10 @@ export default function PrimitiveGenerator() {
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `primitive_${config.shape}_${Date.now()}.stl`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
       toastActionSuccess("STL exportado com sucesso!");
     } catch (err) {
       console.error(err);
@@ -550,6 +553,13 @@ export default function PrimitiveGenerator() {
             <Play className="w-4 h-4 text-[#632CE5]" />
             <span className="text-[10px] font-black uppercase tracking-widest text-[var(--on-surface-variant)]">Preview 3D Real</span>
           </div>
+          <button
+            onClick={handleExportSTL}
+            className="absolute top-4 right-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#632CE5]/40 bg-[#632CE5]/10 text-[#632CE5] hover:bg-[#632CE5]/20 text-[10px] font-black uppercase tracking-widest transition-all"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Baixar STL
+          </button>
           <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 40, 60], fov: 45 }}>
             <color attach="background" args={["#F1F3ED"]} />
             <ambientLight intensity={0.8} />
