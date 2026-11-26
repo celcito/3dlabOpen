@@ -13,8 +13,8 @@ export const RIM_MAX = 3.0;
 
 export const DEFAULT_PEN_HOLDER_CONFIG: PenHolderConfig = {
   text: 'Nome',
-  fontFamily: 'Pacifico',
-  letterHeight: 16,
+  fontFamily: 'Fredoka',
+  letterHeight: 30,
   letterSpacing: 1.8,
   fontWeightScale: 1.0,
   outlineSize: 4.0,
@@ -22,6 +22,7 @@ export const DEFAULT_PEN_HOLDER_CONFIG: PenHolderConfig = {
   cupHeight: 100,
   wallThickness: 2.0,
   floorThickness: 3,
-  baseColor: '#111827',
-  reliefColor: '#FBBF24',
+  layout: 'tray',
+  baseColor: '#F4F4F5',
+  reliefColor: '#8B5CF6',
 };

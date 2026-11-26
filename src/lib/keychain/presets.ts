@@ -38,4 +38,6 @@ export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   loopHoleDiameter: 5,
   loopWallThickness: 2,
   loopLetterGap: 1.5,
+  symbolGapFactor: 0.35,
+  symbolSeparated: false,
 };

@@ -5,9 +5,12 @@ import {
   LOOP_GAP_MAX,
   LOOP_WALL_MIN,
 } from '../lib/keychain/presets';
+import { SYMBOL_GAP_FACTOR_MIN, SYMBOL_GAP_FACTOR_MAX } from '../lib/keychain/storage';
 import { resolveLoopGapMm } from '../lib/keychain/loop';
 import { TEXT_STYLE_PRESETS, stylePatch2Camadas } from '../lib/textStyles';
+import { KEYCHAIN_THEME_PRESETS } from '../lib/keychain/themePresets';
 import { FontPicker } from './FontPicker';
+import { DimensionRows } from './DimensionRows';
 import { SymbolPicker } from './SymbolPicker';
 import {
   Check,
@@ -124,7 +127,9 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
                   key={style.id}
                   type="button"
                   title={style.description}
-                  onClick={() => onChange({ ...config, ...stylePatch2Camadas(style) })}
+                  onClick={() =>
+                    onChange({ ...config, tagShape: undefined, ...stylePatch2Camadas(style) })
+                  }
                   className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
                     isSelected
                       ? 'border-[#632CE5] bg-[#632CE5]/10'
@@ -142,6 +147,42 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
                     <div
                       className="w-4 h-4 rounded-full border border-white shadow-sm"
                       style={{ backgroundColor: style.reliefColor }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+            {KEYCHAIN_THEME_PRESETS.map((theme) => {
+              const isSelected =
+                config.symbolId === theme.patch.symbolId &&
+                (config.symbolIdRight ?? 'none') === (theme.patch.symbolIdRight ?? 'none') &&
+                config.symbolPosition === theme.patch.symbolPosition &&
+                config.baseColor.toLowerCase() === theme.patch.baseColor.toLowerCase() &&
+                config.reliefColor.toLowerCase() === theme.patch.reliefColor.toLowerCase();
+
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  title={theme.description}
+                  onClick={() => onChange({ ...config, ...theme.patch })}
+                  className={`p-2 rounded-lg border flex items-center justify-between transition-all cursor-pointer ${
+                    isSelected
+                      ? 'border-[#632CE5] bg-[#632CE5]/10'
+                      : 'border-[var(--workbench-line)] hover:border-[#632CE5]/40'
+                  }`}
+                >
+                  <span className="text-[9px] font-black uppercase text-[var(--on-surface-variant)] truncate">
+                    {theme.emoji} {theme.name}
+                  </span>
+                  <div className="flex -space-x-1.5 shrink-0">
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: theme.patch.baseColor }}
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full border border-white shadow-sm"
+                      style={{ backgroundColor: theme.patch.reliefColor }}
                     />
                   </div>
                 </button>
@@ -202,9 +243,70 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
         <SymbolPicker
           symbolId={config.symbolId}
           symbolPosition={config.symbolPosition}
-          showPosition={config.symbolId !== 'none' || !!config.customIconUrl}
+          showPosition={(config.symbolId !== 'none' || !!config.customIconUrl) && !config.symbolSeparated}
           onChange={(patch) => onChange({ ...config, ...patch })}
         />
+
+        {config.symbolPosition === 'both' && config.symbolId !== 'none' && (
+          <div className="space-y-2 p-3 rounded-lg border border-[var(--surface-container-high)] bg-[var(--surface-container-high)]/30">
+            <label className="text-[9px] uppercase font-bold text-zinc-600 block">
+              Ícone do Fim
+            </label>
+            <SymbolPicker
+              symbolId={config.symbolIdRight ?? config.symbolId}
+              symbolPosition={config.symbolPosition}
+              showPosition={false}
+              onChange={(patch) =>
+                onChange({
+                  ...config,
+                  symbolIdRight:
+                    'symbolId' in patch
+                      ? patch.symbolId === 'none'
+                        ? undefined
+                        : patch.symbolId
+                      : config.symbolIdRight,
+                })
+              }
+            />
+            <p className="text-[9px] text-zinc-600 leading-snug">
+              Escolha um ícone diferente do início. O mesmo ícone repete nas duas pontas.
+            </p>
+          </div>
+        )}
+
+        {(config.symbolId !== 'none' || !!config.customIconUrl) && config.symbolPosition !== 'both' && (
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({
+                  ...config,
+                  symbolSeparated: !config.symbolSeparated,
+                  // Separado, o ícone vira a peça do início (argola à esquerda).
+                  ...(config.symbolSeparated ? {} : { symbolPosition: 'left' as const }),
+                })
+              }
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-[var(--surface-container-high)] bg-[var(--surface-container-high)]/50 hover:border-[#632CE5]/40 transition-all cursor-pointer"
+            >
+              <span className="text-[9px] uppercase font-bold text-zinc-600">Ícone separado do nome</span>
+              <div
+                className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                  config.symbolSeparated
+                    ? 'bg-[#632CE5] border-[#632CE5]'
+                    : 'border-[var(--surface-container-high)]'
+                }`}
+              >
+                {config.symbolSeparated && <Check className="w-3 h-3 text-black" />}
+              </div>
+            </button>
+            {config.symbolSeparated && (
+              <p className="text-[9px] text-zinc-600 leading-snug -mt-2">
+                O ícone vira a peça do início, com argola à esquerda; o nome ganha argola no começo
+                e no fim.
+              </p>
+            )}
+          </>
+        )}
 
         <button
           type="button"
@@ -234,6 +336,16 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
             </button>
           </div>
         )}
+
+        <RangeControl
+          label="Espaço do Ícone"
+          unit="x"
+          min={String(SYMBOL_GAP_FACTOR_MIN)}
+          max={String(SYMBOL_GAP_FACTOR_MAX)}
+          step="0.05"
+          number={config.symbolGapFactor}
+          onChange={(value) => onChange({ ...config, symbolGapFactor: value })}
+        />
 
         <div className="p-3 rounded-lg bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent border border-orange-500/30 space-y-2">
           <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wide text-orange-500">
@@ -528,14 +640,8 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
       {/* Dimensões & Exportação */}
       <section className="space-y-3 pt-4 border-t border-[var(--surface-container-high)]">
         <div className="p-3 rounded-lg bg-[var(--surface-container-high)]/50 border border-[var(--surface-container-high)] space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase font-bold text-zinc-600">Dimensões 3D</span>
-            <span className="text-[14px] font-black text-[#632CE5] tracking-tighter font-mono">
-              {dimensions.dimX} <span className="text-[10px] text-zinc-600 font-bold">×</span>{' '}
-              {dimensions.dimY} <span className="text-[10px] text-zinc-600 font-bold">×</span>{' '}
-              {dimensions.dimZ} <span className="text-[10px] text-zinc-600 font-bold">mm</span>
-            </span>
-          </div>
+          <span className="text-[9px] uppercase font-bold text-zinc-600 block">Dimensões 3D</span>
+          <DimensionRows dimX={dimensions.dimX} dimY={dimensions.dimY} dimZ={dimensions.dimZ} />
           <div className="flex items-center justify-between">
             <span className="text-[9px] uppercase font-bold text-zinc-600">
               Volume & Peso estimado

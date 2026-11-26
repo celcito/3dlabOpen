@@ -80,6 +80,38 @@ export const SYMBOL_SHAPES: Record<string, SymbolShapes> = {
     add: [{ kind: 'path', d: starPath(50, 50, 46, 20) }],
     sub: [],
   },
+  bone: {
+    add: [
+      rect(18, 38, 64, 24, 12),
+      ellipse(24, 32, 14, 12),
+      ellipse(24, 68, 14, 12),
+      ellipse(76, 32, 14, 12),
+      ellipse(76, 68, 14, 12),
+    ],
+    sub: [],
+  },
+  fish: {
+    add: [
+      ellipse(44, 50, 32, 19),
+      { kind: 'path', d: 'M72 50 L96 28 L96 72 Z' },
+      { kind: 'path', d: 'M38 34 L52 16 L62 34 Z' },
+    ],
+    sub: [ellipse(30, 44, 4.5, 4.5)],
+  },
+  tagBone: {
+    add: [
+      rect(8, 26, 84, 48, 24),
+      ellipse(16, 30, 16, 15),
+      ellipse(16, 70, 16, 15),
+      ellipse(84, 30, 16, 15),
+      ellipse(84, 70, 16, 15),
+    ],
+    sub: [],
+  },
+  tagFish: {
+    add: [ellipse(47, 50, 47, 32), { kind: 'path', d: 'M78 50 L100 20 L100 80 Z' }],
+    sub: [],
+  },
   crown: {
     add: [
       { kind: 'path', d: 'M9 68 L13 20 L32 44 L50 12 L68 44 L87 20 L91 68 Z' },
@@ -262,6 +294,51 @@ export function drawSymbol(
     tracePart(targetCtx, part);
     if (outlinePx > 0) {
       targetCtx.lineWidth = (outlinePx * 2) / k;
+      targetCtx.stroke();
+    }
+    targetCtx.fill();
+  }
+
+  if (shapes.sub.length > 0) {
+    targetCtx.globalCompositeOperation = 'destination-out';
+    for (const part of shapes.sub) {
+      tracePart(targetCtx, part);
+      targetCtx.fill();
+    }
+  }
+  targetCtx.restore();
+}
+
+/**
+ * Desenha o ícone esticado numa caixa (tags: o osso/peixinho é a própria borda).
+ * O traçado é o mesmo, só a escala em X e Y é independente.
+ */
+export function drawSymbolSized(
+  targetCtx: CanvasRenderingContext2D,
+  symbolId: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  outlinePx = 0
+): void {
+  const shapes = SYMBOL_SHAPES[symbolId];
+  if (!shapes || width <= 0 || height <= 0) return;
+
+  const kx = width / 100;
+  const ky = height / 100;
+  const strokeScale = (kx + ky) / 2;
+
+  targetCtx.save();
+  targetCtx.translate(x - width / 2, y - height / 2);
+  targetCtx.scale(kx, ky);
+  targetCtx.lineJoin = 'round';
+  targetCtx.lineCap = 'round';
+
+  for (const part of shapes.add) {
+    tracePart(targetCtx, part);
+    if (outlinePx > 0 && strokeScale > 0) {
+      targetCtx.lineWidth = (outlinePx * 2) / strokeScale;
       targetCtx.stroke();
     }
     targetCtx.fill();

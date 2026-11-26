@@ -98,7 +98,7 @@ export function loadSavedPencilPersonalConfig(): PencilPersonalConfig {
       customFontBase64: typeof parsed.customFontBase64 === 'string' ? parsed.customFontBase64 : undefined,
       letterHeight: clamp(parsed.letterHeight, 6, 24, def.letterHeight),
       letterSpacing: clamp(parsed.letterSpacing, 0, 3, def.letterSpacing),
-      fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
+      fontWeightScale: clamp(parsed.fontWeightScale, 0.2, 2.0, def.fontWeightScale),
       variant,
       face: readFace(parsed.face),
       angleDeg: readAngleDeg(parsed.angleDeg),

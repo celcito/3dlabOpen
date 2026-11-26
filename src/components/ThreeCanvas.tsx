@@ -670,19 +670,33 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             </span>
           </div>
 
-          <div className="flex items-baseline justify-between text-xs font-mono text-[var(--workbench-text)]">
-            <div className="flex items-center gap-1.5">
-              <span className="text-blue-400 font-bold">X</span>
-              <span>{dimensions.dimX}</span>
+          <div className="flex flex-col gap-1 text-xs font-mono text-[var(--workbench-text)]">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[9px] font-sans font-bold uppercase text-[var(--on-surface-variant)]">
+                Largura <span className="text-blue-400">(X)</span>
+              </span>
+              <span>
+                {dimensions.dimX}
+                <span className="text-[10px] text-[var(--on-surface-variant)] font-sans"> mm</span>
+              </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-emerald-400 font-bold">Y</span>
-              <span>{dimensions.dimY}</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[9px] font-sans font-bold uppercase text-[var(--on-surface-variant)]">
+                Altura <span className="text-emerald-400">(Y)</span>
+              </span>
+              <span>
+                {dimensions.dimY}
+                <span className="text-[10px] text-[var(--on-surface-variant)] font-sans"> mm</span>
+              </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-purple-400 font-bold">Z</span>
-              <span>{dimensions.dimZ}</span>
-              <span className="text-[10px] text-[var(--on-surface-variant)] font-sans">mm</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[9px] font-sans font-bold uppercase text-[var(--on-surface-variant)]">
+                Profundidade <span className="text-purple-400">(Z)</span>
+              </span>
+              <span>
+                {dimensions.dimZ}
+                <span className="text-[10px] text-[var(--on-surface-variant)] font-sans"> mm</span>
+              </span>
             </div>
           </div>
 

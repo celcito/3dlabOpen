@@ -4,7 +4,7 @@ import type { PenHolderConfig, PenHolderDimensions } from '../types/penHolder';
 import { loadSavedPenHolderConfig, savePenHolderConfigToStorage } from '../lib/penHolder/storage';
 import { exportPenHolder3MF } from '../lib/penHolder/threeMfExporter';
 import { exportToBinarySTL, downloadBlob } from '../lib/pencilTopper/stlExporter';
-import { generatePenHolderModel } from '../lib/penHolder/geometry';
+import { generatePenHolder } from '../lib/penHolder/nameTray';
 import { PenHolderCanvas } from '../components/PenHolderCanvas';
 import { PenHolderControls } from '../components/PenHolderControls';
 
@@ -36,7 +36,7 @@ export default function PenHolderCreator() {
       setTimeout(finish, 250);
     });
     try {
-      const model = await generatePenHolderModel(config);
+      const model = await generatePenHolder(config);
       const buffer = exportToBinarySTL([model.corpoMesh.geometry, model.rimMesh.geometry]);
       const filename = `Porta_Canetas_${safeName(config)}.stl`;
       downloadBlob(new Blob([buffer], { type: 'model/stl' }), filename);
@@ -58,7 +58,7 @@ export default function PenHolderCreator() {
       setTimeout(finish, 250);
     });
     try {
-      const model = await generatePenHolderModel(config);
+      const model = await generatePenHolder(config);
       const filename = `Porta_Canetas_${safeName(config)}_Multicolor.3mf`;
 
       const blob = exportPenHolder3MF(
@@ -82,6 +82,7 @@ export default function PenHolderCreator() {
       <div className="flex-1 min-w-0">
         <PenHolderCanvas
           config={config}
+          dimensions={dimensions}
           onDimensionsChange={setDimensions}
         />
       </div>

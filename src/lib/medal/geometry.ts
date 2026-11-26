@@ -574,14 +574,68 @@ function cleanLoop(pts: Point2D[]): Point2D[] {
 }
 
 /**
+ * Distância máxima de um traçado ao outro (Hausdorff, amostrado). Duas cópias
+ * do mesmo laço ficam a menos de 1 px; no anel fino de verdade quem separa o
+ * contorno externo do interno é a largura da parede inteira.
+ */
+function maxLoopDistance(a: Point2D[], b: Point2D[]): number {
+  const step = Math.max(1, Math.ceil(Math.max(a.length, b.length) / 120));
+  const sample = (pts: Point2D[]) => pts.filter((_, i) => i % step === 0);
+  const sa = sample(a);
+  const sb = sample(b);
+  const oneWay = (from: Point2D[], to: Point2D[]) => {
+    let worst = 0;
+    for (const p of from) {
+      let best = Infinity;
+      for (const q of to) {
+        const d = (p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y);
+        if (d < best) best = d;
+      }
+      worst = Math.max(worst, best);
+    }
+    return Math.sqrt(worst);
+  };
+  return Math.max(oneWay(sa, sb), oneWay(sb, sa));
+}
+
+/**
+ * Mesmo laço rastreado duas vezes. Faixas abertas (a borda recortada pela alça)
+ * podem sair duplicadas do extrator, e a cópia acaba classificada como furo —
+ * os pedaços do anel se cancelavam na triangulação e a borda ficava irregular.
+ * Compara os traçados ponto a ponto: anéis concêntricos de uma borda fina têm
+ * área e centro quase iguais, mas a parede separa os contornos.
+ */
+function sameLoop(a: Point2D[], b: Point2D[]): boolean {
+  const areaA = Math.abs(polygonArea(a));
+  const areaB = Math.abs(polygonArea(b));
+  const bigger = Math.max(areaA, areaB);
+  if (bigger <= 1e-6) return true;
+  // Filtro barato: traçados do mesmo laço têm áreas praticamente iguais.
+  if (Math.abs(areaA - areaB) > bigger * 0.05 + 0.05) return false;
+  return maxLoopDistance(a, b) <= 0.2;
+}
+
+/**
  * Constrói shapes a partir dos contornos, atribuindo cada furo apenas ao outer
  * imediatamente contido (menor área). Diferente de buildThreeShapes, que adiciona
  * o furo a todos os outers que o contêm e gera furos aninhados (não-manifold)
  * quando há anéis concêntricos (ex.: passador de fita com canal duplo).
  */
 function buildMedalShapes(outerContours: Point2D[][], holesContours: Point2D[][]): THREE.Shape[] {
-  const outers = outerContours.map(cleanLoop).filter((o) => o.length >= 3);
-  const holes = holesContours.map(cleanLoop).filter((h) => h.length >= 3);
+  const outers: Point2D[][] = [];
+  for (const loop of outerContours.map(cleanLoop)) {
+    if (loop.length < 3) continue;
+    if (outers.some((o) => sameLoop(o, loop))) continue;
+    outers.push(loop);
+  }
+  const holes: Point2D[][] = [];
+  for (const loop of holesContours.map(cleanLoop)) {
+    if (loop.length < 3) continue;
+    // Cópia de um outer não pode ser furo: cancelaria o próprio shape.
+    if (outers.some((o) => sameLoop(o, loop))) continue;
+    if (holes.some((h) => sameLoop(h, loop))) continue;
+    holes.push(loop);
+  }
   const areas = outers.map((o) => Math.abs(polygonArea(o)));
 
   const shapes: THREE.Shape[] = outers.map((outer) => {
@@ -596,6 +650,7 @@ function buildMedalShapes(outerContours: Point2D[][], holesContours: Point2D[][]
     let best = -1;
     for (let i = 0; i < outers.length; i++) {
       if (!isPointInsidePolygon(hole[0], outers[i])) continue;
+      if (sameLoop(outers[i], hole)) continue;
       if (best === -1 || areas[i] < areas[best]) best = i;
     }
     if (best === -1) continue;
