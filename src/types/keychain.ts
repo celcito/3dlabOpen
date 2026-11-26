@@ -15,8 +15,6 @@ export interface KeychainConfig {
 
   outlineSize: number;
   bodyThickness: number;
-  /** Espessura da base do chaveiro (corpo). Afeta a altura da peça. */
-  baseThickness: number;
   reliefThickness: number;
 
   baseColor: string;
