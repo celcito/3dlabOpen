@@ -866,6 +866,37 @@ export default function CakeTopperCreator() {
             </div>
           )}
 
+          {/* Medidas (régua) */}
+          {showDimensions && (
+            <div className="absolute bottom-4 left-4 pointer-events-none">
+              <div className="bg-white/90 backdrop-blur-md border border-[#632CE5]/30 p-3 rounded-xl space-y-1 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Ruler className="w-3 h-3 text-[#632CE5]" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-[#632CE5]">Medidas</span>
+                </div>
+                {plaqueStyle === "placa" ? (
+                  <>
+                    <div className="text-[10px] font-mono text-zinc-600">Largura: {config.plateWidth} mm</div>
+                    <div className="text-[10px] font-mono text-zinc-600">Altura da placa: {config.plateHeight} mm</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[10px] font-mono text-zinc-600">
+                      Nome: {nameGeometry.dimensions ? `${nameGeometry.dimensions.dimX} × ${nameGeometry.dimensions.dimY} mm` : "calculando..."}
+                    </div>
+                    {plaqueStyle === "nome-placa" && (
+                      <div className="text-[10px] font-mono text-zinc-600">Placa: {config.plateWidth} × {config.plateHeight} mm</div>
+                    )}
+                  </>
+                )}
+                <div className="text-[10px] font-mono text-zinc-600">Haste: {config.stickHeight} mm</div>
+                <div className="text-[10px] font-mono font-bold text-zinc-700">
+                  Altura total: {config.stickHeight + config.plateHeight} mm
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* HUD Overlay */}
           <div className="absolute top-4 left-4 pointer-events-none">
             <div className="bg-white/80 backdrop-blur-md border border-[var(--surface-container-high)] p-3 rounded-xl space-y-1">
