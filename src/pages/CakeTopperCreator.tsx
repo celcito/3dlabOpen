@@ -321,11 +321,45 @@ function TopperScene({ config, modelColor, showCakePreview, showGrid, showDimens
             <boxGeometry args={[config.plateWidth / 10, 0.05, 0.05]} />
             <meshBasicMaterial color="#632CE5" />
           </mesh>
+          <Text
+            position={[0, -(config.plateHeight / 10 + 1) / 2 - 1.15, 0.05]}
+            fontSize={0.45}
+            color="#632CE5"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {`${config.plateWidth} mm`}
+          </Text>
           {/* Height indicator */}
           <mesh position={[config.plateWidth / 10 / 2 + 0.5, 0, 0]}>
             <boxGeometry args={[0.05, config.plateHeight / 10, 0.05]} />
             <meshBasicMaterial color="#632CE5" />
           </mesh>
+          <Text
+            position={[config.plateWidth / 10 / 2 + 1.15, 0, 0.05]}
+            rotation={[0, 0, -Math.PI / 2]}
+            fontSize={0.45}
+            color="#632CE5"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {`${config.plateHeight} mm`}
+          </Text>
+          {/* Haste indicator */}
+          <mesh position={[-config.plateWidth / 10 / 2 - 0.5, -config.plateHeight / 20 - config.stickHeight / 20, 0]}>
+            <boxGeometry args={[0.05, config.stickHeight / 10, 0.05]} />
+            <meshBasicMaterial color="#632CE5" />
+          </mesh>
+          <Text
+            position={[-config.plateWidth / 10 / 2 - 1.15, -config.plateHeight / 20 - config.stickHeight / 20, 0.05]}
+            rotation={[0, 0, -Math.PI / 2]}
+            fontSize={0.45}
+            color="#632CE5"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {`haste ${config.stickHeight} mm`}
+          </Text>
         </group>
       )}
     </group>
