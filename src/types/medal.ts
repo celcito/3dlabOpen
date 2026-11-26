@@ -15,6 +15,8 @@ export interface MedalConfig {
   bottomText: string;
   centerText: string;
   fontFamily: string;
+  /** Escala da fonte: até 1x o texto sai em peso regular; acima, em bold. */
+  fontWeightScale: number;
   customFontName?: string;
   customFontBase64?: string;
   topArcSize: number;

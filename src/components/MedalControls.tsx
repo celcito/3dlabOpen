@@ -277,6 +277,16 @@ export const MedalControls: React.FC<MedalControlsProps> = ({
         />
 
         <RangeControl
+          label="Espessura da Fonte"
+          unit="x"
+          min="0.5"
+          max="2"
+          step="0.1"
+          number={config.fontWeightScale}
+          onChange={(value) => onChange({ ...config, fontWeightScale: value })}
+        />
+
+        <RangeControl
           label="Raio do Arco"
           unit="%"
           min={String(ARC_RADIUS_MIN)}

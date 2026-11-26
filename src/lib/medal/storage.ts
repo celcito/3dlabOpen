@@ -116,6 +116,7 @@ export function loadSavedMedalConfig(): MedalConfig {
       bottomText: typeof parsed.bottomText === 'string' ? parsed.bottomText : def.bottomText,
       centerText: typeof parsed.centerText === 'string' ? parsed.centerText : def.centerText,
       fontFamily: typeof parsed.fontFamily === 'string' && parsed.fontFamily ? parsed.fontFamily : def.fontFamily,
+      fontWeightScale: clamp(parsed.fontWeightScale, 0.5, 2.0, def.fontWeightScale),
       customFontName: typeof parsed.customFontName === 'string' ? parsed.customFontName : undefined,
       customFontBase64: typeof parsed.customFontBase64 === 'string' ? parsed.customFontBase64 : undefined,
       topArcSize: clamp(parsed.topArcSize, ARC_SIZE_MIN, ARC_SIZE_MAX, def.topArcSize),
