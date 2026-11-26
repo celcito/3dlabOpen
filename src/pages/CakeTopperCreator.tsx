@@ -604,7 +604,7 @@ export default function CakeTopperCreator() {
   } = creator;
 
   const [activeTab, setActiveTab] = useState<"texto" | "numeros" | "elementos" | "temas" | "templates" | "formas" | "imagem">("texto");
-  const [sidebarTab, setSidebarTab] = useState<"propriedades" | "impressao" | "colecao">("propriedades");
+  const [sidebarTab, setSidebarTab] = useState<"design" | "propriedades" | "impressao" | "colecao">("design");
 
   // Estilos de plaquinha (T5–T6): placa com texto · nome em silhueta · nome em relevo sobre placa.
   const [plaqueStyle, setPlaqueStyle] = useState<PlaqueStyle>("placa");
@@ -759,396 +759,6 @@ export default function CakeTopperCreator() {
 
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[var(--workbench-viewport)]">
-      {/* LEFT SIDEBAR - Tools */}
-      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-r border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
-        {/* Header */}
-        <div className="p-4 border-b border-[var(--surface-container-high)]">
-          <div className="flex items-center gap-2 mb-1">
-            <Cake className="w-5 h-5 text-[#632CE5]" />
-            <h1 className="text-sm font-black uppercase tracking-tighter text-[var(--workbench-text)]">Topo de Bolo 3D</h1>
-          </div>
-          <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">Crie toppers personalizados</p>
-        </div>
-
-        {/* Estilo da plaquinha */}
-        <div className="p-3 border-b border-[var(--surface-container-high)]">
-          <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Estilo da Plaquinha</label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {([
-              { id: "placa" as const, label: "Placa c/ Texto" },
-              { id: "nome-silhueta" as const, label: "Nome (Silhueta)" },
-              { id: "nome-placa" as const, label: "Nome em Placa" },
-            ]).map(({ id, label }) => (
-              <button
-                key={id}
-                onClick={() => setPlaqueStyle(id)}
-                title={
-                  id === "placa"
-                    ? "Placa com texto e elementos decorativos"
-                    : id === "nome-silhueta"
-                      ? "Nome recortado em silhueta com hastes"
-                      : "Nome em relevo sobre a placa"
-                }
-                className={`py-2 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
-                  plaqueStyle === id
-                    ? "bg-[#632CE5] text-white border-[#632CE5] shadow-[0_0_10px_rgba(99,44,229,0.3)]"
-                    : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]/50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tool Tabs (estilo placa) */}
-        {plaqueStyle === "placa" && (
-        <div className="flex border-b border-[var(--surface-container-high)]">
-          {([
-            { id: "texto" as const, icon: Type, label: "Texto" },
-            { id: "numeros" as const, icon: Hash, label: "Números" },
-            { id: "elementos" as const, icon: Shapes, label: "Elem." },
-            { id: "formas" as const, icon: Star, label: "Formas" },
-            { id: "imagem" as const, icon: ImagePlus, label: "Imagem" },
-            { id: "temas" as const, icon: Palette, label: "Temas" },
-            { id: "templates" as const, icon: LayoutTemplate, label: "Models" },
-          ]).map(({ id, icon: Icon, label }) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`flex-1 py-2.5 flex flex-col items-center gap-1 text-[8px] font-bold uppercase tracking-wider transition-colors ${
-                activeTab === id
-                  ? "text-[#632CE5] border-b-2 border-[#632CE5] bg-[#632CE5]/5"
-                  : "text-zinc-400 hover:text-zinc-600"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
-        )}
-
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          {/* ESTILOS DE NOME */}
-          {isNameStyle ? (
-            <NamePanel nameConfig={nameConfig} onChange={setNameConfig} nameGeometry={nameGeometry} />
-          ) : (
-          <>
-          {activeTab === "texto" && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Texto Principal</label>
-                <input
-                  type="text"
-                  value={config.text}
-                  onChange={(e) => updateConfig({ text: e.target.value })}
-                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
-                  placeholder="DIGITE SEU TEXTO..."
-                />
-              </div>
-              <div>
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Subtítulo</label>
-                <input
-                  type="text"
-                  value={config.subtitle}
-                  onChange={(e) => updateConfig({ subtitle: e.target.value })}
-                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
-                  placeholder="Ex: Nome, Data..."
-                />
-              </div>
-              <div>
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Fonte</label>
-                <select
-                  value={config.fontFamily}
-                  onChange={(e) => updateConfig({ fontFamily: e.target.value })}
-                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold"
-                >
-                  {TOPPER_FONTS.map((f) => (
-                    <option key={f.url} value={f.url}>{f.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <label className="text-[9px] uppercase font-bold text-zinc-500">Tamanho</label>
-                  <span className="text-[10px] font-mono text-[#632CE5]">{config.fontSize}mm</span>
-                </div>
-                <input
-                  type="range" min="6" max="30" step="1"
-                  value={config.fontSize}
-                  onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <label className="text-[9px] uppercase font-bold text-zinc-500">Espessura</label>
-                  <span className="text-[10px] font-mono text-[#632CE5]">{config.textThickness}mm</span>
-                </div>
-                <input
-                  type="range" min="0.5" max="8" step="0.5"
-                  value={config.textThickness}
-                  onChange={(e) => updateConfig({ textThickness: parseFloat(e.target.value) })}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <label className="text-[9px] uppercase font-bold text-zinc-500">Espaçamento</label>
-                  <span className="text-[10px] font-mono text-[#632CE5]">{config.letterSpacing}mm</span>
-                </div>
-                <input
-                  type="range" min="0" max="5" step="0.2"
-                  value={config.letterSpacing}
-                  onChange={(e) => updateConfig({ letterSpacing: parseFloat(e.target.value) })}
-                  className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-              <div className="flex gap-1.5">
-                {(["left", "center", "right"] as const).map((align) => (
-                  <button
-                    key={align}
-                    onClick={() => updateConfig({ alignment: align })}
-                    className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
-                      config.alignment === align
-                        ? "bg-[#632CE5] text-white border-[#632CE5]"
-                        : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
-                    }`}
-                  >
-                    {align === "left" ? <AlignLeft className="w-3 h-3 mx-auto" /> : align === "center" ? <AlignCenter className="w-3 h-3 mx-auto" /> : <AlignRight className="w-3 h-3 mx-auto" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* NUMEROS TAB */}
-          {activeTab === "numeros" && (
-            <div className="space-y-3">
-              <label className="text-[9px] uppercase font-bold text-zinc-500 block">Adicionar Números</label>
-              <div className="grid grid-cols-5 gap-1.5">
-                {["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
-                  <button
-                    key={num}
-                    onClick={() => handleAddNumber(num)}
-                    className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg text-lg font-black text-[var(--workbench-text)] hover:bg-[#632CE5] hover:text-white hover:border-[#632CE5] transition-all active:scale-95"
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
-              <div>
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Ou digite uma idade</label>
-                <input
-                  type="text"
-                  placeholder="Ex: 18, 50, 1..."
-                  className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5]"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const val = (e.target as HTMLInputElement).value.trim();
-                      if (val) { addElement("number", val); (e.target as HTMLInputElement).value = ""; }
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ELEMENTOS TAB */}
-          {activeTab === "elementos" && (
-            <div className="space-y-3">
-              <label className="text-[9px] uppercase font-bold text-zinc-500 block">Elementos Decorativos</label>
-              {[
-                { label: "Coração", icon: Heart, shape: "coracao" },
-                { label: "Estrela 5", icon: Star, shape: "estrela" },
-                { label: "Estrela 6", icon: Sparkles, shape: "estrela6" },
-                { label: "Flor", icon: Flower, shape: "flor" },
-                { label: "Coroa", icon: Crown, shape: "coroa" },
-                { label: "Balão", icon: Circle, shape: "balao" },
-                { label: "Círculo", icon: Circle, shape: "circulo" },
-                { label: "Quadrado", icon: Square, shape: "quadrado" },
-                { label: "Losango", icon: Diamond, shape: "losango" },
-                { label: "Triângulo", icon: Triangle, shape: "triangulo" },
-              ].map(({ label, icon: Icon, shape }) => (
-                <button
-                  key={shape}
-                  onClick={() => handleAddShape(shape)}
-                  className="w-full flex items-center gap-3 p-2.5 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all text-left"
-                >
-                  <div className="w-8 h-8 rounded bg-[#632CE5]/10 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-[#632CE5]" />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">{label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* FORMAS TAB */}
-          {activeTab === "formas" && (
-            <div className="space-y-3">
-              <label className="text-[9px] uppercase font-bold text-zinc-500 block">Formas Geométricas</label>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.keys(SHAPE_PRESETS).map((shapeType) => (
-                  <button
-                    key={shapeType}
-                    onClick={() => handleAddShape(shapeType)}
-                    className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all"
-                  >
-                    <div className="w-8 h-8">
-                      <svg viewBox="-25 -25 50 50" className="w-full h-full">
-                        <ShapeSVG shapeType={shapeType} />
-                      </svg>
-                    </div>
-                    <span className="text-[8px] font-bold uppercase text-zinc-500">{shapeType}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TEMAS TAB */}
-          {activeTab === "temas" && (
-            <div className="space-y-3">
-              <label className="text-[9px] uppercase font-bold text-zinc-500 block">Temas Predefinidos</label>
-              {Object.entries(THEMES).map(([key, theme]) => (
-                <button
-                  key={key}
-                  onClick={() => applyTheme(key)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                    config.theme === key
-                      ? "bg-[#632CE5]/10 border-[#632CE5]"
-                      : "bg-[var(--workbench-viewport)] border-[var(--surface-container-high)] hover:border-[#632CE5]/30"
-                  }`}
-                >
-                  <div className="flex gap-1">
-                    <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.plateColor }} />
-                    <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.textColor }} />
-                    <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.borderColor }} />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)] capitalize">
-                    {key.replace(/_/g, " ")}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* IMAGEM TAB */}
-          {activeTab === "imagem" && (
-            <div className="space-y-3">
-              <input
-                ref={imageInputRef}
-                type="file"
-                accept=".png,.jpg,.jpeg,.gif,.bmp,.webp"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <input
-                ref={svgInputRef}
-                type="file"
-                accept=".svg"
-                onChange={handleSvgUpload}
-                className="hidden"
-              />
-
-              <label className="text-[9px] uppercase font-bold text-zinc-500 block">Upload de Imagem</label>
-              <p className="text-[9px] text-zinc-400 leading-relaxed">
-                Faça upload de uma imagem (PNG, JPG) para usar o contorno/silueta como elemento decorativo no topper.
-              </p>
-              <button
-                onClick={() => imageInputRef.current?.click()}
-                disabled={isUploading}
-                className="w-full p-4 bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
-              >
-                {isUploading ? (
-                  <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
-                ) : (
-                  <ImagePlus className="w-6 h-6 text-[#632CE5]" />
-                )}
-                <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">
-                  {isUploading ? "Processando..." : "Selecionar Imagem"}
-                </span>
-                <span className="text-[8px] text-zinc-400">PNG, JPG, GIF, BMP, WebP</span>
-              </button>
-
-              <div className="border-t border-[var(--surface-container-high)] pt-3">
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-2">Upload de SVG</label>
-                <p className="text-[9px] text-zinc-400 leading-relaxed mb-2">
-                  SVGs vetoriais preservam qualidade perfecta e são convertidos diretamente em formas 3D.
-                </p>
-                <button
-                  onClick={() => svgInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="w-full p-4 bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
-                  ) : (
-                    <Upload className="w-6 h-6 text-[#632CE5]" />
-                  )}
-                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">
-                    {isUploading ? "Processando..." : "Selecionar SVG"}
-                  </span>
-                  <span className="text-[8px] text-zinc-400">Vetor SVG</span>
-                </button>
-              </div>
-
-              <div className="border-t border-[var(--surface-container-high)] pt-3">
-                <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-2">Dicas</label>
-                <ul className="text-[8px] text-zinc-400 space-y-1 list-disc list-inside">
-                  <li>Imagens com fundo claro e contours nítidos funcionam melhor</li>
-                  <li>O fundo é removido automaticamente</li>
-                  <li>SVGs produzem resultados mais limpos</li>
-                  <li>O elemento adicionado pode ser movido, girado e redimensionado</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* TEMPLATES TAB */}
-          {activeTab === "templates" && (
-            <div className="space-y-3">
-              <label className="text-[9px] uppercase font-bold text-zinc-500 block">Modelos Prontos</label>
-              {TEMPLATES.map((tpl) => (
-                <button
-                  key={tpl.name}
-                  onClick={() => loadTemplate(tpl)}
-                  className="w-full p-3 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg hover:border-[#632CE5]/30 transition-all text-left"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-4 h-4 rounded-full" style={{ background: tpl.plateColor }} />
-                    <span className="text-[10px] font-black uppercase text-[var(--workbench-text)]">{tpl.name}</span>
-                  </div>
-                  <span className="text-[9px] text-zinc-400 font-bold">{tpl.text}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          </>
-          )}
-        </div>
-
-        {/* Undo/Redo */}
-        <div className="p-3 border-t border-[var(--surface-container-high)] flex gap-2">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="flex-1 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[var(--surface-container-high)] transition-colors"
-          >
-            <Undo2 className="w-3 h-3" /> Desfazer
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="flex-1 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[var(--surface-container-high)] transition-colors"
-          >
-            <Redo2 className="w-3 h-3" /> Refazer
-          </button>
-        </div>
-      </div>
 
       {/* CENTER - Viewport */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -1315,9 +925,19 @@ export default function CakeTopperCreator() {
       </div>
 
       {/* RIGHT SIDEBAR - Properties */}
-      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-y-auto scrollbar-hide flex flex-col shrink-0">
+      <div className="w-full md:w-[400px] bg-[var(--workbench-panel)] border-l border-[var(--surface-container-high)] overflow-hidden flex flex-col shrink-0">
         {/* Sidebar Tabs */}
         <div className="flex border-b border-[var(--surface-container-high)]">
+          <button
+            onClick={() => setSidebarTab("design")}
+            className={`flex-1 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-colors ${
+              sidebarTab === "design"
+                ? "text-[#632CE5] border-b-2 border-[#632CE5]"
+                : "text-zinc-400 hover:text-zinc-600"
+            }`}
+          >
+            Design
+          </button>
           <button
             onClick={() => setSidebarTab("propriedades")}
             className={`flex-1 py-2.5 text-[9px] font-bold uppercase tracking-wider transition-colors ${
@@ -1351,7 +971,398 @@ export default function CakeTopperCreator() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {sidebarTab === "colecao" ? (
+          {sidebarTab === "design" ? (
+            /* Ferramentas */
+        <div className="flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-[var(--surface-container-high)]">
+            <div className="flex items-center gap-2 mb-1">
+              <Cake className="w-5 h-5 text-[#632CE5]" />
+              <h1 className="text-sm font-black uppercase tracking-tighter text-[var(--workbench-text)]">Topo de Bolo 3D</h1>
+            </div>
+            <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">Crie toppers personalizados</p>
+          </div>
+
+          {/* Estilo da plaquinha */}
+          <div className="p-3 border-b border-[var(--surface-container-high)]">
+            <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Estilo da Plaquinha</label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { id: "placa" as const, label: "Placa c/ Texto" },
+                { id: "nome-silhueta" as const, label: "Nome (Silhueta)" },
+                { id: "nome-placa" as const, label: "Nome em Placa" },
+              ]).map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => setPlaqueStyle(id)}
+                  title={
+                    id === "placa"
+                      ? "Placa com texto e elementos decorativos"
+                      : id === "nome-silhueta"
+                        ? "Nome recortado em silhueta com hastes"
+                        : "Nome em relevo sobre a placa"
+                  }
+                  className={`py-2 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
+                    plaqueStyle === id
+                      ? "bg-[#632CE5] text-white border-[#632CE5] shadow-[0_0_10px_rgba(99,44,229,0.3)]"
+                      : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]/50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tool Tabs (estilo placa) */}
+          {plaqueStyle === "placa" && (
+          <div className="flex border-b border-[var(--surface-container-high)]">
+            {([
+              { id: "texto" as const, icon: Type, label: "Texto" },
+              { id: "numeros" as const, icon: Hash, label: "Números" },
+              { id: "elementos" as const, icon: Shapes, label: "Elem." },
+              { id: "formas" as const, icon: Star, label: "Formas" },
+              { id: "imagem" as const, icon: ImagePlus, label: "Imagem" },
+              { id: "temas" as const, icon: Palette, label: "Temas" },
+              { id: "templates" as const, icon: LayoutTemplate, label: "Models" },
+            ]).map(({ id, icon: Icon, label }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex-1 py-2.5 flex flex-col items-center gap-1 text-[8px] font-bold uppercase tracking-wider transition-colors ${
+                  activeTab === id
+                    ? "text-[#632CE5] border-b-2 border-[#632CE5] bg-[#632CE5]/5"
+                    : "text-zinc-400 hover:text-zinc-600"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+          )}
+
+          {/* Tab Content */}
+          <div className="p-3 space-y-3">
+            {/* ESTILOS DE NOME */}
+            {isNameStyle ? (
+              <NamePanel nameConfig={nameConfig} onChange={setNameConfig} nameGeometry={nameGeometry} />
+            ) : (
+            <>
+            {activeTab === "texto" && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Texto Principal</label>
+                  <input
+                    type="text"
+                    value={config.text}
+                    onChange={(e) => updateConfig({ text: e.target.value })}
+                    className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
+                    placeholder="DIGITE SEU TEXTO..."
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Subtítulo</label>
+                  <input
+                    type="text"
+                    value={config.subtitle}
+                    onChange={(e) => updateConfig({ subtitle: e.target.value })}
+                    className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-all"
+                    placeholder="Ex: Nome, Data..."
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Fonte</label>
+                  <select
+                    value={config.fontFamily}
+                    onChange={(e) => updateConfig({ fontFamily: e.target.value })}
+                    className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold"
+                  >
+                    {TOPPER_FONTS.map((f) => (
+                      <option key={f.url} value={f.url}>{f.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1.5">
+                    <label className="text-[9px] uppercase font-bold text-zinc-500">Tamanho</label>
+                    <span className="text-[10px] font-mono text-[#632CE5]">{config.fontSize}mm</span>
+                  </div>
+                  <input
+                    type="range" min="6" max="30" step="1"
+                    value={config.fontSize}
+                    onChange={(e) => updateConfig({ fontSize: parseInt(e.target.value) })}
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1.5">
+                    <label className="text-[9px] uppercase font-bold text-zinc-500">Espessura</label>
+                    <span className="text-[10px] font-mono text-[#632CE5]">{config.textThickness}mm</span>
+                  </div>
+                  <input
+                    type="range" min="0.5" max="8" step="0.5"
+                    value={config.textThickness}
+                    onChange={(e) => updateConfig({ textThickness: parseFloat(e.target.value) })}
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1.5">
+                    <label className="text-[9px] uppercase font-bold text-zinc-500">Espaçamento</label>
+                    <span className="text-[10px] font-mono text-[#632CE5]">{config.letterSpacing}mm</span>
+                  </div>
+                  <input
+                    type="range" min="0" max="5" step="0.2"
+                    value={config.letterSpacing}
+                    onChange={(e) => updateConfig({ letterSpacing: parseFloat(e.target.value) })}
+                    className="w-full accent-[#632CE5] h-1.5 bg-[var(--surface-container-high)] rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+                <div className="flex gap-1.5">
+                  {(["left", "center", "right"] as const).map((align) => (
+                    <button
+                      key={align}
+                      onClick={() => updateConfig({ alignment: align })}
+                      className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase border transition-colors ${
+                        config.alignment === align
+                          ? "bg-[#632CE5] text-white border-[#632CE5]"
+                          : "bg-[var(--workbench-viewport)] text-zinc-500 border-[var(--surface-container-high)] hover:border-[#632CE5]"
+                      }`}
+                    >
+                      {align === "left" ? <AlignLeft className="w-3 h-3 mx-auto" /> : align === "center" ? <AlignCenter className="w-3 h-3 mx-auto" /> : <AlignRight className="w-3 h-3 mx-auto" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* NUMEROS TAB */}
+            {activeTab === "numeros" && (
+              <div className="space-y-3">
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block">Adicionar Números</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => handleAddNumber(num)}
+                      className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg text-lg font-black text-[var(--workbench-text)] hover:bg-[#632CE5] hover:text-white hover:border-[#632CE5] transition-all active:scale-95"
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-1.5">Ou digite uma idade</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: 18, 50, 1..."
+                    className="w-full bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] p-2.5 rounded-lg text-sm text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5]"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val) { addElement("number", val); (e.target as HTMLInputElement).value = ""; }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ELEMENTOS TAB */}
+            {activeTab === "elementos" && (
+              <div className="space-y-3">
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block">Elementos Decorativos</label>
+                {[
+                  { label: "Coração", icon: Heart, shape: "coracao" },
+                  { label: "Estrela 5", icon: Star, shape: "estrela" },
+                  { label: "Estrela 6", icon: Sparkles, shape: "estrela6" },
+                  { label: "Flor", icon: Flower, shape: "flor" },
+                  { label: "Coroa", icon: Crown, shape: "coroa" },
+                  { label: "Balão", icon: Circle, shape: "balao" },
+                  { label: "Círculo", icon: Circle, shape: "circulo" },
+                  { label: "Quadrado", icon: Square, shape: "quadrado" },
+                  { label: "Losango", icon: Diamond, shape: "losango" },
+                  { label: "Triângulo", icon: Triangle, shape: "triangulo" },
+                ].map(({ label, icon: Icon, shape }) => (
+                  <button
+                    key={shape}
+                    onClick={() => handleAddShape(shape)}
+                    className="w-full flex items-center gap-3 p-2.5 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all text-left"
+                  >
+                    <div className="w-8 h-8 rounded bg-[#632CE5]/10 flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-[#632CE5]" />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* FORMAS TAB */}
+            {activeTab === "formas" && (
+              <div className="space-y-3">
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block">Formas Geométricas</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.keys(SHAPE_PRESETS).map((shapeType) => (
+                    <button
+                      key={shapeType}
+                      onClick={() => handleAddShape(shapeType)}
+                      className="aspect-square bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg flex flex-col items-center justify-center gap-1 hover:bg-[#632CE5]/5 hover:border-[#632CE5]/30 transition-all"
+                    >
+                      <div className="w-8 h-8">
+                        <svg viewBox="-25 -25 50 50" className="w-full h-full">
+                          <ShapeSVG shapeType={shapeType} />
+                        </svg>
+                      </div>
+                      <span className="text-[8px] font-bold uppercase text-zinc-500">{shapeType}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TEMAS TAB */}
+            {activeTab === "temas" && (
+              <div className="space-y-3">
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block">Temas Predefinidos</label>
+                {Object.entries(THEMES).map(([key, theme]) => (
+                  <button
+                    key={key}
+                    onClick={() => applyTheme(key)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                      config.theme === key
+                        ? "bg-[#632CE5]/10 border-[#632CE5]"
+                        : "bg-[var(--workbench-viewport)] border-[var(--surface-container-high)] hover:border-[#632CE5]/30"
+                    }`}
+                  >
+                    <div className="flex gap-1">
+                      <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.plateColor }} />
+                      <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.textColor }} />
+                      <div className="w-5 h-5 rounded-full border border-white shadow" style={{ background: theme.borderColor }} />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)] capitalize">
+                      {key.replace(/_/g, " ")}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* IMAGEM TAB */}
+            {activeTab === "imagem" && (
+              <div className="space-y-3">
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.gif,.bmp,.webp"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <input
+                  ref={svgInputRef}
+                  type="file"
+                  accept=".svg"
+                  onChange={handleSvgUpload}
+                  className="hidden"
+                />
+
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block">Upload de Imagem</label>
+                <p className="text-[9px] text-zinc-400 leading-relaxed">
+                  Faça upload de uma imagem (PNG, JPG) para usar o contorno/silueta como elemento decorativo no topper.
+                </p>
+                <button
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-full p-4 bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
+                  ) : (
+                    <ImagePlus className="w-6 h-6 text-[#632CE5]" />
+                  )}
+                  <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">
+                    {isUploading ? "Processando..." : "Selecionar Imagem"}
+                  </span>
+                  <span className="text-[8px] text-zinc-400">PNG, JPG, GIF, BMP, WebP</span>
+                </button>
+
+                <div className="border-t border-[var(--surface-container-high)] pt-3">
+                  <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-2">Upload de SVG</label>
+                  <p className="text-[9px] text-zinc-400 leading-relaxed mb-2">
+                    SVGs vetoriais preservam qualidade perfecta e são convertidos diretamente em formas 3D.
+                  </p>
+                  <button
+                    onClick={() => svgInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full p-4 bg-[var(--workbench-viewport)] border-2 border-dashed border-[var(--surface-container-high)] rounded-lg flex flex-col items-center gap-2 hover:border-[#632CE5]/50 hover:bg-[#632CE5]/5 transition-all disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <RefreshCw className="w-6 h-6 text-[#632CE5] animate-spin" />
+                    ) : (
+                      <Upload className="w-6 h-6 text-[#632CE5]" />
+                    )}
+                    <span className="text-[10px] font-bold uppercase text-[var(--workbench-text)]">
+                      {isUploading ? "Processando..." : "Selecionar SVG"}
+                    </span>
+                    <span className="text-[8px] text-zinc-400">Vetor SVG</span>
+                  </button>
+                </div>
+
+                <div className="border-t border-[var(--surface-container-high)] pt-3">
+                  <label className="text-[9px] uppercase font-bold text-zinc-500 block mb-2">Dicas</label>
+                  <ul className="text-[8px] text-zinc-400 space-y-1 list-disc list-inside">
+                    <li>Imagens com fundo claro e contours nítidos funcionam melhor</li>
+                    <li>O fundo é removido automaticamente</li>
+                    <li>SVGs produzem resultados mais limpos</li>
+                    <li>O elemento adicionado pode ser movido, girado e redimensionado</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* TEMPLATES TAB */}
+            {activeTab === "templates" && (
+              <div className="space-y-3">
+                <label className="text-[9px] uppercase font-bold text-zinc-500 block">Modelos Prontos</label>
+                {TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.name}
+                    onClick={() => loadTemplate(tpl)}
+                    className="w-full p-3 bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] rounded-lg hover:border-[#632CE5]/30 transition-all text-left"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-4 h-4 rounded-full" style={{ background: tpl.plateColor }} />
+                      <span className="text-[10px] font-black uppercase text-[var(--workbench-text)]">{tpl.name}</span>
+                    </div>
+                    <span className="text-[9px] text-zinc-400 font-bold">{tpl.text}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            </>
+            )}
+          </div>
+
+          {/* Undo/Redo */}
+          <div className="p-3 border-t border-[var(--surface-container-high)] flex gap-2">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="flex-1 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[var(--surface-container-high)] transition-colors"
+            >
+              <Undo2 className="w-3 h-3" /> Desfazer
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="flex-1 py-2 rounded-lg bg-[var(--workbench-viewport)] border border-[var(--surface-container-high)] text-[9px] font-bold uppercase flex items-center justify-center gap-1 disabled:opacity-30 hover:bg-[var(--surface-container-high)] transition-colors"
+            >
+              <Redo2 className="w-3 h-3" /> Refazer
+            </button>
+          </div>
+        </div>
+          ) : sidebarTab === "colecao" ? (
             <CollectionPanel
               plaques={collection.plaques}
               onLoad={handleLoadPlaque}
