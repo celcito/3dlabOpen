@@ -166,6 +166,16 @@ export const SidebarControls: React.FC<SidebarControlsProps> = ({
         />
 
         <RangeControl
+          label="Espessura da Fonte"
+          unit="x"
+          min="0.5"
+          max="2"
+          step="0.1"
+          number={config.fontWeightScale}
+          onChange={(value) => onChange({ ...config, fontWeightScale: value })}
+        />
+
+        <RangeControl
           label="Contorno Traseiro (Borda Externa)"
           unit="mm"
           min="4"

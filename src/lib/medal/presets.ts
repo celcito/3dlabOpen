@@ -63,6 +63,7 @@ export const DEFAULT_MEDAL_CONFIG: MedalConfig = {
   bottomText: '',
   centerText: '',
   fontFamily: 'Montserrat',
+  fontWeightScale: 1.0,
   topArcSize: 7,
   bottomArcSize: 6,
   centerTextSize: 8,

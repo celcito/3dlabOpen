@@ -451,9 +451,13 @@ function punchHandleOpening(ctx: CanvasRenderingContext2D, cx: number, cy: numbe
   ctx.restore();
 }
 
-function fontWeightFor(family: string): 'bold' | 'normal' {
+function fontWeightFor(family: string, fontScale: number): 'bold' | 'normal' {
   // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
-  return ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(family) ? 'normal' : 'bold';
+  const isSingleWeightDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(family);
+  // "Espessura da Fonte" até 1x (padrão incluso) usa o peso regular (traço fino, melhor
+  // leitura); acima de 1x, bold. O Google Fonts só carrega 400 e 700 — pesos
+  // intermediários seriam sintetizados e o resultado não seria previsível.
+  return isSingleWeightDisplay || fontScale <= 1 ? 'normal' : 'bold';
 }
 
 function fontString(sizePx: number, family: string, weight: 'bold' | 'normal'): string {
@@ -706,7 +710,8 @@ export async function generateMedalModel(config: MedalConfig): Promise<Generated
   const raioUtil = Math.max(4, radiusMm - (rimWidthMm > 0 ? rimWidthMm : 0) - 1);
 
   const family = config.fontFamily || 'Montserrat';
-  const weight = fontWeightFor(family);
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  const weight = fontWeightFor(family, fontScale);
   const topSizeMm = Math.max(MIN_ARC_FONT_MM, config.topArcSize);
   const bottomSizeMm = Math.max(MIN_ARC_FONT_MM, config.bottomArcSize);
   const centerSizeMm = Math.max(MIN_ARC_FONT_MM, config.centerTextSize);

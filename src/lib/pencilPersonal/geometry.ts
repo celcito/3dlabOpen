@@ -109,10 +109,17 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   const text = config.text.trim() || 'Nome';
   const fontHeightPx = Math.max(6, config.letterHeight) * PX_PER_MM;
 
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  // "Espessura da Fonte" até 1x (padrão incluso) usa o peso regular (traço fino, melhor
+  // leitura); acima de 1x, bold. O Google Fonts só carrega 400 e 700 — pesos
+  // intermediários seriam sintetizados e o resultado não seria previsível.
+  const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
+  const fontWeight = isCursiveOrDisplay || fontScale <= 1 ? 'normal' : 'bold';
+
   try {
     if (!config.customFontName) await ensureGoogleFont(config.fontFamily);
     if (typeof document !== 'undefined' && document.fonts) {
-      await document.fonts.load(`${fontHeightPx}px "${config.fontFamily}"`);
+      await document.fonts.load(`${fontWeight} ${fontHeightPx}px "${config.fontFamily}"`);
     }
   } catch {
     // fallback para a fonte do sistema
@@ -122,7 +129,7 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   const mctx = measure.getContext('2d');
   if (!mctx) throw new Error('Falha ao inicializar Canvas 2D');
 
-  const fontStyle = `${fontHeightPx}px "${config.fontFamily}", sans-serif`;
+  const fontStyle = `${fontWeight} ${fontHeightPx}px "${config.fontFamily}", sans-serif`;
   mctx.font = fontStyle;
 
   const letterSpacingPx = Math.max(0, config.letterSpacing) * PX_PER_MM;
@@ -144,17 +151,8 @@ export async function buildTextShapes(config: PencilPersonalConfig): Promise<Tex
   const symbolBlockPx = symbolCount * (symbolGapPx + symbolSizePx);
   const totalContentWidthPx = textWidthPx + symbolBlockPx;
 
-  // Espessura extra em mm: positiva engrossa (contorno por fora), negativa
-  // afina (erosão da silhueta). 0.5x é a fonte original: daí para baixo a
-  // escala afina de verdade, sem trecho que ainda engorde. 1x segue em
-  // +1.2 mm e 2x em +2.4 mm, como antes. 0.2x (piso) erode 0.24 mm — o
-  // bastante para reabrir os vazados sem apagar as hastes das fontes normais.
-  const weightScale = Math.min(2, Math.max(0.2, config.fontWeightScale || 1));
-  const offsetMm =
-    weightScale >= 0.5
-      ? Math.min(2.4, (weightScale - 0.5) * 2.4)
-      : (weightScale - 0.5) * 0.8;
-  const outlinePx = Math.abs(offsetMm) * PX_PER_MM;
+  // No mínimo do controle (0,5x) o contorno some e sobra só o glifo; em 1x, 0,6 mm de cada lado.
+  const outlinePx = (fontScale - 0.5) * 1.2 * PX_PER_MM;
   const paddingPx = Math.ceil(outlinePx * 2 + 12);
 
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);

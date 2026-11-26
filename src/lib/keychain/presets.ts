@@ -8,10 +8,16 @@ export const LOOP_WALL_MIN = 1.2;
 export const LOOP_WALL_MAX = 4;
 export const LOOP_GAP_MIN = 0;
 export const LOOP_GAP_MAX = 4;
+export const NAME_LAYER_MIN = 1;
+export const NAME_LAYER_MAX = 3;
+export const NAME_LAYER_STEP_MIN = 0.2;
+export const NAME_LAYER_STEP_MAX = 1.5;
+export const NAME_LINE_SPACING_MIN = 0;
+export const NAME_LINE_SPACING_MAX = 12;
 
 export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   text: 'Nome',
-  fontFamily: 'Pacifico',
+  fontFamily: 'Montserrat',
   letterHeight: 16,
   letterSpacing: 1.8,
   fontWeightScale: 1.0,
@@ -22,6 +28,11 @@ export const DEFAULT_KEYCHAIN_CONFIG: KeychainConfig = {
   reliefThickness: 2.0,
   baseColor: '#111827',
   reliefColor: '#FBBF24',
+  reliefColor2: '#F9FAFB',
+  reliefColor3: '#632CE5',
+  nameLayerCount: 1,
+  nameLayerStep: 0.6,
+  nameLineSpacing: 2.8,
   loopEnabled: true,
   loopSide: 'left',
   loopHoleDiameter: 5,

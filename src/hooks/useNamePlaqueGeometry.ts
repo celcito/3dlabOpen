@@ -5,11 +5,18 @@ import { generateKeychainModel } from "../lib/keychain/geometry";
 import type { KeychainConfig } from "../types/keychain";
 import type { Model3DDimensions } from "../types/pencilTopper";
 
+/** Uma camada do nome (cor própria) pronta para render/export. */
+export interface NamePlaqueReliefLayer {
+  geometry: THREE.BufferGeometry;
+  color: string;
+  name: string;
+}
+
 export interface NamePlaqueGeometryState {
   /** Corpo (silhueta) em mm, centrado em XY, z ∈ [0, bodyThickness]. */
   base: THREE.BufferGeometry | null;
-  /** Relevo em mm, empilhado acima do corpo. */
-  relief: THREE.BufferGeometry | null;
+  /** Camadas do nome, da base (mais larga) para o topo (relevo visível). */
+  reliefs: NamePlaqueReliefLayer[];
   /** Dimensões geradas (mm) — usado no fit check `nome-placa` [V2]. */
   dimensions: Model3DDimensions | null;
   generating: boolean;
@@ -18,15 +25,25 @@ export interface NamePlaqueGeometryState {
 
 const DEBOUNCE_MS = 150;
 
+function meshColorHex(mesh: THREE.Mesh): string {
+  const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+  const color = (material as THREE.MeshStandardMaterial | undefined)?.color;
+  return color ? `#${color.getHexString()}` : "#F9FAFB";
+}
+
+function disposeReliefs(reliefs: NamePlaqueReliefLayer[]) {
+  reliefs.forEach((layer) => layer.geometry.dispose());
+}
+
 /**
- * Geração assíncrona (debounce ~150 ms) do corpo+relevo de um nome no
+ * Geração assíncrona (debounce ~150 ms) do corpo+camadas do nome no
  * estilo chaveiro — a CSG é pesada (canvas 20 px/mm) e não pode travar a UI.
  * `loopEnabled` é forçado false: plaquinha de bolo não tem argola [R6].
  */
 export function useNamePlaqueGeometry(config: KeychainConfig, enabled: boolean): NamePlaqueGeometryState {
   const [state, setState] = useState<NamePlaqueGeometryState>({
     base: null,
-    relief: null,
+    reliefs: [],
     dimensions: null,
     generating: false,
     error: null,
@@ -35,8 +52,8 @@ export function useNamePlaqueGeometry(config: KeychainConfig, enabled: boolean):
   useEffect(() => {
     if (!enabled) {
       setState((prev) =>
-        prev.base || prev.generating || prev.error
-          ? { base: null, relief: null, dimensions: null, generating: false, error: null }
+        prev.base || prev.reliefs.length > 0 || prev.generating || prev.error
+          ? { base: null, reliefs: [], dimensions: null, generating: false, error: null }
           : prev
       );
       return;
@@ -48,18 +65,26 @@ export function useNamePlaqueGeometry(config: KeychainConfig, enabled: boolean):
     const timer = setTimeout(async () => {
       try {
         const model = await generateKeychainModel({ ...config, loopEnabled: false });
+        const base = model.baseMesh.geometry;
+        // Mesmas cores dos materiais da prévia 3D do chaveiro, camada por camada.
+        const reliefs: NamePlaqueReliefLayer[] =
+          model.reliefMeshes.length > 0
+            ? model.reliefMeshes.map((mesh, index) => ({
+                geometry: mesh.geometry,
+                color: meshColorHex(mesh),
+                name: mesh.name || `camada-${index + 1}`,
+              }))
+            : [{ geometry: base, color: meshColorHex(model.baseMesh), name: "relevo" }];
         if (cancelled) {
-          model.baseMesh.geometry.dispose();
-          model.reliefMesh.geometry.dispose();
+          base.dispose();
+          disposeReliefs(reliefs);
           return;
         }
-        const base = model.baseMesh.geometry;
-        const relief = model.reliefMesh.geometry;
         flushSync(() =>
           setState((prev) => {
             prev.base?.dispose();
-            prev.relief?.dispose();
-            return { base, relief, dimensions: model.dimensions, generating: false, error: null };
+            disposeReliefs(prev.reliefs);
+            return { base, reliefs, dimensions: model.dimensions, generating: false, error: null };
           })
         );
       } catch (err) {
@@ -68,10 +93,10 @@ export function useNamePlaqueGeometry(config: KeychainConfig, enabled: boolean):
         flushSync(() =>
           setState((prev) => {
             prev.base?.dispose();
-            prev.relief?.dispose();
+            disposeReliefs(prev.reliefs);
             return {
               base: null,
-              relief: null,
+              reliefs: [],
               dimensions: null,
               generating: false,
               error: "Não foi possível gerar o nome. Verifique a fonte e tente novamente.",

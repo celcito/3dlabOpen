@@ -68,7 +68,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           </h1>
         </div>
         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-          Nome em relevo + argola em 2 cores.
+          Nome em relevo com até 3 camadas + corpo, e argola.
         </p>
       </header>
 
@@ -81,14 +81,25 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="text-[9px] uppercase font-bold text-zinc-600">Nome / Texto</label>
-            <span className="text-[10px] font-mono text-[#632CE5]">{config.text}</span>
+            <span className="text-[10px] font-mono text-[#632CE5]">
+              {config.text.split('\n').length}/3 linhas
+            </span>
           </div>
-          <input
-            type="text"
+          <textarea
             value={config.text}
-            onChange={(e) => onChange({ ...config, text: e.target.value.substring(0, 18) })}
-            placeholder="Nome no chaveiro (ex: Milene)"
-            className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-colors"
+            onChange={(e) =>
+              onChange({
+                ...config,
+                text: e.target.value
+                  .split('\n')
+                  .slice(0, 3)
+                  .map((line) => line.slice(0, 18))
+                  .join('\n'),
+              })
+            }
+            rows={2}
+            placeholder={'Nome no chaveiro (ex: Milene)\nEnter para uma linha abaixo'}
+            className="w-full bg-white border border-[var(--surface-container-high)] p-2 rounded text-[10px] text-[var(--workbench-text)] font-bold focus:outline-none focus:border-[#632CE5] transition-colors resize-none"
           />
         </div>
 
@@ -199,6 +210,18 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           number={config.letterSpacing}
           onChange={(value) => onChange({ ...config, letterSpacing: value })}
         />
+
+        {config.text.includes('\n') && (
+          <RangeControl
+            label="Espaçamento entre Linhas"
+            unit="mm"
+            min="0"
+            max="12"
+            step="0.1"
+            number={config.nameLineSpacing}
+            onChange={(value) => onChange({ ...config, nameLineSpacing: value })}
+          />
+        )}
 
         <RangeControl
           label="Espessura da Fonte"
@@ -378,6 +401,44 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           number={config.reliefThickness}
           onChange={(value) => onChange({ ...config, reliefThickness: value })}
         />
+
+        <div className="space-y-2">
+          <label className="text-[9px] uppercase font-bold text-zinc-600 block">
+            Camadas do Nome
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[1, 2, 3].map((count) => (
+              <button
+                key={count}
+                type="button"
+                onClick={() => onChange({ ...config, nameLayerCount: count })}
+                className={`py-2.5 rounded-lg border text-[9px] font-black uppercase tracking-wide transition-all ${
+                  config.nameLayerCount === count
+                    ? 'border-[#632CE5] text-[#632CE5] bg-[#632CE5]/10'
+                    : 'border-[var(--workbench-line)] text-[var(--on-surface-variant)] hover:border-[#632CE5]/40'
+                }`}
+              >
+                {count} {count === 1 ? 'camada' : 'camadas'}
+              </button>
+            ))}
+          </div>
+          <p className="text-[9px] text-zinc-600 leading-snug">
+            Cada camada extra vira um contorno colorido em volta do nome. Corpo + camadas do nome
+            = até 4 cores.
+          </p>
+        </div>
+
+        {config.nameLayerCount > 1 && (
+          <RangeControl
+            label="Degrau entre Camadas"
+            unit="mm"
+            min="0.2"
+            max="1.5"
+            step="0.1"
+            number={config.nameLayerStep}
+            onChange={(value) => onChange({ ...config, nameLayerStep: value })}
+          />
+        )}
       </section>
 
       {/* 04. Argola */}
@@ -504,11 +565,36 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
             onChange={(color) => onChange({ ...config, baseColor: color })}
           />
           <ColorField
-            label="2. Nome em Relevo"
+            label={config.nameLayerCount > 1 ? `${config.nameLayerCount + 1}. Nome (topo)` : '2. Nome em Relevo'}
             value={config.reliefColor}
             onChange={(color) => onChange({ ...config, reliefColor: color })}
           />
+          {config.nameLayerCount === 2 && (
+            <ColorField
+              label="2. Camada de base do nome"
+              value={config.reliefColor2 ?? '#F9FAFB'}
+              onChange={(color) => onChange({ ...config, reliefColor2: color })}
+            />
+          )}
+          {config.nameLayerCount > 2 && (
+            <>
+              <ColorField
+                label="3. Camada do meio"
+                value={config.reliefColor2 ?? '#F9FAFB'}
+                onChange={(color) => onChange({ ...config, reliefColor2: color })}
+              />
+              <ColorField
+                label="2. Camada de base do nome"
+                value={config.reliefColor3 ?? '#632CE5'}
+                onChange={(color) => onChange({ ...config, reliefColor3: color })}
+              />
+            </>
+          )}
         </div>
+        <p className="text-[9px] text-zinc-600 leading-snug">
+          Ordem das cores, de cima para baixo: nome, camada do meio e camada de base. As camadas
+          extras aparecem como contornos em volta das letras.
+        </p>
 
         <div className="space-y-2">
           <label className="text-[9px] uppercase font-bold text-zinc-600 block">

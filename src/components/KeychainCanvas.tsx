@@ -92,13 +92,17 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
     setIsHoveringObject(true);
 
     const partDisplayName =
-      hitMesh.name === '1_Corpo_do_Chaveiro' ? 'Corpo do Chaveiro' : 'Nome em Relevo';
+      hitMesh.name === '1_Corpo_do_Chaveiro'
+        ? 'Corpo do Chaveiro'
+        : hitMesh.name.endsWith('Nome_em_Relevo')
+          ? 'Nome em Relevo'
+          : 'Camada do Nome';
     setHoveredPartName(partDisplayName);
 
     if (currentModelRef.current) {
       const allMeshes = [
         currentModelRef.current.baseMesh,
-        currentModelRef.current.reliefMesh,
+        ...currentModelRef.current.reliefMeshes,
       ].filter(Boolean);
 
       allMeshes.forEach((mesh) => {
@@ -273,7 +277,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
         raycasterRef.current.setFromCamera(new THREE.Vector2(mouseX, mouseY), cameraRef.current);
         const targetMeshes = [
           currentModelRef.current.baseMesh,
-          currentModelRef.current.reliefMesh,
+          ...currentModelRef.current.reliefMeshes,
         ].filter(Boolean);
 
         const intersects = raycasterRef.current.intersectObjects(targetMeshes, false);
@@ -361,7 +365,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
 
         // Anexa wireframe overlays
         attachWireframeOverlay(model.baseMesh);
-        attachWireframeOverlay(model.reliefMesh);
+        model.reliefMeshes.forEach((mesh) => attachWireframeOverlay(mesh));
 
         // Centraliza sobre a mesa de impressão
         model.baseMesh.geometry.computeBoundingBox();
@@ -372,12 +376,12 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
         // Alinha na base Z=0
         const minZ = bbox.min.z;
         model.baseMesh.position.set(-center.x, -center.y, -minZ);
-        model.reliefMesh.position.set(-center.x, -center.y, -minZ);
+        model.reliefMeshes.forEach((mesh) => mesh.position.set(-center.x, -center.y, -minZ));
 
         // Deita na mesa de impressão 3D plana (Z do fatiador apontando para cima Y na cena)
         group.rotation.x = -Math.PI / 2;
         group.add(model.baseMesh);
-        group.add(model.reliefMesh);
+        model.reliefMeshes.forEach((mesh) => group.add(mesh));
 
         setIsGenerating(false);
       } catch (err) {
@@ -407,6 +411,10 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
     config.reliefThickness,
     config.baseColor,
     config.reliefColor,
+    config.reliefColor2,
+    config.reliefColor3,
+    config.nameLayerCount,
+    config.nameLayerStep,
     config.loopEnabled,
     config.loopSide,
     config.loopHoleDiameter,
@@ -563,7 +571,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--on-surface-variant)]">Nome:</span>
           <span className="font-mono font-bold text-[var(--workbench-text)]">
-            {config.text || 'Nome'}
+            {config.text.replace(/\n/g, ' · ') || 'Nome'}
           </span>
         </div>
         </div>

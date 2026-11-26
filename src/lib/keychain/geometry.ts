@@ -269,7 +269,13 @@ function drawTopLoopTab(
 }
 
 export async function generateKeychainModel(config: KeychainConfig): Promise<GeneratedKeychain> {
-  const text = config.text.trim() || 'Nome';
+  // Pular linha empilha até 3 linhas (nome + textos abaixo); linhas vazias são ignoradas.
+  const textLines = (config.text.trim() || 'Nome')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(0, 3);
+  if (textLines.length === 0) textLines.push('Nome');
   const targetFontHeightPx = Math.max(10, config.letterHeight) * pxPerMm;
 
   try {
@@ -288,26 +294,52 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
 
   // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
   const isCursiveOrDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
-  const fontWeight = isCursiveOrDisplay ? 'normal' : 'bold';
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  // "Espessura da Fonte" até 1x (padrão incluso) usa o peso regular (traço fino, melhor
+  // leitura); acima de 1x, bold. O Google Fonts só carrega 400 e 700 — pesos
+  // intermediários seriam sintetizados e o resultado não seria previsível.
+  const fontWeight = isCursiveOrDisplay || fontScale <= 1 ? 'normal' : 'bold';
   const fontStyle = `${fontWeight} ${targetFontHeightPx}px "${config.fontFamily}", sans-serif`;
   mctx.font = fontStyle;
 
   const letterSpacingPx = Math.max(0.0, config.letterSpacing ?? 1.8) * pxPerMm;
-  let textWidthPx = 0;
-  const charOffsets: number[] = [];
-  for (let i = 0; i < text.length; i++) {
-    charOffsets.push(textWidthPx);
-    textWidthPx += mctx.measureText(text[i]).width + letterSpacingPx;
-  }
-  if (text.length > 0) textWidthPx -= letterSpacingPx;
+  const textLinesLayout = textLines.map((line) => {
+    const charOffsets: number[] = [];
+    let widthPx = 0;
+    for (let i = 0; i < line.length; i++) {
+      charOffsets.push(widthPx);
+      widthPx += mctx.measureText(line[i]).width + letterSpacingPx;
+    }
+    if (line.length > 0) widthPx -= letterSpacingPx;
+    return { text: line, charOffsets, widthPx };
+  });
+  const textWidthPx = Math.max(...textLinesLayout.map((line) => line.widthPx));
 
   const textHeightPx = targetFontHeightPx;
+  const lineSpacingMm = Math.min(12, Math.max(0, config.nameLineSpacing ?? 2.8));
+  const linePitchPx = textHeightPx + lineSpacingMm * pxPerMm;
+  const textBlockHeightPx = (textLinesLayout.length - 1) * linePitchPx + textHeightPx;
   // Borda da base = outlineSize puro; "Espessura da Fonte" engorda só as letras em relevo.
   const outlinePx = Math.max(1.5, config.outlineSize) * pxPerMm;
-  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
   // SEGA: os filetes internos do logo têm 0,25–0,65 mm e estão abertos nas pontas —
   // qualquer dilatação os fecha (o punchMask só restaura contadores fechados). Sem dilatação.
   const reliefDilationMm = config.fontFamily === 'SEGA LOGO FONT' ? 0 : (fontScale - 0.5) * 0.4;
+
+  // Camadas do nome: a camada de base é a cópia mais larga e a de topo é o relevo atual.
+  // Assim cada cor extra aparece como um contorno em volta da letra, sem recorte CSG.
+  const nameLayerCount = Math.min(3, Math.max(1, Math.round(config.nameLayerCount ?? 1)));
+  const requestedLayerStepMm = Math.min(1.5, Math.max(0.2, config.nameLayerStep ?? 0.6));
+  // O contorno extra não pode passar da borda do corpo.
+  const maxExtraDilationMm = Math.max(0, config.outlineSize - reliefDilationMm - 0.3);
+  const layerStepMm =
+    nameLayerCount > 1
+      ? Math.min(requestedLayerStepMm, maxExtraDilationMm / (nameLayerCount - 1))
+      : 0;
+  const nameLayerColors = [
+    config.reliefColor3 ?? '#632CE5',
+    config.reliefColor2 ?? '#F9FAFB',
+    config.reliefColor,
+  ].slice(3 - nameLayerCount);
 
   let iconImage: CanvasImageSource | null = null;
   let iconNaturalWidth = 256;
@@ -423,7 +455,7 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     ) + 28
   );
   const canvasWidth = Math.ceil(totalContentWidthPx + paddingPx * 2);
-  const canvasHeight = Math.ceil(contentHeightPx + paddingPx * 2);
+  const canvasHeight = Math.ceil(textBlockHeightPx + paddingPx * 2);
 
   const drawCanvas = document.createElement('canvas');
   drawCanvas.width = canvasWidth;
@@ -435,19 +467,23 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const centerY = canvasHeight / 2;
   const contentStartXPx = centerX - totalContentWidthPx / 2;
   const leftBlockPx = showIconLeft ? iconBlockGapPx + iconBlockWidthPx : 0;
-  const textStartXPx = tagLayout
-    ? centerX - tagInkWidthPx / 2 - tagInkLeftPx
-    : contentStartXPx + leftBlockPx;
-  // Na tag o nome é centralizado pela tinta das letras, não pela caixa da fonte.
-  const textBaselineY = tagLayout ? centerY + tagInkCenterOffsetPx : centerY + textHeightPx * 0.32;
-  const contentCenterYPx = textBaselineY - textHeightPx * 0.28;
+  const textStartXPx = contentStartXPx + leftBlockPx;
+  // Cada linha é centralizada dentro do bloco de texto; o ícone acompanha o bloco todo.
+  const lineStartXPx = (line: { widthPx: number }) => textStartXPx + (textWidthPx - line.widthPx) / 2;
+  const lineBaselineY = (index: number) =>
+    centerY + textHeightPx * 0.32 + (index - (textLinesLayout.length - 1) / 2) * linePitchPx;
+  const contentCenterYPx = centerY + textHeightPx * 0.32 - textHeightPx * 0.28;
   // Fim real da tinta do último caractere (sem side bearing) — sem isso o gap
   // ganha a entreletra e o símbolo/ícone acaba descolado do corpo.
-  const lastCharMeasure = text.length > 0 ? mctx.measureText(text[text.length - 1]) : null;
-  const lastCharInkRightPx = lastCharMeasure
-    ? charOffsets[text.length - 1] + Math.max(lastCharMeasure.actualBoundingBoxRight ?? lastCharMeasure.width, 0)
-    : textWidthPx;
-  const textInkEndPx = textStartXPx + lastCharInkRightPx;
+  const textInkRightPx = textLinesLayout.reduce((max, line) => {
+    if (line.text.length === 0) return max;
+    const measure = mctx.measureText(line.text[line.text.length - 1]);
+    const ink =
+      line.charOffsets[line.charOffsets.length - 1] +
+      Math.max(measure.actualBoundingBoxRight ?? measure.width, 0);
+    return Math.max(max, lineStartXPx(line) - textStartXPx + ink);
+  }, textWidthPx);
+  const textInkEndPx = textStartXPx + textInkRightPx;
   const iconLeftCenterX = contentStartXPx + iconBlockWidthPx / 2;
   const iconRightCenterX = textInkEndPx + iconBlockGapPx + iconBlockWidthPx / 2;
   // Fronteira entre a peça do ícone (início) e a do nome — delimita onde cada argola pode nascer.
@@ -481,9 +517,13 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     targetCtx.font = fontStyle;
     targetCtx.textBaseline = 'alphabetic';
     targetCtx.textAlign = 'left';
-    for (let i = 0; i < text.length; i++) {
-      targetCtx.fillText(text[i], textStartXPx + charOffsets[i], textBaselineY);
-    }
+    textLinesLayout.forEach((line, lineIndex) => {
+      const startX = lineStartXPx(line);
+      const baselineY = lineBaselineY(lineIndex);
+      for (let i = 0; i < line.text.length; i++) {
+        targetCtx.fillText(line.text[i], startX + line.charOffsets[i], baselineY);
+      }
+    });
   };
 
   const drawIcon = (targetCtx: CanvasRenderingContext2D, x: number, y: number) => {
@@ -524,34 +564,26 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   ctx.fillStyle = '#000000';
   ctx.strokeStyle = '#000000';
-  if (tagLayout) {
-    drawSymbolSized(
-      ctx,
-      tagShape === 'bone' ? 'tagBone' : 'tagFish',
-      centerX,
-      centerY,
-      tagLayout.w,
-      tagLayout.h,
-      0
-    );
-  } else {
-    // Contorno da base acompanha o desenho da fonte: quina em bissetriz (paralela ao
-    // glifo) em vez de arco, que transformava tudo em "nuvem". miterLimit corta as
-    // pontas agudas demais (bevel) para a borda não espetar.
-    ctx.lineJoin = 'miter';
-    ctx.miterLimit = 3;
-    ctx.lineCap = 'round';
-    ctx.lineWidth = outlinePx * 2;
-    ctx.font = fontStyle;
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-    for (let i = 0; i < text.length; i++) {
-      const cx = textStartXPx + charOffsets[i];
-      ctx.strokeText(text[i], cx, textBaselineY);
-      ctx.fillText(text[i], cx, textBaselineY);
+  // Contorno da base acompanha o desenho da fonte: quina em bissetriz (paralela ao
+  // glifo) em vez de arco, que transformava tudo em "nuvem". miterLimit corta as
+  // pontas agudas demais (bevel) para a borda não espetar.
+  ctx.lineJoin = 'miter';
+  ctx.miterLimit = 3;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = outlinePx * 2;
+  ctx.font = fontStyle;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  textLinesLayout.forEach((line, lineIndex) => {
+    const startX = lineStartXPx(line);
+    const baselineY = lineBaselineY(lineIndex);
+    for (let i = 0; i < line.text.length; i++) {
+      const cx = startX + line.charOffsets[i];
+      ctx.strokeText(line.text[i], cx, baselineY);
+      ctx.fillText(line.text[i], cx, baselineY);
     }
-    drawIcons(ctx, outlinePx);
-  }
+  });
+  drawIcons(ctx, outlinePx);
 
   const baseImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
   // Na tag o corpo não tem letra: os contadores do nome só valem para o relevo.
@@ -583,39 +615,53 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   );
   const baseShapes = buildThreeShapes(baseContours.outer, baseContours.holes);
 
-  // 4) Relevo: texto com dilatação controlada pela "Espessura da Fonte" + ícone sem dilatação.
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  ctx.fillStyle = '#000000';
-  ctx.strokeStyle = '#000000';
-  // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
-  const reliefStroke = reliefDilationMm > 0.01;
-  if (reliefStroke) ctx.lineWidth = reliefDilationMm * 2 * pxPerMm;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.font = fontStyle;
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-  for (let i = 0; i < text.length; i++) {
-    const cx = textStartXPx + charOffsets[i];
-    if (reliefStroke) ctx.strokeText(text[i], cx, textBaselineY);
-    ctx.fillText(text[i], cx, textBaselineY);
+  // 4) Camadas do nome: cada camada é o texto com uma dilatação menor, da base
+  // (mais larga, cor de fundo) para o topo (o relevo atual, cor do nome).
+  const reliefLayers: { imgData: ImageData; shapes: THREE.Shape[]; color: string }[] = [];
+  for (let layerIndex = 0; layerIndex < nameLayerCount; layerIndex++) {
+    const dilationMm = reliefDilationMm + layerStepMm * (nameLayerCount - 1 - layerIndex);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle = '#000000';
+    ctx.strokeStyle = '#000000';
+    // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
+    const reliefStroke = dilationMm > 0.01;
+    if (reliefStroke) ctx.lineWidth = dilationMm * 2 * pxPerMm;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.font = fontStyle;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    textLinesLayout.forEach((line, lineIndex) => {
+      const startX = lineStartXPx(line);
+      const baselineY = lineBaselineY(lineIndex);
+      for (let i = 0; i < line.text.length; i++) {
+        const cx = startX + line.charOffsets[i];
+        if (reliefStroke) ctx.strokeText(line.text[i], cx, baselineY);
+        ctx.fillText(line.text[i], cx, baselineY);
+      }
+    });
+    drawIcons(ctx, reliefStroke ? dilationMm * pxPerMm : 0);
+
+    const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    punchMask(imgData, counterMask);
+    const contours = extractContoursFromImageData(
+      imgData,
+      mmPerPixel,
+      canvasWidth / 2,
+      canvasHeight / 2,
+      0.05,
+      { resimplifyMm: 0.02 }
+    );
+    reliefLayers.push({
+      imgData,
+      shapes: buildThreeShapes(contours.outer, contours.holes),
+      color: nameLayerColors[layerIndex],
+    });
   }
-  drawIcons(ctx, reliefStroke ? reliefDilationMm * pxPerMm : 0);
 
-  const reliefImgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-  punchMask(reliefImgData, counterMask);
-  const reliefContours = extractContoursFromImageData(
-    reliefImgData,
-    mmPerPixel,
-    canvasWidth / 2,
-    canvasHeight / 2,
-    0.05,
-    { resimplifyMm: 0.02 }
-  );
-  const reliefShapes = buildThreeShapes(reliefContours.outer, reliefContours.holes);
-
-  const safeBaseShapes = baseShapes.length > 0 ? baseShapes : reliefShapes;
-  const safeReliefShapes = reliefShapes.length > 0 ? reliefShapes : safeBaseShapes;
+  const fallbackReliefShapes =
+    reliefLayers.find((layer) => layer.shapes.length > 0)?.shapes ?? [];
+  const safeBaseShapes = baseShapes.length > 0 ? baseShapes : fallbackReliefShapes;
 
   const bodyThickness = Math.max(1.5, config.bodyThickness);
   const reliefThickness = Math.max(0.8, config.reliefThickness);
@@ -636,39 +682,60 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   baseGeom.translate(0, 0, baseBevelThickness);
   const bodyTopZ = bodyThickness + 2 * baseBevelThickness;
 
-  // Relevo: a altura total (topo) é a mesma de antes, mas o fundo é reto e começa
-  // exatamente no topo do corpo — sem a parte enterrada que sobrepunha as duas cores.
-  // Mantém o topo em bodyThickness + baseBevelThickness + reliefThickness.
-  const reliefDepth = Math.max(0.2, reliefThickness - baseBevelThickness);
-  const reliefGeom = new THREE.ExtrudeGeometry(safeReliefShapes, {
-    depth: reliefDepth,
-    bevelEnabled: true,
-    bevelThickness: reliefBevelThickness,
-    bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
-    bevelSegments: 4,
+  // Cada camada do nome ocupa uma fatia da espessura do relevo, empilhada a partir do topo do corpo.
+  const layerDepth = reliefThickness / nameLayerCount;
+  // flattenBottomBevel() deixa o fundo reto em z = 0, então a peça mede
+  // layerExtrudeDepth + bevelThickness e precisa caber exatamente no passo
+  // layerDepth; um piso fixo no depth empurrava a camada para dentro da de cima.
+  const layerBevelThickness = Math.min(reliefBevelThickness, layerDepth * 0.5);
+  const layerExtrudeDepth = layerDepth - layerBevelThickness;
+  const reliefGeoms = reliefLayers.map((layer, layerIndex) => {
+    const shapes = layer.shapes.length > 0 ? layer.shapes : safeBaseShapes;
+    const geom = new THREE.ExtrudeGeometry(shapes, {
+      depth: layerExtrudeDepth,
+      bevelEnabled: true,
+      bevelThickness: layerBevelThickness,
+      bevelSize: Math.min(0.25, avgLetterHeight * 0.017),
+      bevelSegments: 4,
+    });
+    flattenBottomBevel(geom);
+    geom.translate(0, 0, bodyTopZ + layerIndex * layerDepth);
+    return geom;
   });
-  flattenBottomBevel(reliefGeom);
-  reliefGeom.translate(0, 0, bodyTopZ);
+  const layerNames = reliefLayers.map((_, layerIndex) =>
+    layerIndex === nameLayerCount - 1
+      ? `${layerIndex + 2}_Nome_em_Relevo`
+      : `${layerIndex + 2}_Camada_${layerIndex + 1}_do_Nome`
+  );
 
   baseGeom.computeBoundingBox();
   const bbBase = baseGeom.boundingBox || new THREE.Box3();
   const midX = (bbBase.min.x + bbBase.max.x) / 2;
   const midY = (bbBase.min.y + bbBase.max.y) / 2;
   baseGeom.translate(-midX, -midY, 0);
-  reliefGeom.translate(-midX, -midY, 0);
+  reliefGeoms.forEach((geom) => {
+    geom.translate(-midX, -midY, 0);
+    geom.computeBoundingBox();
+  });
   baseGeom.computeBoundingBox();
-  reliefGeom.computeBoundingBox();
 
-  const totalBox = (baseGeom.boundingBox || new THREE.Box3()).clone().union(reliefGeom.boundingBox || new THREE.Box3());
+  const totalBox = (baseGeom.boundingBox || new THREE.Box3()).clone();
+  reliefGeoms.forEach((geom) => {
+    if (geom.boundingBox) totalBox.union(geom.boundingBox);
+  });
   const size = new THREE.Vector3();
   totalBox.getSize(size);
 
   const mm2PerPx = mmPerPixel * mmPerPixel;
   const baseAreaMm2 = countSolidPixels(baseAfterLoop.data) * mm2PerPx;
-  const reliefAreaMm2 = countSolidPixels(reliefImgData.data) * mm2PerPx;
+  const reliefVolumeMm3 =
+    reliefLayers.reduce(
+      (sum, layer) => sum + countSolidPixels(layer.imgData.data) * mm2PerPx,
+      0
+    ) * layerDepth;
   const volumeCm3 = Math.max(
     1.0,
-    Number(((baseAreaMm2 * bodyThickness + reliefAreaMm2 * reliefThickness) / 1000).toFixed(1))
+    Number(((baseAreaMm2 * bodyThickness + reliefVolumeMm3) / 1000).toFixed(1))
   );
   const weightGrams = Number((volumeCm3 * 1.24).toFixed(1));
   const printTimeMinutes = Math.max(12, Math.round(weightGrams * 2.8 + 8));
@@ -694,17 +761,20 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   baseMesh.castShadow = true;
   baseMesh.receiveShadow = true;
 
-  const reliefMesh = new THREE.Mesh(
-    reliefGeom,
-    new THREE.MeshStandardMaterial({
-      color: new THREE.Color(config.reliefColor),
-      roughness: 0.28,
-      metalness: 0.12,
-    })
-  );
-  reliefMesh.name = '2_Nome_em_Relevo';
-  reliefMesh.castShadow = true;
-  reliefMesh.receiveShadow = true;
+  const reliefMeshes = reliefGeoms.map((geom, layerIndex) => {
+    const mesh = new THREE.Mesh(
+      geom,
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(reliefLayers[layerIndex].color),
+        roughness: 0.28,
+        metalness: 0.12,
+      })
+    );
+    mesh.name = layerNames[layerIndex];
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  });
 
-  return { baseMesh, reliefMesh, dimensions };
+  return { baseMesh, reliefMeshes, dimensions };
 }

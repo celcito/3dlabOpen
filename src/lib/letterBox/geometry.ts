@@ -21,7 +21,11 @@ export async function generateLetterBoxModel(
 
   // SEGA LOGO FONT tem um único peso; bold sintético engrossa os traços e fecha os filetes internos do logo.
   const isSingleWeightDisplay = ['Pacifico', 'Lobster', 'Dancing Script', 'Chewy', 'Bangers', 'SEGA LOGO FONT'].includes(config.fontFamily);
-  const fontWeight = isSingleWeightDisplay ? 'normal' : 'bold';
+  const fontScale = Math.min(2, Math.max(0.5, config.fontWeightScale || 1));
+  // "Espessura da Fonte" até 1x (padrão incluso) usa o peso regular (traço fino, melhor
+  // leitura); acima de 1x, bold. O Google Fonts só carrega 400 e 700 — pesos
+  // intermediários seriam sintetizados e o resultado não seria previsível.
+  const fontWeight = isSingleWeightDisplay || fontScale <= 1 ? 'normal' : 'bold';
 
   try {
     if (!config.customFontName) await ensureGoogleFont(config.fontFamily);

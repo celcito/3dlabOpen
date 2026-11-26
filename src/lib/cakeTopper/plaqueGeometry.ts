@@ -256,7 +256,9 @@ async function buildNomeParts(plaque: Plaque): Promise<PlaquePart[]> {
   const nameConfig: KeychainConfig = { ...plaque.name, loopEnabled: false };
   const model = await generateKeychainModel(nameConfig);
   const baseGeom = model.baseMesh.geometry;
-  const reliefGeom = model.reliefMesh.geometry;
+  // Todas as camadas do nome, cada uma com a cor do seu material (mesma prévia do chaveiro).
+  const reliefMeshes =
+    model.reliefMeshes.length > 0 ? model.reliefMeshes : [model.baseMesh];
 
   baseGeom.computeBoundingBox();
   const baseBox = baseGeom.boundingBox || new THREE.Box3();
@@ -286,14 +288,22 @@ async function buildNomeParts(plaque: Plaque): Promise<PlaquePart[]> {
     parts.push({ geoms: [plate.geometry], name: "placa", color: topper.plateColor });
     // Bloco do nome sobe para cima da placa (z ∈ [plateThickness …]).
     baseGeom.translate(0, 0, topper.plateThickness);
-    reliefGeom.translate(0, 0, topper.plateThickness);
+    reliefMeshes.forEach((mesh) => mesh.geometry.translate(0, 0, topper.plateThickness));
     anchorY = -topper.plateHeight / 2;
   } else {
     anchorY = baseBox.min.y;
   }
 
   parts.push({ geoms: [baseGeom], name: "corpo", color: nameConfig.baseColor });
-  parts.push({ geoms: [reliefGeom], name: "relevo", color: nameConfig.reliefColor });
+  reliefMeshes.forEach((mesh, index) => {
+    const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+    const color = (material as THREE.MeshStandardMaterial | undefined)?.color;
+    parts.push({
+      geoms: [mesh.geometry],
+      name: reliefMeshes.length > 1 ? `relevo-${index + 1}` : "relevo",
+      color: color ? `#${color.getHexString()}` : nameConfig.reliefColor,
+    });
+  });
 
   const stickGeoms = buildStickGeometries(plaque.topper, anchorY, plateShape);
   if (stickGeoms.length > 0) {
