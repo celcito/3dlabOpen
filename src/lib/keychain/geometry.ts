@@ -411,16 +411,35 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   const TAG_TOP = { bone: 0.35, fish: 0.32 } as const;
   const tagMarginPx = Math.max(2 * pxPerMm, outlinePx);
   // Na tag o nome é dimensionado pela tinta real das letras, não pelo avanço da fonte.
-  const tagInk = tagShape
-    ? measureTextInk(
+  // Com pulo de linha, todas as linhas entram na medição (cada uma com a sua centralização).
+  const tagInk = (() => {
+    if (!tagShape) return null;
+    const referenceBaseline = textHeightPx;
+    const probeHeight = textHeightPx * 2 + textBlockHeightPx;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+    textLinesLayout.forEach((line, lineIndex) => {
+      const centerOffset = (textWidthPx - line.widthPx) / 2;
+      const baseline = referenceBaseline + lineIndex * linePitchPx;
+      const ink = measureTextInk(
         fontStyle,
-        text,
-        charOffsets,
+        line.text,
+        line.charOffsets.map((offset) => offset + centerOffset),
         textWidthPx + textHeightPx * 2,
-        textHeightPx * 2,
-        textHeightPx
-      )
-    : null;
+        probeHeight,
+        baseline
+      );
+      if (!ink) return;
+      minX = Math.min(minX, ink.minX);
+      maxX = Math.max(maxX, ink.maxX);
+      top = Math.min(top, baseline - ink.ascent);
+      bottom = Math.max(bottom, baseline + ink.descent);
+    });
+    if (!Number.isFinite(minX)) return null;
+    return { minX, maxX, ascent: referenceBaseline - top, descent: bottom - referenceBaseline };
+  })();
   const tagInkLeftPx = tagInk ? tagInk.minX - 2 : 0;
   const tagInkWidthPx = tagInk ? tagInk.maxX - tagInk.minX : textWidthPx;
   const tagInkHeightPx = tagInk ? tagInk.ascent + tagInk.descent : textHeightPx * 0.74;
@@ -617,6 +636,63 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
 
   // 4) Camadas do nome: cada camada é o texto com uma dilatação menor, da base
   // (mais larga, cor de fundo) para o topo (o relevo atual, cor do nome).
+  //
+  // Silhueta mais larga de cada linha do nome (camada de base do relevo). Serve de
+  // recorte para a linha de cima: onde ela encosta na de baixo, o contorno colorido
+  // da de cima desaparece e sobra só o da de baixo.
+  const lineFootprints: HTMLCanvasElement[] = [];
+  if (textLinesLayout.length > 1) {
+    const widestDilationPx = (reliefDilationMm + layerStepMm * (nameLayerCount - 1)) * pxPerMm;
+    textLinesLayout.forEach((line, lineIndex) => {
+      const footprint = document.createElement('canvas');
+      footprint.width = canvasWidth;
+      footprint.height = canvasHeight;
+      const fctx = footprint.getContext('2d');
+      if (!fctx) return;
+      fctx.fillStyle = '#000000';
+      fctx.strokeStyle = '#000000';
+      fctx.lineJoin = 'round';
+      fctx.lineCap = 'round';
+      if (widestDilationPx > 0.01) fctx.lineWidth = widestDilationPx * 2;
+      fctx.font = fontStyle;
+      fctx.textBaseline = 'alphabetic';
+      fctx.textAlign = 'left';
+      const startX = lineStartXPx(line);
+      const baselineY = lineBaselineY(lineIndex);
+      for (let i = 0; i < line.text.length; i++) {
+        const cx = startX + line.charOffsets[i];
+        if (widestDilationPx > 0.01) fctx.strokeText(line.text[i], cx, baselineY);
+        fctx.fillText(line.text[i], cx, baselineY);
+      }
+      lineFootprints.push(footprint);
+    });
+  }
+
+  const lineScratch = document.createElement('canvas');
+  lineScratch.width = canvasWidth;
+  lineScratch.height = canvasHeight;
+  const lineScratchCtx = lineScratch.getContext('2d');
+  // Desenha uma única linha do nome com a dilatação da camada atual.
+  const drawReliefLine = (targetCtx: CanvasRenderingContext2D, lineIndex: number, dilationPx: number) => {
+    const line = textLinesLayout[lineIndex];
+    const dilated = dilationPx > 0.01;
+    targetCtx.fillStyle = '#000000';
+    targetCtx.strokeStyle = '#000000';
+    targetCtx.lineJoin = 'round';
+    targetCtx.lineCap = 'round';
+    if (dilated) targetCtx.lineWidth = dilationPx * 2;
+    targetCtx.font = fontStyle;
+    targetCtx.textBaseline = 'alphabetic';
+    targetCtx.textAlign = 'left';
+    const startX = lineStartXPx(line);
+    const baselineY = lineBaselineY(lineIndex);
+    for (let i = 0; i < line.text.length; i++) {
+      const cx = startX + line.charOffsets[i];
+      if (dilated) targetCtx.strokeText(line.text[i], cx, baselineY);
+      targetCtx.fillText(line.text[i], cx, baselineY);
+    }
+  };
+
   const reliefLayers: { imgData: ImageData; shapes: THREE.Shape[]; color: string }[] = [];
   for (let layerIndex = 0; layerIndex < nameLayerCount; layerIndex++) {
     const dilationMm = reliefDilationMm + layerStepMm * (nameLayerCount - 1 - layerIndex);
@@ -625,21 +701,26 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     ctx.strokeStyle = '#000000';
     // lineWidth 0 é inválido no canvas (mantém o valor anterior da base); sem dilação, só o fill.
     const reliefStroke = dilationMm > 0.01;
-    if (reliefStroke) ctx.lineWidth = dilationMm * 2 * pxPerMm;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.font = fontStyle;
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-    textLinesLayout.forEach((line, lineIndex) => {
-      const startX = lineStartXPx(line);
-      const baselineY = lineBaselineY(lineIndex);
-      for (let i = 0; i < line.text.length; i++) {
-        const cx = startX + line.charOffsets[i];
-        if (reliefStroke) ctx.strokeText(line.text[i], cx, baselineY);
-        ctx.fillText(line.text[i], cx, baselineY);
+    const reliefDilationPx = dilationMm * pxPerMm;
+    // Da linha de baixo para a de cima: a de cima é recortada pela silhueta das de
+    // baixo, então no encontro entre as linhas só existe o contorno de baixo.
+    const clipUpperLines =
+      lineScratchCtx !== null && lineFootprints.length === textLinesLayout.length;
+    for (let lineIndex = textLinesLayout.length - 1; lineIndex >= 0; lineIndex--) {
+      if (!clipUpperLines || !lineScratchCtx || lineIndex === textLinesLayout.length - 1) {
+        drawReliefLine(ctx, lineIndex, reliefDilationPx);
+        continue;
       }
-    });
+      lineScratchCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+      drawReliefLine(lineScratchCtx, lineIndex, reliefDilationPx);
+      lineScratchCtx.save();
+      lineScratchCtx.globalCompositeOperation = 'destination-out';
+      for (let lower = lineIndex + 1; lower < textLinesLayout.length; lower++) {
+        lineScratchCtx.drawImage(lineFootprints[lower], 0, 0);
+      }
+      lineScratchCtx.restore();
+      ctx.drawImage(lineScratch, 0, 0);
+    }
     drawIcons(ctx, reliefStroke ? dilationMm * pxPerMm : 0);
 
     const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
