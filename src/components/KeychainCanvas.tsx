@@ -415,6 +415,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
     config.reliefColor3,
     config.nameLayerCount,
     config.nameLayerStep,
+    config.nameLineSpacing,
     config.loopEnabled,
     config.loopSide,
     config.loopHoleDiameter,
