@@ -1954,7 +1954,7 @@ function NamePanel({ nameConfig, onChange, nameGeometry }: {
       {slider("Tamanho da Letra", `${nameConfig.letterHeight}mm`, "10", "28", "1", "letterHeight")}
       {slider("Espaçamento entre Letras", `${nameConfig.letterSpacing}mm`, "0", "2.5", "0.1", "letterSpacing")}
       {nameConfig.text.includes("\n") &&
-        slider("Espaçamento entre Linhas", `${nameConfig.nameLineSpacing}mm`, "0", "12", "0.1", "nameLineSpacing")}
+        slider("Espaçamento entre Linhas", `${nameConfig.nameLineSpacing}mm`, "-12", "12", "0.1", "nameLineSpacing")}
       {slider("Espessura da Fonte", `${nameConfig.fontWeightScale}x`, "0.5", "2", "0.1", "fontWeightScale")}
       {slider("Contorno", `${nameConfig.outlineSize}mm`, "1", "6", "0.2", "outlineSize")}
       {slider("Corpo", `${nameConfig.bodyThickness}mm`, "1.5", "6", "0.1", "bodyThickness")}

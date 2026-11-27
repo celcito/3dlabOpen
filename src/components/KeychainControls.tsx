@@ -215,7 +215,7 @@ export const KeychainControls: React.FC<KeychainControlsProps> = ({
           <RangeControl
             label="Espaçamento entre Linhas"
             unit="mm"
-            min="0"
+            min="-12"
             max="12"
             step="0.1"
             number={config.nameLineSpacing}
