@@ -52,4 +52,6 @@ export interface GeneratedKeychain {
   /** Camadas do nome, da base (mais larga) para o topo (relevo visível). */
   reliefMeshes: import('three').Mesh[];
   dimensions: import('./pencilTopper').Model3DDimensions;
+  /** Canvases rasterizados que geraram a malha, do corpo para o topo do nome. */
+  layerPreviews: { label: string; color: string; canvas: HTMLCanvasElement }[];
 }

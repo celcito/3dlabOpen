@@ -675,6 +675,17 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     });
   }
 
+  // O ícone é desenhado depois das linhas, então o relevo dele cobria o contorno da
+  // linha de baixo. Ele é recortado pelas silhuetas das linhas abaixo do seu centro —
+  // no encontro sobrevive só o contorno da linha de baixo.
+  const iconClipLineIndexes: number[] = [];
+  if (lineFootprints.length === textLinesLayout.length) {
+    const blockCenterBaselineY = centerY + textHeightPx * 0.32;
+    textLinesLayout.forEach((_, lineIndex) => {
+      if (lineBaselineY(lineIndex) > blockCenterBaselineY) iconClipLineIndexes.push(lineIndex);
+    });
+  }
+
   const lineScratch = document.createElement('canvas');
   lineScratch.width = canvasWidth;
   lineScratch.height = canvasHeight;
@@ -728,7 +739,20 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
       lineScratchCtx.restore();
       ctx.drawImage(lineScratch, 0, 0);
     }
-    drawIcons(ctx, reliefStroke ? dilationMm * pxPerMm : 0);
+    const iconDilationPx = reliefStroke ? dilationMm * pxPerMm : 0;
+    if (iconClipLineIndexes.length > 0 && lineScratchCtx) {
+      lineScratchCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+      drawIcons(lineScratchCtx, iconDilationPx);
+      lineScratchCtx.save();
+      lineScratchCtx.globalCompositeOperation = 'destination-out';
+      iconClipLineIndexes.forEach((lineIndex) => {
+        lineScratchCtx.drawImage(lineFootprints[lineIndex], 0, 0);
+      });
+      lineScratchCtx.restore();
+      ctx.drawImage(lineScratch, 0, 0);
+    } else {
+      drawIcons(ctx, iconDilationPx);
+    }
 
     const imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
     punchMask(imgData, counterMask);
@@ -746,6 +770,27 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
       color: nameLayerColors[layerIndex],
     });
   }
+
+  // Prévia 2D: os mesmos canvases de onde saem os contornos da malha, para conferir o
+  // encontro das linhas no app sem exportar.
+  const makeLayerPreview = (imgData: ImageData, label: string, color: string) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = imgData.width;
+    canvas.height = imgData.height;
+    const previewCtx = canvas.getContext('2d');
+    if (previewCtx) previewCtx.putImageData(imgData, 0, 0);
+    return { label, color, canvas };
+  };
+  const layerPreviews = [
+    makeLayerPreview(baseAfterLoop, 'Corpo do Chaveiro', config.baseColor),
+    ...reliefLayers.map((layer, layerIndex) =>
+      makeLayerPreview(
+        layer.imgData,
+        layerIndex === nameLayerCount - 1 ? 'Nome em Relevo' : `Camada ${layerIndex + 1} do Nome`,
+        layer.color
+      )
+    ),
+  ];
 
   const fallbackReliefShapes =
     reliefLayers.find((layer) => layer.shapes.length > 0)?.shapes ?? [];
@@ -864,5 +909,5 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
     return mesh;
   });
 
-  return { baseMesh, reliefMeshes, dimensions };
+  return { baseMesh, reliefMeshes, dimensions, layerPreviews };
 }

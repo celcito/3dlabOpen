@@ -9,7 +9,9 @@ import {
   Maximize2,
   Camera,
   MousePointer,
-  CheckCircle2
+  CheckCircle2,
+  Layers,
+  X
 } from 'lucide-react';
 
 interface KeychainCanvasProps {
@@ -17,6 +19,26 @@ interface KeychainCanvasProps {
   dimensions: Model3DDimensions;
   onDimensionsChange: (dims: Model3DDimensions) => void;
 }
+
+// Prévia 2D de uma camada: desenha o canvas que gerou a malha tingido com a cor dela.
+const LayerPreviewCanvas: React.FC<{ preview: GeneratedKeychain['layerPreviews'][number] }> = ({ preview }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = preview.canvas.width;
+    canvas.height = preview.canvas.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(preview.canvas, 0, 0);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = preview.color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [preview]);
+
+  return <canvas ref={canvasRef} className="block mx-auto max-h-[36vh] max-w-full object-contain" />;
+};
 
 export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
   config,
@@ -44,6 +66,10 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
   const [captureToast, setCaptureToast] = useState<string | null>(null);
+
+  // Prévia 2D das camadas (mesmos canvases usados para gerar a malha)
+  const [layerPreviews, setLayerPreviews] = useState<GeneratedKeychain['layerPreviews']>([]);
+  const [showLayerPreviews, setShowLayerPreviews] = useState<boolean>(false);
 
   // Esfera de órbita da câmera
   const sphericalRef = useRef({
@@ -343,6 +369,7 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
         if (isCancelled) return;
 
         currentModelRef.current = model;
+        setLayerPreviews(model.layerPreviews);
         onDimensionsChange(model.dimensions);
 
         // Limpa geometrias anteriores
@@ -518,6 +545,47 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
         </div>
       )}
 
+      {/* Prévia 2D das Camadas do Nome */}
+      {showLayerPreviews && (
+        <div className="absolute inset-0 z-30 bg-[var(--workbench-viewport)]/95 backdrop-blur-sm flex flex-col">
+          <div className="flex items-start justify-between gap-3 px-4 py-3 border-b border-[var(--surface-container-high)]">
+            <div>
+              <p className="text-xs font-bold text-[var(--workbench-text)]">Camadas 2D do Nome</p>
+              <p className="text-[10px] text-[var(--on-surface-variant)]">
+                Os mesmos canvases que geram a malha — confira o encontro das linhas.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLayerPreviews(false)}
+              className="p-2 rounded-xl text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)] transition-colors"
+              title="Fechar Prévia das Camadas"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 content-start">
+            {layerPreviews.map((preview) => (
+              <div
+                key={preview.label}
+                className="rounded-xl bg-white border border-[var(--surface-container-high)] p-2"
+              >
+                <div className="flex items-center gap-1.5 px-1 pb-1.5">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-black/10"
+                    style={{ backgroundColor: preview.color }}
+                  />
+                  <span className="text-[10px] font-bold text-[var(--workbench-text)]">
+                    {preview.label}
+                  </span>
+                </div>
+                <LayerPreviewCanvas preview={preview} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Barra de Controles Rápidos da Câmera (Canto Inferior Esquerdo) */}
       <div className="absolute bottom-5 left-5 z-20 flex items-center gap-1.5 p-1.5 rounded-2xl bg-[var(--workbench-panel)]/90 border-[var(--surface-container-high)] backdrop-blur-md shadow-xl">
         <button
@@ -547,6 +615,18 @@ export const KeychainCanvas: React.FC<KeychainCanvasProps> = ({
           title="Giro Automático 360°"
         >
           <RotateCw className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowLayerPreviews((visible) => !visible)}
+          className={`p-2 rounded-xl transition-colors ${
+            showLayerPreviews
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+              : 'text-[var(--on-surface-variant)] hover:text-[var(--workbench-text)] hover:bg-[var(--surface-container-high)]'
+          }`}
+          title="Ver Camadas 2D do Nome (mesmos canvases da malha)"
+        >
+          <Layers className="w-4 h-4" />
         </button>
         <div className="w-px h-5 bg-[var(--surface-container-high)] mx-1" />
         <button
