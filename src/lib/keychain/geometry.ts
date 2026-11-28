@@ -644,12 +644,15 @@ export async function generateKeychainModel(config: KeychainConfig): Promise<Gen
   // 4) Camadas do nome: cada camada é o texto com uma dilatação menor, da base
   // (mais larga, cor de fundo) para o topo (o relevo atual, cor do nome).
   //
-  // Silhueta do corpo de cada linha do nome (letras + borda). Serve de recorte para a
-  // linha de cima: onde ela encosta na de baixo, o relevo/contorno colorido da de cima
-  // não invade o corpo da de baixo, sobrando só o contorno de baixo.
+  // Silhueta de cada linha do nome. Serve de recorte para a linha de cima: onde ela
+  // encosta na de baixo, o relevo colorido da de cima não invade o da de baixo.
+  // Usa o contorno mais largo do relevo (não o corpo inteiro): assim o corte cai
+  // exatamente na borda do contorno de baixo, sem sobrar uma faixa do corpo entre os
+  // dois — que aparecia como um contorno extra da linha de cima no encontro.
   const lineFootprints: HTMLCanvasElement[] = [];
   if (textLinesLayout.length > 1) {
-    const widestDilationPx = outlinePx;
+    // +2px de margem para o antialias não deixar fresta entre os contornos.
+    const widestDilationPx = (reliefDilationMm + layerStepMm * (nameLayerCount - 1)) * pxPerMm + 2;
     textLinesLayout.forEach((line, lineIndex) => {
       const footprint = document.createElement('canvas');
       footprint.width = canvasWidth;
